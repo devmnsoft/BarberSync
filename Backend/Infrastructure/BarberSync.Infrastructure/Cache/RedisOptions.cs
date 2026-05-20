@@ -1,0 +1,2 @@
+namespace BarberSync.Infrastructure.Cache;
+public class RedisOptions { public string ConnectionString { get; set; } = "localhost:6379"; }

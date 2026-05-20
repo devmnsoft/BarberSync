@@ -1,17 +1,11 @@
 name: CI
-on:
-  push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main", "develop" ]
-
+on: [push, pull_request]
 jobs:
-  backend-tests:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-      - run: dotnet --info
-      - run: dotnet test Backend/Tests/BarberSync.Tests/BarberSync.Tests.csproj
+        with: { dotnet-version: '8.0.x' }
+      - run: dotnet build Backend/BarberSync.sln
+      - run: dotnet test Backend/BarberSync.sln
