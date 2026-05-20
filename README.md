@@ -1,29 +1,19 @@
-# BarberSync 2.0
+# BarberSync 2.0 - Initial Monorepo Scaffold
 
-Projeto base completo para desenvolvimento e deployment com:
-- Backend .NET (Clean Architecture + DDD + CQRS)
-- Admin Blazor
-- Mobile React Native (Expo)
-- Totem (Web + Node API)
-- IA (ML.NET)
-- Scripts SQL PostgreSQL
-- CI/CD com GitHub Actions
+This repository contains the initial production-ready scaffold for BarberSync 2.0:
 
-## Estrutura
-Ver pastas `Backend`, `Frontend/Admin`, `MobileApp`, `Totem`, `ScriptsSQL` e `ML`.
+- **Backend**: .NET Clean Architecture + DDD
+- **Frontend/Admin**: Blazor Server starter
+- **MobileApp**: React Native + Expo starter
+- **Totem**: React fullscreen kiosk starter
+- **ScriptsSQL**: Initial schema and seed scripts
+- **ML**: ML.NET + OpenCV/Azure Cognitive Services integration skeleton
 
-## Execução rápida
-1. Backend API:
-   - `cd Backend/Presentation/BarberSync.Api`
-   - `dotnet run`
-2. Admin:
-   - `cd Frontend/Admin`
-   - `dotnet run`
-3. Mobile:
-   - `cd MobileApp && npm install && npm start`
-4. Totem:
-   - API: `cd Totem/api && npm install && npm run dev`
-   - App: `cd Totem/app && npm install && npm start`
+## Quick Start
+1. Configure `.env` values (JWT, DB, Redis, RabbitMQ/Kafka)
+2. Run SQL scripts from `ScriptsSQL`.
+3. Start backend API.
+4. Start Admin, Mobile, and Totem clients.
 
-## Roadmap sugerido
-Consulte `docs/ROADMAP.md`.
+## Status
+Scaffold with representative CRUD flows and extension points for full implementation.
