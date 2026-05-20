@@ -1,9 +1,6 @@
-import { Text, View } from 'react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 
 export default function App() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>BarberSync Mobile 2.0</Text>
-    </View>
-  );
+  return <View style={{flex:1,justifyContent:'center',alignItems:'center'}}><Text>BarberSync Mobile: Login, Cadastro, Agenda, Histórico</Text></View>;
 }

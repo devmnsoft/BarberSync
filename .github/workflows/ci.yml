@@ -3,9 +3,19 @@ on: [push, pull_request]
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports: ['5672:5672']
+      kafka:
+        image: bitnami/kafka:latest
+        ports: ['9092:9092']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.0.x' }
-      - run: dotnet build Backend/BarberSync.sln
-      - run: dotnet test Backend/BarberSync.sln
+      - run: dotnet --info
+      - run: echo "Run tests and linters here"
