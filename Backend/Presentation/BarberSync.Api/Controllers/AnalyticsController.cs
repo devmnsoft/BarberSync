@@ -10,19 +10,31 @@ public class AnalyticsController : ControllerBase
     [HttpGet("kpis")]
     public ActionResult<KpiSnapshotDto> GetKpis()
     {
-        var snapshot = new KpiSnapshotDto
+        return Ok(new KpiSnapshotDto
         {
-            Revenue = 18250m,
-            Profit = 12400m,
-            OccupancyRate = 0.86m,
+            SnapshotAtUtc = DateTime.UtcNow,
+            OccupancyRate = 0.81m,
+            Revenue = 124530.90m,
+            Profit = 38210.12m,
             SatisfactionScore = 4.8m,
-            CriticalStockItems = 2,
-            OverloadedProfessionals = 1
-        };
-
-        return Ok(snapshot);
+            CriticalStockItems = 3,
+            OverloadedProfessionals = 2
+        });
     }
 
-    [HttpGet("export/powerbi")]
-    public IActionResult ExportPowerBi() => Ok(new { endpoint = "/api/analytics/kpis", format = "json" });
+    [HttpGet("bi-export")]
+    public ActionResult<BiExportDto> ExportBi([FromQuery] string provider = "power-bi")
+    {
+        return Ok(new BiExportDto
+        {
+            Provider = provider,
+            Kpis = new Dictionary<string, decimal>
+            {
+                ["occupancy_rate"] = 0.81m,
+                ["avg_ticket"] = 92.4m,
+                ["low_stock_alerts"] = 3,
+                ["demand_prediction"] = 1.18m
+            }
+        });
+    }
 }
