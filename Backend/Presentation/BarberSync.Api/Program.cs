@@ -1,3 +1,5 @@
+using BarberSync.Application.Abstractions.Innovation;
+using BarberSync.Infrastructure.Innovation;
 using BarberSync.Application.Abstractions;
 using BarberSync.Infrastructure.Security;
 
@@ -7,6 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
 var app = builder.Build();
 

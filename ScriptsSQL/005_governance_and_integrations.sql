@@ -43,3 +43,41 @@ CREATE TABLE IF NOT EXISTS payment_gateway_events (
 
 CREATE INDEX IF NOT EXISTS idx_access_policies_user_module ON access_policies(user_id, module_key);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_module_created ON audit_logs(module_key, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS smart_notification_triggers (
+    id UUID PRIMARY KEY,
+    event_key VARCHAR(80) NOT NULL,
+    channel VARCHAR(40) NOT NULL,
+    target_type VARCHAR(40) NOT NULL,
+    template TEXT NOT NULL,
+    is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ai_video_metrics (
+    id UUID PRIMARY KEY,
+    appointment_id UUID REFERENCES appointments(id),
+    professional_id UUID REFERENCES users(id),
+    predicted_service VARCHAR(120) NOT NULL,
+    confidence NUMERIC(5,4) NOT NULL,
+    posture_score NUMERIC(5,4) NOT NULL,
+    instrument_detected VARCHAR(120),
+    duration_seconds INT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE VIEW IF NOT EXISTS vw_predictive_peak_hours AS
+SELECT EXTRACT(HOUR FROM start_time) AS hour_of_day,
+       COUNT(*) AS total_appointments,
+       AVG(EXTRACT(EPOCH FROM (end_time - start_time))/60.0) AS avg_minutes
+FROM appointments
+GROUP BY EXTRACT(HOUR FROM start_time)
+ORDER BY total_appointments DESC;
+
+CREATE VIEW IF NOT EXISTS vw_professional_efficiency AS
+SELECT sr.professional_id,
+       COUNT(*) AS total_recognitions,
+       AVG(sr.confidence) AS avg_confidence,
+       AVG(sr.duration_seconds)/60.0 AS avg_service_minutes
+FROM service_recognition sr
+GROUP BY sr.professional_id;
