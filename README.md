@@ -1,19 +1,30 @@
-# BarberSync 2.0 - Initial Monorepo Scaffold
+# BarberSync 2.0 - Futuristic Intelligent Platform
 
-This repository contains the initial production-ready scaffold for BarberSync 2.0:
+This monorepo now includes a **futuristic, automated and AI-driven foundation** for salon operations.
 
-- **Backend**: .NET Clean Architecture + DDD
-- **Frontend/Admin**: Blazor Server starter
-- **MobileApp**: React Native + Expo starter
-- **Totem**: React fullscreen kiosk starter
-- **ScriptsSQL**: Initial schema and seed scripts
-- **ML**: ML.NET + OpenCV/Azure Cognitive Services integration skeleton
+## Core Modules
+- **Backend (.NET API):** Clean Architecture + DDD with advanced modules for AI analytics, loyalty, smart notifications, platform command center and futuristic automation endpoints.
+- **Mobile (React Native):** Base screens + gamification/AI snapshot screen for real-time KPIs.
+- **Totem (React kiosk):** Self-service data orchestrator with loyalty progress and AI-powered operations snapshot.
+- **ML:** Structured integration points for service recognition and intelligent metrics.
+- **ScriptsSQL:** Expanded database scripts for AI model registry, predictive demand, professional metrics and smart notification logs.
+
+## New Futuristic Automation Endpoints
+- `GET /api/futuristic-automation/operations-snapshot`
+- `GET /api/futuristic-automation/bi-export`
+
+## Highlights Delivered
+- Real-time AI operational snapshot for dashboards and totems
+- Predictive demand feed by hour and service profile
+- Smart notification queue model (push/WhatsApp/Telegram)
+- Professional KPI metrics ready for BI export (Power BI/Qlik)
+- Gamified mobile experience scaffold with intelligent KPI visualization
 
 ## Quick Start
-1. Configure `.env` values (JWT, DB, Redis, RabbitMQ/Kafka)
-2. Run SQL scripts from `ScriptsSQL`.
-3. Start backend API.
-4. Start Admin, Mobile, and Totem clients.
+1. Configure environment values (JWT, DB, Redis, broker and external integrations).
+2. Run SQL scripts from `ScriptsSQL` including `007_futuristic_ai_automation.sql`.
+3. Start backend API with Swagger.
+4. Start Mobile and Totem applications.
 
 ## Status
-Scaffold with representative CRUD flows and extension points for full implementation.
+Production-oriented scaffold for BarberSync 2.0 advanced evolution, ready for integration and iterative hardening.
