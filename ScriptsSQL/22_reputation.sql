@@ -1,0 +1,4 @@
+create table if not exists reputation_reviews (id uuid primary key, tenant_id uuid not null, branch_id uuid not null, professional_id uuid, service_id uuid, score int not null, comment text, created_at timestamptz default now());
+create table if not exists reputation_alerts (id uuid primary key, tenant_id uuid not null, branch_id uuid not null, review_id uuid references reputation_reviews(id), alert_type text not null, status text default 'OPEN');
+create table if not exists reputation_action_plans (id uuid primary key, alert_id uuid references reputation_alerts(id), owner_name text, due_date date, status text, notes text);
+create table if not exists review_requests (id uuid primary key, tenant_id uuid not null, appointment_id uuid not null, channel text not null, requested_at timestamptz default now(), completed boolean default false);

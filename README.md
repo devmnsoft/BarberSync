@@ -35,3 +35,14 @@ Production-oriented scaffold for BarberSync 2.0 advanced evolution, ready for in
 - Novas rotas: `/api/saas/*`, `/api/onboarding/*`, `/api/dashboard/*`, `/api/reviews`, `/api/nps`, `/api/reports/satisfaction/{tenantId}`.
 - Documentação detalhada em `Docs/`.
 
+\n## Strategic Business Modules 2.0\n- Franchise & network management\n- Commercial goals & progress\n- Professional ranking and performance\n- CRM reactivation and VIP intelligence\n- Campaign management\n- Business insights and executive dashboard\n- Financial planning and reputation\n- Management report job pipeline
+
+## Strategic Business Modules 2.0
+- Franchise & network management
+- Commercial goals & progress
+- Professional ranking and performance
+- CRM reactivation and VIP intelligence
+- Campaign management
+- Business insights and executive dashboard
+- Financial planning and reputation
+- Management report job pipeline

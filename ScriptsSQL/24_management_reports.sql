@@ -1,0 +1,1 @@
+create table if not exists management_report_jobs (id uuid primary key, tenant_id uuid not null, report_type text not null, format text not null, status text not null default 'QUEUED', requested_by text, requested_at timestamptz default now(), finished_at timestamptz, download_url text);

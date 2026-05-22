@@ -31,4 +31,15 @@ public class InMemorySaasStore
     public List<SupportTicketDto> SupportTickets { get; } = [];
     public List<ProductEventDto> ProductEvents { get; } = [];
     public List<ExportJobDto> ExportJobs { get; } = [];
+    public List<FranchiseGroupDto> FranchiseGroups { get; } = [];
+    public List<FranchiseUnitDto> FranchiseUnits { get; } = [];
+    public List<UnitMetricDto> UnitMetrics { get; } = [];
+    public List<GoalDto> Goals { get; } = [];
+    public List<GoalProgressDto> GoalProgress { get; } = [];
+    public List<ProfessionalPerformanceDto> ProfessionalPerformance { get; } = [];
+    public List<CrmClientScoreDto> ClientScores { get; } = [];
+    public List<CampaignDto> Campaigns { get; } = [];
+    public List<BusinessInsightDto> BusinessInsights { get; } = [];
+    public List<FinancialPlanDto> FinancialPlans { get; } = [];
+    public List<ReputationSummaryDto> ReputationSummaries { get; } = [];
 }

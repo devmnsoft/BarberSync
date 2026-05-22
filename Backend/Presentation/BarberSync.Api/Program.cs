@@ -17,6 +17,7 @@ builder.Services.AddScoped<ISaasService, SaasService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddSingleton<CommercialPlatformService>();
+builder.Services.AddSingleton<StrategicManagementService>();
 
 var app = builder.Build();
 
