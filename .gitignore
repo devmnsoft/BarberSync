@@ -1,0 +1,27 @@
+# Node
+node_modules/
+**/node_modules/
+
+# .NET
+**/bin/
+**/obj/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
