@@ -18,4 +18,17 @@ public class InMemorySaasStore
     public Dictionary<Guid, OnboardingStateDto> Onboarding { get; } = new();
     public List<ReviewDto> Reviews { get; } = [];
     public List<NpsResponseDto> NpsResponses { get; } = [];
+    public Dictionary<Guid, TenantBrandingDto> TenantBranding { get; } = new();
+    public Dictionary<Guid, TenantDomainDto> TenantDomains { get; } = new();
+    public Dictionary<Guid, TenantPublicPageDto> TenantPublicPages { get; } = new();
+    public List<PublicServiceDto> PublicServices { get; } = [];
+    public List<PublicProfessionalDto> PublicProfessionals { get; } = [];
+    public List<PublicAppointmentDto> PublicAppointments { get; } = [];
+    public List<MarketplaceProfileDto> MarketplaceProfiles { get; } = [];
+    public List<MarketplacePromotionDto> MarketplacePromotions { get; } = [];
+    public List<BillingCycleDto> BillingCycles { get; } = [];
+    public List<SubscriptionChangeDto> SubscriptionChanges { get; } = [];
+    public List<SupportTicketDto> SupportTickets { get; } = [];
+    public List<ProductEventDto> ProductEvents { get; } = [];
+    public List<ExportJobDto> ExportJobs { get; } = [];
 }

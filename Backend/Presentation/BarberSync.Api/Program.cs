@@ -16,6 +16,7 @@ builder.Services.AddSingleton<InMemorySaasStore>();
 builder.Services.AddScoped<ISaasService, SaasService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<ReviewService>();
+builder.Services.AddSingleton<CommercialPlatformService>();
 
 var app = builder.Build();
 
