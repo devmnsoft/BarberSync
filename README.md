@@ -28,3 +28,10 @@ This monorepo now includes a **futuristic, automated and AI-driven foundation** 
 
 ## Status
 Production-oriented scaffold for BarberSync 2.0 advanced evolution, ready for integration and iterative hardening.
+
+## BarberSync SaaS 2.0 (Evolução comercial)
+- Multiempresa com módulos SaaS, onboarding, dashboard e avaliações.
+- Landing page comercial em `Frontend/LandingPage/index.html`.
+- Novas rotas: `/api/saas/*`, `/api/onboarding/*`, `/api/dashboard/*`, `/api/reviews`, `/api/nps`, `/api/reports/satisfaction/{tenantId}`.
+- Documentação detalhada em `Docs/`.
+
