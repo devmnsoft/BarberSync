@@ -1,0 +1,25 @@
+name: Mobile CI
+on:
+  push:
+    paths:
+      - 'MobileApp/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    paths:
+      - 'MobileApp/**'
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: MobileApp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run lint --if-present
+      - run: npm test --if-present
+      - run: npm run start -- --non-interactive --offline || true

@@ -1,0 +1,24 @@
+name: Backend CI
+on:
+  push:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'Backend/**'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore Backend.sln
+      - run: dotnet build Backend.sln --configuration Release --no-restore
+      - run: dotnet test Backend.sln --configuration Release --no-build
