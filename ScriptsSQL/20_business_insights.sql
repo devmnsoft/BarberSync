@@ -1,0 +1,4 @@
+create table if not exists business_insights (id uuid primary key, tenant_id uuid not null, branch_id uuid, insight_type text not null, priority text not null, description text not null, expected_impact text, suggested_action text, executable boolean default false, status text default 'OPEN', created_at timestamptz default now());
+create table if not exists business_insight_actions (id uuid primary key, insight_id uuid references business_insights(id), action_name text not null, action_payload jsonb, executed_at timestamptz);
+create table if not exists business_opportunities (id uuid primary key, tenant_id uuid not null, branch_id uuid, opportunity_type text not null, score int not null, details jsonb, created_at timestamptz default now());
+create table if not exists insight_execution_logs (id uuid primary key, insight_id uuid references business_insights(id), status text not null, message text, logged_at timestamptz default now());

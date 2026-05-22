@@ -1,0 +1,5 @@
+create table if not exists franchise_groups (id uuid primary key, tenant_id uuid not null, name text not null, owner_name text, created_at timestamptz default now());
+create table if not exists franchise_units (id uuid primary key, tenant_id uuid not null, branch_id uuid not null, group_id uuid references franchise_groups(id), name text not null, city text, manager_name text, active boolean default true);
+create table if not exists unit_goals (id uuid primary key, tenant_id uuid not null, branch_id uuid not null, metric text not null, target_value numeric(12,2) not null, month_ref text not null);
+create table if not exists unit_performance_snapshots (id uuid primary key, unit_id uuid not null references franchise_units(id), snapshot_date date not null, revenue numeric(12,2), appointments int, ticket_avg numeric(12,2), recurring_clients int);
+create table if not exists unit_comparison_reports (id uuid primary key, tenant_id uuid not null, created_at timestamptz default now(), payload_json jsonb not null);

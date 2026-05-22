@@ -1,0 +1,5 @@
+create table if not exists marketing_campaigns (id uuid primary key, tenant_id uuid not null, branch_id uuid, name text not null, campaign_type text not null, start_date date not null, end_date date not null, status text not null);
+create table if not exists campaign_rules (id uuid primary key, campaign_id uuid references marketing_campaigns(id), service_id uuid, professional_id uuid, min_spend numeric(12,2), discount_percent numeric(5,2), discount_fixed numeric(12,2));
+create table if not exists campaign_audiences (id uuid primary key, campaign_id uuid references marketing_campaigns(id), segment_name text, client_id uuid);
+create table if not exists campaign_coupons (id uuid primary key, campaign_id uuid references marketing_campaigns(id), coupon_code text unique not null, max_uses int, uses_count int default 0);
+create table if not exists campaign_results (id uuid primary key, campaign_id uuid references marketing_campaigns(id), revenue_generated numeric(12,2), redemptions int, roi numeric(7,2), generated_at timestamptz default now());
