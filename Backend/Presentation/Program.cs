@@ -20,6 +20,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<BarberSync.Api.Finance.Services.FinanceDataStore>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();

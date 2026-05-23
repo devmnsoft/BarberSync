@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS fiscal_receipts(id UUID PRIMARY KEY, tenant_id UUID NOT NULL, branch_id UUID NOT NULL, number TEXT, series TEXT, issued_at TIMESTAMP, customer_name TEXT, total NUMERIC(14,2), hash TEXT, is_canceled BOOLEAN DEFAULT FALSE);

@@ -46,3 +46,6 @@ Production-oriented scaffold for BarberSync 2.0 advanced evolution, ready for in
 - Business insights and executive dashboard
 - Financial planning and reputation
 - Management report job pipeline
+
+## Módulos Financeiro/Fiscal (v2.1)
+Inclui módulo fiscal inicial, recibos, contas a pagar e dashboard financeiro básico com endpoints em `Backend/Presentation/Finance` e scripts em `ScriptsSQL/46-57`.

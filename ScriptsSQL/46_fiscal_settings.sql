@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS fiscal_company_settings(id UUID PRIMARY KEY, tenant_id UUID NOT NULL, company_name TEXT NOT NULL, document TEXT NOT NULL, municipal_registration TEXT, tax_regime TEXT, cnae TEXT, iss_rate NUMERIC(10,2), receipt_series TEXT, next_receipt_number INT DEFAULT 1);
