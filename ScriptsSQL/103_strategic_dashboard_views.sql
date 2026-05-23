@@ -1,0 +1,10 @@
+CREATE VIEW vw_competitive_price_analysis AS SELECT c.name, cp.price FROM competitors c JOIN competitor_services cs ON cs.competitor_id=c.id JOIN competitor_prices cp ON cp.competitor_service_id=cs.id;
+CREATE VIEW vw_dynamic_pricing_suggestions AS SELECT service_id, current_price, suggested_price FROM dynamic_price_suggestions;
+CREATE VIEW vw_supplier_performance AS SELECT sp.name, srm.on_time_rate, srm.quality_rate FROM supplier_profiles sp JOIN supplier_performance_metrics srm ON srm.supplier_id=sp.id;
+CREATE VIEW vw_purchase_replenishment AS SELECT branch_id, product_id, suggested_quantity FROM purchase_replenishment_suggestions;
+CREATE VIEW vw_service_real_cost AS SELECT appointment_id, SUM(actual_quantity) AS total_consumption FROM actual_service_consumption GROUP BY appointment_id;
+CREATE VIEW vw_service_margin_analysis AS SELECT service_id, suggested_price-current_price AS delta FROM dynamic_price_suggestions;
+CREATE VIEW vw_expansion_feasibility AS SELECT p.name, f.payback_months, f.viability FROM expansion_projects p JOIN expansion_feasibility_analysis f ON f.project_id=p.id;
+CREATE VIEW vw_franchise_health AS SELECT branch_id, health_score FROM franchise_unit_health_scores;
+CREATE VIEW vw_benchmark_units AS SELECT branch_id, metric_id, value FROM benchmark_results;
+CREATE VIEW vw_strategic_dashboard AS SELECT COUNT(*) AS competitors FROM competitors;
