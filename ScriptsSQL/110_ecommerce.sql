@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS ecommerce_products (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, branch_id UUID, name VARCHAR(120) NOT NULL, price NUMERIC(12,2) NOT NULL, stock_qty INT NOT NULL DEFAULT 0, is_active BOOLEAN DEFAULT TRUE);
+CREATE TABLE IF NOT EXISTS ecommerce_product_images (id UUID PRIMARY KEY, product_id UUID REFERENCES ecommerce_products(id), url TEXT NOT NULL, sort_order INT DEFAULT 0);
+CREATE TABLE IF NOT EXISTS ecommerce_carts (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, client_id UUID NOT NULL, status VARCHAR(20) DEFAULT 'OPEN', created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS ecommerce_cart_items (id UUID PRIMARY KEY, cart_id UUID REFERENCES ecommerce_carts(id), product_id UUID REFERENCES ecommerce_products(id), quantity INT NOT NULL, unit_price NUMERIC(12,2) NOT NULL);
+CREATE TABLE IF NOT EXISTS ecommerce_orders (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, cart_id UUID REFERENCES ecommerce_carts(id), client_id UUID NOT NULL, total_amount NUMERIC(12,2) NOT NULL, fulfillment_type VARCHAR(20), status VARCHAR(30) NOT NULL, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS ecommerce_order_items (id UUID PRIMARY KEY, order_id UUID REFERENCES ecommerce_orders(id), product_id UUID REFERENCES ecommerce_products(id), quantity INT, unit_price NUMERIC(12,2));
+CREATE TABLE IF NOT EXISTS ecommerce_order_payments (id UUID PRIMARY KEY, order_id UUID REFERENCES ecommerce_orders(id), status VARCHAR(20), amount NUMERIC(12,2), paid_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS ecommerce_order_status_history (id UUID PRIMARY KEY, order_id UUID REFERENCES ecommerce_orders(id), status VARCHAR(30), changed_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS ecommerce_pickup_slots (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, branch_id UUID, slot_start TIMESTAMP, slot_end TIMESTAMP, capacity INT);
+CREATE TABLE IF NOT EXISTS ecommerce_delivery_zones (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, name VARCHAR(80), fee NUMERIC(12,2), eta_minutes INT);

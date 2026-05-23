@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS client_visual_history (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, client_id UUID NOT NULL, appointment_id UUID, service_id UUID, notes TEXT, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS client_visual_photos (id UUID PRIMARY KEY, visual_history_id UUID NOT NULL REFERENCES client_visual_history(id), photo_type VARCHAR(20) NOT NULL, file_url TEXT NOT NULL, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS visual_photo_consents (id UUID PRIMARY KEY, photo_id UUID NOT NULL REFERENCES client_visual_photos(id), consent_status VARCHAR(20) NOT NULL, consented_at TIMESTAMP, revoked_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS visual_photo_tags (id UUID PRIMARY KEY, photo_id UUID NOT NULL REFERENCES client_visual_photos(id), tag VARCHAR(50) NOT NULL);
+CREATE TABLE IF NOT EXISTS visual_portfolio_items (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, photo_id UUID REFERENCES client_visual_photos(id), is_public BOOLEAN NOT NULL DEFAULT FALSE, published_at TIMESTAMP);

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS customer_journeys (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, name VARCHAR(120) NOT NULL, segment VARCHAR(40), is_active BOOLEAN DEFAULT FALSE);
+CREATE TABLE IF NOT EXISTS journey_steps (id UUID PRIMARY KEY, journey_id UUID NOT NULL REFERENCES customer_journeys(id), step_order INT NOT NULL, name VARCHAR(120) NOT NULL);
+CREATE TABLE IF NOT EXISTS journey_triggers (id UUID PRIMARY KEY, journey_id UUID NOT NULL REFERENCES customer_journeys(id), trigger_type VARCHAR(40) NOT NULL, trigger_config JSONB);
+CREATE TABLE IF NOT EXISTS journey_actions (id UUID PRIMARY KEY, step_id UUID NOT NULL REFERENCES journey_steps(id), action_type VARCHAR(40) NOT NULL, action_payload JSONB);
+CREATE TABLE IF NOT EXISTS customer_journey_enrollments (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, journey_id UUID NOT NULL REFERENCES customer_journeys(id), client_id UUID NOT NULL, status VARCHAR(20) NOT NULL, enrolled_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS journey_execution_logs (id UUID PRIMARY KEY, enrollment_id UUID NOT NULL REFERENCES customer_journey_enrollments(id), step_id UUID REFERENCES journey_steps(id), status VARCHAR(20), executed_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS journey_metrics (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, journey_id UUID NOT NULL REFERENCES customer_journeys(id), metric_date DATE NOT NULL, enrolled_count INT, conversion_count INT, retention_rate NUMERIC(5,2));
