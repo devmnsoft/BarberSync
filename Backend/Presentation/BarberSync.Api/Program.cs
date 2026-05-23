@@ -4,6 +4,8 @@ using BarberSync.Application.Abstractions.Innovation;
 using BarberSync.Infrastructure.Innovation;
 using BarberSync.Application.Abstractions;
 using BarberSync.Infrastructure.Security;
+using BarberSync.Application.Abstractions.Ai;
+using BarberSync.Application.Services.Ai;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,8 @@ builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddSingleton<CommercialPlatformService>();
 builder.Services.AddSingleton<StrategicManagementService>();
+builder.Services.AddSingleton<IAiProvider, MockAiProvider>();
+builder.Services.AddSingleton<ICopilotService, CopilotService>();
 
 var app = builder.Build();
 
