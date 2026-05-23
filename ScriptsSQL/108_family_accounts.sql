@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS family_accounts (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, holder_client_id UUID NOT NULL, name VARCHAR(120) NOT NULL, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS family_members (id UUID PRIMARY KEY, family_account_id UUID NOT NULL REFERENCES family_accounts(id), client_id UUID NOT NULL, is_minor BOOLEAN NOT NULL DEFAULT FALSE, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS family_relationships (id UUID PRIMARY KEY, family_member_id UUID NOT NULL REFERENCES family_members(id), relationship_type VARCHAR(50) NOT NULL);
+CREATE TABLE IF NOT EXISTS family_wallet_sharing_rules (id UUID PRIMARY KEY, family_account_id UUID NOT NULL REFERENCES family_accounts(id), can_share BOOLEAN NOT NULL DEFAULT FALSE, monthly_limit NUMERIC(12,2));
+CREATE TABLE IF NOT EXISTS family_benefit_rules (id UUID PRIMARY KEY, family_account_id UUID NOT NULL REFERENCES family_accounts(id), rule_type VARCHAR(40), rule_value NUMERIC(12,2));
+CREATE TABLE IF NOT EXISTS family_member_permissions (id UUID PRIMARY KEY, family_member_id UUID NOT NULL REFERENCES family_members(id), permission_code VARCHAR(50) NOT NULL, granted BOOLEAN NOT NULL DEFAULT TRUE);

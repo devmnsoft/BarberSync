@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS referral_programs (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, name VARCHAR(120) NOT NULL, active BOOLEAN NOT NULL DEFAULT TRUE);
+CREATE TABLE IF NOT EXISTS referral_codes (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, client_id UUID NOT NULL, code VARCHAR(30) UNIQUE NOT NULL, expires_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS referral_invites (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, referral_code_id UUID REFERENCES referral_codes(id), invited_contact VARCHAR(120), status VARCHAR(30), created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS referral_rewards (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, referral_invite_id UUID REFERENCES referral_invites(id), reward_type VARCHAR(40), reward_value NUMERIC(12,2), granted_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS referral_fraud_checks (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, referral_invite_id UUID REFERENCES referral_invites(id), score NUMERIC(5,2), flagged BOOLEAN DEFAULT FALSE, reason VARCHAR(255));
+CREATE TABLE IF NOT EXISTS referral_campaigns (id UUID PRIMARY KEY, tenant_id UUID NOT NULL, program_id UUID REFERENCES referral_programs(id), name VARCHAR(120), starts_at TIMESTAMP, ends_at TIMESTAMP);

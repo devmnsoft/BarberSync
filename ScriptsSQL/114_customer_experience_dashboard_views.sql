@@ -1,0 +1,10 @@
+CREATE OR REPLACE VIEW vw_customer_subscription_summary AS SELECT tenant_id, status, COUNT(*) AS subscriptions FROM customer_subscriptions GROUP BY tenant_id, status;
+CREATE OR REPLACE VIEW vw_benefit_usage AS SELECT tenant_id, DATE(redeemed_at) AS ref_date, COUNT(*) AS redemptions FROM benefit_redemptions GROUP BY tenant_id, DATE(redeemed_at);
+CREATE OR REPLACE VIEW vw_customer_wallet_balance AS SELECT tenant_id, client_id, cashback_balance, credit_balance FROM customer_wallets;
+CREATE OR REPLACE VIEW vw_family_account_summary AS SELECT fa.tenant_id, fa.id AS family_account_id, COUNT(fm.id) AS members FROM family_accounts fa LEFT JOIN family_members fm ON fm.family_account_id = fa.id GROUP BY fa.tenant_id, fa.id;
+CREATE OR REPLACE VIEW vw_referral_conversion AS SELECT ri.tenant_id, COUNT(*) FILTER (WHERE status='CONVERTED') AS converted, COUNT(*) AS total FROM referral_invites ri GROUP BY ri.tenant_id;
+CREATE OR REPLACE VIEW vw_ecommerce_sales AS SELECT tenant_id, DATE(created_at) AS ref_date, SUM(total_amount) AS gross_sales FROM ecommerce_orders WHERE status IN ('PAID','FULFILLED') GROUP BY tenant_id, DATE(created_at);
+CREATE OR REPLACE VIEW vw_customer_preferences_summary AS SELECT tenant_id, COUNT(*) AS preference_count FROM customer_preferences GROUP BY tenant_id;
+CREATE OR REPLACE VIEW vw_client_visual_history_summary AS SELECT tenant_id, client_id, COUNT(*) AS entries FROM client_visual_history GROUP BY tenant_id, client_id;
+CREATE OR REPLACE VIEW vw_customer_journey_metrics AS SELECT tenant_id, journey_id, SUM(enrolled_count) AS enrolled, SUM(conversion_count) AS converted FROM journey_metrics GROUP BY tenant_id, journey_id;
+CREATE OR REPLACE VIEW vw_customer_experience_dashboard AS SELECT s.tenant_id, s.subscriptions, COALESCE(w.wallet_count,0) AS wallets FROM (SELECT tenant_id, SUM(subscriptions) subscriptions FROM vw_customer_subscription_summary GROUP BY tenant_id) s LEFT JOIN (SELECT tenant_id, COUNT(*) wallet_count FROM customer_wallets GROUP BY tenant_id) w ON w.tenant_id = s.tenant_id;

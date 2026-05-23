@@ -52,3 +52,10 @@ Inclui módulo fiscal inicial, recibos, contas a pagar e dashboard financeiro b�
 
 ## Strategic Growth 2.0
 Inclui inteligência competitiva, precificação dinâmica, fornecedores, compras, reposição, consumo por serviço, expansão, franquias avançadas, benchmarking e dashboard estratégico.
+
+## Customer Experience Ecosystem (Phase 1)
+
+Added SQL foundations and docs for subscriptions, benefit club, wallet, family accounts, referrals, e-commerce, customer preferences, visual history, journeys and CX dashboard.
+
+See ScriptsSQL 105-115 and Docs/CUSTOMER_* modules.
+
