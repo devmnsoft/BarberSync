@@ -1,3 +1,4 @@
+using BarberSync.Api.Middleware;
 using BarberSync.Application.Abstractions.Saas;
 using BarberSync.Application.Services.Saas;
 using BarberSync.Application.Abstractions.Innovation;
@@ -12,8 +13,12 @@ using BarberSync.Application.Abstractions.Strategy;
 using BarberSync.Application.Services.Strategy;
 using BarberSync.Application.Abstractions.AutonomousGrowth;
 using BarberSync.Application.Services.AutonomousGrowth;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Console().CreateLogger();
+builder.Host.UseSerilog();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -33,11 +38,9 @@ builder.Services.AddSingleton<IStrategicGrowthService, StrategicGrowthService>()
 builder.Services.AddSingleton<IAutonomousGrowthService, AutonomousGrowthService>();
 
 var app = builder.Build();
-
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();
-
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "BarberSync API" }));
-
 app.Run();
