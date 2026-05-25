@@ -13,16 +13,24 @@ using BarberSync.Application.Abstractions.Strategy;
 using BarberSync.Application.Services.Strategy;
 using BarberSync.Application.Abstractions.AutonomousGrowth;
 using BarberSync.Application.Services.AutonomousGrowth;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration().Enrich.FromLogContext().WriteTo.Console().CreateLogger();
-builder.Host.UseSerilog();
+builder.Host.UseSerilog((context, cfg) => cfg
+    .ReadFrom.Configuration(context.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "BarberSync.Api")
+    .WriteTo.Console());
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 builder.Services.AddSingleton<InMemorySaasStore>();

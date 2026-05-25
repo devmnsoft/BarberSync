@@ -1,4 +1,5 @@
 using BarberSync.Api.Models;
+using FluentValidation;
 
 namespace BarberSync.Api.Middleware;
 
@@ -6,7 +7,15 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILog
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        try { await next(context); }
+        try
+        {
+            await next(context);
+        }
+        catch (ValidationException ex)
+        {
+            logger.LogWarning(ex, "Erro de validação. Path={Path}", context.Request.Path);
+            await WriteAsync(context, StatusCodes.Status400BadRequest, "Verifique os dados informados.", ex.Errors.Select(e => e.ErrorMessage));
+        }
         catch (UnauthorizedAccessException ex)
         {
             logger.LogWarning(ex, "Acesso não autorizado. Path={Path}", context.Request.Path);
@@ -22,10 +31,10 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILog
             logger.LogWarning(ex, "Conflito de regra de negócio. Path={Path}", context.Request.Path);
             await WriteAsync(context, StatusCodes.Status409Conflict, "Não foi possível concluir a operação.");
         }
-        catch (ArgumentException ex)
+        catch (OperationCanceledException ex)
         {
-            logger.LogWarning(ex, "Erro de validação. Path={Path}", context.Request.Path);
-            await WriteAsync(context, StatusCodes.Status400BadRequest, "Verifique os dados informados.");
+            logger.LogWarning(ex, "Operação cancelada. Path={Path}", context.Request.Path);
+            await WriteAsync(context, 499, "Operação cancelada pelo cliente.");
         }
         catch (Exception ex)
         {
@@ -34,10 +43,10 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILog
         }
     }
 
-    private static Task WriteAsync(HttpContext context, int statusCode, string message)
+    private static Task WriteAsync(HttpContext context, int statusCode, string message, IEnumerable<string>? errors = null)
     {
         context.Response.StatusCode = statusCode;
-        var payload = ApiResponse<object>.Fail(message, traceId: context.TraceIdentifier);
+        var payload = ApiResponse<object>.Fail(message, errors, context.TraceIdentifier);
         return context.Response.WriteAsJsonAsync(payload);
     }
 }
