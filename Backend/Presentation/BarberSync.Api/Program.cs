@@ -10,6 +10,8 @@ using BarberSync.Application.Abstractions.Hr;
 using BarberSync.Application.Services.Hr;
 using BarberSync.Application.Abstractions.Strategy;
 using BarberSync.Application.Services.Strategy;
+using BarberSync.Application.Abstractions.AutonomousGrowth;
+using BarberSync.Application.Services.AutonomousGrowth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,7 @@ builder.Services.AddSingleton<IAiProvider, MockAiProvider>();
 builder.Services.AddSingleton<ICopilotService, CopilotService>();
 builder.Services.AddSingleton<IHrProfessionalService, HrProfessionalService>();
 builder.Services.AddSingleton<IStrategicGrowthService, StrategicGrowthService>();
+builder.Services.AddSingleton<IAutonomousGrowthService, AutonomousGrowthService>();
 
 var app = builder.Build();
 
