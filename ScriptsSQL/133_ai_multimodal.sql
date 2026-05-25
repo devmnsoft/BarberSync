@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS ai_multimodal_requests (id BIGSERIAL PRIMARY KEY, tenant_id BIGINT NOT NULL, source_channel VARCHAR(40) NOT NULL, requested_by BIGINT NULL, status VARCHAR(20) NOT NULL DEFAULT 'PENDING', created_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS ai_multimodal_inputs (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), input_type VARCHAR(20) NOT NULL, content_ref TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS ai_multimodal_outputs (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), output_type VARCHAR(20) NOT NULL, output_text TEXT NOT NULL, confidence NUMERIC(5,2) NULL);
+CREATE TABLE IF NOT EXISTS ai_intent_classifications (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), intent_name VARCHAR(120) NOT NULL, confidence NUMERIC(5,2) NOT NULL);
+CREATE TABLE IF NOT EXISTS ai_sentiment_analysis (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), sentiment_label VARCHAR(30) NOT NULL, sentiment_score NUMERIC(5,2) NOT NULL, urgency_level VARCHAR(20));
+CREATE TABLE IF NOT EXISTS ai_voice_commands (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), transcript TEXT NOT NULL, command_name VARCHAR(120), executed BOOLEAN NOT NULL DEFAULT FALSE);
+CREATE TABLE IF NOT EXISTS ai_document_summaries (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), summary_text TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS ai_suggested_responses (id BIGSERIAL PRIMARY KEY, request_id BIGINT NOT NULL REFERENCES ai_multimodal_requests(id), response_text TEXT NOT NULL);
+CREATE OR REPLACE VIEW vw_ai_multimodal_usage AS SELECT tenant_id,source_channel,status,COUNT(*) total FROM ai_multimodal_requests GROUP BY tenant_id,source_channel,status;

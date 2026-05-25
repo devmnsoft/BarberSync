@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS voice_assistant_sessions (id BIGSERIAL PRIMARY KEY, tenant_id BIGINT NOT NULL, user_id BIGINT NULL, started_at TIMESTAMP NOT NULL DEFAULT NOW(), ended_at TIMESTAMP NULL);
+CREATE TABLE IF NOT EXISTS voice_commands (id BIGSERIAL PRIMARY KEY, session_id BIGINT NOT NULL REFERENCES voice_assistant_sessions(id), raw_text TEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS voice_command_intents (id BIGSERIAL PRIMARY KEY, command_id BIGINT NOT NULL REFERENCES voice_commands(id), intent_name VARCHAR(120) NOT NULL, confidence NUMERIC(5,2) NOT NULL);
+CREATE TABLE IF NOT EXISTS voice_command_executions (id BIGSERIAL PRIMARY KEY, command_id BIGINT NOT NULL REFERENCES voice_commands(id), execution_status VARCHAR(20) NOT NULL, result_payload JSONB NULL, executed_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS voice_command_logs (id BIGSERIAL PRIMARY KEY, command_id BIGINT NOT NULL REFERENCES voice_commands(id), log_level VARCHAR(10) NOT NULL, message TEXT NOT NULL, logged_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE OR REPLACE VIEW vw_voice_commands_summary AS SELECT s.tenant_id,i.intent_name,COUNT(*) total FROM voice_assistant_sessions s JOIN voice_commands c ON c.session_id=s.id JOIN voice_command_intents i ON i.command_id=c.id GROUP BY s.tenant_id,i.intent_name;
