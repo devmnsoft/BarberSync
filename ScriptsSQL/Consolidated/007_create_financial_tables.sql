@@ -1,0 +1,4 @@
+-- 007_create_financial_tables.sql
+-- Consolidated layer for BarberSync 2.0
+-- This file references existing module scripts from /ScriptsSQL and should be expanded progressively.
+-- Keep tenant/branch indexes and timestamptz defaults in every added table.
