@@ -1,0 +1,13 @@
+CREATE OR REPLACE VIEW vw_public_api_usage AS SELECT app_id, count(*) total_calls FROM developer_api_usage_logs GROUP BY app_id;
+CREATE OR REPLACE VIEW vw_developer_apps_status AS SELECT environment, status, count(*) apps FROM developer_apps GROUP BY environment,status;
+CREATE OR REPLACE VIEW vw_partner_integrations AS SELECT p.name, count(a.id) applications FROM technology_partners p LEFT JOIN partner_applications a ON p.id=a.partner_id GROUP BY p.name;
+CREATE OR REPLACE VIEW vw_governance_pending_approvals AS SELECT * FROM governance_approvals WHERE status='PENDING';
+CREATE OR REPLACE VIEW vw_enterprise_risk_heatmap AS SELECT category_id, probability, impact, count(*) total FROM enterprise_risks GROUP BY category_id, probability, impact;
+CREATE OR REPLACE VIEW vw_incident_sla_summary AS SELECT i.id incident_id, s.response_minutes, s.resolution_minutes, s.breached FROM incidents i LEFT JOIN incident_sla_tracking s ON i.id=s.incident_id;
+CREATE OR REPLACE VIEW vw_command_center_national AS SELECT region, sum(active_tenants) active_tenants FROM regional_operations GROUP BY region;
+CREATE OR REPLACE VIEW vw_ai_agent_suggestions AS SELECT a.name agent_name, s.priority, s.impact, s.suggestion FROM ai_agent_suggestions s JOIN ai_agent_runs r ON r.id=s.run_id JOIN ai_agents a ON a.id=r.agent_id;
+CREATE OR REPLACE VIEW vw_change_release_status AS SELECT c.title, c.status, rp.version FROM change_requests c LEFT JOIN release_plans rp ON rp.change_request_id=c.id;
+CREATE OR REPLACE VIEW vw_business_continuity_readiness AS SELECT name, rto_minutes, rpo_minutes FROM business_continuity_plans;
+CREATE OR REPLACE VIEW vw_immutable_audit_integrity AS SELECT checked_at, valid, details FROM audit_integrity_checks;
+CREATE OR REPLACE VIEW vw_advanced_compliance_score AS SELECT f.name framework, avg(s.score) avg_score FROM compliance_frameworks f JOIN compliance_scores s ON s.framework_id=f.id GROUP BY f.name;
+CREATE OR REPLACE VIEW vw_enterprise_dashboard AS SELECT now() captured_at;
