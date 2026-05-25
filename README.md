@@ -59,3 +59,14 @@ Added SQL foundations and docs for subscriptions, benefit club, wallet, family a
 
 See ScriptsSQL 105-115 and Docs/CUSTOMER_* modules.
 
+
+## Super App Ecosystem Foundation (Phase 2)
+
+Adicionados scripts SQL 129-141 e documentação dos novos domínios:
+- Conta digital empresarial e reconciliação financeira
+- Repasses de profissionais
+- Marketplace B2B e compras coletivas
+- IA multimodal, assistente de voz e totem acessível
+- Super App cliente e app do dono
+- Ranking público e centro de oportunidades
+- Monetização da plataforma

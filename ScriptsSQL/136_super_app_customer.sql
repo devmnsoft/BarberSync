@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS super_app_customer_profiles (id BIGSERIAL PRIMARY KEY, customer_id BIGINT NOT NULL UNIQUE, favorite_salons_json JSONB NULL, wallet_balance NUMERIC(14,2) NOT NULL DEFAULT 0, cashback_balance NUMERIC(14,2) NOT NULL DEFAULT 0, updated_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS super_app_customer_activities (id BIGSERIAL PRIMARY KEY, customer_id BIGINT NOT NULL, activity_type VARCHAR(60) NOT NULL, payload_json JSONB NULL, created_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE OR REPLACE VIEW vw_super_app_customer_home AS SELECT customer_id,wallet_balance,cashback_balance,updated_at FROM super_app_customer_profiles;

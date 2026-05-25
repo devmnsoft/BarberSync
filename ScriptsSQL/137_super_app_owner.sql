@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS owner_app_snapshots (id BIGSERIAL PRIMARY KEY, tenant_id BIGINT NOT NULL, branch_id BIGINT NULL, realtime_revenue NUMERIC(14,2) NOT NULL DEFAULT 0, critical_stock_count INT NOT NULL DEFAULT 0, pending_approvals INT NOT NULL DEFAULT 0, snapshot_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE OR REPLACE VIEW vw_owner_app_home AS SELECT tenant_id,branch_id,realtime_revenue,critical_stock_count,pending_approvals,snapshot_at FROM owner_app_snapshots;
