@@ -1,0 +1,1 @@
+-- placeholder functional baseline for 180_impact_tracking.sql

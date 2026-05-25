@@ -1,0 +1,1 @@
+-- placeholder functional baseline for 176_autonomous_campaigns.sql
