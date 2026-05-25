@@ -70,3 +70,10 @@ Adicionados scripts SQL 129-141 e documentação dos novos domínios:
 - Super App cliente e app do dono
 - Ranking público e centro de oportunidades
 - Monetização da plataforma
+
+## Enterprise Open Platform (2.0+)
+- Public API versioned + Developer Portal
+- Partner Integrators + Governance + Enterprise Risks
+- Incidents/SLA + Command Center + Autonomous AI Agents
+- Change/Release Management + Business Continuity + Immutable Audit + Advanced Compliance
+- Enterprise Dashboard and SQL seeds/views for demos

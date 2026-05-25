@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS compliance_frameworks (id BIGSERIAL PRIMARY KEY, name VARCHAR(100), version VARCHAR(40));
+CREATE TABLE IF NOT EXISTS compliance_controls (id BIGSERIAL PRIMARY KEY, framework_id BIGINT REFERENCES compliance_frameworks(id), control_code VARCHAR(60), title VARCHAR(180));
+CREATE TABLE IF NOT EXISTS compliance_control_evidences (id BIGSERIAL PRIMARY KEY, control_id BIGINT REFERENCES compliance_controls(id), evidence TEXT, created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS compliance_assessments (id BIGSERIAL PRIMARY KEY, framework_id BIGINT REFERENCES compliance_frameworks(id), assessment_date DATE, score NUMERIC(5,2));
+CREATE TABLE IF NOT EXISTS compliance_nonconformities (id BIGSERIAL PRIMARY KEY, assessment_id BIGINT REFERENCES compliance_assessments(id), description TEXT, severity VARCHAR(20), status VARCHAR(20));
+CREATE TABLE IF NOT EXISTS compliance_scores (id BIGSERIAL PRIMARY KEY, framework_id BIGINT REFERENCES compliance_frameworks(id), score NUMERIC(5,2), calculated_at TIMESTAMP DEFAULT NOW());

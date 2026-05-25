@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS immutable_audit_logs (id BIGSERIAL PRIMARY KEY, event_type VARCHAR(80), event_payload JSONB, event_hash VARCHAR(128), previous_hash VARCHAR(128), created_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS audit_hash_chains (id BIGSERIAL PRIMARY KEY, chain_name VARCHAR(80), latest_hash VARCHAR(128), updated_at TIMESTAMP DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS audit_integrity_checks (id BIGSERIAL PRIMARY KEY, checked_at TIMESTAMP DEFAULT NOW(), valid BOOLEAN, details TEXT);
+CREATE TABLE IF NOT EXISTS audit_exports (id BIGSERIAL PRIMARY KEY, exported_at TIMESTAMP DEFAULT NOW(), exported_by VARCHAR(120), file_ref TEXT);
