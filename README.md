@@ -77,3 +77,9 @@ Adicionados scripts SQL 129-141 e documentação dos novos domínios:
 - Incidents/SLA + Command Center + Autonomous AI Agents
 - Change/Release Management + Business Continuity + Immutable Audit + Advanced Compliance
 - Enterprise Dashboard and SQL seeds/views for demos
+
+
+## Plataforma 360º (Consolidação)
+- Scripts SQL consolidados em `ScriptsSQL/Consolidated` com ordem de execução 001-020.
+- Documentação consolidada em `Docs/` para arquitetura, API, deploy, testes, operação, mobile e totem.
+- Roteiro comercial completo em `Docs/DEMO_SCRIPT.md`.
