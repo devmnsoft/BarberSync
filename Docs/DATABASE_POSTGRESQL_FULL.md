@@ -12,7 +12,7 @@ Ele reúne os scripts SQL existentes em `ScriptsSQL/` em ordem alfanumérica, co
 
 ## Como executar
 ```bash
-psql -U postgres -d barbersync -f ScriptsSQL/barbersync_full_database_postgresql.sql
+psql -U postgres -d barber -f ScriptsSQL/barber_full_database_postgresql.sql
 ```
 
 ## Ordem de execução
@@ -23,11 +23,11 @@ psql -U postgres -d barbersync -f ScriptsSQL/barbersync_full_database_postgresql
 ## Validação pós-execução
 Arquivo de validação:
 
-- `ScriptsSQL/validate_barbersync_database.sql`
+- `ScriptsSQL/validate_barber_database.sql`
 
 Execute:
 ```bash
-psql -U postgres -d barbersync -f ScriptsSQL/validate_barbersync_database.sql
+psql -U postgres -d barber -f ScriptsSQL/validate_barber_database.sql
 ```
 
 Valida:
@@ -42,19 +42,19 @@ Os usuários e dados demo são carregados pelos scripts de seed já existentes n
 
 ## Reset do banco
 ```bash
-dropdb barbersync
-createdb barbersync
-psql -U postgres -d barbersync -f ScriptsSQL/barbersync_full_database_postgresql.sql
+dropdb barber
+createdb barber
+psql -U postgres -d barber -f ScriptsSQL/barber_full_database_postgresql.sql
 ```
 
 ## Conferência manual útil
 ```sql
-SELECT schema_name FROM information_schema.schemata WHERE schema_name='identity';
-SELECT COUNT(*) FROM identity.users;
-SELECT COUNT(*) FROM tenant.tenants;
-SELECT COUNT(*) FROM scheduling.services;
-SELECT COUNT(*) FROM inventory.products;
-SELECT COUNT(*) FROM dashboard.vw_admin_dashboard;
+SELECT schema_name FROM information_schema.schemata WHERE schema_name='barber';
+SELECT COUNT(*) FROM barber.users;
+SELECT COUNT(*) FROM barber.tenants;
+SELECT COUNT(*) FROM barber.services;
+SELECT COUNT(*) FROM barber.products;
+SELECT COUNT(*) FROM barber.kiosk_devices;
 ```
 
 ## Appsettings (PostgreSQL)
@@ -63,6 +63,6 @@ Exemplo:
 
 ```json
 "ConnectionStrings": {
-  "DefaultConnection": "Host=localhost;Port=5432;Database=barbersync;Username=postgres;Password=postgres"
+  "DefaultConnection": "Host=localhost;Port=5432;Database=barber;Username=postgres;Password=postgres"
 }
 ```
