@@ -1,34 +1,49 @@
-using BarberSync.Api.Services.Configuration;
 using BarberSync.Api.Middleware;
-using BarberSync.Application.Abstractions.Saas;
-using BarberSync.Application.Services.Saas;
-using BarberSync.Application.Abstractions.Innovation;
-using BarberSync.Infrastructure.Innovation;
+using BarberSync.Api.Services.Configuration;
 using BarberSync.Application.Abstractions;
-using BarberSync.Infrastructure.Security;
 using BarberSync.Application.Abstractions.Ai;
-using BarberSync.Application.Services.Ai;
-using BarberSync.Application.Abstractions.Hr;
-using BarberSync.Application.Services.Hr;
-using BarberSync.Application.Abstractions.Strategy;
-using BarberSync.Application.Services.Strategy;
 using BarberSync.Application.Abstractions.AutonomousGrowth;
+using BarberSync.Application.Abstractions.Hr;
+using BarberSync.Application.Abstractions.Innovation;
+using BarberSync.Application.Abstractions.Saas;
+using BarberSync.Application.Abstractions.Strategy;
+using BarberSync.Application.Services.Ai;
 using BarberSync.Application.Services.AutonomousGrowth;
+using BarberSync.Application.Services.Hr;
+using BarberSync.Application.Services.Saas;
+using BarberSync.Application.Services.Strategy;
+using BarberSync.Infrastructure.Innovation;
+using BarberSync.Infrastructure.Security;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, cfg) => cfg
-    .ReadFrom.Configuration(context.Configuration)
-    .Enrich.FromLogContext()
-    .Enrich.WithProperty("Application", "BarberSync.Api")
-    .WriteTo.Console());
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", "BarberSync.Api")
+        .WriteTo.Console();
+});
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DefaultCors", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
+
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -49,9 +64,21 @@ builder.Services.AddSingleton<IAutonomousGrowthService, AutonomousGrowthService>
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
 var app = builder.Build();
+
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-app.UseSwagger();
-app.UseSwaggerUI();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors("DefaultCors");
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "BarberSync API" }));
+app.MapHealthChecks("/health");
+
 app.Run();
