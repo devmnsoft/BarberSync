@@ -16,7 +16,7 @@ public class InnovationController : ControllerBase
     }
 
     [HttpGet("professional-performance/{professionalId:guid}")]
-    public ActionResult<ProfessionalPerformanceDto> GetProfessionalPerformance(Guid professionalId)
+    public ActionResult<InnovationProfessionalPerformanceDto> GetProfessionalPerformance(Guid professionalId)
         => Ok(_orchestrator.GetProfessionalPerformance(professionalId));
 
     [HttpGet("upsell/{clientId:guid}")]

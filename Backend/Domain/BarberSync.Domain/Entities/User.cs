@@ -1,7 +1,7 @@
+using System;
 using BarberSync.Domain.Common;
 
 namespace BarberSync.Domain.Entities;
-
 public sealed class User : BaseEntity
 {
     public string Name { get; private set; }

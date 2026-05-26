@@ -4,7 +4,7 @@ namespace BarberSync.Application.Abstractions.Innovation;
 
 public interface IInnovationOrchestrator
 {
-    ProfessionalPerformanceDto GetProfessionalPerformance(Guid professionalId);
+    InnovationProfessionalPerformanceDto GetProfessionalPerformance(Guid professionalId);
     IEnumerable<UpsellRecommendationDto> GetUpsellRecommendations(Guid clientId);
     SmartScheduleSuggestionDto SuggestAppointmentSlot(Guid clientId, Guid serviceId);
     IEnumerable<SmartAlertDto> GetSmartAlerts();

@@ -1,0 +1,2 @@
+async function loadPublic(){for(const [id,url] of [['services','/api/services'],['pros','/api/professionals']]){const e=document.getElementById(id);if(!e)continue;try{const r=await fetch('http://localhost:8080'+url);const j=await r.json();const arr=j.data||j.items||[];e.innerHTML=arr.slice(0,5).map(x=>`<div class='col-md-4'><div class='card p-3'><h5>${x.name||x.nome||'Demo'}</h5></div></div>`).join('')}catch{e.innerHTML='<div class="alert alert-warning">Dados demo carregados.</div>';}}}
+loadPublic();
