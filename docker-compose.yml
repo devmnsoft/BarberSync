@@ -1,39 +1,35 @@
-version: '3.9'
 services:
   postgres:
     image: postgres:16
-    environment:
-      POSTGRES_DB: barbersync
-      POSTGRES_USER: barbersync
-      POSTGRES_PASSWORD: barbersync
-    ports:
-      - "5432:5432"
+    container_name: barbersync-postgres
+    env_file: .env
+    ports: ["5432:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
+      - ./ScriptsSQL/barber_full_database_postgresql.sql:/docker-entrypoint-initdb.d/01_barber_full_database_postgresql.sql
+  seq:
+    image: datalust/seq:latest
+    environment: { ACCEPT_EULA: "Y" }
+    ports: ["5341:80"]
   api:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile.Api
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-      - redis
-
-  admin:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile.Admin
-    ports:
-      - "8081:8081"
-    depends_on:
-      - api
-
+    build: { context: ./Backend/Presentation/BarberSync.Api, dockerfile: Dockerfile }
+    env_file: .env
+    ports: ["8080:8080"]
+    depends_on: [postgres]
+  admin-web:
+    build: { context: ./Web/BarberSync.AdminWeb, dockerfile: Dockerfile }
+    env_file: .env
+    ports: ["8081:8080"]
+    depends_on: [api]
+  public-web:
+    build: { context: ./Web/BarberSync.PublicWeb, dockerfile: Dockerfile }
+    env_file: .env
+    ports: ["8082:8080"]
+    depends_on: [api]
+  kiosk-web:
+    build: { context: ./Web/BarberSync.KioskWeb, dockerfile: Dockerfile }
+    env_file: .env
+    ports: ["8083:8080"]
+    depends_on: [api]
 volumes:
   postgres_data:

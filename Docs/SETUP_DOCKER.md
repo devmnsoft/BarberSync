@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# SETUP_DOCKER.md
 
 Consulte README.md para fluxo completo.
 

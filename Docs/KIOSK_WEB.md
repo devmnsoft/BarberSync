@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# KIOSK_WEB.md
 
 Consulte README.md para fluxo completo.
 

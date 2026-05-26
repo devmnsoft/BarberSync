@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# CONFIGURING_KIOSK.md
 
 Consulte README.md para fluxo completo.
 
