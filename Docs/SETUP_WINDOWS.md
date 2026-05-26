@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# SETUP_WINDOWS.md
 
 Consulte README.md para fluxo completo.
 

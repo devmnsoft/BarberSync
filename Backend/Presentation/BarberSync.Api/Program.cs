@@ -1,3 +1,4 @@
+using BarberSync.Api.Services.Configuration;
 using BarberSync.Api.Middleware;
 using BarberSync.Application.Abstractions.Saas;
 using BarberSync.Application.Services.Saas;
@@ -45,6 +46,7 @@ builder.Services.AddSingleton<ICopilotService, CopilotService>();
 builder.Services.AddSingleton<IHrProfessionalService, HrProfessionalService>();
 builder.Services.AddSingleton<IStrategicGrowthService, StrategicGrowthService>();
 builder.Services.AddSingleton<IAutonomousGrowthService, AutonomousGrowthService>();
+builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();

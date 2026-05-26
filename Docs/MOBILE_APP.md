@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# MOBILE_APP.md
 
 Consulte README.md para fluxo completo.
 

@@ -1,4 +1,4 @@
-# TROUBLESHOOTING.md
+# CONFIGURING_PUBLIC_SITE.md
 
 Consulte README.md para fluxo completo.
 
