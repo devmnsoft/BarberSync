@@ -5,12 +5,19 @@ services:
     env_file: .env
     ports: ["5432:5432"]
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
       - ./ScriptsSQL/barber_full_database_postgresql.sql:/docker-entrypoint-initdb.d/01_barber_full_database_postgresql.sql
   seq:
     image: datalust/seq:latest
-    environment: { ACCEPT_EULA: "Y" }
-    ports: ["5341:80"]
+    container_name: barbersync-seq
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
   api:
     build: { context: ., dockerfile: Backend/Presentation/BarberSync.Api/Dockerfile }
     env_file: .env
@@ -32,4 +39,5 @@ services:
     ports: ["8083:8080"]
     depends_on: [api]
 volumes:
-  postgres_data:
+  postgres-data:
+  seq-data:
