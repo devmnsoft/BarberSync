@@ -1,12 +1,9 @@
-# SETUP_DOCKER.md
+# SETUP DOCKER
 
-Consulte README.md para fluxo completo.
-
-## Comandos
-- docker compose up -d --build
-- dotnet run --project Backend/Presentation/BarberSync.Api
-- dotnet run --project Web/BarberSync.AdminWeb
-- dotnet run --project Web/BarberSync.PublicWeb
-- dotnet run --project Web/BarberSync.KioskWeb
-- psql -U postgres -d barber -f ScriptsSQL/barber_full_database_postgresql.sql
-- psql -U postgres -d barber -f ScriptsSQL/validate_barber_database.sql
+1. `cp .env.example .env`
+2. `docker compose up -d --build`
+3. `docker compose ps`
+4. Acesse:
+   - API: http://localhost:8080/swagger
+   - Admin: http://localhost:8081
+   - Totem: http://localhost:8083
