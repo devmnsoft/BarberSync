@@ -1,0 +1,2 @@
+window.BarberUI={toggleHelp(){const p=document.getElementById('helpPanel');if(p)p.style.display=p.style.display==='block'?'none':'block';},togglePassword(){const i=document.getElementById('password');if(i)i.type=i.type==='password'?'text':'password';}};
+document.getElementById('loginForm')?.addEventListener('submit',async e=>{e.preventDefault();try{await Api.post('/auth/login',{email:email.value,password:password.value});localStorage.setItem('bs_token','demo');location='/Dashboard';}catch{alert('Não foi possível autenticar.')}});

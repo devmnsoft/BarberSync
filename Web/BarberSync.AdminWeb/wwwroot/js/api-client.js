@@ -1,0 +1,1 @@
+window.Api={base:'http://localhost:8080/api',async get(u){const r=await fetch(`${this.base}${u}`);if(!r.ok)throw new Error();return r.json()},async post(u,b){const r=await fetch(`${this.base}${u}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error();return r.json()}};

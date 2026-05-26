@@ -1,2 +1,1 @@
-body { background: #f8f9fa; }
-.card { border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.sidebar{width:250px;min-height:100vh;background:#111827}.sidebar .nav-link{color:#fff}.topbar{background:#fff;border-bottom:1px solid #e5e7eb}.card{border:0;box-shadow:0 8px 24px rgba(0,0,0,.08)}.help-panel{position:fixed;right:1rem;bottom:1rem;background:#fff;padding:1rem;border-radius:.75rem;display:none;max-width:320px}.login-bg{min-height:100vh;background:linear-gradient(120deg,#111827,#2563EB)}.login-card{width:420px}
