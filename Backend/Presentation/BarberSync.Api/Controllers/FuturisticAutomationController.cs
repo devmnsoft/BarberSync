@@ -23,9 +23,9 @@ public class FuturisticAutomationController : ControllerBase
 
         var professionals = new[]
         {
-            new ProfessionalPerformanceDto(Guid.NewGuid(), "Paulo Mendes", 0.94m, 0.89m, 0.96m, 0.31m),
-            new ProfessionalPerformanceDto(Guid.NewGuid(), "Renata Alves", 0.97m, 0.92m, 0.95m, 0.38m),
-            new ProfessionalPerformanceDto(Guid.NewGuid(), "Miguel Rocha", 0.91m, 0.85m, 0.93m, 0.28m)
+            new FuturisticProfessionalPerformanceDto(Guid.NewGuid(), "Paulo Mendes", 0.94m, 0.89m, 0.96m, 0.31m),
+            new FuturisticProfessionalPerformanceDto(Guid.NewGuid(), "Renata Alves", 0.97m, 0.92m, 0.95m, 0.38m),
+            new FuturisticProfessionalPerformanceDto(Guid.NewGuid(), "Miguel Rocha", 0.91m, 0.85m, 0.93m, 0.28m)
         };
 
         var notifications = new[]

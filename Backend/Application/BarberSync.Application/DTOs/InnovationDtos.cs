@@ -1,6 +1,6 @@
 namespace BarberSync.Application.DTOs;
 
-public class ProfessionalPerformanceDto
+public class InnovationProfessionalPerformanceDto
 {
     public Guid ProfessionalId { get; set; }
     public decimal AverageServiceMinutes { get; set; }
