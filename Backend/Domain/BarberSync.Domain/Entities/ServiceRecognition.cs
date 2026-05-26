@@ -1,5 +1,7 @@
-namespace BarberSync.Domain.Entities;
+using System;
+using BarberSync.Domain.Common;
 
+namespace BarberSync.Domain.Entities;
 public class ServiceRecognition : BaseEntity
 {
     public string Name { get; set; } = string.Empty;
