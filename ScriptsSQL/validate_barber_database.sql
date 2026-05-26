@@ -8,21 +8,28 @@ SELECT COUNT(*) AS total_views FROM information_schema.views WHERE table_schema 
 -- Tabelas principais
 SELECT to_regclass('barber.users') AS users_table;
 SELECT to_regclass('barber.clients') AS clients_table;
+SELECT to_regclass('barber.professionals') AS professionals_table;
 SELECT to_regclass('barber.services') AS services_table;
 SELECT to_regclass('barber.products') AS products_table;
 SELECT to_regclass('barber.appointments') AS appointments_table;
-SELECT to_regclass('barber.audit_logs') AS audit_logs_table;
-SELECT to_regclass('barber.immutable_audit_logs') AS immutable_audit_logs_table;
+SELECT to_regclass('barber.cash_register_sessions') AS cash_register_sessions_table;
 
--- Seeds e usuários demo
-SELECT COUNT(*) AS users_count FROM barber.users;
-SELECT email FROM barber.users WHERE email IN ('admin@barbersync.com', 'cliente@demo.com');
+-- Usuários demo
+SELECT email FROM barber.users
+WHERE email IN (
+ 'admin@barbersync.com','gerente@barbeariaelite.com','recepcao@barbeariaelite.com',
+ 'financeiro@barbeariaelite.com','profissional@barbeariaelite.com','cliente@demo.com','totem@barbeariaelite.com'
+)
+ORDER BY email;
 
--- Domínio de operação
-SELECT COUNT(*) AS services_count FROM barber.services;
-SELECT COUNT(*) AS products_count FROM barber.products;
-SELECT COUNT(*) AS appointments_count FROM barber.appointments;
+-- Seeds comerciais mínimos para demo
+SELECT COUNT(*) AS demo_clients FROM barber.clients WHERE name ILIKE 'Cliente Demo %';
+SELECT COUNT(*) AS demo_services FROM barber.services;
+SELECT COUNT(*) AS demo_products FROM barber.products;
+SELECT COUNT(*) AS demo_appointments FROM barber.appointments;
 
--- Dashboard
+-- Views principais
 SELECT to_regclass('barber.vw_admin_dashboard') AS admin_dashboard_view;
+SELECT to_regclass('barber.vw_financial_dashboard') AS financial_dashboard_view;
+SELECT to_regclass('barber.vw_stock_critical') AS stock_critical_view;
 SELECT COUNT(*) AS dashboard_rows FROM barber.vw_admin_dashboard;
