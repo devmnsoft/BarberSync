@@ -12,22 +12,22 @@ services:
     environment: { ACCEPT_EULA: "Y" }
     ports: ["5341:80"]
   api:
-    build: { context: ./Backend/Presentation/BarberSync.Api, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: Backend/Presentation/BarberSync.Api/Dockerfile }
     env_file: .env
     ports: ["8080:8080"]
     depends_on: [postgres]
   admin-web:
-    build: { context: ./Web/BarberSync.AdminWeb, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: Web/BarberSync.AdminWeb/Dockerfile }
     env_file: .env
     ports: ["8081:8080"]
     depends_on: [api]
   public-web:
-    build: { context: ./Web/BarberSync.PublicWeb, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: Web/BarberSync.PublicWeb/Dockerfile }
     env_file: .env
     ports: ["8082:8080"]
     depends_on: [api]
   kiosk-web:
-    build: { context: ./Web/BarberSync.KioskWeb, dockerfile: Dockerfile }
+    build: { context: ., dockerfile: Web/BarberSync.KioskWeb/Dockerfile }
     env_file: .env
     ports: ["8083:8080"]
     depends_on: [api]
