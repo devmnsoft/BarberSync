@@ -6,7 +6,6 @@ namespace BarberSync.Api.Controllers.Mobile;
 
 [ApiController]
 [Route("api/mobile")]
-[Tags("Mobile")]
 public class MobileAppController(ILogger<MobileAppController> logger) : ControllerBase
 {
     private static readonly List<MobilePlantaoDto> Plantoes =
