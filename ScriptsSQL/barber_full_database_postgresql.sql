@@ -5808,22 +5808,71 @@ CREATE TRIGGER trg_audit_payments AFTER INSERT OR UPDATE OR DELETE ON barber.pay
 CREATE TRIGGER trg_stock_update AFTER INSERT OR UPDATE ON barber.stock_movements FOR EACH ROW EXECUTE FUNCTION barber.update_stock_balance();
 CREATE TRIGGER trg_wallet_update AFTER INSERT OR UPDATE ON barber.wallet_transactions FOR EACH ROW EXECUTE FUNCTION barber.update_wallet_balance();
 
-INSERT INTO barber.tenants(name, code) VALUES ('BarberSync Demo Tenant','DEMO') ON CONFLICT DO NOTHING;
-INSERT INTO barber.users(name,email,code,payload) VALUES
-('Admin','admin@barbersync.com','Admin@123','{role:admin}'::jsonb),
-('Gerente','gerente@barbeariaelite.com','Admin@123','{}'::jsonb),
-('Recepcao','recepcao@barbeariaelite.com','Admin@123','{}'::jsonb),
-('Financeiro','financeiro@barbeariaelite.com','Admin@123','{}'::jsonb),
-('Profissional','profissional@barbeariaelite.com','Admin@123','{}'::jsonb),
-('Cliente','cliente@demo.com','Admin@123','{}'::jsonb),
-('Totem','totem@barbeariaelite.com','Admin@123','{}'::jsonb),
-('Suporte','suporte@barbersync.com','Admin@123','{}'::jsonb),
-('Comercial','comercial@barbersync.com','Admin@123','{}'::jsonb),
-('Developer','developer@barbersync.com','Admin@123','{}'::jsonb) ON CONFLICT DO NOTHING;
+-- ============================================================
+-- SEEDS COMERCIAIS MVP DEMO (tenant/barber, schema barber)
+-- ============================================================
+INSERT INTO barber.tenants(name, code, status, payload)
+VALUES
+('Barbearia Elite Demo','ELITE-DEMO','ACTIVE','{"segment":"barbershop"}'::jsonb),
+('Salão Bella Forma Demo','BELLA-DEMO','ACTIVE','{"segment":"salon"}'::jsonb),
+('Clínica Estética Prime Demo','PRIME-DEMO','ACTIVE','{"segment":"aesthetic"}'::jsonb)
+ON CONFLICT DO NOTHING;
 
-INSERT INTO barber.services(name,amount) VALUES ('Corte Tradicional',50.00),('Barba',35.00) ON CONFLICT DO NOTHING;
-INSERT INTO barber.products(name,amount) VALUES ('Pomada Modeladora',39.90),('Shampoo Premium',49.90) ON CONFLICT DO NOTHING;
-INSERT INTO barber.appointments(name,amount) VALUES ('Agendamento Demo',50.00) ON CONFLICT DO NOTHING;
+INSERT INTO barber.branches(tenant_id, name, code, status)
+SELECT t.id, b.branch_name, b.branch_code, 'ACTIVE'
+FROM barber.tenants t
+CROSS JOIN (VALUES ('Matriz', 'MATRIZ'), ('Unidade Shopping', 'SHOPPING')) AS b(branch_name, branch_code)
+WHERE t.code IN ('ELITE-DEMO','BELLA-DEMO','PRIME-DEMO')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO barber.users(tenant_id, branch_id, name, email, code, status, payload)
+SELECT
+    t.id,
+    b.id,
+    u.user_name,
+    u.user_email::citext,
+    crypt('Admin@123', gen_salt('bf')),
+    'ACTIVE',
+    jsonb_build_object('role', u.user_role, 'password_hint', 'Admin@123 (demo)')
+FROM barber.tenants t
+JOIN barber.branches b ON b.tenant_id = t.id AND b.code = 'MATRIZ'
+JOIN (VALUES
+    ('Admin', 'admin@barbersync.com', 'ADMIN'),
+    ('Gerente', 'gerente@barbeariaelite.com', 'MANAGER'),
+    ('Recepção', 'recepcao@barbeariaelite.com', 'RECEPTION'),
+    ('Financeiro', 'financeiro@barbeariaelite.com', 'FINANCIAL'),
+    ('Profissional', 'profissional@barbeariaelite.com', 'PROFESSIONAL'),
+    ('Cliente', 'cliente@demo.com', 'CLIENT'),
+    ('Totem', 'totem@barbeariaelite.com', 'TOTEM')
+) AS u(user_name, user_email, user_role) ON true
+WHERE t.code = 'ELITE-DEMO'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO barber.clients(tenant_id, branch_id, name, email, code, status, payload)
+SELECT t.id, b.id,
+       'Cliente Demo ' || gs,
+       ('cliente' || gs || '@demo.com')::citext,
+       'DOC-' || lpad(gs::text, 3, '0'),
+       'ACTIVE',
+       jsonb_build_object('phone', '+55 11 90000-' || lpad(gs::text,4,'0'), 'cashback_balance', (gs * 3.50)::numeric(18,2))
+FROM barber.tenants t
+JOIN barber.branches b ON b.tenant_id = t.id AND b.code = 'MATRIZ'
+CROSS JOIN generate_series(1,10) AS gs
+WHERE t.code = 'ELITE-DEMO'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO barber.services(tenant_id, branch_id, name, amount, status, payload)
+SELECT t.id, b.id, s.name, s.price, 'ACTIVE', jsonb_build_object('duration_minutes', s.duration, 'category', s.category)
+FROM barber.tenants t
+JOIN barber.branches b ON b.tenant_id = t.id AND b.code = 'MATRIZ'
+JOIN (VALUES
+('Corte Tradicional',50.00,45,'Corte'),('Barba Completa',35.00,30,'Barba'),('Combo Corte + Barba',80.00,70,'Combo'),
+('Pigmentação',45.00,35,'Coloração'),('Hidratação Capilar',60.00,40,'Tratamento'),('Sobrancelha',25.00,20,'Estética'),
+('Pezinho',20.00,15,'Acabamento'),('Lavagem Premium',18.00,15,'Higiene'),('Corte Infantil',40.00,40,'Corte'),
+('Alisamento',120.00,90,'Tratamento'),('Escova',55.00,45,'Finalização'),('Spa da Barba',75.00,50,'Premium')
+) s(name, price, duration, category) ON true
+WHERE t.code = 'ELITE-DEMO'
+ON CONFLICT DO NOTHING;
 
 CREATE OR REPLACE VIEW barber.vw_admin_dashboard AS SELECT t.id AS tenant_id, t.name AS tenant_name, count(u.id) AS users_count FROM barber.tenants t LEFT JOIN barber.users u ON u.tenant_id=t.id GROUP BY t.id,t.name;
 CREATE OR REPLACE VIEW barber.vw_owner_dashboard AS SELECT t.id AS tenant_id, t.name AS tenant_name, count(u.id) AS users_count FROM barber.tenants t LEFT JOIN barber.users u ON u.tenant_id=t.id GROUP BY t.id,t.name;
