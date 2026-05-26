@@ -5985,3 +5985,48 @@ CREATE TABLE IF NOT EXISTS barber.client_next_best_actions (
     status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
     created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
 );
+
+-- Commercial CRM (phase 1)
+create table if not exists barber.crm_leads (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    branch_id uuid null,
+    full_name varchar(180) not null,
+    phone varchar(30) null,
+    email varchar(180) null,
+    source varchar(40) not null,
+    status varchar(30) not null default 'ACTIVE',
+    temperature varchar(20) not null default 'WARM',
+    assigned_to_user_id uuid null,
+    is_converted boolean not null default false,
+    converted_client_id uuid null,
+    loss_reason varchar(300) null,
+    last_contact_at timestamptz null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz null,
+    created_by uuid null,
+    updated_by uuid null,
+    is_deleted boolean not null default false
+);
+
+create table if not exists barber.crm_lead_status_history (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    branch_id uuid null,
+    lead_id uuid not null,
+    status varchar(30) not null,
+    reason varchar(300) null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz null,
+    created_by uuid null,
+    updated_by uuid null,
+    is_deleted boolean not null default false
+);
+
+create view barber.vw_lead_conversion_summary as
+select tenant_id,
+       count(*) filter (where not is_deleted) as total_leads,
+       count(*) filter (where is_converted and not is_deleted) as converted_leads,
+       round((count(*) filter (where is_converted and not is_deleted)::numeric / nullif(count(*) filter (where not is_deleted), 0)) * 100, 2) as conversion_rate_percent
+from barber.crm_leads
+group by tenant_id;

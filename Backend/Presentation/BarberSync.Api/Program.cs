@@ -38,6 +38,7 @@ builder.Services.AddScoped<ISaasService, SaasService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddSingleton<CommercialPlatformService>();
+builder.Services.AddSingleton<BarberSync.Application.Services.Commercial.CrmLeadService>();
 builder.Services.AddSingleton<StrategicManagementService>();
 builder.Services.AddSingleton<IAiProvider, MockAiProvider>();
 builder.Services.AddSingleton<ICopilotService, CopilotService>();
