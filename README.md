@@ -97,3 +97,11 @@ Validação pós-criação:
 ```bash
 psql -U postgres -d barbersync -f ScriptsSQL/validate_barbersync_database.sql
 ```
+
+
+## Evolução de regras 2026
+- Agenda inteligente: recorrência, reagendamento, no-show e políticas de cancelamento.
+- Comanda com validações de estoque, cupom, cashback e fechamento financeiro.
+- Pacotes e assinaturas com uso rastreável e validade.
+- Cliente 360 com timeline, notas, score e next best action.
+- Base SQL `barber` ampliada e script de validação atualizado.

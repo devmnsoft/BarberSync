@@ -5894,3 +5894,94 @@ CREATE OR REPLACE VIEW barber.vw_stock_critical AS SELECT t.id AS tenant_id, t.n
 CREATE OR REPLACE VIEW barber.vw_retention_risk_clients AS SELECT t.id AS tenant_id, t.name AS tenant_name, count(u.id) AS users_count FROM barber.tenants t LEFT JOIN barber.users u ON u.tenant_id=t.id GROUP BY t.id,t.name;
 CREATE OR REPLACE VIEW barber.vw_growth_opportunities AS SELECT t.id AS tenant_id, t.name AS tenant_name, count(u.id) AS users_count FROM barber.tenants t LEFT JOIN barber.users u ON u.tenant_id=t.id GROUP BY t.id,t.name;
 CREATE OR REPLACE VIEW barber.vw_immutable_audit_integrity AS SELECT t.id AS tenant_id, t.name AS tenant_name, count(u.id) AS users_count FROM barber.tenants t LEFT JOIN barber.users u ON u.tenant_id=t.id GROUP BY t.id,t.name;
+
+-- BARBERSYNC_EVOLUTION_2026_CORE_RULES
+CREATE TABLE IF NOT EXISTS barber.service_packages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL,
+    name varchar(150) NOT NULL, validity_days int NOT NULL DEFAULT 30, allow_partial_usage boolean NOT NULL DEFAULT true,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.service_package_items (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, service_package_id uuid NOT NULL,
+    service_id uuid NOT NULL, quantity int NOT NULL DEFAULT 1,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.customer_service_packages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, customer_id uuid NOT NULL,
+    service_package_id uuid NOT NULL, total_uses int NOT NULL, remaining_uses int NOT NULL, expires_at timestamptz NOT NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.customer_service_package_usage (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, customer_service_package_id uuid NOT NULL,
+    appointment_id uuid NULL, service_order_id uuid NULL, used_quantity int NOT NULL DEFAULT 1, used_at timestamptz NOT NULL DEFAULT now(),
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.appointment_recurrences (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, appointment_id uuid NOT NULL,
+    recurrence_pattern varchar(50) NOT NULL, next_occurrence_at timestamptz NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.appointment_reschedules (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, appointment_id uuid NOT NULL,
+    old_start_at timestamptz NOT NULL, new_start_at timestamptz NOT NULL, reason text NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.cancellation_policies (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL,
+    minimum_notice_minutes int NOT NULL DEFAULT 120, cancellation_fee_pct numeric(5,2) NOT NULL DEFAULT 0, max_no_show_before_block int NOT NULL DEFAULT 3,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.cancellation_fees (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, appointment_id uuid NOT NULL,
+    amount numeric(18,2) NOT NULL DEFAULT 0, waived boolean NOT NULL DEFAULT false,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_no_show_history (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, appointment_id uuid NULL,
+    occurred_at timestamptz NOT NULL DEFAULT now(), notes text NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_booking_blocks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, blocked_until timestamptz NULL, reason text NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.campaign_coupon_usage (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, campaign_coupon_id uuid NOT NULL, client_id uuid NOT NULL, service_order_id uuid NULL, used_at timestamptz NOT NULL DEFAULT now(),
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.stock_transfers (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, product_id uuid NOT NULL, source_branch_id uuid NOT NULL, destination_branch_id uuid NOT NULL, quantity numeric(18,3) NOT NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_timeline (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, event_type varchar(60) NOT NULL, event_payload jsonb NOT NULL DEFAULT '{}'::jsonb, event_at timestamptz NOT NULL DEFAULT now(),
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_internal_notes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, note text NOT NULL,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_scores (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, loyalty_score numeric(10,2) NOT NULL DEFAULT 0, churn_risk_score numeric(10,2) NOT NULL DEFAULT 0,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS barber.client_next_best_actions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, branch_id uuid NULL, client_id uuid NOT NULL, action_title varchar(200) NOT NULL, confidence_score numeric(5,2) NOT NULL DEFAULT 0,
+    status varchar(30) NOT NULL DEFAULT 'ACTIVE', is_deleted boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
