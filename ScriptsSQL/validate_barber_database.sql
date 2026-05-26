@@ -52,3 +52,8 @@ SELECT to_regclass('barber.client_timeline') AS client_timeline_table;
 SELECT to_regclass('barber.client_internal_notes') AS client_internal_notes_table;
 SELECT to_regclass('barber.client_scores') AS client_scores_table;
 SELECT to_regclass('barber.client_next_best_actions') AS client_next_best_actions_table;
+
+-- Commercial CRM (phase 1)
+select 'crm_leads' as object, to_regclass('barber.crm_leads') is not null as exists;
+select 'crm_lead_status_history' as object, to_regclass('barber.crm_lead_status_history') is not null as exists;
+select 'vw_lead_conversion_summary' as object, to_regclass('barber.vw_lead_conversion_summary') is not null as exists;
