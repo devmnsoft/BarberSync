@@ -1,4 +1,5 @@
 using BarberSync.Api.Middleware;
+using BarberSync.Api.Swagger;
 using BarberSync.Application;
 using BarberSync.Infrastructure;
 using Serilog;
@@ -19,6 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+    options.OperationFilter<FileUploadOperationFilter>();
 });
 
 builder.Services.AddCors(options =>
