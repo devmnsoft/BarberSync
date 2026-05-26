@@ -4,5 +4,9 @@ namespace BarberSync.AdminWeb.Controllers;
 
 public class HelpController : Controller
 {
-    public IActionResult Index() => View();
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View();
+    }
 }
