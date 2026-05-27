@@ -1,0 +1,11 @@
+@{
+    var crumbs = ViewData["Breadcrumbs"] as List<string> ?? new List<string> { "Dashboard" };
+}
+<nav aria-label="breadcrumb" class="app-breadcrumb mb-3">
+    <ol class="breadcrumb mb-0">
+        @for (var i = 0; i < crumbs.Count; i++)
+        {
+            <li class="breadcrumb-item @(i == crumbs.Count - 1 ? "active" : "")">@crumbs[i]</li>
+        }
+    </ol>
+</nav>

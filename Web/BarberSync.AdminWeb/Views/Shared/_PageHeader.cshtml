@@ -1,0 +1,8 @@
+@model (string Title, string Subtitle)
+<div class="page-header d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-1">@Model.Title</h1>
+        <p class="text-muted mb-0">@Model.Subtitle</p>
+    </div>
+    <div><button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir</button></div>
+</div>

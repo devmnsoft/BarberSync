@@ -1,0 +1,1 @@
+.loading-overlay{position:fixed;inset:0;background:rgba(17,24,39,.65);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;z-index:1200}.state-card{border:1px dashed #d1d5db;border-radius:1rem;background:#fff}.state-error{border-color:#fecaca;color:#b91c1c}.page-header{background:#fff;padding:1rem;border:1px solid #e5e7eb;border-radius:.75rem}
