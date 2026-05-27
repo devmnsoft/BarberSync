@@ -16,10 +16,7 @@
     <main class='container py-4'>@RenderBody()</main>
 
     <script>
-        window.BarberSyncConfig = {
-            apiBaseUrl: '@(ViewBag.ApiBaseUrl ?? "http://localhost:8080")',
-            deviceCode: 'KIOSK-DEMO-001'
-        };
+        window.BarberSyncKiosk = { deviceCode: 'KIOSK-DEMO-001' };
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
