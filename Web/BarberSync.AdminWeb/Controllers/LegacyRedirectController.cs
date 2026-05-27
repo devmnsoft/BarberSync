@@ -4,19 +4,19 @@ namespace BarberSync.AdminWeb.Controllers;
 
 public class LegacyRedirectController : Controller
 {
-    [HttpGet("/")]
-    public IActionResult Root() => RedirectToAction("Index", "Admin");
-
-    [HttpGet("/Dashboard")] public IActionResult Dashboard() => Redirect("/Admin/Dashboard");
-    [HttpGet("/Clients")] public IActionResult Clients() => Redirect("/Admin/Clients");
-    [HttpGet("/Professionals")] public IActionResult Professionals() => Redirect("/Admin/Professionals");
-    [HttpGet("/Services")] public IActionResult Services() => Redirect("/Admin/Services");
-    [HttpGet("/Appointments")] public IActionResult Appointments() => Redirect("/Admin/Appointments");
-    [HttpGet("/ServiceOrders")] public IActionResult ServiceOrders() => Redirect("/Admin/ServiceOrders");
-    [HttpGet("/Stock")] public IActionResult Stock() => Redirect("/Admin/Stock");
-    [HttpGet("/Loyalty")] public IActionResult Loyalty() => Redirect("/Admin/Loyalty");
-    [HttpGet("/Campaigns")] public IActionResult Campaigns() => Redirect("/Admin/Campaigns");
-    [HttpGet("/Coupons")] public IActionResult Coupons() => Redirect("/Admin/Coupons");
-    [HttpGet("/Reviews")] public IActionResult Reviews() => Redirect("/Admin/Reviews");
-    [HttpGet("/Copilot")] public IActionResult Copilot() => Redirect("/Admin/Copilot");
+    [HttpGet("Dashboard")] public IActionResult Dashboard() => RedirectToActionPermanent("Dashboard", "Admin");
+    [HttpGet("Clients")] public IActionResult Clients() => RedirectToActionPermanent("Clients", "Admin");
+    [HttpGet("Professionals")] public IActionResult Professionals() => RedirectToActionPermanent("Professionals", "Admin");
+    [HttpGet("Services")] public IActionResult Services() => RedirectToActionPermanent("Services", "Admin");
+    [HttpGet("Appointments")] public IActionResult Appointments() => RedirectToActionPermanent("Appointments", "Admin");
+    [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => RedirectToActionPermanent("ServiceOrders", "Admin");
+    [HttpGet("Stock")] public IActionResult Stock() => RedirectToActionPermanent("Stock", "Admin");
+    [HttpGet("Products")] public IActionResult Products() => RedirectToActionPermanent("Products", "Admin");
+    [HttpGet("Loyalty")] public IActionResult Loyalty() => RedirectToActionPermanent("Loyalty", "Admin");
+    [HttpGet("Campaigns")] public IActionResult Campaigns() => RedirectToActionPermanent("Campaigns", "Admin");
+    [HttpGet("Coupons")] public IActionResult Coupons() => RedirectToActionPermanent("Coupons", "Admin");
+    [HttpGet("Reviews")] public IActionResult Reviews() => RedirectToActionPermanent("Reviews", "Admin");
+    [HttpGet("Copilot")] public IActionResult Copilot() => RedirectToActionPermanent("Copilot", "Admin");
+    [HttpGet("Reports")] public IActionResult Reports() => RedirectToActionPermanent("Reports", "Admin");
+    [HttpGet("Settings")] public IActionResult Settings() => RedirectToActionPermanent("Settings", "Admin");
 }
