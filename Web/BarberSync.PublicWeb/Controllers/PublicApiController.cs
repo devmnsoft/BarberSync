@@ -13,8 +13,12 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     [HttpGet("professionals")]
     public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", new[] { new { name = "Rafael Barber" } });
 
+
+    [HttpPost("leads")]
+    public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/leads", payload, new { success = true, message = "Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO" } });
+
     [HttpPost("appointments")]
-    public Task<IActionResult> Appointments([FromBody] JsonElement payload) => ProxyPost("/api/appointments", payload, new { success = true, message = "Agendamento criado em modo demonstração.", data = new { protocol = "PUB-DEMO" } });
+    public Task<IActionResult> Appointments([FromBody] JsonElement payload) => ProxyPost("/api/appointments", payload, new { success = true, message = "Solicitação recebida em modo demonstração.", data = new { protocol = "PUB-DEMO" } });
 
     private async Task<IActionResult> ProxyGet(string path, object fallback)
     {

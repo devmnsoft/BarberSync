@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     availableProfessionals: 6
                 };
 
-                const { data } = await window.adminApiClient.get("/api/dashboard/summary", demoSummary);
+                const { data } = await window.adminApiClient.get("/AdminApi/dashboard", demoSummary);
                 kpis = [
                     { label: "Receita hoje", value: `R$ ${Number(data?.revenueToday ?? 4850).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: "💰", variation: "+12%" },
                     { label: "Receita mês", value: `R$ ${Number(data?.revenueMonth ?? 92340).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: "📈", variation: "+18%" },
