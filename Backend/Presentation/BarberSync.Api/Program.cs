@@ -21,6 +21,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
     options.OperationFilter<FileUploadOperationFilter>();
+    options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 });
 
 builder.Services.AddCors(options =>
