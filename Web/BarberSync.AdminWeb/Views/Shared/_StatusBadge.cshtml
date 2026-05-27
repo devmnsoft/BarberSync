@@ -1,0 +1,3 @@
+@model string
+@{ var css = (Model ?? "").ToLower() switch { "active" => "bg-success", "inactive" => "bg-secondary", "pending" => "bg-warning text-dark", "error" => "bg-danger", _ => "bg-primary" }; }
+<span class='badge @css'>@Model</span>

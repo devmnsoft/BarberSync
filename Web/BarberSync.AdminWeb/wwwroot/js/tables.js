@@ -1,0 +1,1 @@
+window.BarberSyncTables={filter:(inputId,tableId)=>{const q=(document.getElementById(inputId)?.value||"").toLowerCase();document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr=>tr.style.display=tr.innerText.toLowerCase().includes(q)?"":"none");}};

@@ -1,0 +1,6 @@
+@model dynamic
+<div class='kpi-card'>
+  <div class='kpi-label'>@Model?.Label</div>
+  <div class='kpi-value'>@Model?.Value</div>
+  @if(Model?.Hint!=null){<small class='text-muted'>@Model.Hint</small>}
+</div>
