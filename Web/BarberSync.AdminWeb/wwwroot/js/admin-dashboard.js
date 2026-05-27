@@ -1,0 +1,1 @@
+// BarberSync admin script
