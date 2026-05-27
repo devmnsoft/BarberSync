@@ -1,1 +1,2 @@
-/* BarberSync admin stylesheet */
+:root{--bs-dark:#111827;--bs-dark-2:#0B1220;--bs-gold:#D4A72C;--bs-blue:#2563EB;--bs-purple:#7C3AED;--bs-green:#16A34A;--bs-red:#DC2626;--bs-orange:#F97316;--bs-bg:#F3F4F6;--bs-card:#FFFFFF;--bs-border:#E5E7EB;--bs-text:#111827;--bs-muted:#6B7280;--bs-radius:18px;--bs-shadow:0 18px 40px rgba(15,23,42,.08)}
+body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:var(--bs-bg);color:var(--bs-text)}

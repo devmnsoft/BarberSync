@@ -1,28 +1,12 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Dashboard"; }
-<section class="admin-page-header d-flex justify-content-between align-items-start">
-  <div>
-    <h1>Dashboard</h1>
-    <p>Visão geral da Barbearia Elite Demo</p>
-  </div>
-  <div class="d-flex gap-2">
-    <button class="btn btn-outline-light" data-admin-refresh>Atualizar</button>
-    <a class="btn btn-warning" href="/Admin/Appointments">Novo Agendamento</a>
-    <a class="btn btn-primary" href="/Admin/ServiceOrders">Abrir Comanda</a>
-  </div>
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="page-header"><div><div class="page-title">Dashboard Executivo</div><div class="page-subtitle">Visão em tempo real da Barbearia Elite Demo.</div></div><div><button class="btn btn-secondary">Atualizar</button> <button class="btn btn-primary">Novo Agendamento</button></div></div>
+<section class="kpi-grid">
+@foreach (var k in new[] {"Receita hoje|R$ 4.850,00|💵","Receita mês|R$ 92.340,00|📆","Agendamentos hoje|26|📅","Clientes ativos|412|👥","Atendimentos em andamento|4|🪑","Comandas abertas|7|🧾","Ticket médio|R$ 126,00|🎟️","Estoque crítico|8|📦","Avaliação média|4.8|⭐","Totem online|2|🖥️","Campanhas ativas|5|🎯","Profissionais disponíveis|6|💈"}) {
+ var p=k.Split('|'); <article class="kpi-card"><div class="kpi-icon">@p[2]</div><div class="kpi-value">@p[1]</div><div class="kpi-label">@p[0]</div></article>
+}
 </section>
-<div class="alert alert-warning d-none" id="adminFallbackWarning">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div id="dashboardKpis" class="row g-3"></div>
-<div class="row g-3 mt-1">
-  <div class="col-lg-8"><div class="card p-3"><h5>Receita últimos 7 dias</h5><div id="chartRevenue" class="simple-chart"></div></div></div>
-  <div class="col-lg-4"><div class="card p-3"><h5>Agendamentos por status</h5><div id="chartStatus" class="simple-list"></div></div></div>
-  <div class="col-lg-4"><div class="card p-3"><h5>Serviços mais vendidos</h5><div id="topServices" class="simple-list"></div></div></div>
-  <div class="col-lg-4"><div class="card p-3"><h5>Pagamentos por forma</h5><div id="paymentMix" class="simple-list"></div></div></div>
-  <div class="col-lg-4"><div class="card p-3"><h5>Ocupação por profissional</h5><div id="proOccupation" class="simple-list"></div></div></div>
-</div>
-<div class="row g-3 mt-1">
-  <div class="col-lg-6"><div class="card p-3"><h5>Próximos agendamentos</h5><div id="nextAppointments"></div></div></div>
-  <div class="col-lg-6"><div class="card p-3"><h5>Sugestões do Copilot</h5><div id="copilotSuggestions"></div></div></div>
-</div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-dashboard.js"></script>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:16px"><section class="panel"><h3>Receita últimos 7 dias</h3><div class="loading-skeleton">▁▃▅▆▇▆▅</div></section><section class="panel"><h3>Alertas</h3><ul><li>8 itens em estoque crítico.</li><li>2 avaliações aguardando resposta.</li></ul></section></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px"><section class="panel"><h3>Próximos agendamentos</h3><table class="table"><tr><td>10:00</td><td>Corte + Barba</td><td>Rafael</td></tr><tr><td>10:40</td><td>Barba Tradicional</td><td>Lucas</td></tr></table></section><section class="panel"><h3>Sugestões do Copilot</h3><ul><li>Ativar campanha de retorno para clientes inativos há 30 dias.</li><li>Criar combo Corte + Hidratação com desconto progressivo.</li></ul></section></div>
