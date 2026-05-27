@@ -21,8 +21,8 @@ public class StrategicManagementController(StrategicManagementService service) :
     [HttpGet("/api/crm/inactive-clients")] public ActionResult<IReadOnlyList<CrmClientScoreDto>> InactiveClients([FromQuery] Guid tenantId, [FromQuery] int days = 30) => Ok(service.InactiveClients(tenantId, days));
     [HttpGet("/api/crm/vip-clients")] public ActionResult<IReadOnlyList<CrmClientScoreDto>> VipClients([FromQuery] Guid tenantId) => Ok(service.VipClients(tenantId));
 
-    [HttpGet("/api/campaigns")] public ActionResult<IReadOnlyList<CampaignDto>> Campaigns([FromQuery] Guid tenantId) => Ok(service.GetCampaigns(tenantId));
-    [HttpPost("/api/campaigns")] public ActionResult<CampaignDto> CreateCampaign([FromBody] CampaignDto dto) => Ok(service.CreateCampaign(dto));
+    [HttpGet("/api/strategic-management/campaigns")] public ActionResult<IReadOnlyList<CampaignDto>> Campaigns([FromQuery] Guid tenantId) => Ok(service.GetCampaigns(tenantId));
+    [HttpPost("/api/strategic-management/campaigns")] public ActionResult<CampaignDto> CreateCampaign([FromBody] CampaignDto dto) => Ok(service.CreateCampaign(dto));
 
     [HttpGet("/api/insights")] public ActionResult<IReadOnlyList<BusinessInsightDto>> Insights([FromQuery] Guid tenantId) => Ok(service.GetInsights(tenantId));
     [HttpPost("/api/financial-planning")] public ActionResult<FinancialPlanDto> UpsertFinancial([FromBody] FinancialPlanDto dto) => Ok(service.UpsertFinancialPlan(dto));
