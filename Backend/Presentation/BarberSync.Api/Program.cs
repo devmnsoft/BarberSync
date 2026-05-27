@@ -1,5 +1,6 @@
 using BarberSync.Api.Middleware;
 using BarberSync.Api.Swagger;
+using BarberSync.Api.Services.Configuration;
 using BarberSync.Application;
 using BarberSync.Infrastructure;
 using Serilog;
@@ -40,6 +41,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 builder.Services.AddHealthChecks();
 
