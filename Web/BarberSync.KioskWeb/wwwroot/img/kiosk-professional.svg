@@ -1,0 +1,12 @@
+<svg width="540" height="360" viewBox="0 0 540 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="540" height="360" rx="32" fill="#0B1220"/>
+  <rect x="36" y="34" width="468" height="292" rx="26" fill="#111827" stroke="#1F2937"/>
+  <circle cx="160" cy="146" r="50" fill="#FFF7D6"/>
+  <circle cx="160" cy="146" r="28" fill="#D4A72C" opacity=".3"/>
+  <rect x="236" y="98" width="210" height="18" rx="9" fill="white"/>
+  <rect x="236" y="126" width="162" height="14" rx="7" fill="#9CA3AF"/>
+  <rect x="236" y="154" width="122" height="14" rx="7" fill="#9CA3AF"/>
+  <rect x="236" y="188" width="152" height="34" rx="17" fill="#D4A72C"/>
+  <text x="312" y="210" text-anchor="middle" fill="#0B1220" font-family="Inter, Arial" font-size="14" font-weight="800">Selecionar</text>
+  <text x="270" y="286" text-anchor="middle" fill="#E5E7EB" font-family="Inter, Arial" font-size="16" font-weight="700">Escolha seu profissional</text>
+</svg>
