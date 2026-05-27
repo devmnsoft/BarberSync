@@ -1,0 +1,28 @@
+@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="admin-page-header">
+    <h1>@Model.Module</h1>
+    <p>@Model.Subtitle</p>
+</section>
+<section class="row g-3 mb-3">
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>API Status</strong><p id="api-status">Verificando...</p></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Unidade Atual</strong><p>Matriz Centro</p></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Usuário</strong><p>Administrador Demo</p></div></div></div>
+</section>
+<section class="card">
+    <div class="card-body">
+        <h3>Módulo @Model.Module</h3>
+        <p>Tela administrativa integrada pronta para consumir API e fallback demo.</p>
+        <div class="table-responsive">
+            <table class="table table-striped"><thead><tr><th>Item</th><th>Status</th><th>Ação</th></tr></thead><tbody>
+            <tr><td>Fluxo Principal</td><td><span class="badge text-bg-success">Operacional</span></td><td><button class="btn btn-sm btn-outline-primary">Abrir</button></td></tr>
+            <tr><td>Fallback Demo</td><td><span class="badge text-bg-warning">Ativo</span></td><td><button class="btn btn-sm btn-outline-primary">Validar</button></td></tr>
+            </tbody></table>
+        </div>
+    </div>
+</section>
+<script>
+fetch('/health').then(()=>document.getElementById('api-status').textContent='Online').catch(()=>document.getElementById('api-status').textContent='Offline');
+</script>
