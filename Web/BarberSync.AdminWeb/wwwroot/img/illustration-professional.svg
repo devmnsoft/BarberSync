@@ -1,0 +1,12 @@
+<svg width="480" height="320" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="480" height="320" rx="28" fill="#F3F4F6"/>
+  <rect x="46" y="44" width="388" height="232" rx="24" fill="white" stroke="#E5E7EB"/>
+  <circle cx="160" cy="128" r="42" fill="#FFF7D6"/>
+  <path d="M160 87c17 0 31 14 31 31s-14 31-31 31-31-14-31-31 14-31 31-31Z" fill="#D4A72C" opacity=".25"/>
+  <rect x="220" y="96" width="160" height="14" rx="7" fill="#111827"/>
+  <rect x="220" y="122" width="120" height="12" rx="6" fill="#6B7280"/>
+  <rect x="220" y="152" width="78" height="28" rx="14" fill="#DCFCE7"/>
+  <text x="259" y="171" text-anchor="middle" fill="#16A34A" font-family="Inter, Arial" font-size="12" font-weight="700">Disponível</text>
+  <rect x="78" y="202" width="324" height="42" rx="14" fill="#111827"/>
+  <text x="240" y="228" text-anchor="middle" fill="white" font-family="Inter, Arial" font-size="14" font-weight="700">Profissional • Corte + Barba</text>
+</svg>
