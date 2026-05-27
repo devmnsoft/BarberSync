@@ -1,16 +1,14 @@
 @{ ViewData["Title"]="BarberSync"; }
-<header class="pub-header"><img src="~/img/logo-barbersync.svg"/><nav><a href="#servicos">Serviços</a><a href="#profissionais">Profissionais</a><a href="#faq">FAQ</a></nav></header>
-<section class="hero"><h1>BarberSync 2.0</h1><p>Gestão, agendamento público, totem e copilot IA.</p><a class="btn-primary" href="#agendamento">Agendar agora</a></section>
-<section id="servicos" class="grid-section"><h2>Serviços</h2><div id="services" class="card-grid"></div></section>
-<section id="profissionais" class="grid-section"><h2>Profissionais</h2><div id="pros" class="card-grid"></div></section>
-<section id="agendamento" class="grid-section"><h2>Agendamento público</h2><div class="panel">Formulário rápido de agendamento com fallback demo.</div></section>
-<section class="grid-section"><h2>Benefícios</h2><div class="card-grid"><article class="panel">Totem inteligente</article><article class="panel">App mobile</article><article class="panel">Copilot IA</article></div></section>
-<section id="faq" class="grid-section"><h2>FAQ</h2><div class="panel">Perguntas frequentes sobre o serviço.</div></section>
-<section class="grid-section"><h2>Totem</h2><div class="panel">Atendimento self-service com fila inteligente.</div></section>
-<section class="grid-section"><h2>App</h2><div class="panel">Aplicativo para clientes e profissionais.</div></section>
-<section class="grid-section"><h2>IA</h2><div class="panel">Copilot para campanhas e decisões.</div></section>
-<section class="grid-section"><h2>Depoimentos</h2><div class="panel">"Melhorou nossa conversão em 35%."</div></section>
-<section class="grid-section"><h2>Contato</h2><div class="panel">comercial@barbersync.com</div></section>
-
+<header class="pub-header"><img src="~/img/logo-barbersync.svg" alt="BarberSync"/><nav><a href="#servicos">Serviços</a><a href="#profissionais">Profissionais</a><a href="#planos">Planos</a><a href="#faq">FAQ</a></nav></header>
+<section class="hero"><h1>BarberSync SaaS para Barbearias</h1><p>Agendamento, totem, dashboard e IA em uma única plataforma enterprise.</p><a class="btn-primary" href="#agendamento">Agendar agora</a></section>
+<section id="servicos" class="grid-section"><h2>Serviços em destaque</h2><div id="services" class="card-grid"></div></section>
+<section id="profissionais" class="grid-section"><h2>Profissionais disponíveis</h2><div id="pros" class="card-grid"></div></section>
+<section id="agendamento" class="grid-section"><h2>Agendamento público</h2><div class="panel">Fluxo rápido com fallback inteligente para manter a experiência ativa.</div></section>
+<section class="grid-section"><h2>Solução completa</h2><div class="card-grid"><article class="panel">Totem de autoatendimento</article><article class="panel">Aplicativo mobile</article><article class="panel">Copilot IA</article><article class="panel">Dashboard financeiro</article></div></section>
+<section id="planos" class="grid-section"><h2>Planos</h2><div class="card-grid"><article class="panel">Starter • R$ 199/mês</article><article class="panel">Growth • R$ 399/mês</article><article class="panel">Enterprise • Sob consulta</article></div></section>
+<section id="faq" class="grid-section"><h2>FAQ</h2><div class="panel">Implantação em até 7 dias, treinamento incluso e suporte dedicado.</div></section>
 <footer class="pub-footer">© BarberSync</footer>
+<script>
+  window.BarberSyncConfig = { apiBaseUrl: 'http://localhost:8080' };
+</script>
 <script src="~/js/public.js" asp-append-version="true"></script>
