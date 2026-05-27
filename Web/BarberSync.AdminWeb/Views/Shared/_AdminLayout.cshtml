@@ -1,1 +1,23 @@
-@{ Layout = "_Layout"; }
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BarberSync 2.0</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<div class="d-flex">
+    <partial name="_AdminSidebar" />
+    <main class="flex-grow-1 p-3">
+        <partial name="_AdminTopbar" />
+        <partial name="_AdminBreadcrumb" />
+        @RenderBody()
+    </main>
+</div>
+<partial name="_AdminToast" />
+<partial name="_AdminConfirmModal" />
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

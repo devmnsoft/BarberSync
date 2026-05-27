@@ -1,11 +1,12 @@
 using BarberSync.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
 [Route("api/professionals")]
-public class ProfessionalsController : ControllerBase
+public class ProfessionalsController(ILogger<ProfessionalsController> logger) : ControllerBase
 {
     private static readonly List<ProfessionalDto> Professionals =
     [
@@ -17,15 +18,35 @@ public class ProfessionalsController : ControllerBase
     ];
 
     [HttpGet]
-    public IActionResult Get() => Ok(ApiResponse<IEnumerable<ProfessionalDto>>.Ok(Professionals, "Profissionais carregados com sucesso.", HttpContext.TraceIdentifier));
+    public IActionResult Get()
+    {
+        try
+        {
+            logger.LogInformation("Listando profissionais. Total: {Total}", Professionals.Count);
+            return Ok(ApiResponse<IEnumerable<ProfessionalDto>>.Ok(Professionals, "Profissionais carregados com sucesso.", HttpContext.TraceIdentifier));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar profissionais.");
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao listar profissionais.", [ex.Message], HttpContext.TraceIdentifier));
+        }
+    }
 
     [HttpGet("{id:guid}")]
     public IActionResult GetById([FromRoute] Guid id)
     {
-        var professional = Professionals.FirstOrDefault(p => p.Id == id);
-        return professional is null
-            ? NotFound(ApiResponse<object>.Fail("Profissional não encontrado.", ["ID informado não existe."], HttpContext.TraceIdentifier))
-            : Ok(ApiResponse<ProfessionalDto>.Ok(professional, "Profissional carregado com sucesso.", HttpContext.TraceIdentifier));
+        try
+        {
+            var professional = Professionals.FirstOrDefault(p => p.Id == id);
+            return professional is null
+                ? NotFound(ApiResponse<object>.Fail("Profissional não encontrado.", ["ID informado não existe."], HttpContext.TraceIdentifier))
+                : Ok(ApiResponse<ProfessionalDto>.Ok(professional, "Profissional carregado com sucesso.", HttpContext.TraceIdentifier));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao buscar profissional por id: {Id}", id);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao buscar profissional.", [ex.Message], HttpContext.TraceIdentifier));
+        }
     }
 
     [HttpPost]
