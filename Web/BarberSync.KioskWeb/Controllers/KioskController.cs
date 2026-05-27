@@ -9,13 +9,11 @@ public class KioskController(IConfiguration configuration) : Controller
     public IActionResult Index(string? deviceCode)
     {
         ViewData["DeviceCode"] = string.IsNullOrWhiteSpace(deviceCode) ? DefaultDeviceCode : deviceCode.Trim();
-        ViewBag.ApiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080";
         return View();
     }
 
     public IActionResult Services()
     {
-        ViewBag.ApiBaseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080";
         return View();
     }
 

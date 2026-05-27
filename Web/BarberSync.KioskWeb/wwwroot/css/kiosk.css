@@ -1,1 +1,8 @@
+body{background:radial-gradient(circle at top,#1b1f2c 0,#0d1018 55%,#080a10 100%);color:#fff}
+.kiosk-progress{height:8px;background:#1f2433;border-radius:999px;margin-bottom:18px;overflow:hidden}.kiosk-progress span{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+.kiosk-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.kiosk-actions{display:flex;gap:10px;align-items:center}
+.kiosk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:18px}
+.k-card{background:#161b27;border:1px solid #2d3448;border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.k-icon{font-size:2rem}.k-btn{display:inline-block;margin-top:8px;background:#7c3aed;color:#fff;padding:8px 14px;border-radius:10px;text-decoration:none}
 .btn-lg{font-size:1.3rem;padding:1rem 1.4rem}.card{background:#1f2937;border:1px solid #374151}
