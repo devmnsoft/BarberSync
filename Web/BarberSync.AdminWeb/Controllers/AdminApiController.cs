@@ -50,10 +50,10 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     private static object DemoDashboard() => new
     {
         kpis = new[] {
-            new { label = "Receita hoje", value = 4850 }, new { label = "Receita mês", value = 97800 }, new { label = "Agendamentos hoje", value = 26 },
-            new { label = "Clientes ativos", value = 412 }, new { label = "Atendimentos em andamento", value = 7 }, new { label = "Comandas abertas", value = 9 },
-            new { label = "Ticket médio", value = 83 }, new { label = "Estoque crítico", value = 4 }, new { label = "Avaliação média", value = 4.8 },
-            new { label = "Campanhas ativas", value = 3 }, new { label = "Totem online", value = 1 }, new { label = "Profissionais disponíveis", value = 5 }
+            new { label = "Receita hoje", value = 4850m }, new { label = "Receita mês", value = 97800m }, new { label = "Agendamentos hoje", value = 26m },
+            new { label = "Clientes ativos", value = 412m }, new { label = "Atendimentos em andamento", value = 7m }, new { label = "Comandas abertas", value = 9m },
+            new { label = "Ticket médio", value = 83m }, new { label = "Estoque crítico", value = 4m }, new { label = "Avaliação média", value = 4.8m },
+            new { label = "Campanhas ativas", value = 3m }, new { label = "Totem online", value = 1m }, new { label = "Profissionais disponíveis", value = 5m }
         },
         charts = new { weeklyRevenue = new[] { 3200, 4100, 3800, 4500, 4700, 5200, 4850 } },
         appointments = DemoAppointments(), stockCritical = DemoStock(), copilotSuggestions = DemoCopilotSuggestions(),
