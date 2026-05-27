@@ -1,7 +1,10 @@
 @{Layout="~/Views/Shared/_KioskLayout.cshtml"; ViewData["Title"]="Serviços";}
 <section>
- <h1>Escolha seu serviço</h1><p>Toque em um card para continuar.</p>
+ <div style='display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap'>
+  <div><h1>Escolha seu serviço</h1><p>Toque em um card para continuar.</p></div>
+  <span id='kioskDemoNotice' class='badge text-bg-warning' style='display:none'>Modo demonstração ativo.</span>
+ </div>
  <div id='kioskServices' class='kiosk-grid'>
-    <article class='k-card'><div>💈</div><h3>Corte Masculino</h3><p>Barbearia</p><p>Corte moderno com acabamento profissional.</p><strong>R$ 45,00</strong><span>40 min</span><a class='k-btn' href='/Kiosk/Client'>Selecionar</a></article>
+    <article class='k-card'><div class='k-icon'>✂️</div><h3>Corte Masculino</h3><p>Barbearia</p><p>Corte moderno com acabamento profissional.</p><strong>R$ 45,00</strong><span>40 min</span><a class='k-btn' href='/Kiosk/Client'>Selecionar</a></article>
  </div>
 </section>
