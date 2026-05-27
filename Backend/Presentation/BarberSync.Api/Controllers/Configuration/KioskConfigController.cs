@@ -1,4 +1,5 @@
 using BarberSync.Api.Models.Configuration;
+using BarberSync.Api.Models.Kiosk;
 using BarberSync.Api.Services.Configuration;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,24 +7,26 @@ namespace BarberSync.Api.Controllers.Configuration;
 
 [ApiController]
 [Route("api/kiosk")]
-public class KioskConfigController(IConfigurationService configurationService, ILogger<KioskConfigController> logger) : ControllerBase
+public class KioskConfigController(IConfigurationService configurationService, ILogger<KioskConfigController> logger, IWebHostEnvironment environment) : ControllerBase
 {
     [HttpGet("services")]
     public ActionResult<ApiResponse<IReadOnlyList<KioskServiceDto>>> Services([FromQuery] string? deviceCode)
     {
+        var resolved = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
         try
         {
-            var resolved = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
             logger.LogInformation("Kiosk services requested for deviceCode {DeviceCode}", resolved);
-
-            var data = DemoServices();
-            var msg = "Serviços carregados com sucesso.";
-            return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(data, msg));
+            var data = GetDemoKioskServices();
+            return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(data, "Serviços carregados com sucesso em modo demonstração."));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erro ao carregar serviços kiosk");
-            return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(DemoServices(), "Modo demonstração ativo."));
+            logger.LogError(ex, "Erro ao carregar serviços kiosk para {DeviceCode}", resolved);
+            if (environment.IsDevelopment())
+            {
+                return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(GetDemoKioskServices(), "Serviços carregados em modo demonstração após falha temporária."));
+            }
+            return StatusCode(500, ApiResponse<IReadOnlyList<KioskServiceDto>>.Fail("Falha ao carregar serviços do kiosk."));
         }
     }
 
@@ -33,24 +36,31 @@ public class KioskConfigController(IConfigurationService configurationService, I
         try
         {
             logger.LogInformation("Kiosk professionals requested for service {ServiceId} and device {DeviceCode}", serviceId, deviceCode);
-            return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(DemoProfessionals(), "Profissionais carregados com sucesso."));
+            return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(GetDemoProfessionals(), "Profissionais carregados com sucesso em modo demonstração."));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao carregar profissionais kiosk");
-            return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(DemoProfessionals(), "Modo demonstração ativo."));
+            return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(GetDemoProfessionals(), "Modo demonstração ativo."));
         }
     }
 
-    private static List<KioskServiceDto> DemoServices() => [
-        new(Guid.NewGuid(),"Corte Masculino","Barbearia","Corte moderno com acabamento profissional.",45,40,"✂️",true),
-        new(Guid.NewGuid(),"Barba Tradicional","Barbearia","Barba alinhada com toalha quente e navalha.",35,30,"🪒",true),
-        new(Guid.NewGuid(),"Corte + Barba","Combo","Experiência completa de corte e barba.",75,70,"💈",true),
-        new(Guid.NewGuid(),"Sobrancelha","Estética","Design e alinhamento de sobrancelha.",20,15,"👁️",true),
-        new(Guid.NewGuid(),"Hidratação Capilar","Estética","Tratamento capilar profissional.",60,45,"💧",true),
-        new(Guid.NewGuid(),"Manicure","Beleza","Cuidado completo para as unhas.",40,50,"💅",true)
+    private static List<KioskServiceDto> GetDemoKioskServices() =>
+    [
+        new() { Id = Guid.NewGuid(), Name = "Corte Masculino", Category = "Barbearia", Description = "Corte moderno com acabamento profissional.", Price = 45.00m, DurationMinutes = 40, Icon = "✂️", IsAvailable = true, IsDemo = true },
+        new() { Id = Guid.NewGuid(), Name = "Barba Tradicional", Category = "Barbearia", Description = "Barba alinhada com toalha quente e navalha.", Price = 35.00m, DurationMinutes = 30, Icon = "🪒", IsAvailable = true, IsDemo = true },
+        new() { Id = Guid.NewGuid(), Name = "Corte + Barba", Category = "Combo", Description = "Experiência completa de corte e barba.", Price = 75.00m, DurationMinutes = 70, Icon = "💈", IsAvailable = true, IsDemo = true },
+        new() { Id = Guid.NewGuid(), Name = "Sobrancelha", Category = "Estética", Description = "Design e alinhamento de sobrancelha.", Price = 20.00m, DurationMinutes = 15, Icon = "👁️", IsAvailable = true, IsDemo = true },
+        new() { Id = Guid.NewGuid(), Name = "Hidratação Capilar", Category = "Estética", Description = "Tratamento capilar profissional.", Price = 60.00m, DurationMinutes = 45, Icon = "💧", IsAvailable = true, IsDemo = true },
+        new() { Id = Guid.NewGuid(), Name = "Manicure", Category = "Beleza", Description = "Cuidado completo para as unhas.", Price = 40.00m, DurationMinutes = 50, Icon = "💅", IsAvailable = true, IsDemo = true }
     ];
-    private static List<KioskProfessionalDto> DemoProfessionals() => [new("Rafael Barber"),new("Lucas Navalha"),new("Bruno Estilo"),new("Camila Beauty"),new("Amanda Nails")];
-    public sealed record KioskServiceDto(Guid Id,string Name,string Category,string Description,decimal Price,int DurationMinutes,string Icon,bool IsAvailable);
-    public sealed record KioskProfessionalDto(string Name);
+
+    private static List<KioskProfessionalDto> GetDemoProfessionals() =>
+    [
+        new() { Name = "Rafael Barber", Specialty = "Fade e navalha", EstimatedWaitMinutes = 10, AvatarInitials = "RB" },
+        new() { Name = "Lucas Navalha", Specialty = "Barba clássica", EstimatedWaitMinutes = 15, AvatarInitials = "LN" },
+        new() { Name = "Bruno Estilo", Specialty = "Corte social", EstimatedWaitMinutes = 20, AvatarInitials = "BE" },
+        new() { Name = "Camila Beauty", Specialty = "Estética", EstimatedWaitMinutes = 8, AvatarInitials = "CB" },
+        new() { Name = "Amanda Nails", Specialty = "Manicure", EstimatedWaitMinutes = 12, AvatarInitials = "AN" }
+    ];
 }

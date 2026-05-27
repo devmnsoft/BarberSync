@@ -7,37 +7,50 @@
     { name:"Hidratação Capilar", category:"Estética", description:"Tratamento capilar profissional.", price:60, durationMinutes:45, icon:"💧" },
     { name:"Manicure", category:"Beleza", description:"Cuidado completo para as unhas.", price:40, durationMinutes:50, icon:"💅" }
   ];
+
   const container = document.getElementById("kioskServices");
   const badge = document.getElementById("kioskDemoNotice");
   if (!container) return;
 
-  const base = (window.__kioskApiBaseUrl || "http://localhost:8080").replace(/\/$/, "");
+  const config = window.BarberSyncConfig || {};
+  const deviceCode = (config.deviceCode || "KIOSK-DEMO-001").trim();
+  const base = (config.apiBaseUrl || "http://localhost:8080").replace(/\/$/, "");
 
   const renderServices = (items, isDemo) => {
     if (badge) badge.style.display = isDemo ? "inline-flex" : "none";
-    container.innerHTML = items.map(s => `
+    const safeItems = Array.isArray(items) && items.length ? items : fallbackServices;
+    container.innerHTML = safeItems.map(s => `
       <article class='k-card'>
         <div class='k-icon'>${s.icon || "💈"}</div>
         <h3>${s.name}</h3>
         <p>${s.category}</p>
         <p>${s.description}</p>
-        <strong>R$ ${Number(s.price).toFixed(2).replace('.',',')}</strong>
-        <span>${s.durationMinutes} min</span>
+        <strong>R$ ${Number(s.price ?? 0).toFixed(2).replace('.',',')}</strong>
+        <span>${s.durationMinutes ?? 0} min</span>
         <a class='k-btn' href='/Kiosk/Client'>Selecionar</a>
       </article>`).join("");
   };
 
   (async () => {
     try {
-      const response = await fetch(`${base}/api/kiosk/services?deviceCode=KIOSK-DEMO-001`);
-      if (!response.ok) {
+      const response = await fetch(`${base}/api/kiosk/services?deviceCode=${encodeURIComponent(deviceCode)}`);
+      if (!response.ok && [404, 409, 500].includes(response.status)) {
         console.warn("API indisponível ou retornou erro", response.status);
         renderServices(fallbackServices, true);
         return;
       }
+      if (!response.ok) {
+        renderServices(fallbackServices, true);
+        return;
+      }
+
       const payload = await response.json();
-      const services = payload?.data || payload || [];
-      renderServices(Array.isArray(services) && services.length ? services : fallbackServices, !(Array.isArray(services) && services.length));
+      const services = Array.isArray(payload) ? payload : (payload?.data || []);
+      if (!Array.isArray(services) || services.length === 0) {
+        renderServices(fallbackServices, true);
+        return;
+      }
+      renderServices(services, Boolean(services[0]?.isDemo));
     } catch (error) {
       console.warn("Falha ao carregar serviços do totem", error);
       renderServices(fallbackServices, true);
