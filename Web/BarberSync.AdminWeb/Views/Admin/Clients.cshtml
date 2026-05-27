@@ -1,12 +1,13 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Clients"; }
-<section class="admin-page-header"><h1>Clients</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="ClientsFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="ClientsCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de Clients</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ClientsRows"></tbody></table></div>
-</div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-crud.js"></script>
-<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Clients')</script>
+@{
+    ViewData["Title"] = "Clients";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="page-header"><div><div class="page-title">Clients</div><div class="page-subtitle">Gestão do módulo com dados demo e ações rápidas.</div></div><div><button class="btn btn-primary">Novo</button></div></div>
+<section class="kpi-grid">
+  <article class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-value">128</div><div class="kpi-label">Indicador principal</div></article>
+  <article class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value">93%</div><div class="kpi-label">Eficiência</div></article>
+  <article class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-value">24h</div><div class="kpi-label">SLA médio</div></article>
+</section>
+<section class="panel" style="margin-top:16px"><div class="panel-header"><h3>Lista operacional</h3><button class="btn btn-secondary">Filtrar</button></div>
+<table class="table"><thead><tr><th>Item</th><th>Status</th><th>Ação</th></tr></thead><tbody><tr><td>Registro demo A</td><td><span class="badge badge-success">Ativo</span></td><td><button class="btn btn-secondary">Editar</button></td></tr><tr><td>Registro demo B</td><td><span class="badge badge-warning">Pendente</span></td><td><button class="btn btn-danger">Remover</button></td></tr></tbody></table></section>
+<div class="modal" style="display:none">Modal de criação/edição</div>

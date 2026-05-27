@@ -1,21 +1,7 @@
-<aside class="bg-dark text-white p-3" style="width:280px; min-height:100vh">
-    <h5>BarberSync 2.0</h5>
-    <div class="small text-secondary mb-3">Gestão inteligente para salões, barbearias e estética.</div>
-    <nav class="nav flex-column">
-        <a class="nav-link text-white" href="/Admin/Dashboard">Dashboard</a>
-        <a class="nav-link text-white" href="/Admin/Clients">Clientes</a>
-        <a class="nav-link text-white" href="/Admin/Professionals">Profissionais</a>
-        <a class="nav-link text-white" href="/Admin/Services">Serviços</a>
-        <a class="nav-link text-white" href="/Admin/Appointments">Agenda</a>
-        <a class="nav-link text-white" href="/Admin/ServiceOrders">Comandas</a>
-        <a class="nav-link text-white" href="/Admin/Stock">Estoque</a>
-        <a class="nav-link text-white" href="/Admin/Campaigns">Campanhas</a>
-        <a class="nav-link text-white" href="/Admin/Coupons">Cupons</a>
-        <a class="nav-link text-white" href="/Admin/Reviews">Avaliações</a>
-        <a class="nav-link text-white" href="/Admin/Copilot">Copilot IA</a>
-        <a class="nav-link text-white" href="/Admin/Kiosk">Totem</a>
-        <a class="nav-link text-white" href="/Admin/PublicSite">Site Público</a>
-        <a class="nav-link text-white" href="/Admin/Settings">Configurações</a>
-        <a class="nav-link text-white" href="/Admin/Help">Manual</a>
-    </nav>
+@{ var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty; Func<string, string> active = href => path.StartsWith(href.ToLowerInvariant()) ? "active" : string.Empty; }
+<aside class="admin-sidebar">
+  <div class="brand"><img src="~/img/logo-barbersync.svg" alt="BarberSync"/><div><strong>BarberSync</strong><small>Performance para barbearias</small></div></div>
+  <div class="menu-section"><h6>OPERAÇÃO</h6><a class="menu-link @active("/admin/dashboard")" href="/Admin/Dashboard">📊 Dashboard</a><a class="menu-link @active("/admin/appointments")" href="/Admin/Appointments">📅 Agenda</a><a class="menu-link" href="/Admin/Attendance">🪑 Atendimentos</a><a class="menu-link @active("/admin/serviceorders")" href="/Admin/ServiceOrders">🧾 Comandas</a><a class="menu-link" href="/Admin/Cash">💰 Caixa</a></div>
+  <div class="menu-section"><h6>CADASTROS</h6><a class="menu-link @active("/admin/clients")" href="/Admin/Clients">👥 Clientes</a><a class="menu-link @active("/admin/professionals")" href="/Admin/Professionals">💈 Profissionais</a><a class="menu-link @active("/admin/services")" href="/Admin/Services">✂️ Serviços</a><a class="menu-link" href="/Admin/Products">📦 Produtos</a></div>
+  <div class="menu-section"><h6>GESTÃO</h6><a class="menu-link @active("/admin/campaigns")" href="/Admin/Campaigns">🎯 Campanhas</a><a class="menu-link @active("/admin/coupons")" href="/Admin/Coupons">🏷️ Cupons</a><a class="menu-link @active("/admin/reviews")" href="/Admin/Reviews">⭐ Avaliações</a><a class="menu-link @active("/admin/stock")" href="/Admin/Stock">📦 Estoque</a><a class="menu-link @active("/admin/copilot")" href="/Admin/Copilot">🤖 Copilot IA</a><a class="menu-link @active("/admin/kiosk")" href="/Admin/Kiosk">🖥️ Totem</a><a class="menu-link @active("/admin/help")" href="/Admin/Help">⚙️ Manual</a></div>
 </aside>

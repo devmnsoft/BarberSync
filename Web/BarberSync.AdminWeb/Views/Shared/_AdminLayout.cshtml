@@ -2,10 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - BarberSync 2.0</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-brand.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-components.css" asp-append-version="true" />
@@ -14,27 +12,22 @@
     <link rel="stylesheet" href="~/css/admin-tables.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-responsive.css" asp-append-version="true" />
 </head>
-<body class="admin-shell">
-<div class="admin-layout">
-    <partial name="_AdminSidebar" />
-    <main class="admin-main">
-        <partial name="_AdminTopbar" />
-        <partial name="_AdminBreadcrumb" />
-        @RenderBody()
-    </main>
-</div>
-<partial name="_AdminToast" />
-<partial name="_AdminConfirmModal" />
-<partial name="_AdminLoading" />
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/admin-api-client.js" asp-append-version="true"></script>
-<script src="~/js/admin-toast.js" asp-append-version="true"></script>
-<script src="~/js/admin-modal.js" asp-append-version="true"></script>
-<script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
-<script src="~/js/admin-crud.js" asp-append-version="true"></script>
-<script src="~/js/admin-kiosk.js" asp-append-version="true"></script>
-<script src="~/js/admin-copilot.js" asp-append-version="true"></script>
-<script src="~/js/admin-shell.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", required: false)
+<body class="admin-body">
+    <div class="admin-shell">
+        <partial name="_AdminSidebar" />
+        <div class="admin-main">
+            <partial name="_AdminTopbar" />
+            <main class="admin-content">@RenderBody()</main>
+        </div>
+    </div>
+    <partial name="_AdminToast" />
+    <partial name="_AdminConfirmModal" />
+    <script src="~/js/admin-api-client.js" asp-append-version="true"></script>
+    <script src="~/js/admin-toast.js" asp-append-version="true"></script>
+    <script src="~/js/admin-modal.js" asp-append-version="true"></script>
+    <script src="~/js/admin-shell.js" asp-append-version="true"></script>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+    <script src="~/js/admin-crud.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
