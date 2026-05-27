@@ -1,1 +1,15 @@
-.admin-body{min-height:100vh}.admin-shell{display:flex;min-height:100vh}.admin-sidebar{width:300px;background:linear-gradient(180deg,var(--bs-dark),var(--bs-dark-2));color:#fff;padding:20px;overflow:auto}.admin-main{flex:1;display:flex;flex-direction:column}.admin-topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--bs-border)}.admin-content{padding:24px}.brand{display:flex;gap:10px;align-items:center;margin-bottom:18px}.brand img{height:38px}.brand small{display:block;color:#c4c9d4}.menu-section{margin:14px 0}.menu-section h6{color:#9ca3af;margin:8px 0}.menu-link{display:block;color:#e5e7eb;text-decoration:none;padding:8px 10px;border-radius:10px}.menu-link:hover,.menu-link.active{background:rgba(255,255,255,.12);color:#fff}.topbar-search{flex:1;padding:10px;border:1px solid var(--bs-border);border-radius:10px}.api-status{margin-left:auto}.user-area{font-size:.9rem;color:var(--bs-muted)}
+.admin-body {
+    margin: 0;
+    background: #F3F4F6;
+    color: #111827;
+    font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+}
+.admin-shell { min-height: 100vh; display: flex; width: 100%; }
+.admin-sidebar { width: 292px; min-height: 100vh; background: linear-gradient(180deg, #111827 0%, #0B1220 100%); color: #FFFFFF; padding: 24px 18px; position: sticky; top: 0; }
+.admin-main { flex: 1; min-width: 0; background: #F3F4F6; }
+.admin-topbar { min-height: 76px; background: #FFFFFF; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; position: sticky; top: 0; z-index: 20; }
+.admin-content { padding: 30px; }
+.menu-section { margin-top: 26px; }
+.menu-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.45); margin: 0 0 10px 12px; }
+.menu-link { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.78); text-decoration: none; padding: 12px 14px; border-radius: 14px; font-weight: 600; margin-bottom: 4px; }
+.menu-link:hover,.menu-link.active { background: rgba(212,167,44,.16); color: #FFFFFF; }
