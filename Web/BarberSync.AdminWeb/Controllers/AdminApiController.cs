@@ -19,9 +19,9 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("campaigns")] public Task<IActionResult> Campaigns() => ProxyGet("/api/campaigns", DemoCampaigns());
     [HttpGet("coupons")] public Task<IActionResult> Coupons() => ProxyGet("/api/coupons", DemoCoupons());
     [HttpGet("reviews")] public Task<IActionResult> Reviews() => ProxyGet("/api/reviews", DemoReviews());
-    [HttpGet("loyalty")] public Task<IActionResult> Loyalty() => ProxyGet("/api/loyalty/summary", new { pointsDistributed = 1800, activeMembers = 132, cashbackMonth = 2340 });
-    [HttpGet("copilot-suggestions")] public Task<IActionResult> CopilotSuggestions() => ProxyGet("/api/copilot/suggestions", new[] { "Reforçar campanha de retorno para clientes inativos há 45 dias.", "Aumentar escala no horário de pico entre 18h e 20h." });
-    [HttpPost("copilot/ask")] public Task<IActionResult> CopilotAsk([FromBody] JsonElement payload) => ProxyPost("/api/copilot/ask", payload, new { success = true, answer = "Modo demonstração: priorize campanhas de retenção e reativação." });
+    [HttpGet("loyalty")] public Task<IActionResult> Loyalty() => ProxyGet("/api/loyalty/summary", DemoLoyalty());
+    [HttpGet("copilot-suggestions")] public Task<IActionResult> CopilotSuggestions() => ProxyGet("/api/copilot/suggestions", DemoCopilotSuggestions());
+    [HttpPost("copilot/ask")] public Task<IActionResult> CopilotAsk([FromBody] JsonElement payload) => ProxyPost("/api/copilot/ask", payload, new { success = true, answer = "Modo demonstração: priorize retenção, recompras e ocupação dos horários ociosos." });
 
     private async Task<IActionResult> ProxyGet(string path, object fallback)
     {
@@ -49,29 +49,36 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
 
     private static object DemoDashboard() => new
     {
-        kpis = new[] { new { label = "Receita hoje", value = 4850 }, new { label = "Agendamentos", value = 26 }, new { label = "Clientes ativos", value = 412 } },
+        kpis = new[] {
+            new { label = "Receita hoje", value = 4850 }, new { label = "Receita mês", value = 97800 }, new { label = "Agendamentos hoje", value = 26 },
+            new { label = "Clientes ativos", value = 412 }, new { label = "Atendimentos em andamento", value = 7 }, new { label = "Comandas abertas", value = 9 },
+            new { label = "Ticket médio", value = 83 }, new { label = "Estoque crítico", value = 4 }, new { label = "Avaliação média", value = 4.8 },
+            new { label = "Campanhas ativas", value = 3 }, new { label = "Totem online", value = 1 }, new { label = "Profissionais disponíveis", value = 5 }
+        },
         charts = new { weeklyRevenue = new[] { 3200, 4100, 3800, 4500, 4700, 5200, 4850 } },
-        appointments = DemoAppointments(),
-        stockCritical = DemoStock(),
-        copilotSuggestions = new[] { "Reforçar equipe no pico das 19h", "Ativar cupom para clientes inativos" }
+        appointments = DemoAppointments(), stockCritical = DemoStock(), copilotSuggestions = DemoCopilotSuggestions(),
+        alerts = new[] { "Pico previsto entre 18h e 20h", "3 produtos abaixo do estoque mínimo" }
     };
 
-    private static object[] DemoServices() =>
-    [
-        new { name = "Corte Masculino", price = 45, durationMinutes = 40 },
-        new { name = "Barba Tradicional", price = 35, durationMinutes = 30 },
-        new { name = "Corte + Barba", price = 70, durationMinutes = 60 },
-        new { name = "Sobrancelha", price = 20, durationMinutes = 20 },
-        new { name = "Hidratação", price = 55, durationMinutes = 45 },
-        new { name = "Manicure", price = 40, durationMinutes = 35 }
+    private static object[] DemoServices() => [
+        new { id = 1, name = "Corte Masculino", price = 45, durationMinutes = 40 }, new { id = 2, name = "Barba Tradicional", price = 35, durationMinutes = 30 },
+        new { id = 3, name = "Corte + Barba", price = 70, durationMinutes = 60 }, new { id = 4, name = "Sobrancelha", price = 20, durationMinutes = 20 },
+        new { id = 5, name = "Hidratação", price = 55, durationMinutes = 45 }, new { id = 6, name = "Manicure", price = 40, durationMinutes = 35 }
     ];
-    private static object[] DemoProfessionals() => [ new { name = "Rafael Barber" }, new { name = "Lucas Navalha" }, new { name = "Bruno Estilo" }, new { name = "Camila Beauty" }, new { name = "Amanda Nails" } ];
-    private static object[] DemoClients() => [ new { name = "Carlos Souza", status = "VIP" }, new { name = "João Lima", status = "Ativo" } ];
-    private static object[] DemoAppointments() => [ new { client = "Carlos Souza", service = "Corte + Barba", time = "14:30", status = "Confirmado" } ];
-    private static object[] DemoServiceOrders() => [ new { code = "SO-1042", status = "Em execução", total = 120.0 } ];
-    private static object[] DemoProducts() => [ new { name = "Pomada Matte", stock = 24 }, new { name = "Shampoo Anticaspa", stock = 9 } ];
-    private static object[] DemoStock() => [ new { name = "Lâmina Platinum", current = 6, minimum = 20 }, new { name = "Toalha Premium", current = 10, minimum = 25 } ];
-    private static object[] DemoCampaigns() => [ new { name = "Volte e ganhe", channel = "WhatsApp", status = "Ativa" } ];
-    private static object[] DemoCoupons() => [ new { code = "BARBA10", discount = 10, status = "Ativo" } ];
-    private static object[] DemoReviews() => [ new { client = "Marcos", rating = 5, comment = "Atendimento excelente" } ];
+
+    private static object[] DemoProfessionals() => [
+        new { id = 1, name = "Rafael Barber" }, new { id = 2, name = "Lucas Navalha" }, new { id = 3, name = "Bruno Estilo" },
+        new { id = 4, name = "Camila Beauty" }, new { id = 5, name = "Amanda Nails" }
+    ];
+
+    private static object[] DemoClients() => Enumerable.Range(1, 10).Select(i => new { id = i, name = $"Cliente Demo {i}", status = i % 3 == 0 ? "VIP" : "Ativo" }).ToArray();
+    private static object[] DemoAppointments() => Enumerable.Range(1, 8).Select(i => new { id = i, client = $"Cliente Demo {i}", service = i % 2 == 0 ? "Corte + Barba" : "Corte Masculino", time = $"{9 + i:00}:00", status = i % 3 == 0 ? "Em atendimento" : "Confirmado" }).ToArray();
+    private static object[] DemoServiceOrders() => Enumerable.Range(1, 5).Select(i => new { code = $"SO-10{i:00}", status = i % 2 == 0 ? "Aberta" : "Em execução", total = 70 + i * 15 }).ToArray();
+    private static object[] DemoProducts() => Enumerable.Range(1, 10).Select(i => new { id = i, name = $"Produto Demo {i}", stock = 5 + i, min = 8 }).ToArray();
+    private static object[] DemoStock() => [ new { name = "Lâmina Platinum", current = 6, minimum = 20 }, new { name = "Toalha Premium", current = 10, minimum = 25 }, new { name = "Pomada Modeladora", current = 7, minimum = 15 }, new { name = "Shampoo Anticaspa", current = 5, minimum = 10 } ];
+    private static object[] DemoCampaigns() => [ new { name = "Volte e ganhe", channel = "WhatsApp", status = "Ativa" }, new { name = "Combo do mês", channel = "Instagram", status = "Ativa" }, new { name = "Aniversariantes", channel = "SMS", status = "Agendada" } ];
+    private static object[] DemoCoupons() => [ new { code = "BARBA10", discount = 10, status = "Ativo" }, new { code = "VIP15", discount = 15, status = "Ativo" }, new { code = "WELCOME5", discount = 5, status = "Ativo" } ];
+    private static object[] DemoReviews() => [ new { client = "Marcos", rating = 5, comment = "Atendimento excelente" }, new { client = "Thiago", rating = 4, comment = "Ótimo acabamento" }, new { client = "Eduardo", rating = 5, comment = "Voltarei com certeza" } ];
+    private static object DemoLoyalty() => new { pointsDistributed = 1800, activeMembers = 132, cashbackMonth = 2340 };
+    private static object[] DemoCopilotSuggestions() => [ "Reforçar campanha de retorno para clientes inativos há 45 dias.", "Aumentar escala no horário de pico entre 18h e 20h.", "Criar cupom de recompra para serviços com baixa ocupação." ];
 }
