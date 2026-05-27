@@ -1,12 +1,7 @@
 @{Layout="~/Views/Shared/_KioskLayout.cshtml"; ViewData["Title"]="Serviços";}
 <section>
  <h1>Escolha seu serviço</h1><p>Toque em um card para continuar.</p>
- <div id='kioskServices' class='kiosk-grid'></div>
+ <div id='kioskServices' class='kiosk-grid'>
+    <article class='k-card'><div>💈</div><h3>Corte Masculino</h3><p>Barbearia</p><p>Corte moderno com acabamento profissional.</p><strong>R$ 45,00</strong><span>40 min</span><a class='k-btn' href='/Kiosk/Client'>Selecionar</a></article>
+ </div>
 </section>
-@section Scripts{
-<script>
-const demo=[['Corte Masculino','R$ 45,00','40 min'],['Barba Tradicional','R$ 35,00','30 min'],['Corte + Barba','R$ 75,00','70 min'],['Sobrancelha','R$ 20,00','15 min'],['Hidratação Capilar','R$ 60,00','45 min'],['Manicure','R$ 40,00','50 min']];
-(async()=>{let items=demo;try{const r=await fetch('/api/kiosk/services?deviceCode=KIOSK-DEMO-001');if(r.ok) items=await r.json();}catch{}
-const list=Array.isArray(items)&&items.length?items:demo;
-document.getElementById('kioskServices').innerHTML=list.map(s=>`<article class='k-card'><h3>${s.name||s[0]}</h3><p>${s.description||'Serviço premium.'}</p><strong>${s.priceFormatted||s[1]}</strong><span>${s.durationLabel||s[2]}</span><a class='k-btn' href='/Kiosk/Client'>Selecionar</a></article>`).join('');})();
-</script>}

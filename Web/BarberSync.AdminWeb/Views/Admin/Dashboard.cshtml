@@ -1,67 +1,13 @@
-@{
-    ViewData["Title"] = "Dashboard";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-
-<header class="page-header">
-    <div>
-        <h1 class="page-title">Dashboard Executivo</h1>
-        <p class="page-subtitle">Visão em tempo real da Barbearia Elite Demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-secondary">Atualizar</button>
-        <button class="btn btn-primary">Novo Agendamento</button>
-    </div>
-</header>
-
-<section class="kpi-grid" data-dashboard-kpis></section>
-
-<section class="dashboard-panels dashboard-panels-lg">
-    <article class="panel">
-        <h3>Receita últimos 7 dias</h3>
-        <div class="chart-placeholder">▁▃▅▆▇▆▅</div>
-    </article>
-    <article class="panel">
-        <h3>Alertas</h3>
-        <ul class="list-clean">
-            <li>8 itens em estoque crítico.</li>
-            <li>2 avaliações aguardando resposta.</li>
-        </ul>
-    </article>
+@{ ViewData["Title"] = "Dashboard"; }
+<div class="page-header"><div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS completa da operação BarberSync.</p></div><div class="page-actions"><button class="btn btn-light">Exportar</button><button class="btn btn-gold">Copilot</button><button class="btn btn-primary">Novo Agendamento</button></div></div>
+<section class="kpi-grid" data-dashboard-kpis>
+@for (var i=1;i<=12;i++){<article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">Indicador @i</p><strong class="kpi-value">--</strong><span class="kpi-variation">demo</span></div></article>}
 </section>
-
-<section class="dashboard-panels">
-    <article class="panel">
-        <h3>Próximos agendamentos</h3>
-        <table class="table">
-            <tr><td>10:00</td><td>Corte + Barba</td><td>Rafael</td></tr>
-            <tr><td>10:40</td><td>Barba Tradicional</td><td>Lucas</td></tr>
-        </table>
-    </article>
-    <article class="panel">
-        <h3>Sugestões do Copilot</h3>
-        <ul class="list-clean">
-            <li>Ativar campanha de retorno para clientes inativos há 30 dias.</li>
-            <li>Criar combo Corte + Hidratação com desconto progressivo.</li>
-        </ul>
-    </article>
-</section>
-
-@section Scripts {
-<script>
-    window.dashboardKpis = [
-        { label: "Receita hoje", value: "R$ 4.850,00", icon: "💰", variation: "+12%" },
-        { label: "Receita mês", value: "R$ 92.340,00", icon: "📈", variation: "+18%" },
-        { label: "Agendamentos hoje", value: "26", icon: "📅", variation: "+7%" },
-        { label: "Clientes ativos", value: "412", icon: "👥", variation: "+22" },
-        { label: "Atendimentos em andamento", value: "4", icon: "✂️", variation: "Agora" },
-        { label: "Comandas abertas", value: "7", icon: "🧾", variation: "Agora" },
-        { label: "Ticket médio", value: "R$ 126,00", icon: "🎯", variation: "+9%" },
-        { label: "Estoque crítico", value: "8", icon: "📦", variation: "Atenção" },
-        { label: "Avaliação média", value: "4.8", icon: "⭐", variation: "Excelente" },
-        { label: "Totem online", value: "2", icon: "🖥️", variation: "Online" },
-        { label: "Campanhas ativas", value: "5", icon: "🎯", variation: "Ativas" },
-        { label: "Profissionais disponíveis", value: "6", icon: "💈", variation: "Hoje" }
-    ];
-</script>
-}
+<div class="dashboard-grid">
+<article class="panel span-6"><h3>Receita últimos 7 dias</h3><p>R$ 32.940,00</p></article>
+<article class="panel span-6"><h3>Serviços mais vendidos</h3><ul><li>Corte Masculino</li><li>Corte + Barba</li><li>Barba Tradicional</li></ul></article>
+<article class="panel span-4"><h3>Próximos agendamentos</h3><p>10:00 Rafael • Corte + Barba</p></article>
+<article class="panel span-4"><h3>Estoque crítico</h3><p>8 itens com reposição pendente.</p></article>
+<article class="panel span-4"><h3>Copilot</h3><p>Ative campanha de retorno para clientes inativos.</p></article>
+</div>
+@section Scripts{<script>window.dashboardKpis=window.dashboardKpis||[];</script>}

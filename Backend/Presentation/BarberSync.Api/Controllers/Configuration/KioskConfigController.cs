@@ -8,23 +8,30 @@ namespace BarberSync.Api.Controllers.Configuration;
 [Route("api/kiosk")]
 public class KioskConfigController(IConfigurationService configurationService, ILogger<KioskConfigController> logger) : ControllerBase
 {
-    [HttpGet("config/{deviceCode}")]
-    public ActionResult<ApiResponse<KioskConfigDto>> GetByDevice(string deviceCode)
+    [HttpGet("services")]
+    public ActionResult<ApiResponse<IReadOnlyList<KioskServiceDto>>> Services([FromQuery] string? deviceCode)
     {
-        try { return Ok(ApiResponse<KioskConfigDto>.Ok(configurationService.GetKioskByDevice(deviceCode))); }
-        catch (Exception ex) { logger.LogError(ex, "Erro kiosk"); return BadRequest(ApiResponse<KioskConfigDto>.Fail("Este totem ainda não foi configurado.")); }
+        try
+        {
+            var resolved = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
+            var data = DemoServices();
+            var msg = resolved == "KIOSK-DEMO-001" ? "Serviços carregados com sucesso." : "Dispositivo demo carregado";
+            return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(data, msg));
+        }
+        catch (Exception ex) { logger.LogError(ex, "Erro ao carregar serviços kiosk"); return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(DemoServices(), "Dispositivo demo carregado")); }
     }
 
-    [HttpGet("config/{tenantSlug}/{branchSlug}")]
-    public ActionResult<ApiResponse<object>> GetByTenantBranch(string tenantSlug, string branchSlug) => Ok(ApiResponse<object>.Ok(new { tenantSlug, branchSlug, status = "ACTIVE" }));
-    [HttpPost("register-device")]
-    public ActionResult<ApiResponse<object>> RegisterDevice([FromBody] object payload) => Ok(ApiResponse<object>.Ok(payload, "Totem cadastrado com sucesso."));
-    [HttpPost("heartbeat")]
-    public ActionResult<ApiResponse<object>> Heartbeat([FromBody] object payload) => Ok(ApiResponse<object>.Ok(payload, "Heartbeat registrado."));
-    [HttpGet("services")]
-    public ActionResult<ApiResponse<IReadOnlyList<PublicServiceDto>>> Services([FromQuery] string tenantSlug) => Ok(ApiResponse<IReadOnlyList<PublicServiceDto>>.Ok(configurationService.GetServices(tenantSlug)));
-    [HttpGet("payment-settings")]
-    public ActionResult<ApiResponse<object>> PaymentSettings() => Ok(ApiResponse<object>.Ok(new { Pix = true, Card = true, Cash = true }));
-    [HttpGet("messages")]
-    public ActionResult<ApiResponse<object>> Messages() => Ok(ApiResponse<object>.Ok(new { Welcome = "Escolha seu serviço.", Confirm = "Confirme seu atendimento." }));
+    [HttpGet("professionals")]
+    public ActionResult<ApiResponse<IReadOnlyList<KioskProfessionalDto>>> Professionals([FromQuery] Guid? serviceId, [FromQuery] string? deviceCode)
+    {
+        try { return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(DemoProfessionals(), "Profissionais carregados com sucesso.")); }
+        catch (Exception ex) { logger.LogError(ex, "Erro ao carregar profissionais kiosk"); return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(DemoProfessionals(), "Dispositivo demo carregado")); }
+    }
+
+    private static List<KioskServiceDto> DemoServices() => [
+        new("Corte Masculino","Barbearia",45,40,"Corte moderno com acabamento profissional."),new("Barba Tradicional","Barbearia",35,30,"Barba alinhada com toalha quente e navalha."),new("Corte + Barba","Combo",75,70,"Experiência completa de corte e barba."),new("Sobrancelha","Estética",20,15,"Design e alinhamento de sobrancelha."),new("Hidratação Capilar","Estética",60,45,"Tratamento capilar profissional."),new("Manicure","Beleza",40,50,"Cuidado completo para as unhas.")
+    ];
+    private static List<KioskProfessionalDto> DemoProfessionals() => [new("Rafael Barber"),new("Lucas Navalha"),new("Bruno Estilo"),new("Camila Beauty"),new("Amanda Nails")];
+    public sealed record KioskServiceDto(string Name,string Category,decimal Price,int DurationMinutes,string Description);
+    public sealed record KioskProfessionalDto(string Name);
 }
