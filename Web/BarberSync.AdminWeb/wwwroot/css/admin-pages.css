@@ -1,0 +1,1 @@
+.dashboard-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}.kpi-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem}
