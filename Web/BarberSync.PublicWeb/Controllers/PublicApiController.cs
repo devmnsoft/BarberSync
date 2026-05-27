@@ -8,10 +8,10 @@ namespace BarberSync.PublicWeb.Controllers;
 public class PublicApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<PublicApiController> logger) : Controller
 {
     [HttpGet("services")]
-    public Task<IActionResult> Services() => ProxyGet("/api/services", new[] { new { name = "Corte Masculino", description = "Atendimento premium.", price = 45 } });
+    public Task<IActionResult> Services() => ProxyGet("/api/services", new[] { new { name = "Corte Masculino", description = "Corte premium com consultoria de estilo.", price = 45 }, new { name = "Barba Tradicional", description = "Toalha quente e acabamento com navalha.", price = 35 }, new { name = "Combo Corte + Barba", description = "Experiência completa para ocasiões especiais.", price = 70 } });
 
     [HttpGet("professionals")]
-    public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", new[] { new { name = "Rafael Barber" } });
+    public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", new[] { new { name = "Rafael Barber", specialty = "Fade" }, new { name = "Lucas Navalha", specialty = "Barba" }, new { name = "Camila Beauty", specialty = "Visagismo" } });
 
 
     [HttpPost("leads")]
