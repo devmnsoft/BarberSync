@@ -1,4 +1,12 @@
 @model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = Model.Title; }
-<section class="admin-page-header"><h1>@Model.Module</h1><p>@Model.Subtitle</p></section>
-<div class="card"><div class="card-body"><p>Módulo <strong>@Model.Module</strong> ativo em /Admin/@Model.Module.</p></div></div>
+@{ ViewData["Title"] = "Loyalty"; }
+<section class="admin-page-header"><h1>Loyalty</h1><p>Painel operacional com dados e ações do módulo.</p></section>
+<div class="alert alert-warning d-none" id="LoyaltyFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
+<div class="row g-3" id="LoyaltyCards"></div>
+<div class="card mt-3 p-3">
+  <div class="d-flex justify-content-between"><h5>Lista de Loyalty</h5><button class="btn btn-primary">Novo</button></div>
+  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="LoyaltyRows"></tbody></table></div>
+</div>
+<script src="~/js/admin-api-client.js"></script>
+<script src="~/js/admin-crud.js"></script>
+<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Loyalty')</script>

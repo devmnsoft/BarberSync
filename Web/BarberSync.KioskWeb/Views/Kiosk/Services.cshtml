@@ -1,1 +1,11 @@
-@{Layout="~/Views/Shared/_KioskLayout.cshtml";}<h2>Escolha seu serviço</h2><div id='kioskServices' class='row g-3'></div>
+@{Layout="~/Views/Shared/_KioskLayout.cshtml";}
+<section class='container py-4'>
+ <h1>Escolha seu serviço</h1><p>Toque em um card para continuar.</p>
+ <div id='kioskServices' class='row g-3'></div>
+ <div class='mt-3'><a class='btn btn-outline-light' href='/Kiosk'>Voltar</a></div>
+</section>
+<script>
+const demo=[['Corte Masculino','R$ 45,00','40 min'],['Barba Tradicional','R$ 35,00','30 min'],['Corte + Barba','R$ 75,00','70 min'],['Sobrancelha','R$ 20,00','15 min'],['Hidratação','R$ 60,00','45 min'],['Manicure','R$ 40,00','50 min']];
+(async()=>{let items=demo;try{const r=await fetch('/api/kiosk/services?deviceCode=KIOSK-DEMO-001');if(r.ok) items=await r.json();}catch{}
+kioskServices.innerHTML=(Array.isArray(items)?items:demo).map(s=>`<div class='col-md-4'><div class='card p-3 h-100'><h5>${s.name||s[0]}</h5><p>${s.description||'Serviço premium para barbearia.'}</p><div><strong>${s.priceFormatted||s[1]}</strong> • ${s.durationLabel||s[2]}</div><a class='btn btn-warning mt-2' href='/Kiosk/Client'>Selecionar</a></div></div>`).join('');})();
+</script>
