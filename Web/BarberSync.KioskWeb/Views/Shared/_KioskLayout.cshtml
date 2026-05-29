@@ -3,25 +3,23 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewData["Title"] - BarberSync Kiosk</title>
     <link rel="stylesheet" href="~/css/kiosk-design-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/kiosk-brand.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/kiosk.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/kiosk-flow.css" asp-append-version="true" />
 </head>
 <body>
-    <header class='p-3 d-flex justify-content-between'>
-        <img src='~/img/logo-barbersync.svg' height='48' alt="BarberSync"/>
-        <a href='/Kiosk/Index' class='btn btn-outline-light btn-lg'>Voltar</a>
+    <header class="kiosk-header">
+        <img src="~/img/logo-barbersync-white.svg" alt="BarberSync"/>
+        <div class="kiosk-mode"><span>Modo demonstração</span><strong>KIOSK-DEMO-001</strong></div>
+        <a href="/Kiosk/Services" class="kiosk-reset">Reiniciar</a>
     </header>
-    <main class='container py-4'>@RenderBody()</main>
-
-    <script>
-        window.BarberSyncKiosk = { deviceCode: 'KIOSK-DEMO-001' };
-    </script>
-
+    <main class="kiosk-container">@RenderBody()</main>
+    <script>window.BarberSyncKiosk = { deviceCode: 'KIOSK-DEMO-001' };</script>
     @await RenderSectionAsync("Scripts", required: false)
-    <script src='~/js/kiosk-flow.js' asp-append-version="true"></script>
-    <script src='~/js/kiosk.js' asp-append-version="true"></script>
-    <script src='~/js/kiosk-timeout.js' asp-append-version="true"></script>
+    <script src="~/js/kiosk-flow.js" asp-append-version="true"></script>
+    <script src="~/js/kiosk.js" asp-append-version="true"></script>
+    <script src="~/js/kiosk-timeout.js" asp-append-version="true"></script>
 </body>
 </html>
