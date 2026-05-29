@@ -1,13 +1,37 @@
 @{
-    ViewData["Title"] = "Stock";
+    ViewData["Title"] = "Estoque";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<div class="page-header"><div><div class="page-title">Stock</div><div class="page-subtitle">Gestão do módulo com dados demo e ações rápidas.</div></div><div><button class="btn btn-primary">Novo</button></div></div>
-<section class="kpi-grid">
-  <article class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-value">128</div><div class="kpi-label">Indicador principal</div></article>
-  <article class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value">93%</div><div class="kpi-label">Eficiência</div></article>
-  <article class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-value">24h</div><div class="kpi-label">SLA médio</div></article>
+<section class="page-header">
+    <div>
+        <h1 class="page-title">Estoque</h1>
+        <p class="page-subtitle">Produtos, mínimos e reposição crítica. Dados carregados por proxy MVC <strong>/AdminApi/products</strong> com fallback demo.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" data-admin-refresh="Stock">Atualizar</button>
+        <button class="btn btn-primary" data-admin-new="Stock">Novo Produto</button>
+    </div>
 </section>
-<section class="panel" style="margin-top:16px"><div class="panel-header"><h3>Lista operacional</h3><button class="btn btn-secondary">Filtrar</button></div>
-<table class="table"><thead><tr><th>Item</th><th>Status</th><th>Ação</th></tr></thead><tbody><tr><td>Registro demo A</td><td><span class="badge badge-success">Ativo</span></td><td><button class="btn btn-secondary">Editar</button></td></tr><tr><td>Registro demo B</td><td><span class="badge badge-warning">Pendente</span></td><td><button class="btn btn-danger">Remover</button></td></tr></tbody></table></section>
-<div class="modal" style="display:none">Modal de criação/edição</div>
+<div class="alert alert-warning d-none" id="StockFallback">API indisponível: modo demonstração seguro ativo.</div>
+<section class="admin-module-grid" id="StockCards">
+    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
+</section>
+<section class="panel module-panel">
+    <div class="panel-header">
+        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
+        <span class="badge badge-info">/AdminApi/products</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="StockRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
+    </div>
+</section>
+<div class="admin-modal-backdrop" id="StockModal" hidden>
+    <form class="admin-modal" data-admin-form="Stock">
+        <div class="modal-header"><h3>Novo/editar Produto</h3><button type="button" class="modal-close" data-admin-close="Stock">×</button></div>
+        <label>Nome<input name="name" required placeholder="Nome" /></label>
+        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
+        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
+        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Stock">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
+    </form>
+</div>
+@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Stock')</script>}

@@ -1,13 +1,18 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+
+const colors = { dark:'#0B1220', gold:'#D4A72C', bg:'#F3F4F6', card:'#FFFFFF', text:'#111827', muted:'#6B7280', blue:'#2563EB', green:'#16A34A' };
+const Card = ({ children }) => <View style={{ backgroundColor: colors.card, borderRadius: 22, padding: 18, marginBottom: 14, shadowColor: colors.dark, shadowOpacity: 0.08, shadowRadius: 18, elevation: 3 }}>{children}</View>;
 
 export default function App() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, gap: 12 }}>
-      <Text style={{ fontSize: 22, fontWeight: '700' }}>BarberSync Mobile Gamificado</Text>
-      <Text>⭐ Programa de pontos e cashback em tempo real</Text>
-      <Text>📅 Agenda inteligente + cobrança automática</Text>
-      <Text>🔔 Push, WhatsApp e Telegram com gatilhos de eventos</Text>
-    </View>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: 22, paddingTop: 58 }}>
+      <Text style={{ color: colors.dark, fontSize: 30, fontWeight: '900' }}>BarberSync</Text>
+      <Text style={{ color: colors.muted, marginTop: 6, marginBottom: 18 }}>Mobile premium para clientes: agenda, cashback e histórico.</Text>
+      <Card><Text style={{ fontSize: 20, fontWeight: '800' }}>Olá, Cliente Demo 👋</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Seu próximo atendimento é hoje às 18:30 com Rafael Barber.</Text></Card>
+      <Card><Text style={{ fontSize: 18, fontWeight: '800' }}>Serviços rápidos</Text><Text style={{ marginTop: 10 }}>✂️ Corte Masculino • R$ 45</Text><Text>💈 Corte + Barba • R$ 70</Text><Text>🧴 Hidratação Premium • R$ 55</Text></Card>
+      <Card><Text style={{ fontSize: 18, fontWeight: '800' }}>Cashback</Text><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ 38,50</Text><Text style={{ color: colors.muted }}>Disponível para o próximo agendamento.</Text></Card>
+      <View style={{ backgroundColor: colors.blue, borderRadius: 18, padding: 16, alignItems: 'center' }}><Text style={{ color: 'white', fontWeight: '900' }}>Agendar agora</Text></View>
+    </ScrollView>
   );
 }
