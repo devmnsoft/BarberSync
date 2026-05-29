@@ -71,7 +71,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
 
     private string BuildApiUrl(string path)
     {
-        var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080";
+        var baseUrl = configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080";
         return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 

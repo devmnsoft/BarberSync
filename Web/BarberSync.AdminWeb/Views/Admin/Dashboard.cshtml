@@ -1,13 +1,15 @@
-@{ ViewData["Title"] = "Dashboard"; }
-<div class="page-header"><div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS completa da operação BarberSync.</p></div><div class="page-actions"><button class="btn btn-light">Exportar</button><button class="btn btn-gold">Copilot</button><button class="btn btn-primary">Novo Agendamento</button></div></div>
+@{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header">
+    <div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS premium com dados reais quando a API responde e fallback demo robusto via <strong>/AdminApi/dashboard</strong>.</p></div>
+    <div class="page-actions"><button class="btn btn-light">Exportar</button><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a><a class="btn btn-primary" href="/Admin/Appointments">Novo Agendamento</a></div>
+</section>
 <section class="kpi-grid" data-dashboard-kpis>
-@for (var i=1;i<=12;i++){<article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">Indicador @i</p><strong class="kpi-value">--</strong><span class="kpi-variation">demo</span></div></article>}
+@foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
 </section>
 <div class="dashboard-grid">
-<article class="panel span-6"><h3>Receita últimos 7 dias</h3><p>R$ 32.940,00</p></article>
-<article class="panel span-6"><h3>Serviços mais vendidos</h3><ul><li>Corte Masculino</li><li>Corte + Barba</li><li>Barba Tradicional</li></ul></article>
-<article class="panel span-4"><h3>Próximos agendamentos</h3><p>10:00 Rafael • Corte + Barba</p></article>
-<article class="panel span-4"><h3>Estoque crítico</h3><p>8 itens com reposição pendente.</p></article>
-<article class="panel span-4"><h3>Copilot</h3><p>Ative campanha de retorno para clientes inativos.</p></article>
+    <article class="panel span-6"><div class="panel-header"><h3>Serviços mais vendidos</h3><span class="badge badge-info">/AdminApi/services</span></div><ul class="metric-list" data-top-services><li>Corte Masculino</li></ul></article>
+    <article class="panel span-6"><div class="panel-header"><h3>Profissionais em destaque</h3><span class="badge badge-success">Disponíveis</span></div><p>Rafael Barber, Camila Beauty e Amanda Nails com alta avaliação.</p></article>
+    <article class="panel span-4"><h3>Próximos agendamentos</h3><ul class="metric-list" data-next-appointments><li>10:00 Cliente Demo</li></ul></article>
+    <article class="panel span-4"><h3>Estoque crítico</h3><ul class="metric-list" data-stock-critical><li>Lâmina Platinum</li></ul></article>
+    <article class="panel span-4"><h3>Sugestões Copilot</h3><ul class="metric-list" data-copilot-list><li>Ativar campanha de retorno.</li></ul></article>
 </div>
-@section Scripts{<script>window.dashboardKpis=window.dashboardKpis||[];</script>}

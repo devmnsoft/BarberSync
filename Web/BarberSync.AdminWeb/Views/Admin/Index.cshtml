@@ -1,4 +1,15 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = Model.Title; }
-<section class="admin-page-header"><h1>@Model.Module</h1><p>@Model.Subtitle</p></section>
-<div class="card"><div class="card-body"><p>Módulo <strong>@Model.Module</strong> ativo em /Admin/@Model.Module.</p></div></div>
+@{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header">
+    <div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS premium com dados reais quando a API responde e fallback demo robusto via <strong>/AdminApi/dashboard</strong>.</p></div>
+    <div class="page-actions"><button class="btn btn-light">Exportar</button><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a><a class="btn btn-primary" href="/Admin/Appointments">Novo Agendamento</a></div>
+</section>
+<section class="kpi-grid" data-dashboard-kpis>
+@foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
+</section>
+<div class="dashboard-grid">
+    <article class="panel span-6"><div class="panel-header"><h3>Serviços mais vendidos</h3><span class="badge badge-info">/AdminApi/services</span></div><ul class="metric-list" data-top-services><li>Corte Masculino</li></ul></article>
+    <article class="panel span-6"><div class="panel-header"><h3>Profissionais em destaque</h3><span class="badge badge-success">Disponíveis</span></div><p>Rafael Barber, Camila Beauty e Amanda Nails com alta avaliação.</p></article>
+    <article class="panel span-4"><h3>Próximos agendamentos</h3><ul class="metric-list" data-next-appointments><li>10:00 Cliente Demo</li></ul></article>
+    <article class="panel span-4"><h3>Estoque crítico</h3><ul class="metric-list" data-stock-critical><li>Lâmina Platinum</li></ul></article>
+    <article class="panel span-4"><h3>Sugestões Copilot</h3><ul class="metric-list" data-copilot-list><li>Ativar campanha de retorno.</li></ul></article>
+</div>

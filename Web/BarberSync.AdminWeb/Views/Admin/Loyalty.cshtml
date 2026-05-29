@@ -1,12 +1,37 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Loyalty"; }
-<section class="admin-page-header"><h1>Loyalty</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="LoyaltyFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="LoyaltyCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de Loyalty</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="LoyaltyRows"></tbody></table></div>
+@{
+    ViewData["Title"] = "Fidelidade";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header">
+    <div>
+        <h1 class="page-title">Fidelidade</h1>
+        <p class="page-subtitle">Cashback, pontos e membros ativos. Dados carregados por proxy MVC <strong>/AdminApi/loyalty</strong> com fallback demo.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" data-admin-refresh="Loyalty">Atualizar</button>
+        <button class="btn btn-primary" data-admin-new="Loyalty">Novo Regra</button>
+    </div>
+</section>
+<div class="alert alert-warning d-none" id="LoyaltyFallback">API indisponível: modo demonstração seguro ativo.</div>
+<section class="admin-module-grid" id="LoyaltyCards">
+    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
+</section>
+<section class="panel module-panel">
+    <div class="panel-header">
+        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
+        <span class="badge badge-info">/AdminApi/loyalty</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="LoyaltyRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
+    </div>
+</section>
+<div class="admin-modal-backdrop" id="LoyaltyModal" hidden>
+    <form class="admin-modal" data-admin-form="Loyalty">
+        <div class="modal-header"><h3>Novo/editar Regra</h3><button type="button" class="modal-close" data-admin-close="Loyalty">×</button></div>
+        <label>Nome<input name="name" required placeholder="Nome" /></label>
+        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
+        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
+        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Loyalty">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
+    </form>
 </div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-crud.js"></script>
-<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Loyalty')</script>
+@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Loyalty')</script>}

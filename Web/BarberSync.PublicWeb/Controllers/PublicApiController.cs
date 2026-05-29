@@ -40,5 +40,5 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         }
         catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(fallback); }
     }
-    private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
+    private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
 }
