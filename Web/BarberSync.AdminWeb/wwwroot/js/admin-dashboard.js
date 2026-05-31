@@ -10,7 +10,9 @@
   };
   const icons=['💰','📈','📅','👥','✂️','🧾','🎯','📦','⭐','📣','🖥️','💈'];
   const list=(arr,fn)=> (Array.isArray(arr)?arr:[]).slice(0,5).map(fn).join('');
-  const render=(data)=>{
+  const unwrap = payload => payload?.data && !Array.isArray(payload) ? payload.data : payload;
+  const render=(payload)=>{
+    const data = unwrap(payload) || fallback;
     const kpis = Array.isArray(data.kpis) && data.kpis.length ? data.kpis : fallback.kpis;
     const kpiEl=document.querySelector('[data-dashboard-kpis]');
     if(kpiEl) kpiEl.innerHTML=kpis.map((k,i)=>`<article class='kpi-card'><div class='kpi-icon'>${icons[i]||'📊'}</div><div><p class='kpi-label'>${k.label}</p><strong class='kpi-value'>${k.value}</strong><span class='kpi-variation'>${k.trend||'demo'}</span></div></article>`).join('');
@@ -19,5 +21,26 @@
     const st=document.querySelector('[data-stock-critical]'); if(st) st.innerHTML=list(data.stockCritical||fallback.stockCritical,s=>`<li><strong>${s.name}</strong><span>${s.current}/${s.minimum}</span></li>`);
     const co=document.querySelector('[data-copilot-list]'); if(co) co.innerHTML=list(data.copilotSuggestions||fallback.copilotSuggestions,c=>`<li><strong>${c.title||'Copilot'}</strong><span>${c.description||c}</span></li>`);
   };
-  document.addEventListener('DOMContentLoaded',async()=>{ if(!document.querySelector('[data-dashboard-kpis]')) return; const result=await adminApiClient.get('/AdminApi/dashboard',fallback); render(result.data||fallback); });
+  document.addEventListener('DOMContentLoaded',async()=>{
+    if(!document.querySelector('[data-dashboard-kpis]')) return;
+    const [dashboard, services, professionals, appointments, orders, products, stock, copilot] = await Promise.all([
+      adminApiClient.get('/AdminApi/dashboard', fallback),
+      adminApiClient.get('/AdminApi/services', fallback.topServices),
+      adminApiClient.get('/AdminApi/professionals', []),
+      adminApiClient.get('/AdminApi/appointments', fallback.appointments),
+      adminApiClient.get('/AdminApi/service-orders', []),
+      adminApiClient.get('/AdminApi/products', []),
+      adminApiClient.get('/AdminApi/stock-critical', fallback.stockCritical),
+      adminApiClient.get('/AdminApi/copilot-suggestions', fallback.copilotSuggestions)
+    ]);
+    const data = { ...(unwrap(dashboard.data) || fallback) };
+    data.topServices = unwrap(services.data) || data.topServices;
+    data.featuredProfessionals = unwrap(professionals.data) || data.featuredProfessionals;
+    data.appointments = unwrap(appointments.data) || data.appointments;
+    data.serviceOrders = unwrap(orders.data) || data.serviceOrders;
+    data.products = unwrap(products.data) || data.products;
+    data.stockCritical = unwrap(stock.data) || data.stockCritical;
+    data.copilotSuggestions = unwrap(copilot.data) || data.copilotSuggestions;
+    render(data);
+  });
 })();

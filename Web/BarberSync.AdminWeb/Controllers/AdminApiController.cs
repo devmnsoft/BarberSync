@@ -8,19 +8,19 @@ namespace BarberSync.AdminWeb.Controllers;
 [Route("AdminApi")]
 public class AdminApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<AdminApiController> logger) : ControllerBase
 {
-    [HttpGet("dashboard")] public Task<IActionResult> Dashboard() => ProxyGet("/api/dashboard/summary", DemoDashboard());
-    [HttpGet("clients")] public Task<IActionResult> Clients() => ProxyGet("/api/clients", DemoClients());
-    [HttpGet("professionals")] public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", DemoProfessionals());
-    [HttpGet("services")] public Task<IActionResult> Services() => ProxyGet("/api/services", DemoServices());
-    [HttpGet("appointments")] public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments());
-    [HttpGet("service-orders")] public Task<IActionResult> ServiceOrders() => ProxyGet("/api/service-orders", DemoServiceOrders());
-    [HttpGet("products")] public Task<IActionResult> Products() => ProxyGet("/api/products", DemoProducts());
-    [HttpGet("stock-critical")] public Task<IActionResult> StockCritical() => ProxyGet("/api/stock/critical", DemoStock());
-    [HttpGet("campaigns")] public Task<IActionResult> Campaigns() => ProxyGet("/api/campaigns", DemoCampaigns());
-    [HttpGet("coupons")] public Task<IActionResult> Coupons() => ProxyGet("/api/coupons", DemoCoupons());
-    [HttpGet("reviews")] public Task<IActionResult> Reviews() => ProxyGet("/api/reviews", DemoReviews());
-    [HttpGet("loyalty")] public Task<IActionResult> Loyalty() => ProxyGet("/api/loyalty/summary", DemoLoyalty());
-    [HttpGet("copilot-suggestions")] public Task<IActionResult> CopilotSuggestions() => ProxyGet("/api/copilot/suggestions", DemoCopilotSuggestions());
+    [HttpGet("dashboard")] public Task<IActionResult> Dashboard() => ProxyGet("/api/dashboard/summary", DemoDashboard(), "Dashboard carregado em modo demonstração.");
+    [HttpGet("clients")] public Task<IActionResult> Clients() => ProxyGet("/api/clients", DemoClients(), "Clientes carregados em modo demonstração.");
+    [HttpGet("professionals")] public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", DemoProfessionals(), "Profissionais carregados em modo demonstração.");
+    [HttpGet("services")] public Task<IActionResult> Services() => ProxyGet("/api/services", DemoServices(), "Serviços carregados em modo demonstração.");
+    [HttpGet("appointments")] public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments(), "Agenda carregada em modo demonstração.");
+    [HttpGet("service-orders")] public Task<IActionResult> ServiceOrders() => ProxyGet("/api/service-orders", DemoServiceOrders(), "Comandas carregadas em modo demonstração.");
+    [HttpGet("products")] public Task<IActionResult> Products() => ProxyGet("/api/products", DemoProducts(), "Produtos carregados em modo demonstração.");
+    [HttpGet("stock-critical")] public Task<IActionResult> StockCritical() => ProxyGet("/api/stock/critical", DemoStockCritical(), "Estoque crítico carregado em modo demonstração.");
+    [HttpGet("campaigns")] public Task<IActionResult> Campaigns() => ProxyGet("/api/campaigns", DemoCampaigns(), "Campanhas carregadas em modo demonstração.");
+    [HttpGet("coupons")] public Task<IActionResult> Coupons() => ProxyGet("/api/coupons", DemoCoupons(), "Cupons carregados em modo demonstração.");
+    [HttpGet("reviews")] public Task<IActionResult> Reviews() => ProxyGet("/api/reviews", DemoReviews(), "Avaliações carregadas em modo demonstração.");
+    [HttpGet("loyalty")] public Task<IActionResult> Loyalty() => ProxyGet("/api/loyalty/summary", DemoLoyalty(), "Fidelidade carregada em modo demonstração.");
+    [HttpGet("copilot-suggestions")] public Task<IActionResult> CopilotSuggestions() => ProxyGet("/api/copilot/suggestions", DemoCopilotSuggestions(), "Sugestões Copilot carregadas em modo demonstração.");
 
     [HttpPost("clients")] public Task<IActionResult> CreateClient([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/clients", payload, DemoMutation("Cliente criado em modo demonstração.", payload));
     [HttpPut("clients/{id}")] public Task<IActionResult> UpdateClient(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Put, $"/api/clients/{Uri.EscapeDataString(id)}", payload, DemoMutation("Cliente atualizado em modo demonstração.", payload, id));
@@ -35,113 +35,103 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpDelete("services/{id}")] public Task<IActionResult> DeleteService(string id) => ProxyDelete($"/api/services/{Uri.EscapeDataString(id)}", DemoMutation("Serviço removido em modo demonstração.", id));
 
     [HttpPost("appointments")] public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/appointments", payload, DemoMutation("Agendamento criado em modo demonstração.", payload));
+    [HttpPost("appointments/{id}/confirm")] public Task<IActionResult> ConfirmAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/confirm", null, DemoMutation("Agendamento confirmado em modo demonstração.", id));
+    [HttpPost("appointments/{id}/check-in")] public Task<IActionResult> CheckInAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/check-in", null, DemoMutation("Check-in realizado em modo demonstração.", id));
+    [HttpPost("appointments/{id}/start")] public Task<IActionResult> StartAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/start", null, DemoMutation("Atendimento iniciado em modo demonstração.", id));
+    [HttpPost("appointments/{id}/finish")] public Task<IActionResult> FinishAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/finish", null, DemoMutation("Atendimento finalizado em modo demonstração.", id));
+    [HttpPost("appointments/{id}/cancel")] public Task<IActionResult> CancelAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/cancel", null, DemoMutation("Agendamento cancelado em modo demonstração.", id));
+
     [HttpPost("service-orders/open")] public Task<IActionResult> OpenServiceOrder([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/service-orders/open", payload, DemoMutation("Comanda aberta em modo demonstração.", payload));
+    [HttpPost("service-orders/{id}/add-service")] public Task<IActionResult> AddServiceToOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/add-service", payload, DemoMutation("Serviço adicionado à comanda em modo demonstração.", payload, id));
+    [HttpPost("service-orders/{id}/add-product")] public Task<IActionResult> AddProductToOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/add-product", payload, DemoMutation("Produto adicionado à comanda em modo demonstração.", payload, id));
     [HttpPost("service-orders/{id}/pay")] public Task<IActionResult> PayServiceOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/pay", payload, DemoMutation("Pagamento da comanda aprovado em modo demonstração.", payload, id));
     [HttpPost("service-orders/{id}/close")] public Task<IActionResult> CloseServiceOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/close", payload, DemoMutation("Comanda fechada em modo demonstração.", payload, id));
-    [HttpPost("payments/mock")] public Task<IActionResult> MockPayment([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/payments/mock", payload, DemoMutation("Pagamento mock aprovado.", payload));
+
     [HttpPost("stock/entry")] public Task<IActionResult> StockEntry([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/stock/entry", payload, DemoMutation("Entrada de estoque registrada em modo demonstração.", payload));
+    [HttpPost("stock/exit")] public Task<IActionResult> StockExit([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/stock/exit", payload, DemoMutation("Saída de estoque registrada em modo demonstração.", payload));
     [HttpPost("campaigns")] public Task<IActionResult> CreateCampaign([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/campaigns", payload, DemoMutation("Campanha criada em modo demonstração.", payload));
     [HttpPost("coupons")] public Task<IActionResult> CreateCoupon([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/coupons", payload, DemoMutation("Cupom criado em modo demonstração.", payload));
-    [HttpPost("copilot/ask")] public Task<IActionResult> CopilotAsk([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/copilot/ask", payload, new { success = true, isDemo = true, answer = "Priorize retorno de clientes inativos, combos de alto ticket e escala extra entre 18h e 20h." });
+    [HttpPost("copilot/ask")] public Task<IActionResult> AskCopilot([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/copilot/ask", payload, new { success = true, message = "Copilot respondeu em modo demonstração.", data = new { answer = "Sugestão: priorize clientes VIP sem visita nos últimos 30 dias e ofereça combo Corte + Barba com cashback.", actions = new[] { "Criar campanha WhatsApp", "Gerar cupom VIP15", "Reforçar escala 18h-20h" }, isDemo = true } });
 
-    private async Task<IActionResult> ProxyGet(string path, object fallback)
+    private async Task<IActionResult> ProxyGet(string path, object fallbackData, string fallbackMessage)
     {
         try
         {
-            var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl(path));
-            if (!response.IsSuccessStatusCode)
-            {
-                logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
-                return Ok(fallback);
-            }
-            return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            var response = await httpClientFactory.CreateClient().GetAsync(BuildUrl(path));
+            if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Falha AdminApi GET {Path}. Usando fallback demo.", path);
-            return Ok(fallback);
+            logger.LogWarning(ex, "AdminApi GET {Path} lançou exceção. Usando fallback demo.", path);
         }
+
+        return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
     }
 
-    private Task<IActionResult> ProxySend(HttpMethod method, string path, JsonElement payload, object fallback) => SendCore(method, path, payload.GetRawText(), fallback);
+    private async Task<IActionResult> ProxySend(HttpMethod method, string path, JsonElement? payload, object fallback)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, BuildUrl(path));
+            if (payload.HasValue) request.Content = new StringContent(payload.Value.GetRawText(), Encoding.UTF8, "application/json");
+            var response = await httpClientFactory.CreateClient().SendAsync(request);
+            if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}. Usando fallback demo.", method, path, response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "AdminApi {Method} {Path} lançou exceção. Usando fallback demo.", method, path);
+        }
+
+        return Ok(fallback);
+    }
 
     private async Task<IActionResult> ProxyDelete(string path, object fallback)
     {
         try
         {
-            var response = await httpClientFactory.CreateClient("BarberSyncApi").DeleteAsync(BuildUrl(path));
-            if (!response.IsSuccessStatusCode)
-            {
-                logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
-                return Ok(fallback);
-            }
-            return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            var response = await httpClientFactory.CreateClient().DeleteAsync(BuildUrl(path));
+            if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Falha AdminApi DELETE {Path}. Usando fallback demo.", path);
-            return Ok(fallback);
+            logger.LogWarning(ex, "AdminApi DELETE {Path} lançou exceção. Usando fallback demo.", path);
         }
-    }
 
-    private async Task<IActionResult> SendCore(HttpMethod method, string path, string json, object fallback)
-    {
-        try
-        {
-            using var request = new HttpRequestMessage(method, BuildUrl(path)) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
-            var response = await httpClientFactory.CreateClient("BarberSyncApi").SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}. Usando fallback demo.", method, path, response.StatusCode);
-                return Ok(fallback);
-            }
-            return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Falha AdminApi {Method} {Path}. Usando fallback demo.", method, path);
-            return Ok(fallback);
-        }
+        return Ok(fallback);
     }
 
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
-
-    private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, isDemo = true, message, id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", data = JsonSerializer.Deserialize<object>(payload.GetRawText()) };
-    private static object DemoMutation(string message, string id) => new { success = true, isDemo = true, message, id };
+    private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message, data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
+    private static object DemoMutation(string message, string id) => new { success = true, message, data = new { id, isDemo = true } };
 
     private static object DemoDashboard() => new
     {
-        kpis = new object[] {
-            new { label = "Receita hoje", value = "R$ 4.850", trend = "+12%" }, new { label = "Receita mês", value = "R$ 97.800", trend = "+18%" }, new { label = "Agendamentos hoje", value = "26", trend = "+6" },
-            new { label = "Clientes ativos", value = "412", trend = "+31" }, new { label = "Atendimentos em andamento", value = "7", trend = "agora" }, new { label = "Comandas abertas", value = "9", trend = "R$ 780" },
-            new { label = "Ticket médio", value = "R$ 83", trend = "+9%" }, new { label = "Estoque crítico", value = "4", trend = "repor" }, new { label = "Avaliação média", value = "4,8", trend = "⭐" },
-            new { label = "Campanhas ativas", value = "3", trend = "CRM" }, new { label = "Totem online", value = "1", trend = "online" }, new { label = "Profissionais disponíveis", value = "5", trend = "escala" }
-        },
-        topServices = DemoServices(), featuredProfessionals = DemoProfessionals(), appointments = DemoAppointments(), serviceOrders = DemoServiceOrders(), stockCritical = DemoStock(), copilotSuggestions = DemoCopilotSuggestions(), isDemo = true
+        kpis = new object[] { new { label = "Receita hoje", value = "R$ 4.850", trend = "+12%" }, new { label = "Receita mês", value = "R$ 97.800", trend = "+18%" }, new { label = "Agendamentos hoje", value = "26", trend = "+6" }, new { label = "Clientes ativos", value = "412", trend = "+31" }, new { label = "Atendimentos em andamento", value = "7", trend = "agora" }, new { label = "Comandas abertas", value = "9", trend = "R$ 780" }, new { label = "Ticket médio", value = "R$ 83", trend = "+9%" }, new { label = "Estoque crítico", value = "4", trend = "repor" }, new { label = "Avaliação média", value = "4,8", trend = "⭐" }, new { label = "Campanhas ativas", value = "3", trend = "CRM" }, new { label = "Totem online", value = "1", trend = "online" }, new { label = "Profissionais disponíveis", value = "5", trend = "escala" } },
+        revenueLast7Days = new object[] { new { day = "Seg", total = 3820 }, new { day = "Ter", total = 4210 }, new { day = "Qua", total = 4680 }, new { day = "Qui", total = 5120 }, new { day = "Sex", total = 5840 }, new { day = "Sáb", total = 7350 }, new { day = "Dom", total = 4850 } },
+        appointmentsByStatus = new object[] { new { status = "Confirmado", total = 14 }, new { status = "Check-in", total = 5 }, new { status = "Em atendimento", total = 7 }, new { status = "Finalizado", total = 18 } },
+        topServices = DemoServices().Take(6).ToArray(), paymentMethods = new object[] { new { method = "PIX", total = 48 }, new { method = "Cartão", total = 37 }, new { method = "Dinheiro", total = 15 } },
+        professionalOccupancy = DemoProfessionals().Take(6).ToArray(), upcomingAppointments = DemoAppointments().Take(6).ToArray(), appointments = DemoAppointments().Take(6).ToArray(),
+        openServiceOrders = DemoServiceOrders().Where(x => !JsonSerializer.Serialize(x).Contains("Fechada")).ToArray(), serviceOrders = DemoServiceOrders().Take(5).ToArray(), criticalStock = DemoStockCritical(), stockCritical = DemoStockCritical(), copilotSuggestions = DemoCopilotSuggestions(), alerts = new object[] { new { type = "stock", message = "4 itens abaixo do estoque mínimo." }, new { type = "schedule", message = "Pico de demanda previsto entre 18h e 20h." }, new { type = "crm", message = "32 clientes VIP sem retorno em 30 dias." } }, isDemo = true
     };
 
-    private static object[] DemoServices() => [
-        new { id = "demo-corte", name = "Corte Masculino", category = "Barbearia", price = 45.00m, durationMinutes = 40, status = "ACTIVE", site = true, kiosk = true, mobile = true },
-        new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", price = 35.00m, durationMinutes = 30, status = "ACTIVE", site = true, kiosk = true, mobile = true },
-        new { id = "demo-combo", name = "Corte + Barba", category = "Combo", price = 70.00m, durationMinutes = 60, status = "ACTIVE", site = true, kiosk = true, mobile = true },
-        new { id = "demo-hidratacao", name = "Hidratação Premium", category = "Tratamento", price = 55.00m, durationMinutes = 45, status = "ACTIVE", site = true, kiosk = false, mobile = true }
-    ];
+    private static object[] DemoClients() => new object[] { new { id="cli-001", name="Marcos Vinícius", type="PF", document="123.456.789-01", phone="(11) 98801-1001", whatsapp="(11) 98801-1001", email="marcos@demo.com", lastVisit="28/05/2026", cashback=42.50m, isVip=true, status="VIP" }, new { id="cli-002", name="Thiago Almeida", type="PF", document="234.567.890-12", phone="(11) 98802-1002", whatsapp="(11) 98802-1002", email="thiago@demo.com", lastVisit="27/05/2026", cashback=18.00m, isVip=false, status="Ativo" }, new { id="cli-003", name="Fernanda Costa", type="PF", document="345.678.901-23", phone="(11) 98803-1003", whatsapp="(11) 98803-1003", email="fernanda@demo.com", lastVisit="26/05/2026", cashback=75.00m, isVip=true, status="VIP" }, new { id="cli-004", name="Eduardo Lima", type="PF", document="456.789.012-34", phone="(11) 98804-1004", whatsapp="(11) 98804-1004", email="eduardo@demo.com", lastVisit="25/05/2026", cashback=12.00m, isVip=false, status="Ativo" }, new { id="cli-005", name="Barber Prime Ltda", type="PJ", document="12.345.678/0001-90", phone="(11) 3222-1005", whatsapp="(11) 98805-1005", email="prime@demo.com", lastVisit="24/05/2026", cashback=120.00m, isVip=true, status="VIP" }, new { id="cli-006", name="Renata Martins", type="PF", document="567.890.123-45", phone="(11) 98806-1006", whatsapp="(11) 98806-1006", email="renata@demo.com", lastVisit="23/05/2026", cashback=9.90m, isVip=false, status="Ativo" }, new { id="cli-007", name="Lucas Pereira", type="PF", document="678.901.234-56", phone="(11) 98807-1007", whatsapp="(11) 98807-1007", email="lucas@demo.com", lastVisit="22/05/2026", cashback=33.00m, isVip=false, status="Ativo" }, new { id="cli-008", name="Camila Rocha", type="PF", document="789.012.345-67", phone="(11) 98808-1008", whatsapp="(11) 98808-1008", email="camila@demo.com", lastVisit="21/05/2026", cashback=51.00m, isVip=true, status="VIP" }, new { id="cli-009", name="André Souza", type="PF", document="890.123.456-78", phone="(11) 98809-1009", whatsapp="(11) 98809-1009", email="andre@demo.com", lastVisit="20/05/2026", cashback=6.00m, isVip=false, status="Ativo" }, new { id="cli-010", name="Patrícia Nunes", type="PF", document="901.234.567-89", phone="(11) 98810-1010", whatsapp="(11) 98810-1010", email="patricia@demo.com", lastVisit="19/05/2026", cashback=28.00m, isVip=false, status="Ativo" }, new { id="cli-011", name="Gustavo Reis", type="PF", document="012.345.678-90", phone="(11) 98811-1011", whatsapp="(11) 98811-1011", email="gustavo@demo.com", lastVisit="18/05/2026", cashback=16.00m, isVip=false, status="Inativo" }, new { id="cli-012", name="Juliana Santos", type="PF", document="147.258.369-00", phone="(11) 98812-1012", whatsapp="(11) 98812-1012", email="juliana@demo.com", lastVisit="17/05/2026", cashback=64.00m, isVip=true, status="VIP" } };
 
-    private static object[] DemoProfessionals() => [
-        new { id = "pro-rafael", name = "Rafael Barber", specialty = "Fade e barba", status = "Disponível", rating = 4.9m },
-        new { id = "pro-lucas", name = "Lucas Navalha", specialty = "Corte clássico", status = "Em atendimento", rating = 4.8m },
-        new { id = "pro-camila", name = "Camila Beauty", specialty = "Coloração", status = "Disponível", rating = 4.9m },
-        new { id = "pro-amanda", name = "Amanda Nails", specialty = "Nails premium", status = "Disponível", rating = 4.7m }
-    ];
+    private static object[] DemoProfessionals() => new object[] { new { id="pro-001", name="Rafael Barber", specialty="Fade e barba", phone="(11) 97701-1001", email="rafael@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=28400m, appointmentsToday=8, commissionPercent=40, services=new[] { "Corte Masculino", "Barba Tradicional", "Combo Corte + Barba" } }, new { id="pro-002", name="Lucas Navalha", specialty="Corte clássico", phone="(11) 97702-1002", email="lucas@barbersync.demo", status="Em atendimento", rating=4.8m, monthlyRevenue=24200m, appointmentsToday=6, commissionPercent=38, services=new[] { "Corte Masculino", "Sobrancelha" } }, new { id="pro-003", name="Camila Beauty", specialty="Visagismo e coloração", phone="(11) 97703-1003", email="camila@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=31800m, appointmentsToday=7, commissionPercent=42, services=new[] { "Coloração", "Hidratação Premium" } }, new { id="pro-004", name="Amanda Nails", specialty="Nails premium", phone="(11) 97704-1004", email="amanda@barbersync.demo", status="Disponível", rating=4.7m, monthlyRevenue=19800m, appointmentsToday=5, commissionPercent=40, services=new[] { "Manicure", "Pedicure" } }, new { id="pro-005", name="Diego Skin", specialty="Estética masculina", phone="(11) 97705-1005", email="diego@barbersync.demo", status="Folga", rating=4.8m, monthlyRevenue=17600m, appointmentsToday=0, commissionPercent=35, services=new[] { "Limpeza de pele", "Massagem capilar" } }, new { id="pro-006", name="Bianca Studio", specialty="Design de sobrancelhas", phone="(11) 97706-1006", email="bianca@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=22100m, appointmentsToday=4, commissionPercent=37, services=new[] { "Sobrancelha", "Micropigmentação" } } };
 
-    private static object[] DemoClients() => Enumerable.Range(1, 10).Select(i => new { id = $"cli-{i}", name = $"Cliente Demo {i}", phone = $"(11) 9888{i}-000{i}", status = i % 3 == 0 ? "VIP" : "Ativo", visits = 3 + i, lastVisit = DateTime.Today.AddDays(-i).ToString("dd/MM/yyyy") }).Cast<object>().ToArray();
-    private static object[] DemoAppointments() => Enumerable.Range(1, 8).Select(i => new { id = $"ag-{i}", client = $"Cliente Demo {i}", service = i % 2 == 0 ? "Corte + Barba" : "Corte Masculino", professional = i % 2 == 0 ? "Rafael Barber" : "Camila Beauty", time = $"{9 + i:00}:00", status = i % 3 == 0 ? "Em atendimento" : "Confirmado" }).Cast<object>().ToArray();
-    private static object[] DemoServiceOrders() => Enumerable.Range(1, 5).Select(i => new { id = $"os-{i}", code = $"SO-10{i:00}", client = $"Cliente Demo {i}", status = i % 2 == 0 ? "Aberta" : "Em execução", total = 70 + i * 15 }).Cast<object>().ToArray();
-    private static object[] DemoProducts() => Enumerable.Range(1, 10).Select(i => new { id = $"prod-{i}", name = $"Produto Demo {i}", category = "Estoque", stock = 5 + i, minimum = 8, status = (5 + i) <= 8 ? "Crítico" : "OK" }).Cast<object>().ToArray();
-    private static object[] DemoStock() => [ new { id = "stk-1", name = "Lâmina Platinum", current = 6, minimum = 20, status = "Crítico" }, new { id = "stk-2", name = "Toalha Premium", current = 10, minimum = 25, status = "Atenção" }, new { id = "stk-3", name = "Pomada Modeladora", current = 7, minimum = 15, status = "Crítico" }, new { id = "stk-4", name = "Shampoo Anticaspa", current = 5, minimum = 10, status = "Crítico" } ];
-    private static object[] DemoCampaigns() => [ new { id = "camp-1", name = "Volte e ganhe", channel = "WhatsApp", status = "Ativa", conversion = "18%" }, new { id = "camp-2", name = "Combo do mês", channel = "Instagram", status = "Ativa", conversion = "12%" }, new { id = "camp-3", name = "Aniversariantes", channel = "SMS", status = "Agendada", conversion = "--" } ];
-    private static object[] DemoCoupons() => [ new { id = "cup-1", code = "BARBA10", discount = 10, status = "Ativo" }, new { id = "cup-2", code = "VIP15", discount = 15, status = "Ativo" }, new { id = "cup-3", code = "WELCOME5", discount = 5, status = "Ativo" } ];
-    private static object[] DemoReviews() => [ new { id = "rev-1", client = "Marcos", rating = 5, comment = "Atendimento excelente", status = "Publicado" }, new { id = "rev-2", client = "Thiago", rating = 4, comment = "Ótimo acabamento", status = "Publicado" }, new { id = "rev-3", client = "Eduardo", rating = 5, comment = "Voltarei com certeza", status = "Publicado" } ];
-    private static object DemoLoyalty() => new { name = "Clube BarberSync", status = "Ativo", pointsDistributed = 1800, activeMembers = 132, cashbackMonth = 2340, tiers = new[] { "Silver", "Gold", "Black" } };
-    private static object[] DemoCopilotSuggestions() => [ new { title = "Retenção", description = "Reforçar campanha de retorno para clientes inativos há 45 dias.", priority = "Alta" }, new { title = "Escala", description = "Aumentar escala no horário de pico entre 18h e 20h.", priority = "Média" }, new { title = "Receita", description = "Criar cupom de recompra para serviços com baixa ocupação.", priority = "Alta" } ];
+    private static object[] DemoServices() => new object[] { new { id="srv-001", name="Corte Masculino", category="Barbearia", description="Corte moderno com consultoria de estilo e acabamento.", price=45m, durationMinutes=40, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-002", name="Barba Tradicional", category="Barbearia", description="Toalha quente, navalha e balm premium.", price=35m, durationMinutes=30, commissionPercent=38, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-003", name="Combo Corte + Barba", category="Combo", description="Experiência completa BarberSync.", price=70m, durationMinutes=60, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-004", name="Sobrancelha", category="Estética", description="Design e limpeza com acabamento natural.", price=25m, durationMinutes=20, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-005", name="Hidratação Premium", category="Tratamento", description="Tratamento capilar com produtos profissionais.", price=55m, durationMinutes=45, commissionPercent=36, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-006", name="Coloração", category="Coloração", description="Coloração técnica com diagnóstico prévio.", price=120m, durationMinutes=90, commissionPercent=42, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-007", name="Manicure", category="Nails", description="Cutilagem, esmaltação e hidratação.", price=40m, durationMinutes=45, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-008", name="Pedicure", category="Nails", description="Cuidado completo para os pés.", price=48m, durationMinutes=50, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-009", name="Limpeza de Pele", category="Estética", description="Higienização facial e máscara calmante.", price=95m, durationMinutes=70, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-010", name="Massagem Capilar", category="Bem-estar", description="Relaxamento com óleos essenciais.", price=65m, durationMinutes=35, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" } };
+
+    private static object[] DemoAppointments() => Enumerable.Range(1, 12).Select(i => new { id=$"apt-{i:000}", clientName=DemoNames[i - 1], client=DemoNames[i - 1], professionalName=i % 3 == 0 ? "Camila Beauty" : i % 2 == 0 ? "Lucas Navalha" : "Rafael Barber", professional=i % 3 == 0 ? "Camila Beauty" : i % 2 == 0 ? "Lucas Navalha" : "Rafael Barber", serviceName=i % 4 == 0 ? "Combo Corte + Barba" : i % 3 == 0 ? "Hidratação Premium" : "Corte Masculino", service=i % 4 == 0 ? "Combo Corte + Barba" : i % 3 == 0 ? "Hidratação Premium" : "Corte Masculino", scheduledAt=DateTime.Today.AddHours(8 + i).ToString("yyyy-MM-ddTHH:mm:ss"), time=$"{8 + i:00}:00", price=i % 4 == 0 ? 70m : i % 3 == 0 ? 55m : 45m, status=i % 5 == 0 ? "Em atendimento" : i % 4 == 0 ? "Check-in" : "Confirmado", notes="Preferência registrada no CRM demo." }).Cast<object>().ToArray();
+    private static readonly string[] DemoNames = new[] { "Marcos Vinícius", "Thiago Almeida", "Fernanda Costa", "Eduardo Lima", "Renata Martins", "Lucas Pereira", "Camila Rocha", "André Souza", "Patrícia Nunes", "Gustavo Reis", "Juliana Santos", "Bruno Carvalho" };
+
+    private static object[] DemoServiceOrders() => Enumerable.Range(1, 8).Select(i => new { id=$"so-{i:000}", number=$"SO-2026-{1000 + i}", code=$"SO-2026-{1000 + i}", clientName=DemoNames[i - 1], client=DemoNames[i - 1], professionalName=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty", items=new object[] { new { name="Corte Masculino", quantity=1, total=45m }, new { name=i % 2 == 0 ? "Pomada Modeladora" : "Barba Tradicional", quantity=1, total=i % 2 == 0 ? 39m : 35m } }, subtotal=i % 2 == 0 ? 84m : 80m, discount=i % 3 == 0 ? 10m : 0m, total=(i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m), paidAmount=i > 5 ? ((i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m)) : 0m, status=i > 5 ? "Fechada" : i % 3 == 0 ? "Pagamento" : "Aberta" }).Cast<object>().ToArray();
+    private static object[] DemoProducts() => Enumerable.Range(1, 12).Select(i => new { id=$"prod-{i:000}", name=new[] { "Lâmina Platinum", "Pomada Modeladora", "Shampoo Anticaspa", "Balm para Barba", "Toalha Premium", "Óleo Essencial", "Gel Cola", "Máscara Facial", "Esmalte Nude", "Creme Hidratante", "Capa de Corte", "Luvas Nitrílicas" }[i - 1], category=i % 3 == 0 ? "Tratamento" : i % 2 == 0 ? "Revenda" : "Insumo", sku=$"BS-{i:0000}", costPrice=8m + i, salePrice=18m + (i * 3), currentStock=i < 5 ? 4 + i : 15 + i, minStock=i < 5 ? 12 : 10, stock=i < 5 ? 4 + i : 15 + i, minimum=i < 5 ? 12 : 10, status=i < 5 ? "Crítico" : "OK" }).Cast<object>().ToArray();
+    private static object[] DemoStockCritical() => DemoProducts().Take(4).ToArray();
+    private static object[] DemoCampaigns() => new object[] { new { id="camp-001", name="Volte e Ganhe", channel="WhatsApp", audience="Clientes 45 dias sem visita", period="01/06 a 15/06", status="Ativa", conversion="18%" }, new { id="camp-002", name="Combo do Mês", channel="Instagram", audience="Novos clientes", period="Maio/2026", status="Ativa", conversion="12%" }, new { id="camp-003", name="Aniversariantes", channel="SMS", audience="Clientes do mês", period="Mensal", status="Agendada", conversion="--" }, new { id="camp-004", name="VIP Black", channel="E-mail", audience="VIP", period="Última semana", status="Ativa", conversion="24%" }, new { id="camp-005", name="Indique um Amigo", channel="WhatsApp", audience="Base ativa", period="Trimestral", status="Pausada", conversion="9%" } };
+    private static object[] DemoCoupons() => new object[] { new { id="cup-001", code="BARBA10", discount="10%", validUntil="2026-06-30", status="Ativo" }, new { id="cup-002", code="VIP15", discount="15%", validUntil="2026-06-15", status="Ativo" }, new { id="cup-003", code="WELCOME5", discount="R$ 5", validUntil="2026-07-01", status="Ativo" }, new { id="cup-004", code="COMBO20", discount="20%", validUntil="2026-06-10", status="Pausado" }, new { id="cup-005", code="NIVER25", discount="25%", validUntil="2026-12-31", status="Ativo" }, new { id="cup-006", code="CASHBACKDOBRO", discount="2x cashback", validUntil="2026-06-20", status="Ativo" } };
+    private static object[] DemoReviews() => Enumerable.Range(1, 10).Select(i => new { id=$"rev-{i:000}", client=DemoNames[i - 1], rating=i % 4 == 0 ? 4 : 5, nps=i % 4 == 0 ? 8 : 10, comment=i % 2 == 0 ? "Atendimento pontual e acabamento excelente." : "Experiência premium, recomendo.", professional=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty", status="Publicado" }).Cast<object>().ToArray();
+    private static object DemoLoyalty() => new { balance=18420m, cashbackMonth=2340m, activeMembers=132, customersWithCashback=DemoClients().Where((_, i) => i < 6).ToArray(), statement=new object[] { new { date="2026-05-28", client="Marcos Vinícius", amount=12.5m, type="Crédito" }, new { date="2026-05-27", client="Fernanda Costa", amount=20m, type="Resgate" }, new { date="2026-05-26", client="Juliana Santos", amount=8m, type="Crédito" } }, tiers=new[] { "Silver", "Gold", "Black" }, status="Ativo" };
+    private static object[] DemoCopilotSuggestions() => new object[] { new { title="Retenção VIP", description="Acionar clientes VIP sem visita nos últimos 30 dias com cupom VIP15.", priority="Alta", impact="R$ 6.200" }, new { title="Escala inteligente", description="Reforçar profissionais entre 18h e 20h para reduzir espera no totem.", priority="Alta", impact="+14 atendimentos" }, new { title="Estoque crítico", description="Comprar lâminas, toalhas e pomadas antes do pico do fim de semana.", priority="Média", impact="Evita ruptura" }, new { title="Upsell de combos", description="Oferecer Combo Corte + Barba aos clientes de corte avulso.", priority="Média", impact="+R$ 18 ticket" }, new { title="Reputação", description="Solicitar avaliações após pagamentos PIX para ampliar prova social.", priority="Baixa", impact="+0,2 rating" } };
 }

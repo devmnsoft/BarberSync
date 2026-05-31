@@ -75,11 +75,18 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 
-    private static object[] DemoServices() =>
-    [
+    private static object[] DemoServices() => new object[]
+    {
         new { id = "demo-corte", name = "Corte Masculino", category = "Barbearia", description = "Corte moderno com acabamento profissional.", price = 45.00, durationMinutes = 40, icon = "✂️", isAvailable = true, isDemo = true },
-        new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", description = "Barba alinhada com toalha quente e navalha.", price = 35.00, durationMinutes = 30, icon = "🪒", isAvailable = true, isDemo = true }
-    ];
+        new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", description = "Barba alinhada com toalha quente e navalha.", price = 35.00, durationMinutes = 30, icon = "🪒", isAvailable = true, isDemo = true },
+        new { id = "demo-combo", name = "Combo Corte + Barba", category = "Combo", description = "Atendimento completo com preço especial.", price = 70.00, durationMinutes = 60, icon = "💈", isAvailable = true, isDemo = true },
+        new { id = "demo-sobrancelha", name = "Sobrancelha", category = "Estética", description = "Design rápido para completar o visual.", price = 25.00, durationMinutes = 20, icon = "✨", isAvailable = true, isDemo = true }
+    };
 
-    private static object[] DemoProfessionals() => [new { name = "Rafael Barber", specialty = "Fade", estimatedWaitMinutes = 10, isDemo = true }];
+    private static object[] DemoProfessionals() => new object[]
+    {
+        new { id = "pro-rafael", name = "Rafael Barber", specialty = "Fade e barba", rating = 4.9, estimatedWaitMinutes = 10, isDemo = true },
+        new { id = "pro-lucas", name = "Lucas Navalha", specialty = "Corte clássico", rating = 4.8, estimatedWaitMinutes = 15, isDemo = true },
+        new { id = "pro-camila", name = "Camila Beauty", specialty = "Visagismo", rating = 4.9, estimatedWaitMinutes = 20, isDemo = true }
+    };
 }
