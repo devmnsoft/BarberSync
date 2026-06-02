@@ -20,3 +20,6 @@
 
 ## Integração segura
 O navegador chama somente `/KioskApi/...`; a URL interna da API fica no servidor MVC.
+
+## Roteiro rápido para vendas
+Mostre o fluxo em voz alta: serviço escolhido, cliente identificado, profissional selecionado, pagamento mock aprovado e avaliação final. O resumo lateral deve ser usado para confirmar que o estado foi preservado entre telas.

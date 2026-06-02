@@ -25,3 +25,8 @@ O BarberSync reduz fricção operacional ao unificar agenda, atendimento, comand
 - PublicWeb abre em `http://localhost:8082/`.
 - Totem abre em `http://localhost:8083/Kiosk/Services`.
 - Navegador usa apenas `/AdminApi`, `/PublicApi` e `/KioskApi`.
+
+## Validação da versão demo madura — 2026-06-02
+- Durante a apresentação, explique que Admin, PublicWeb e Kiosk possuem fallback demo para manter a experiência comercial fluida mesmo sem API externa.
+- Demonstre uma mutação visual em cada etapa crítica: criar cliente, alterar status da agenda, pagar comanda, gerar reposição, criar campanha e registrar avaliação.
+- Ao encerrar, reforçar que a segurança de proxy evita chamadas diretas do browser para a URL interna do container.
