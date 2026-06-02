@@ -1,3 +1,7 @@
+## Atualização Demo Experience 1.0
+
+O PublicWeb é uma landing comercial com headline, CTA, serviços, profissionais, diferenciais, planos, antes/depois e formulário de agendamento via `/PublicApi/appointments`.
+
 # BarberSync — Manual de Uso PublicWeb
 
 ## Objetivo

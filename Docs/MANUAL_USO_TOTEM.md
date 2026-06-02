@@ -1,3 +1,7 @@
+## Atualização Demo Experience 1.0
+
+O Totem usa `/KioskApi/...`, salva o fluxo em sessionStorage, permite voltar/cancelar, exibe resumo lateral, possui tela `/Kiosk/Help`, simula pagamento e reseta a tela de sucesso após 10 segundos.
+
 # BarberSync — Manual de Uso do Totem
 
 ## Fluxo guiado

@@ -110,8 +110,12 @@
     return get(key);
   }
 
+  function patch(moduleName, id, patchValue) {
+    return update(moduleName, id, patchValue || {});
+  }
+
   function updateStatus(moduleName, id, status) {
-    return update(moduleName, id, { status });
+    return patch(moduleName, id, { status });
   }
 
   function reset(moduleName) {
@@ -127,5 +131,5 @@
     return readState();
   }
 
-  window.BarberSyncDemoStore = { get, set, add, update, remove, updateStatus, reset, resetAll, seed: clone(seed), moduleKey };
+  window.BarberSyncDemoStore = { get, set, add, update, remove, patch, updateStatus, reset, resetAll, seed: clone(seed), moduleKey };
 })();

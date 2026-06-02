@@ -1,3 +1,7 @@
+## BarberSync Demo Experience 1.0
+
+Inclui dashboard executivo, Cliente 360, profissionais com performance, serviços por canais, agenda com status, comandas com recibo, estoque com reposição, campanhas/cupons, fidelidade/cashback, avaliações/NPS, Copilot acionável, PublicWeb comercial, Totem ponta a ponta e Mobile com tema coerente.
+
 # BarberSync — Funcionalidades Completas Demo Comercial 1.0
 
 ## Admin

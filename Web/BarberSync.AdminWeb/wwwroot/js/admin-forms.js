@@ -24,8 +24,17 @@
     });
   }
 
-  function serializeForm(form) {
-    return Object.fromEntries(new FormData(form).entries());
+  function serializeForm(formOrId) {
+    const form = typeof formOrId === 'string' ? (document.getElementById(formOrId) || document.querySelector(`[data-admin-form='${formOrId}']`)) : formOrId;
+    return form ? Object.fromEntries(new FormData(form).entries()) : {};
+  }
+
+  function validateForm(formOrId) {
+    const form = typeof formOrId === 'string' ? (document.getElementById(formOrId) || document.querySelector(`[data-admin-form='${formOrId}']`)) : formOrId;
+    if (!form) return false;
+    const valid = form.checkValidity();
+    form.querySelectorAll(':invalid').forEach(input => input.classList.add('is-invalid'));
+    return valid;
   }
 
   function fillForm(form, data = {}) {
@@ -41,7 +50,7 @@
     form?.querySelectorAll?.('.is-invalid').forEach(input => input.classList.remove('is-invalid'));
   }
 
-  const api = { validateRequired, validateEmail, applyMasks, serializeForm, fillForm, resetForm };
+  const api = { validateRequired, validateEmail, applyMasks, serializeForm, validateForm, fillForm, resetForm };
   window.AdminForms = api;
   Object.assign(window, api);
   document.addEventListener('DOMContentLoaded', applyMasks);

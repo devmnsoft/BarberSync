@@ -14,11 +14,11 @@
       if (side) side.innerHTML = `<p><strong>Serviço:</strong> ${s.serviceName || 'A escolher'}</p><p><strong>Cliente:</strong> ${s.client?.name || 'A identificar'}</p><p><strong>Profissional:</strong> ${s.professionalName || 'A escolher'}</p><p><strong>Pagamento:</strong> ${s.paymentMethod || 'A selecionar'}</p>`;
     };
     renderSideSummary();
-    document.querySelector('[data-kiosk-help]')?.addEventListener('click',()=> alert('Um atendente foi chamado. No modo demo, continue o fluxo para apresentar o autoatendimento.'));
+    document.querySelectorAll('[data-kiosk-help]').forEach(button => button.addEventListener('click',()=> { KioskFlow.setState({ helpRequestedAt: new Date().toISOString() }); location.href='/Kiosk/Help'; }));
     document.querySelector('[data-kiosk-back]')?.addEventListener('click',()=> history.length > 1 ? history.back() : location.href='/Kiosk/Services');
     document.querySelector('[data-kiosk-accessibility]')?.addEventListener('click',()=> { document.body.classList.toggle('kiosk-accessible'); document.body.classList.toggle('kiosk-high-contrast'); });
     document.querySelector('[data-kiosk-cancel]')?.addEventListener('click',()=> sessionStorage.removeItem('kiosk-flow'));
-    if (document.querySelector('.kiosk-step.success')) setTimeout(()=>{ sessionStorage.removeItem('kiosk-flow'); location.href='/Kiosk/Services'; }, 25000);
+    if (document.querySelector('.kiosk-step.success')) setTimeout(()=>{ sessionStorage.removeItem('kiosk-flow'); location.href='/Kiosk/Services'; }, 10000);
 
     const servicesEl=document.getElementById('kioskServices');
     if(servicesEl){ const payload=await loadJson(`/KioskApi/services?deviceCode=${encodeURIComponent(KioskFlow.deviceCode)}`,fallbackServices); const list=unwrap(payload,fallbackServices); document.getElementById('kioskDemoNotice')?.toggleAttribute('hidden', !(payload.message||'').toLowerCase().includes('demonstra')); servicesEl.innerHTML=list.map(s=>`<article class='k-card'><div class='k-icon'>${s.icon||'💈'}</div><h3>${s.name}</h3><p>${s.description||s.category}</p><strong>R$ ${Number(s.price??0).toFixed(2).replace('.',',')}</strong><span>${s.durationMinutes||30} min</span><a class='k-btn' data-service='${s.id||s.name}' href='/Kiosk/Client'>Selecionar</a></article>`).join(''); servicesEl.addEventListener('click',e=>{const a=e.target.closest('[data-service]'); if(a) { KioskFlow.setState({serviceId:a.dataset.service, serviceName:a.closest('.k-card').querySelector('h3').textContent}); renderSideSummary(); }}); }
