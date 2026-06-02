@@ -1,31 +1,10 @@
-## Atualização Demo Experience 1.0
+# Manual de Uso PublicWeb — Demo Experience 2.0
 
-O PublicWeb é uma landing comercial com headline, CTA, serviços, profissionais, diferenciais, planos, antes/depois e formulário de agendamento via `/PublicApi/appointments`.
+O PublicWeb foi refinado para conversão comercial com hero premium, CTA fixo, demonstração em passos, antes/depois, resultados esperados, totem em ação, app do cliente, IA na gestão, planos e formulários.
 
-# BarberSync — Manual de Uso PublicWeb
-
-## Objetivo
-Vender a proposta BarberSync e permitir agendamento demonstrável para cliente final.
-
-## Seções principais
-- Por que escolher o BarberSync.
-- Antes e depois.
-- Diferenciais.
-- Como funciona.
-- Totem inteligente.
-- App para clientes.
-- IA para gestão.
-- Planos.
-- Solicitar demonstração.
-
-## CTAs
-- Agendar serviço.
-- Ver painel administrativo.
-- Testar totem.
-- Solicitar demonstração.
-
-## Agendamento
-O formulário envia `POST /PublicApi/appointments` e mostra feedback visual. Se a API estiver indisponível, o fallback demo retorna sucesso controlado.
-
-## Demonstração comercial
-Comece pelos diferenciais e planos, clique em “Agendar serviço”, envie uma solicitação e então abra o Admin para mostrar que o mesmo roteiro operacional continua em agenda, cliente 360 e comanda.
+## Fluxo sugerido
+1. Abrir `http://localhost:8082/`.
+2. Mostrar diferenciais e resultados esperados.
+3. Enviar o formulário **Solicitar demonstração comercial**.
+4. Enviar o formulário de agendamento público.
+5. Explicar que o browser chama apenas `/PublicApi/services`, `/PublicApi/professionals` e `/PublicApi/appointments`.

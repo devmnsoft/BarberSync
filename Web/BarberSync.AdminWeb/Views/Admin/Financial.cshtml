@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Financeiro";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header">
+    <div>
+        <h1 class="page-title">Financeiro</h1>
+        <p class="page-subtitle">Receita por período, ticket médio, descontos, cashback usado, comissões e fluxo simples em modo demo.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" data-demo-smart-action="Projetar semana financeira">Projetar semana</button>
+        <button class="btn btn-primary" data-demo-smart-action="Exportar financeiro">Exportar</button>
+    </div>
+</section>
+<section class="dashboard-grid">
+    <article class="kpi-card"><div class="kpi-icon">💰</div><div><p class="kpi-label">Receita do dia</p><strong class="kpi-value">R$ 18.420</strong><span class="kpi-variation positive">+14% vs. ontem</span></div></article>
+    <article class="kpi-card"><div class="kpi-icon">🎟️</div><div><p class="kpi-label">Ticket médio</p><strong class="kpi-value">R$ 92</strong><span class="kpi-variation">Com combos premium</span></div></article>
+    <article class="kpi-card"><div class="kpi-icon">🏷️</div><div><p class="kpi-label">Descontos</p><strong class="kpi-value">R$ 680</strong><span class="kpi-variation">Cupons + negociação</span></div></article>
+    <article class="kpi-card"><div class="kpi-icon">💎</div><div><p class="kpi-label">Cashback usado</p><strong class="kpi-value">R$ 214</strong><span class="kpi-variation positive">Recorrência ativa</span></div></article>
+</section>
+<section class="panel">
+    <div class="panel-header"><h3>Fluxo financeiro simples</h3><span class="badge badge-info">Demo localStorage</span></div>
+    <div class="table-responsive"><table class="table admin-table"><thead><tr><th>Origem</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead><tbody><tr><td>Comandas pagas</td><td>R$ 14.820</td><td><span class="badge badge-success">Conciliado</span></td><td><button class="btn btn-light" data-demo-smart-action="Ver recibos">Recibos</button></td></tr><tr><td>PublicWeb</td><td>R$ 2.900</td><td><span class="badge badge-info">Pré-agendado</span></td><td><button class="btn btn-light" data-demo-smart-action="Ver agendamentos pagos">Detalhar</button></td></tr><tr><td>Produtos</td><td>R$ 700</td><td><span class="badge badge-warning">Margem alta</span></td><td><button class="btn btn-light" data-demo-smart-action="Ver margem de produtos">Margem</button></td></tr></tbody></table></div>
+</section>

@@ -1,29 +1,12 @@
-## Atualização Demo Experience 1.0
+# Manual de Uso Totem — Demo Experience 2.0
 
-O Totem usa `/KioskApi/...`, salva o fluxo em sessionStorage, permite voltar/cancelar, exibe resumo lateral, possui tela `/Kiosk/Help`, simula pagamento e reseta a tela de sucesso após 10 segundos.
+1. Acesse `http://localhost:8083/Kiosk/Services`.
+2. Escolha um serviço em card grande.
+3. Informe o cliente com formulário/teclado visual.
+4. Selecione o profissional.
+5. Confira o resumo lateral.
+6. Escolha pagamento PIX, cartão, dinheiro ou misto.
+7. Valide o QR fake demonstrativo.
+8. Finalize com número de comanda e avaliação por estrelas.
 
-# BarberSync — Manual de Uso do Totem
-
-## Fluxo guiado
-1. Abrir `/Kiosk/Services`.
-2. Selecionar serviço.
-3. Informar telefone e nome.
-4. Selecionar profissional.
-5. Confirmar resumo lateral.
-6. Selecionar pagamento mock.
-7. Visualizar sucesso.
-8. Registrar avaliação com estrelas grandes.
-
-## Recursos de demonstração
-- Barra de progresso por etapa.
-- Botão “Preciso de ajuda”.
-- Botão de acessibilidade/alto contraste.
-- Resumo lateral com serviço, cliente, profissional e pagamento.
-- Timeout visual animado.
-- Persistência em `sessionStorage`: `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment`.
-
-## Integração segura
-O navegador chama somente `/KioskApi/...`; a URL interna da API fica no servidor MVC.
-
-## Roteiro rápido para vendas
-Mostre o fluxo em voz alta: serviço escolhido, cliente identificado, profissional selecionado, pagamento mock aprovado e avaliação final. O resumo lateral deve ser usado para confirmar que o estado foi preservado entre telas.
+O Totem usa somente `/KioskApi` no browser e possui ajuda, timeout visual, reset automático e modo alto contraste.
