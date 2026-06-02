@@ -24,3 +24,10 @@ Home demonstrável com saudação, próximo agendamento, serviços em destaque, 
 
 ## Proxies
 O browser deve consumir somente `/AdminApi`, `/PublicApi` e `/KioskApi`. Configurações internas de API são usadas server-side pelos projetos MVC.
+
+## Critérios de aceite demonstráveis
+- Endpoints MVC proxy retornam JSON/fallback seguro.
+- CRUDs e ações operacionais mostram toast e atualizam estado local.
+- PublicWeb agenda por `/PublicApi/appointments`.
+- Kiosk preserva seleção em `sessionStorage`.
+- Mobile exibe saudação, próximo agendamento, serviços, cashback e promoções.

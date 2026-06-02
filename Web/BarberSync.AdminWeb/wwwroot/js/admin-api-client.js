@@ -21,6 +21,11 @@
     if ('disabled' in el) el.disabled = Boolean(enabled);
   }
 
+  function isDemoResponse(payload) {
+    const normalized = normalizeResponse(payload);
+    return Boolean(normalized?.isDemo || normalized?.demo || normalized?.source === 'demo' || /demonstração|demo/i.test(normalized?.message || ''));
+  }
+
   function handleApiError(error, fallbackMessage = 'Modo demonstração ativo.') {
     console.warn('[BarberSync AdminApiClient] fallback ativado', error?.message || error);
     window.AdminToast?.showWarning?.(fallbackMessage);
@@ -60,6 +65,7 @@
     normalizeResponse,
     setLoading,
     handleApiError,
+    isDemoResponse,
     adminGet,
     adminPost,
     adminPut,
@@ -83,4 +89,5 @@
   window.setLoading = setLoading;
   window.normalizeResponse = normalizeResponse;
   window.handleApiError = handleApiError;
+  window.isDemoResponse = isDemoResponse;
 })();

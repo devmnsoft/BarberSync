@@ -19,3 +19,6 @@ Campanhas, cupons, fidelidade e avaliações possuem dados demo ricos para mostr
 
 ## Copilot
 Use `/Admin/Copilot` para perguntar sobre retenção, escala, estoque, campanha e reputação. As respostas possuem prioridades e ações rápidas.
+
+## Estado local demo
+As telas administrativas usam o `BarberSyncDemoStore` no front-end para persistir alterações em `localStorage`. Use “Atualizar” para comprovar que criações, edições, exclusões e mudanças de status continuam visíveis durante a demonstração.

@@ -22,3 +22,6 @@ Vender a proposta BarberSync e permitir agendamento demonstrável para cliente f
 
 ## Agendamento
 O formulário envia `POST /PublicApi/appointments` e mostra feedback visual. Se a API estiver indisponível, o fallback demo retorna sucesso controlado.
+
+## Demonstração comercial
+Comece pelos diferenciais e planos, clique em “Agendar serviço”, envie uma solicitação e então abra o Admin para mostrar que o mesmo roteiro operacional continua em agenda, cliente 360 e comanda.

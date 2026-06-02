@@ -149,7 +149,7 @@
       const { data, fallback } = await adminApiClient.get(endpoint, demo);
       if (fallback) document.getElementById(`${module}Fallback`)?.classList.remove('d-none');
       const apiList = normalizeList(data).length ? normalizeList(data) : demo;
-      const demoList = JSON.parse(sessionStorage.getItem(`BarberSync:${module}:demoStore`) || '[]');
+      const demoList = window.BarberSyncDemoStore?.get(module) || [];
       const list = [...demoList, ...apiList.filter(item => !demoList.some(demoItem => String(demoItem.id) === String(item.id)))];
       currentList = list;
       const activeCount = list.filter(x => /ativo|dispon|confirm|ok/i.test(status(x))).length || list.length;
@@ -212,8 +212,8 @@
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
       }
       if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && (updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }), writeToast(`${copy.singular} excluído em modo demonstração.`), await load()));
-      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = apptAction.textContent); writeToast(`Agendamento atualizado: ${apptAction.textContent}.`, 'info'); }
-      if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); }
+      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); const statusText = apptAction.textContent === 'Iniciar' ? 'Em atendimento' : apptAction.textContent; window.BarberSyncDemoStore?.updateStatus('Appointments', apptAction.dataset.id || 'demo', statusText); apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = statusText); writeToast(`Agendamento atualizado: ${statusText}.`, 'info'); await load(); }
+      if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); window.BarberSyncDemoStore?.updateStatus('ServiceOrders', orderAction.dataset.id || 'demo', orderAction.dataset.orderAction === 'pay' ? 'Paga' : 'Fechada'); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); await load(); }
     });
   };
 
@@ -257,13 +257,12 @@
   }
 
   function updateLocalDemoStore(moduleName, action, item) {
-    const key = `BarberSync:${moduleName}:demoStore`;
-    const list = JSON.parse(sessionStorage.getItem(key) || '[]');
-    const id = String(item?.id || `${moduleName.toLowerCase()}-${Date.now()}`);
-    const normalized = { id, ...(item || {}) };
-    const next = action === 'delete' ? list.filter(x => String(x.id) !== id) : action === 'update' ? list.map(x => String(x.id) === id ? { ...x, ...normalized } : x) : [normalized, ...list];
-    sessionStorage.setItem(key, JSON.stringify(next));
-    return next;
+    if (window.BarberSyncDemoStore) {
+      if (action === 'delete') return window.BarberSyncDemoStore.remove(moduleName, item?.id);
+      if (action === 'update') return window.BarberSyncDemoStore.update(moduleName, item?.id, item);
+      return window.BarberSyncDemoStore.add(moduleName, item);
+    }
+    return [];
   }
 
   function showFormErrors(errors) {
