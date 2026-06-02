@@ -1,0 +1,25 @@
+@{ ViewData["Title"] = "Primeiros passos"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header onboarding-hero">
+    <div>
+        <span class="eyebrow">Demonstração comercial guiada</span>
+        <h1 class="page-title">Bem-vindo ao BarberSync</h1>
+        <p class="page-subtitle">Configure uma operação demo completa: empresa, serviços, profissionais, clientes, agenda, comanda, totem, PublicWeb e Copilot.</p>
+    </div>
+    <div class="page-actions"><a class="btn btn-light" href="/Admin/Dashboard">Ir ao dashboard</a><button class="btn btn-primary" data-onboarding-reset>Reiniciar progresso</button></div>
+</section>
+<section class="onboarding-summary">
+    <article class="kpi-card"><div class="kpi-icon">🚀</div><div><p class="kpi-label">Progresso</p><strong class="kpi-value" data-onboarding-percent>0%</strong><span class="kpi-variation">localStorage</span></div></article>
+    <article class="kpi-card"><div class="kpi-icon">✅</div><div><p class="kpi-label">Concluídos</p><strong class="kpi-value" data-onboarding-done>0</strong><span class="kpi-variation">passos</span></div></article>
+    <article class="kpi-card"><div class="kpi-icon">🎬</div><div><p class="kpi-label">Modo</p><strong class="kpi-value">Demo</strong><span class="kpi-variation">seguro para venda</span></div></article>
+</section>
+<section class="onboarding-actions">
+    <a class="quick-card" href="/Admin/Clients" data-onboarding-complete="clients">👥<strong>Cadastrar primeiro cliente</strong><span>Abre o CRM e marca o passo como concluído.</span></a>
+    <a class="quick-card" href="/Admin/Services" data-onboarding-complete="services">✂️<strong>Criar primeiro serviço</strong><span>Configure preço, duração e canais.</span></a>
+    <a class="quick-card" href="/Admin/Kiosk" data-onboarding-complete="kiosk">🖥️<strong>Configurar Totem</strong><span>Mostre o autoatendimento guiado.</span></a>
+    <a class="quick-card" href="http://localhost:8082/" target="_blank" rel="noopener" data-onboarding-complete="publicweb">🌐<strong>Abrir painel público</strong><span>Veja landing, CTA e agendamento.</span></a>
+    <a class="quick-card" href="/Admin/Help" data-onboarding-complete="script">📋<strong>Ver roteiro de demonstração</strong><span>Use a sequência de venda do cliente.</span></a>
+</section>
+<section class="panel onboarding-panel">
+    <div class="panel-header"><div><h3>Checklist de implantação demo</h3><p>Cada passo possui status: pendente, concluído ou em demonstração.</p></div><span class="badge badge-info">localStorage</span></div>
+    <div class="onboarding-steps" data-onboarding-steps></div>
+</section>

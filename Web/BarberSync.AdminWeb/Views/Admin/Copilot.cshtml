@@ -1,37 +1,4 @@
-@{
-    ViewData["Title"] = "Copilot IA";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<section class="page-header">
-    <div>
-        <h1 class="page-title">Copilot IA</h1>
-        <p class="page-subtitle">Sugestões acionáveis para operação. Dados carregados por proxy MVC <strong>/AdminApi/copilot-suggestions</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="Copilot">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="Copilot">Novo Pergunta</button>
-    </div>
-</section>
-<div class="alert alert-warning d-none" id="CopilotFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="CopilotCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
-</section>
-<section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/copilot-suggestions</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="CopilotRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
-</section>
-<div class="admin-modal-backdrop" id="CopilotModal" hidden>
-    <form class="admin-modal" data-admin-form="Copilot">
-        <div class="modal-header"><h3>Novo/editar Pergunta</h3><button type="button" class="modal-close" data-admin-close="Copilot">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Copilot">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
-    </form>
-</div>
-@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Copilot')</script>}
+@{ ViewData["Title"] = "Copilot IA"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header"><div><h1 class="page-title">Copilot IA</h1><p class="page-subtitle">Olá, eu sou o Copilot BarberSync. Posso analisar sua operação e sugerir ações.</p></div><div class="page-actions"><a class="btn btn-light" href="/Admin/Campaigns">Criar campanha</a><a class="btn btn-primary" href="/Admin/Appointments">Abrir agenda</a></div></section>
+<section class="panel copilot-chat" id="CopilotChat"><div class="copilot-message assistant"><strong>Copilot BarberSync</strong><p>Olá, eu sou o Copilot BarberSync. Posso analisar sua operação e sugerir ações.</p></div><div class="row-actions"><button data-quick-question="Quais clientes devo reativar hoje?">Clientes para reativar</button><button data-quick-question="Qual produto está crítico no estoque?">Estoque crítico</button><button data-quick-question="Que campanha devo criar agora?">Campanha sugerida</button></div><form id="CopilotAsk" class="public-form"><textarea name="question" required placeholder="Faça uma pergunta para o Copilot"></textarea><button class="btn btn-primary" type="submit">Enviar pergunta</button></form><div id="CopilotAnswers" class="module-feature-grid"><article class="feature-card"><span class="priority-high">Alta</span><h4>Repor Pomada Modeladora</h4><p>Estoque abaixo do mínimo e item vendido junto com Corte + Barba.</p><a href="/Admin/Stock">Ver estoque</a></article><article class="feature-card"><span class="priority-medium">Média</span><h4>Criar campanha de retorno</h4><p>18 clientes estão há mais de 45 dias sem atendimento.</p><a href="/Admin/Campaigns">Criar campanha</a></article><article class="feature-card"><span class="priority-low">Baixa</span><h4>Otimizar agenda</h4><p>Antecipe confirmações dos horários de pico.</p><a href="/Admin/Appointments">Abrir agenda</a></article></div></section>
+@section Scripts {<script src="~/js/admin-copilot.js" asp-append-version="true"></script>}

@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="~/css/admin-forms.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-tables.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-responsive.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-onboarding.css" asp-append-version="true" />
 </head>
 <body class="admin-body">
     <div class="admin-shell">
@@ -23,12 +24,16 @@
     </div>
     <partial name="_AdminToast" />
     <partial name="_AdminConfirmModal" />
+    <partial name="_AdminHelpDrawer" />
     <script src="~/js/admin-api-client.js" asp-append-version="true"></script>
     <script src="~/js/admin-toast.js" asp-append-version="true"></script>
     <script src="~/js/admin-modal.js" asp-append-version="true"></script>
     <script src="~/js/admin-shell.js" asp-append-version="true"></script>
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     <script src="~/js/admin-crud.js" asp-append-version="true"></script>
+    <script src="~/js/admin-filters.js" asp-append-version="true"></script>
+    <script src="~/js/admin-help.js" asp-append-version="true"></script>
+    <script src="~/js/admin-onboarding.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
