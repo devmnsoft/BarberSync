@@ -1,13 +1,11 @@
-@{
-    ViewData["Title"] = "Help";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<div class="page-header"><div><div class="page-title">Help</div><div class="page-subtitle">Gestão do módulo com dados demo e ações rápidas.</div></div><div><button class="btn btn-primary">Novo</button></div></div>
-<section class="kpi-grid">
-  <article class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-value">128</div><div class="kpi-label">Indicador principal</div></article>
-  <article class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value">93%</div><div class="kpi-label">Eficiência</div></article>
-  <article class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-value">24h</div><div class="kpi-label">SLA médio</div></article>
+@{ ViewData["Title"] = "Manual e ajuda"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header"><div><h1 class="page-title">Central de Ajuda BarberSync</h1><p class="page-subtitle">Manual contextual para demonstrar Dashboard, Clientes, Agenda, Comandas, Totem e Copilot.</p></div><div class="page-actions"><button class="btn btn-primary" data-help-open>Abrir ajuda lateral</button><a class="btn btn-light" href="/Admin/Onboarding">Primeiros passos</a></div></section>
+<section class="module-feature-grid">
+<article class="feature-card"><h3>Dashboard</h3><p>Explique KPIs, agenda, comandas, estoque e Copilot.</p><strong>Próximo: Clientes 360.</strong></article>
+<article class="feature-card"><h3>Clientes</h3><p>Cadastro, histórico, VIP, cashback, preferências e campanhas de retorno.</p><strong>Próximo: criar agendamento.</strong></article>
+<article class="feature-card"><h3>Agenda</h3><p>Status: Agendado, Confirmado, Check-in, Em atendimento e Finalizado.</p><strong>Próximo: abrir comanda.</strong></article>
+<article class="feature-card"><h3>Comandas</h3><p>Fluxo de atendimento, pagamento, cashback, desconto e recibo visual.</p><strong>Próximo: estoque e caixa.</strong></article>
+<article class="feature-card"><h3>Totem</h3><p>Autoatendimento com progresso, acessibilidade, pagamento mock e avaliação.</p><strong>Próximo: PublicWeb.</strong></article>
+<article class="feature-card"><h3>Copilot</h3><p>Sugestões inteligentes com prioridade e ações rápidas.</p><strong>Próximo: campanha.</strong></article>
 </section>
-<section class="panel" style="margin-top:16px"><div class="panel-header"><h3>Lista operacional</h3><button class="btn btn-secondary">Filtrar</button></div>
-<table class="table"><thead><tr><th>Item</th><th>Status</th><th>Ação</th></tr></thead><tbody><tr><td>Registro demo A</td><td><span class="badge badge-success">Ativo</span></td><td><button class="btn btn-secondary">Editar</button></td></tr><tr><td>Registro demo B</td><td><span class="badge badge-warning">Pendente</span></td><td><button class="btn btn-danger">Remover</button></td></tr></tbody></table></section>
-<div class="modal" style="display:none">Modal de criação/edição</div>
+<section class="panel"><div class="panel-header"><h3>Links rápidos do roteiro</h3><span class="badge badge-info">Demo</span></div><ul class="metric-list"><li><a href="/Admin/Dashboard">Abrir Dashboard</a></li><li><a href="/Admin/Clients">Ver Clientes</a></li><li><a href="/Admin/Appointments">Abrir Agenda</a></li><li><a href="/Admin/ServiceOrders">Abrir Comandas</a></li><li><a href="/Admin/Copilot">Perguntar ao Copilot</a></li><li><a href="http://localhost:8083/Kiosk/Services" target="_blank" rel="noopener">Testar Totem</a></li><li><a href="http://localhost:8082/" target="_blank" rel="noopener">Abrir PublicWeb</a></li></ul></section>

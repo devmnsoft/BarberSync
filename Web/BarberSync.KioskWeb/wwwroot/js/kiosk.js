@@ -9,7 +9,7 @@
   const loadJson=async(url,fallback)=>{ try{ const r=await fetch(url); if(!r.ok) throw new Error('http'); return await r.json(); }catch{return {data:fallback,message:'Modo demonstração'}} };
   document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('[data-kiosk-back]')?.addEventListener('click',()=> history.length > 1 ? history.back() : location.href='/Kiosk/Services');
-    document.querySelector('[data-kiosk-accessibility]')?.addEventListener('click',()=> document.body.classList.toggle('kiosk-accessible'));
+    document.querySelector('[data-kiosk-accessibility]')?.addEventListener('click',()=> { document.body.classList.toggle('kiosk-accessible'); document.body.classList.toggle('kiosk-high-contrast'); });
     document.querySelector('[data-kiosk-cancel]')?.addEventListener('click',()=> sessionStorage.removeItem('kiosk-flow'));
     if (document.querySelector('.kiosk-step.success')) setTimeout(()=>{ sessionStorage.removeItem('kiosk-flow'); location.href='/Kiosk/Services'; }, 25000);
 
@@ -19,7 +19,8 @@
     if(prosEl){ const payload=await loadJson(`/KioskApi/professionals?serviceId=${encodeURIComponent(KioskFlow.state.serviceId||'demo-corte')}&deviceCode=${encodeURIComponent(KioskFlow.deviceCode)}`,fallbackPros); const list=unwrap(payload,fallbackPros); prosEl.innerHTML=list.map(p=>`<article class='k-card'><div class='k-icon'>👤</div><h3>${p.name}</h3><p>${p.specialty||'Especialista'}</p><span>Espera ${p.estimatedWaitMinutes||10} min</span><a class='k-btn' data-pro='${p.id||p.name}' href='/Kiosk/Confirm'>Escolher</a></article>`).join(''); prosEl.addEventListener('click',e=>{const a=e.target.closest('[data-pro]'); if(a) KioskFlow.setState({professionalId:a.dataset.pro, professionalName:a.closest('.k-card').querySelector('h3').textContent});}); }
     document.getElementById('kioskClientForm')?.addEventListener('submit',async(e)=>{e.preventDefault(); const body=Object.fromEntries(new FormData(e.target).entries()); KioskFlow.setState({client:body}); await KioskFlow.post('/KioskApi/client/quick-register',body,{success:true}); location.href='/Kiosk/Professional';});
     const summary=document.getElementById('kioskSummary'); if(summary){ const s=KioskFlow.state; summary.innerHTML=`<strong>${s.serviceName||'Corte Masculino'}</strong><span>${s.professionalName||'Primeiro disponível'}</span><span>${s.client?.name||'Cliente demo'}</span>`; }
-    document.getElementById('kioskPay')?.addEventListener('click',async()=>{await KioskFlow.post('/KioskApi/payment/mock',KioskFlow.state,{success:true}); location.href='/Kiosk/Success';});
+    document.querySelectorAll('.payment-options button').forEach(b=>b.addEventListener('click',()=>{ KioskFlow.setState({paymentMethod:b.textContent.trim()}); document.querySelectorAll('.payment-options button').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); }));
+    document.getElementById('kioskPay')?.addEventListener('click',async()=>{KioskFlow.setState({paymentMethod:KioskFlow.state.paymentMethod||'PIX'}); await KioskFlow.post('/KioskApi/payment/mock',KioskFlow.state,{success:true}); location.href='/Kiosk/Success';});
     document.getElementById('kioskReviewForm')?.addEventListener('submit',async(e)=>{e.preventDefault(); await KioskFlow.post('/KioskApi/review',Object.fromEntries(new FormData(e.target).entries()),{success:true}); location.href='/Kiosk/Services';});
   });
 })();

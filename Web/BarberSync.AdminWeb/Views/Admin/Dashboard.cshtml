@@ -6,6 +6,22 @@
 <section class="kpi-grid" data-dashboard-kpis>
 @foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
 </section>
+
+<section class="panel dashboard-insights">
+    <div class="panel-header"><div><h3>Insights para hoje</h3><p>Fallback demo via /AdminApi/copilot-suggestions quando a API estiver indisponível.</p></div><span class="badge badge-info">Copilot</span></div>
+    <div class="module-feature-grid">
+        <article class="feature-card"><span>⏰</span><h4>Horário com maior movimento</h4><strong>18h às 20h</strong></article>
+        <article class="feature-card"><span>✂️</span><h4>Serviço mais vendido</h4><strong>Corte + Barba</strong></article>
+        <article class="feature-card"><span>💈</span><h4>Profissional com maior faturamento</h4><strong>Rafael Barber</strong></article>
+        <article class="feature-card"><span>📦</span><h4>Produto com estoque crítico</h4><strong>Pomada Modeladora</strong></article>
+        <article class="feature-card"><span>👥</span><h4>Clientes para reativar</h4><strong>18 clientes</strong></article>
+        <article class="feature-card"><span>🎯</span><h4>Sugestão de campanha</h4><strong>Retorno em 21 dias</strong></article>
+    </div>
+</section>
+<section class="panel action-plan">
+    <div class="panel-header"><h3>Plano de ação sugerido</h3><button class="btn btn-primary" data-demo-action="Plano de ação enviado ao Copilot">Enviar ao Copilot</button></div>
+    <ul class="metric-list"><li>Chamar clientes inativos.</li><li>Promover Corte + Barba.</li><li>Repor Pomada Modeladora.</li><li>Incentivar avaliação pós-atendimento.</li><li>Usar Totem para reduzir fila.</li></ul>
+</section>
 <div class="dashboard-grid">
     <article class="panel span-6"><div class="panel-header"><h3>Serviços mais vendidos</h3><span class="badge badge-info">/AdminApi/services</span></div><ul class="metric-list" data-top-services><li>Corte Masculino</li></ul></article>
     <article class="panel span-6"><div class="panel-header"><h3>Profissionais em destaque</h3><span class="badge badge-success">Disponíveis</span></div><p>Rafael Barber, Camila Beauty e Amanda Nails com alta avaliação.</p></article>

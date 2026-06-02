@@ -1,33 +1,54 @@
-# Roteiro de Demonstração BarberSync
+# Roteiro de Demonstração Comercial BarberSync
 
-Este roteiro conduz uma demonstração comercial ponta a ponta do BarberSync como SaaS para barbearias, salões, estética e franquias.
+Este roteiro guia uma apresentação completa do BarberSync para salões, barbearias, estética e franquias. Use as URLs locais da demonstração e destaque que o navegador consome apenas proxies locais (`/AdminApi`, `/PublicApi` e `/KioskApi`).
 
-## URLs da demo
+## Sequência sugerida
 
-- API/Swagger: `http://localhost:8080/swagger`
-- Admin: `http://localhost:8081/Admin`
-- PublicWeb: `http://localhost:8082/`
-- Totem: `http://localhost:8083/Kiosk/Services`
+1. **Abrir PublicWeb** em `http://localhost:8082/`.
+   - Mostrar proposta de valor, benefícios, diferenciais, antes/depois, Totem inteligente, app para clientes, IA para gestão e planos.
+2. **Mostrar benefícios**.
+   - Explicar operação unificada: agenda, caixa, estoque, campanhas, fidelidade, avaliações e Copilot.
+3. **Fazer agendamento público**.
+   - Preencher o formulário em “Solicitar demonstração” e reforçar o uso do proxy `/PublicApi/appointments`.
+4. **Abrir Admin** em `http://localhost:8081/Admin`.
+   - Entrar pelo Dashboard Executivo e apresentar a navegação enterprise.
+5. **Mostrar Dashboard**.
+   - Apresentar KPIs, “Insights para hoje” e “Plano de ação sugerido”.
+6. **Cadastrar cliente**.
+   - Abrir Clientes, clicar em “Novo Cliente”, preencher campos obrigatórios, salvar e observar o toast.
+7. **Ver Cliente 360**.
+   - Clicar em “Ver Cliente 360” e demonstrar telefone, e-mail, VIP, cashback, total gasto, ticket médio, preferências, histórico e próxima melhor ação.
+8. **Criar agendamento**.
+   - Abrir Agenda, criar um agendamento demo e explicar status.
+9. **Mudar status da agenda**.
+   - Demonstrar: Agendado → Confirmado → Check-in → Em atendimento → Finalizado; usar Cancelar como exceção operacional.
+10. **Abrir comanda**.
+    - Acessar Comandas, criar uma comanda e explicar itens, desconto, cashback e total.
+11. **Registrar pagamento**.
+    - Usar “Registrar pagamento” e “Ver recibo” para mostrar o recibo visual com a mensagem “Obrigado pela preferência.”
+12. **Ver estoque crítico**.
+    - Abrir Estoque, mostrar barra visual, badge crítico/atenção/normal e sugestão de compra.
+13. **Criar campanha**.
+    - Abrir Campanhas/Cupons/Fidelidade, mostrar público-alvo, período, status, resultado, código copiável e cashback.
+14. **Usar Copilot**.
+    - Fazer uma pergunta rápida, apresentar prioridades Alta/Média/Baixa e converter resposta em ação: campanha, estoque ou agenda.
+15. **Abrir Kiosk** em `http://localhost:8083/Kiosk/Services`.
+    - Mostrar barra de progresso, acessibilidade, alto contraste, seleção de serviço e resumo lateral.
+16. **Fazer autoatendimento**.
+    - Selecionar serviço, cliente, profissional e pagamento; confirmar que o fluxo salva `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment` em `sessionStorage`.
+17. **Finalizar e avaliar**.
+    - Exibir tela de sucesso, senha demo, animação simples e avaliação por estrelas grandes.
 
-## Fluxo recomendado
+## Frases comerciais úteis
 
-1. Abra o PublicWeb em `http://localhost:8082/` e destaque a proposta comercial, serviços, profissionais, planos e CTAs.
-2. Faça um agendamento público no formulário da landing; confirme o toast de sucesso e explique o uso do proxy `/PublicApi/appointments`.
-3. Abra o Admin em `http://localhost:8081/Admin`.
-4. Acesse o Dashboard Executivo e mostre KPIs, gráficos visuais, comandas, estoque crítico, avaliações e Copilot.
-5. Crie um Cliente em `Admin > Clientes`, validando modal, campos obrigatórios, toast e atualização visual.
-6. Crie um Serviço em `Admin > Serviços`, marcando canais Site, Totem e Mobile.
-7. Crie um Agendamento em `Admin > Agenda` e altere status entre Confirmar, Check-in, Iniciar, Finalizar ou Cancelar.
-8. Abra uma Comanda em `Admin > Comandas`.
-9. Registre pagamento mock e feche a comanda, destacando recibo visual e kanban.
-10. Veja Estoque em `Admin > Estoque` e simule entrada/saída.
-11. Crie uma Campanha em `Admin > Campanhas` e mostre resultado/status.
-12. Use o Copilot em `Admin > Copilot` com pergunta rápida e histórico local.
-13. Abra o Totem em `http://localhost:8083/Kiosk/Services`.
-14. Conclua o fluxo do Totem: serviço, cliente, profissional, confirmação, pagamento mock, sucesso e avaliação.
+- “O BarberSync reduz fricção no balcão porque une PublicWeb, Totem, Admin e Mobile.”
+- “Mesmo em modo demonstração, toda tela tem fallback visual e ação simulada com feedback.”
+- “O Copilot transforma dados operacionais em campanhas, reposição e agenda mais eficiente.”
 
-## Mensagens-chave
+## Checklist de aceite para a apresentação
 
-- O navegador usa somente `/AdminApi`, `/PublicApi` e `/KioskApi`.
-- `ApiSettings:BaseUrl` é usado apenas server-side pelos projetos MVC.
-- Quando a API real não responde, os proxies retornam fallback demo JSON 200 para preservar a apresentação.
+- Onboarding em `/Admin/Onboarding` concluído parcialmente ou totalmente.
+- Ajuda contextual aberta pela topbar em cada módulo.
+- Toasts visíveis após salvar, editar, excluir, confirmar agenda, registrar pagamento e perguntar ao Copilot.
+- PublicWeb com CTAs para agendar serviço, ver painel administrativo, testar totem e solicitar demonstração.
+- Kiosk finaliza o fluxo sem depender de URLs internas da API no navegador.

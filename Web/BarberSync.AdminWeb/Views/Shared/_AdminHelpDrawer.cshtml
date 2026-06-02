@@ -1,1 +1,20 @@
-<div></div>
+<aside class="admin-help-drawer" id="AdminHelpDrawer" hidden aria-hidden="true" aria-label="Ajuda contextual BarberSync">
+    <div class="admin-help-drawer__header">
+        <div>
+            <span class="modal-kicker">Central de ajuda</span>
+            <h3 data-help-title>Ajuda contextual</h3>
+        </div>
+        <button type="button" class="modal-close" data-help-close aria-label="Fechar ajuda">×</button>
+    </div>
+    <div class="admin-help-drawer__body">
+        <section><h4>O que esta tela faz</h4><p data-help-purpose>Mostra a operação BarberSync com dados reais ou fallback demo seguro.</p></section>
+        <section><h4>Principais ações</h4><ul data-help-actions></ul></section>
+        <section><h4>Dicas de demonstração</h4><ul data-help-tips></ul></section>
+        <section class="next-step"><h4>Próximo passo recomendado</h4><p data-help-next>Abra o onboarding e siga o roteiro comercial.</p></section>
+        <div class="help-links">
+            <a class="btn btn-light" href="/Admin/Help">Abrir manual</a>
+            <a class="btn btn-primary" href="/Docs/DEMO_CLIENTE_ROTEIRO.md" target="_blank" rel="noopener">Roteiro do cliente</a>
+        </div>
+    </div>
+</aside>
+<div class="admin-help-scrim" data-help-close hidden></div>

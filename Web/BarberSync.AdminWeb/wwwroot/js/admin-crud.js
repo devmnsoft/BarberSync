@@ -111,12 +111,26 @@
 
   function actionButtons(module, i, idx) {
     const id = escapeHtml(i.id || idx);
-    const base = `<button class='btn btn-secondary' data-admin-detail='${module}' data-index='${idx}'>Detalhe</button> <button class='btn btn-secondary' data-admin-edit='${module}' data-id='${id}' data-index='${idx}'>Editar</button> <button class='btn btn-danger' data-admin-remove='${module}' data-id='${id}'>Excluir</button>`;
-    if (module === 'Appointments') return `${base}<div class='row-actions'><button data-id='${id}' data-appointment-action='confirm'>Confirmar</button><button data-id='${id}' data-appointment-action='check-in'>Check-in</button><button data-id='${id}' data-appointment-action='start'>Iniciar</button><button data-id='${id}' data-appointment-action='finish'>Finalizar</button><button data-id='${id}' data-appointment-action='cancel'>Cancelar</button></div>`;
-    if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-id='${id}' data-order-action='pay'>Pagar</button><button data-id='${id}' data-order-action='close'>Fechar</button></div>`;
+    const detailLabel = module === 'Clients' ? 'Ver Cliente 360' : module === 'Professionals' ? 'Performance' : module === 'ServiceOrders' ? 'Ver recibo' : 'Detalhe';
+    const base = `<button class='btn btn-secondary' data-admin-detail='${module}' data-index='${idx}'>${detailLabel}</button> <button class='btn btn-secondary' data-admin-edit='${module}' data-id='${id}' data-index='${idx}'>Editar</button> <button class='btn btn-danger' data-admin-remove='${module}' data-id='${id}'>Excluir</button>`;
+    if (module === 'Services') return `${base}<div class='row-actions'><button class='channel-toggle is-on' data-channel-toggle='PublicWeb'>PublicWeb</button><button class='channel-toggle is-on' data-channel-toggle='Totem'>Totem</button><button class='channel-toggle is-on' data-channel-toggle='Mobile'>Mobile</button></div>`;
+    if (module === 'Appointments') return `${base}<div class='status-flow'><span>Agendado</span><span>Confirmado</span><span>Check-in</span><span>Em atendimento</span><span>Finalizado</span></div><div class='row-actions'><button data-id='${id}' data-appointment-action='confirm'>Confirmar</button><button data-id='${id}' data-appointment-action='check-in'>Check-in</button><button data-id='${id}' data-appointment-action='start'>Iniciar</button><button data-id='${id}' data-appointment-action='finish'>Finalizar</button><button data-id='${id}' data-appointment-action='cancel'>Cancelar</button></div>`;
+    if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-id='${id}' data-order-action='pay'>Registrar pagamento</button><button data-id='${id}' data-order-action='close'>Fechar</button></div>`;
+    if (module === 'Stock') return `${base}<div class='stock-bar'><span style='width:${Math.max(12, Math.min(100, Number(i.quantity || i.stock || 35)))}%'></span></div><small>Sugestão: comprar 12 unidades</small>`;
+    if (module === 'Coupons') return `${base}<div class='row-actions'><button data-copy-coupon='${escapeHtml(i.code || 'RETORNO20')}'>Copiar código</button></div>`;
+    if (module === 'Reviews') return `${base}<div class='row-actions'><button data-demo-action='Responder cliente'>Responder cliente</button><button data-demo-action='Criar ação de recuperação'>Criar ação de recuperação</button></div>`;
     return base;
   }
 
+
+  function richDetail(module, item) {
+    if (module === 'Clients') return `<div class="detail-grid"><div><span>Nome</span><strong>${escapeHtml(name(item))}</strong></div><div><span>Telefone</span><strong>${escapeHtml(item.phone || '(11) 98888-0000')}</strong></div><div><span>E-mail</span><strong>${escapeHtml(item.email || 'cliente@demo.com')}</strong></div><div><span>VIP</span><strong>${item.vip || 'Sim'}</strong></div><div><span>Cashback</span><strong>R$ 48,00</strong></div><div><span>Total gasto</span><strong>R$ 1.860,00</strong></div><div><span>Ticket médio</span><strong>R$ 124,00</strong></div><div><span>Último atendimento</span><strong>24/05/2026</strong></div><div><span>Próximo agendamento</span><strong>06/06/2026 10:30</strong></div><div><span>Serviços preferidos</span><strong>Corte + Barba</strong></div><div><span>Profissional preferido</span><strong>Rafael Barber</strong></div><div><span>Pagamentos</span><strong>PIX, Cartão</strong></div><div><span>Histórico</span><strong>15 atendimentos concluídos</strong></div><div><span>Observações</span><strong>Prefere pomada matte</strong></div></div><p class="next-step"><strong>Próxima melhor ação:</strong> Enviar campanha de retorno.</p>`;
+    if (module === 'Professionals') return `<div class="detail-grid"><div><span>Receita do mês</span><strong>R$ 18.450,00</strong></div><div><span>Atendimentos</span><strong>142</strong></div><div><span>Comissão estimada</span><strong>R$ 4.612,50</strong></div><div><span>Avaliação média</span><strong>4,9 ⭐</strong></div><div><span>Serviços mais realizados</span><strong>Corte, Barba, Sobrancelha</strong></div><div><span>Ocupação</span><strong>86%</strong></div><div><span>Ranking</span><strong>#1 da unidade</strong></div><div><span>Meta do mês</span><strong>R$ 22.000</strong></div></div><div class="stock-bar"><span style="width:84%"></span></div>`;
+    if (module === 'ServiceOrders') return `<div class="receipt-box"><h3>BarberSync</h3><p>Comanda #${escapeHtml(item.id || 'DEMO-001')} • ${escapeHtml(name(item))}</p><p>Data: 02/06/2026</p><hr><p>Corte masculino R$ 70,00</p><p>Barba tradicional R$ 45,00</p><p>Pomada modeladora R$ 38,00</p><hr><p>Subtotal: R$ 153,00</p><p>Desconto: R$ 10,00</p><p>Cashback: R$ 7,00</p><h3>Total: R$ 136,00</h3><p>Forma de pagamento: PIX</p><strong>Obrigado pela preferência.</strong></div>`;
+    if (module === 'Stock') return `<div class="detail-grid"><div><span>Status</span><strong>Crítico</strong></div><div><span>Estoque atual</span><strong>4</strong></div><div><span>Mínimo</span><strong>12</strong></div><div><span>Sugestão de compra</span><strong>24 unidades</strong></div></div><button class="btn btn-primary" data-demo-action="Reposição gerada">Gerar reposição</button>`;
+    if (module === 'Reviews') return `<div class="detail-grid"><div><span>Nota média</span><strong>4,8</strong></div><div><span>NPS</span><strong>72</strong></div><div><span>5 estrelas</span><strong>78%</strong></div><div><span>Promotores</span><strong>134</strong></div><div><span>Detratores</span><strong>6</strong></div></div><p>Comentário: Atendimento excelente e pontual.</p>`;
+    return Object.entries(item).slice(0, 14).map(([k, v]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`).join('');
+  }
   window.renderAdminCrudPage = async function (module) {
     const endpoint = endpointMap[module] || '/AdminApi/dashboard';
     const copy = moduleCopy[module] || { icon: '💈', singular: module };
@@ -177,9 +191,15 @@
       const detailBtn = e.target.closest('[data-admin-detail]');
       const apptAction = e.target.closest('[data-appointment-action]');
       const orderAction = e.target.closest('[data-order-action]');
+      const channelToggle = e.target.closest('[data-channel-toggle]');
+      const copyCoupon = e.target.closest('[data-copy-coupon]');
+      const demoAction = e.target.closest('[data-demo-action]');
+      if (channelToggle) { channelToggle.classList.toggle('is-on'); writeToast(`${channelToggle.dataset.channelToggle} atualizado. Ação simulada com sucesso em modo demonstração.`, 'success'); }
+      if (copyCoupon) { navigator.clipboard?.writeText(copyCoupon.dataset.copyCoupon); writeToast('Cupom copiado com sucesso.', 'success'); }
+      if (demoAction) { writeToast(`${demoAction.dataset.demoAction}. Ação simulada com sucesso em modo demonstração.`, 'success'); }
       if (detailBtn) {
         const item = currentList[Number(detailBtn.dataset.index)] || {};
-        document.getElementById(`${module}DetailBody`).innerHTML = Object.entries(item).slice(0, 14).map(([k, v]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`).join('');
+        document.getElementById(`${module}DetailBody`).innerHTML = richDetail(module, item);
         document.getElementById(`${module}DetailModal`).hidden = false;
       }
       if (edit) {
@@ -192,7 +212,7 @@
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
       }
       if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && await load());
-      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); writeToast(`Agendamento atualizado: ${apptAction.textContent}.`, 'info'); }
+      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = apptAction.textContent); writeToast(`Agendamento atualizado: ${apptAction.textContent}.`, 'info'); }
       if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); }
     });
   };

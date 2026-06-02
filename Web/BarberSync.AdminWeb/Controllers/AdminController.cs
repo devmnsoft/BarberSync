@@ -26,6 +26,7 @@ public class AdminController : Controller
     [HttpGet("PublicSite")] public IActionResult PublicSite() => Render("PublicSite");
     [HttpGet("Settings")] public IActionResult Settings() => Render("Settings");
     [HttpGet("Help")] public IActionResult Help() => Render("Help");
+    [HttpGet("Onboarding")] public IActionResult Onboarding() => Render("Onboarding");
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
