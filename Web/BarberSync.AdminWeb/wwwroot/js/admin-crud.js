@@ -111,9 +111,9 @@
 
   function actionButtons(module, i, idx) {
     const id = escapeHtml(i.id || idx);
-    const base = `<button class='btn btn-secondary' data-admin-detail='${module}' data-index='${idx}'>Detalhe</button> <button class='btn btn-secondary' data-admin-edit='${module}' data-id='${id}'>Editar</button> <button class='btn btn-danger' data-admin-remove='${module}' data-id='${id}'>Excluir</button>`;
-    if (module === 'Appointments') return `${base}<div class='row-actions'><button data-appointment-action='Confirmar'>Confirmar</button><button data-appointment-action='Check-in'>Check-in</button><button data-appointment-action='Iniciar'>Iniciar</button><button data-appointment-action='Finalizar'>Finalizar</button><button data-appointment-action='Cancelar'>Cancelar</button></div>`;
-    if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-order-action='pay'>Pagar</button><button data-order-action='close'>Fechar</button></div>`;
+    const base = `<button class='btn btn-secondary' data-admin-detail='${module}' data-index='${idx}'>Detalhe</button> <button class='btn btn-secondary' data-admin-edit='${module}' data-id='${id}' data-index='${idx}'>Editar</button> <button class='btn btn-danger' data-admin-remove='${module}' data-id='${id}'>Excluir</button>`;
+    if (module === 'Appointments') return `${base}<div class='row-actions'><button data-id='${id}' data-appointment-action='confirm'>Confirmar</button><button data-id='${id}' data-appointment-action='check-in'>Check-in</button><button data-id='${id}' data-appointment-action='start'>Iniciar</button><button data-id='${id}' data-appointment-action='finish'>Finalizar</button><button data-id='${id}' data-appointment-action='cancel'>Cancelar</button></div>`;
+    if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-id='${id}' data-order-action='pay'>Pagar</button><button data-id='${id}' data-order-action='close'>Fechar</button></div>`;
     return base;
   }
 
@@ -129,6 +129,7 @@
     const panel = document.querySelector('.module-panel');
     if (panel) ensureWorkspace(module, panel);
     let currentList = demo;
+    let editingId = null;
 
     const load = async () => {
       const { data, fallback } = await adminApiClient.get(endpoint, demo);
@@ -148,15 +149,20 @@
     await load();
     document.getElementById(`${module}Search`)?.addEventListener('input', load);
     document.querySelector(`[data-admin-export='${module}']`)?.addEventListener('click', () => writeToast('Visão exportada em modo demonstração.', 'info'));
-    document.querySelector(`[data-admin-new='${module}']`)?.addEventListener('click', () => { document.getElementById(`${module}ModalTitle`).textContent = `Novo ${copy.singular}`; document.getElementById(`${module}Modal`).hidden = false; });
+    document.querySelector(`[data-admin-new='${module}']`)?.addEventListener('click', () => { editingId = null; const form = document.querySelector(`[data-admin-form='${module}']`); form?.reset(); document.getElementById(`${module}ModalTitle`).textContent = `Novo ${copy.singular}`; window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false); });
     document.querySelector(`[data-admin-refresh='${module}']`)?.addEventListener('click', load);
-    document.querySelectorAll(`[data-admin-close='${module}']`).forEach(b => b.addEventListener('click', () => document.getElementById(`${module}Modal`).hidden = true));
+    document.querySelectorAll(`[data-admin-close='${module}']`).forEach(b => b.addEventListener('click', () => window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true)));
     document.querySelector(`[data-admin-form='${module}']`)?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!e.target.checkValidity()) { document.querySelector(`[data-form-error='${module}']`).hidden = false; return; }
       const body = Object.fromEntries(new FormData(e.target).entries());
-      await adminApiClient.post(module === 'ServiceOrders' ? '/AdminApi/service-orders/open' : endpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
-      document.getElementById(`${module}Modal`).hidden = true;
+      const mutationEndpoint = module === 'ServiceOrders' ? '/AdminApi/service-orders/open' : module === 'Stock' ? (body.movement === 'Saída' ? '/AdminApi/stock/exit' : '/AdminApi/stock/entry') : endpoint;
+      if (editingId && ['Clients','Professionals','Services'].includes(module)) {
+        await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' });
+      } else {
+        await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
+      }
+      window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true);
       e.target.reset();
       writeToast(`${copy.singular} salvo com sucesso.`);
       await load();
@@ -172,10 +178,18 @@
         document.getElementById(`${module}DetailBody`).innerHTML = Object.entries(item).slice(0, 14).map(([k, v]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`).join('');
         document.getElementById(`${module}DetailModal`).hidden = false;
       }
-      if (edit) { document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`; document.getElementById(`${module}Modal`).hidden = false; }
-      if (remove && confirm(`Excluir ${copy.singular}?`)) { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }
-      if (apptAction) writeToast(`Agendamento: ${apptAction.dataset.appointmentAction}.`, 'info');
-      if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${orderAction.closest('[data-admin-remove],[data-admin-edit]')?.dataset.id || 'demo'}/${orderAction.dataset.orderAction}`, {}, { success: true }); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); }
+      if (edit) {
+        editingId = edit.dataset.id;
+        const item = currentList.find(x => String(x.id) === String(editingId)) || currentList[Number(edit.dataset.index)] || {};
+        const form = document.querySelector(`[data-admin-form='${module}']`);
+        form?.reset();
+        Object.entries(item).forEach(([key, value]) => { const field = form?.elements?.[key] || form?.elements?.[key === 'type' ? 'personType' : key]; if (field && typeof value !== 'object') field.value = value; });
+        document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`;
+        window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
+      }
+      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && await load());
+      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); writeToast(`Agendamento atualizado: ${apptAction.textContent}.`, 'info'); }
+      if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); }
     });
   };
 })();

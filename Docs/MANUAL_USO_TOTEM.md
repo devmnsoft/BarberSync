@@ -1,17 +1,15 @@
-# Manual de Uso — Totem (KioskWeb)
+# Manual de uso do Totem BarberSync
 
-## URL
-- `http://localhost:8083/Kiosk/Services`
+## Fluxo
 
-## Jornada do cliente no totem
-1. Selecionar serviço.
-2. Identificar cliente (telefone) ou fazer cadastro rápido.
-3. Escolher profissional.
-4. Confirmar atendimento.
-5. Efetuar pagamento (modo mock para demonstração).
-6. Visualizar sucesso e avaliar atendimento.
+1. Serviços: carregar `/KioskApi/services?deviceCode=KIOSK-DEMO-001` e escolher um serviço.
+2. Cliente: identificar ou cadastrar rapidamente.
+3. Profissional: escolher profissional disponível.
+4. Confirmação: revisar atendimento.
+5. Pagamento: aprovar pagamento mock em `/KioskApi/payment/mock`.
+6. Sucesso: exibir protocolo e reiniciar estado.
+7. Avaliação: enviar nota por `/KioskApi/review`.
 
-## Boas práticas para demo
-- Usar um dispositivo com tela sensível ao toque.
-- Configurar timeout para reset automático entre atendimentos.
-- Manter serviço e profissional ativos para evitar bloqueios no fluxo.
+## Regras de demonstração
+
+O Totem salva estado em `sessionStorage`, possui voltar/cancelar, fallback demo e não chama a API Docker diretamente no browser.

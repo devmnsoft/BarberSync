@@ -43,6 +43,7 @@ body { font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; }
 .bs-btn:hover { box-shadow: var(--bs-shadow-hover); transform: translateY(-1px); }
 .bs-btn-primary { background: linear-gradient(135deg, var(--bs-blue), #1D4ED8); color: var(--bs-white); }
 .bs-btn-gold { background: linear-gradient(135deg, var(--bs-gold), #F6C85F); color: var(--bs-dark); }
+.bs-btn-danger { background: linear-gradient(135deg, var(--bs-red), #B91C1C); color: var(--bs-white); }
 .bs-card, .bs-panel { background: var(--bs-card); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-lg); box-shadow: var(--bs-shadow); padding: 1.25rem; }
 .bs-kpi { align-items: center; display: flex; gap: 1rem; }
 .bs-table { border-collapse: separate; border-spacing: 0; width: 100%; }

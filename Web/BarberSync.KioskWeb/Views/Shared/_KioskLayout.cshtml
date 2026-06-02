@@ -13,7 +13,9 @@
     <header class="kiosk-header">
         <img src="~/img/logo-barbersync-white.svg" alt="BarberSync"/>
         <div class="kiosk-mode"><span>Modo demonstração</span><strong>KIOSK-DEMO-001</strong></div>
-        <a href="/Kiosk/Services" class="kiosk-reset">Reiniciar</a>
+        <button type="button" class="kiosk-reset" data-kiosk-back>Voltar</button>
+        <button type="button" class="kiosk-reset" data-kiosk-accessibility>Acessibilidade</button>
+        <a href="/Kiosk/Services" class="kiosk-reset" data-kiosk-cancel>Cancelar</a>
     </header>
     <main class="kiosk-container">@RenderBody()</main>
     <script>window.BarberSyncKiosk = { deviceCode: 'KIOSK-DEMO-001' };</script>

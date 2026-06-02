@@ -1,1 +1,4 @@
 .kiosk-step{display:grid;gap:22px;margin:0 auto;max-width:1120px;padding:28px 0 54px;text-align:center}.kiosk-form{display:grid;gap:18px;margin:0 auto;max-width:640px;width:100%}.kiosk-form input,.kiosk-form select{background:#fff;border:0;border-radius:24px;color:#111827;font-size:24px;padding:24px 26px}.summary{font-size:26px;margin:0 auto;max-width:720px;text-align:left}.summary span{background:#f3f4f6;border-radius:16px;color:#374151;display:block;font-size:20px;padding:12px 14px}.summary small{color:#6b7280}.success img{margin:0 auto;max-width:280px}
+body.kiosk-accessible { font-size: 120%; }
+body.kiosk-accessible .k-card, body.kiosk-accessible .kiosk-step { outline: 4px solid #D4A72C; }
+.kiosk-reset { border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; border-radius: 999px; padding: 10px 14px; font-weight: 900; text-decoration: none; }
