@@ -1,28 +1,20 @@
-## Atualização Demo Experience 1.0
+# Manual de Uso Admin — Demo Experience 2.0
 
-O Admin possui sidebar premium, topbar com unidade atual, status API/Demo, ajuda contextual, onboarding e command palette via Ctrl + K. CRUDs usam `/AdminApi/...`, persistem alterações demo em localStorage e exibem toasts para cada ação.
+## Modo demonstração
+No topo do Admin existe o banner **Modo Demonstração Ativo** com alternância entre **Demo Comercial**, **API Real** e **Híbrido**. Use os botões para resetar dados ou carregar os cenários: movimentado, estoque crítico, agenda cheia e campanha ativa.
 
-# BarberSync — Manual de Uso Admin
+## Tour Demo
+Clique em **Tour Demo** na topbar para iniciar um roteiro guiado sem biblioteca externa. O tour destaca Dashboard, KPIs, Agenda, Clientes, Cliente 360, Comanda, Pagamento, Estoque, Campanhas, Copilot e Totem.
 
-## Primeiros passos
-Acesse `/Admin/Onboarding` para acompanhar o checklist salvo em `localStorage`: empresa, serviços, profissionais, clientes, agenda, comanda, totem, site público, Copilot e roteiro.
+## Módulos principais
+- **Dashboard:** Resumo da Operação, Fluxo de Hoje, Alertas Prioritários, Oportunidades e Saúde do Negócio.
+- **Clientes:** Cliente 360 com segmento, score, cashback, timeline e ações rápidas.
+- **Agenda:** visão operacional com mudança de status e toasts.
+- **Comandas:** PDV visual com desconto, cupom, cashback, pagamento e recibo.
+- **Caixa/Pagamentos/Financeiro:** abertura/fechamento, entradas, saídas, recibos, ticket médio, comissões e fluxo.
+- **Estoque:** críticos, atenção, valor total, sugestão de compra e reposição.
+- **Campanhas/Cupons/Fidelidade:** funil, público, validade, uso e cashback.
+- **Copilot:** sugestões por vendas, estoque, agenda, clientes e financeiro com ação recomendada.
 
-## Dashboard
-Use `/Admin/Dashboard` para apresentar KPIs, serviços mais vendidos, próximos agendamentos, estoque crítico, sugestões do Copilot, insights para hoje e plano de ação recomendado.
-
-## Cadastros e operação
-- **Clientes**: CRUD visual, busca/filtro, Cliente 360, agendamento e abertura de comanda.
-- **Profissionais**: CRUD visual, inativação demo e performance com receita, comissão, avaliação, ocupação e meta.
-- **Serviços**: CRUD visual e toggles para PublicWeb, Totem e Mobile.
-- **Agenda**: mudança de status com chamada a `/AdminApi/appointments/{id}/...` e atualização local demo.
-- **Comandas**: detalhe, pagamento, fechamento e recibo visual.
-- **Estoque**: entrada/saída demo, barras, status crítico/atenção/normal e sugestão de compra.
-
-## Comercial e relacionamento
-Campanhas, cupons, fidelidade e avaliações possuem dados demo ricos para mostrar retorno, uso, cashback, NPS e recuperação de detratores.
-
-## Copilot
-Use `/Admin/Copilot` para perguntar sobre retenção, escala, estoque, campanha e reputação. As respostas possuem prioridades e ações rápidas.
-
-## Estado local demo
-As telas administrativas usam o `BarberSyncDemoStore` no front-end para persistir alterações em `localStorage`. Use “Atualizar” para comprovar que criações, edições, exclusões e mudanças de status continuam visíveis durante a demonstração.
+## Ajuda contextual e command palette
+Use **Ajuda** para orientação contextual e **Ctrl+K** para abrir a command palette. Todas as ações de demonstração devem responder com alteração visual, toast ou persistência local.

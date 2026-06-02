@@ -18,3 +18,16 @@
     catch { result.textContent = 'Solicitação recebida em modo demonstração.'; toast('Modo demo: solicitação registrada localmente.'); }
   });
 })();
+
+
+document.getElementById('demoRequest')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!event.target.checkValidity()) return;
+  const result = document.getElementById('demoRequestResult');
+  const payload = Object.fromEntries(new FormData(event.target).entries());
+  const saved = JSON.parse(localStorage.getItem('BarberSync:PublicDemoRequests') || '[]');
+  saved.unshift({ ...payload, createdAt: new Date().toISOString(), status: 'Demonstração solicitada' });
+  localStorage.setItem('BarberSync:PublicDemoRequests', JSON.stringify(saved));
+  if (result) result.textContent = 'Demonstração registrada. O roteiro sugerido começa no PublicWeb e segue para Admin, PDV, Copilot e Totem.';
+  event.target.reset();
+});
