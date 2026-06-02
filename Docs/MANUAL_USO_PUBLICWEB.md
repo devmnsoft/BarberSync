@@ -1,15 +1,24 @@
-# Manual de Uso — PublicWeb BarberSync
+# BarberSync — Manual de Uso PublicWeb
 
-Acesse `http://localhost:8082/`.
+## Objetivo
+Vender a proposta BarberSync e permitir agendamento demonstrável para cliente final.
 
-## Seções da landing
+## Seções principais
+- Por que escolher o BarberSync.
+- Antes e depois.
+- Diferenciais.
+- Como funciona.
+- Totem inteligente.
+- App para clientes.
+- IA para gestão.
+- Planos.
+- Solicitar demonstração.
 
-- Headline e CTA acima da dobra.
-- Serviços carregados via `/PublicApi/services`.
-- Profissionais carregados via `/PublicApi/professionals`.
-- Agendamento público via `/PublicApi/appointments`.
-- Demonstração de Totem, App, Copilot, Caixa, Estoque, planos, depoimentos, FAQ e rodapé.
+## CTAs
+- Agendar serviço.
+- Ver painel administrativo.
+- Testar totem.
+- Solicitar demonstração.
 
-## Agendamento demo
-
-Preencha nome, WhatsApp, serviço, profissional, data e hora. O PublicWeb exibe toast/feedback de sucesso e mantém a API interna protegida no server-side.
+## Agendamento
+O formulário envia `POST /PublicApi/appointments` e mostra feedback visual. Se a API estiver indisponível, o fallback demo retorna sucesso controlado.
