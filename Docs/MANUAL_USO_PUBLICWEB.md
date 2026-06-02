@@ -1,13 +1,15 @@
-# Manual de uso do PublicWeb BarberSync
+# Manual de Uso — PublicWeb BarberSync
 
-## Landing comercial
+Acesse `http://localhost:8082/`.
 
-A página inicial apresenta hero premium, problemas, solução, serviços, profissionais, Totem, Mobile, Dashboard, Copilot, planos, depoimentos, FAQ e footer.
+## Seções da landing
 
-## Agendamento público
+- Headline e CTA acima da dobra.
+- Serviços carregados via `/PublicApi/services`.
+- Profissionais carregados via `/PublicApi/professionals`.
+- Agendamento público via `/PublicApi/appointments`.
+- Demonstração de Totem, App, Copilot, Caixa, Estoque, planos, depoimentos, FAQ e rodapé.
 
-O formulário coleta nome, telefone, serviço, profissional, data, hora e observação. A submissão usa `/PublicApi/appointments`; se a API falhar, o fallback mantém a experiência e exibe toast de sucesso demo.
+## Agendamento demo
 
-## Proxies
-
-Serviços e profissionais são carregados por `/PublicApi/services` e `/PublicApi/professionals`. O navegador nunca usa a URL interna Docker da API.
+Preencha nome, WhatsApp, serviço, profissional, data e hora. O PublicWeb exibe toast/feedback de sucesso e mantém a API interna protegida no server-side.

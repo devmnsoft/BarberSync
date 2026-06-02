@@ -1,15 +1,15 @@
-# Manual de uso do Totem BarberSync
+# Manual de Uso — Totem BarberSync
 
-## Fluxo
+Acesse `http://localhost:8083/Kiosk/Services`.
 
-1. Serviços: carregar `/KioskApi/services?deviceCode=KIOSK-DEMO-001` e escolher um serviço.
-2. Cliente: identificar ou cadastrar rapidamente.
-3. Profissional: escolher profissional disponível.
-4. Confirmação: revisar atendimento.
-5. Pagamento: aprovar pagamento mock em `/KioskApi/payment/mock`.
-6. Sucesso: exibir protocolo e reiniciar estado.
-7. Avaliação: enviar nota por `/KioskApi/review`.
+## Fluxo completo
 
-## Regras de demonstração
+1. Selecione um serviço.
+2. Informe telefone e nome.
+3. Escolha o profissional.
+4. Revise o resumo.
+5. Selecione pagamento mock.
+6. Veja a tela de sucesso.
+7. Registre avaliação.
 
-O Totem salva estado em `sessionStorage`, possui voltar/cancelar, fallback demo e não chama a API Docker diretamente no browser.
+O fluxo usa `sessionStorage` para preservar serviço, cliente, profissional, pagamento e avaliação entre páginas. O browser usa somente `/KioskApi`.
