@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Ilustração de campanha BarberSync">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#052e2b"/><stop offset="1" stop-color="#d4af37"/></linearGradient></defs>
+  <rect width="640" height="420" rx="36" fill="#f8fafc"/>
+  <circle cx="500" cy="90" r="64" fill="#fff8e1"/>
+  <rect x="80" y="90" width="320" height="220" rx="24" fill="#fff" stroke="#e2e8f0"/>
+  <path d="M150 180h95l105-52v144l-105-52h-95z" fill="url(#g)"/>
+  <path d="M420 155c32 28 32 88 0 116" fill="none" stroke="#d4af37" stroke-width="18" stroke-linecap="round"/>
+  <rect x="118" y="330" width="404" height="22" rx="11" fill="#052e2b" opacity=".12"/>
+  <text x="118" y="58" font-family="Arial" font-size="28" font-weight="700" fill="#052e2b">Campanhas e cupons</text>
+</svg>

@@ -278,3 +278,13 @@
   Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, updateLocalDemoStore, showFormErrors, clearForm });
 
 })();
+// BarberSync Demo Experience 1.0 required global aliases
+window.initModuleCrud = window.initModuleCrud || ((moduleName, options) => window.renderAdminCrudPage?.(moduleName, options));
+window.loadModuleData = window.loadModuleData || (async (moduleName) => window.BarberSyncDemoStore?.get(moduleName) || []);
+window.renderModule = window.renderModule || ((moduleName) => window.renderAdminCrudPage?.(moduleName));
+window.renderTable = window.renderTable || ((moduleName, data) => window.renderModuleTable?.(moduleName, data));
+window.renderCards = window.renderCards || ((moduleName, data) => window.renderModuleCards?.(moduleName, data));
+window.submitForm = window.submitForm || ((moduleName) => window.submitModuleForm?.(moduleName));
+window.deleteItem = window.deleteItem || ((moduleName, id) => window.confirmDelete?.(moduleName, id));
+window.updateStatus = window.updateStatus || ((moduleName, id, status) => { window.BarberSyncDemoStore?.patch(moduleName, id, { status }); window.AdminToast?.showSuccess?.('Status atualizado em modo demonstração.'); window.refreshModule?.(moduleName); });
+window.showToastByResult = window.showToastByResult || ((result) => (result?.success === false ? window.AdminToast?.showError : window.AdminToast?.showSuccess)?.(result?.message || 'Ação concluída.'));

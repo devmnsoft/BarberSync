@@ -1,3 +1,13 @@
+## BarberSync Demo Experience 1.0
+
+1. Abra o PublicWeb e destaque CTA, serviços, planos e formulário.
+2. Abra o Admin e use Ctrl + K para mostrar a command palette.
+3. Mostre dashboard executivo, saúde da operação, painel Hoje e ações recomendadas.
+4. Crie um cliente demo e apresente Cliente 360.
+5. Avance a agenda por status, abra comanda, simule pagamento e imprima recibo.
+6. Mostre estoque crítico, campanhas, cupons, fidelidade, avaliações/NPS e Copilot.
+7. Finalize no Totem com fluxo completo e avaliação por estrelas.
+
 # BarberSync — Roteiro de Demonstração Comercial 1.0
 
 ## Objetivo

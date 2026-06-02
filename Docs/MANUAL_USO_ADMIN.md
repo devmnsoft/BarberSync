@@ -1,3 +1,7 @@
+## Atualização Demo Experience 1.0
+
+O Admin possui sidebar premium, topbar com unidade atual, status API/Demo, ajuda contextual, onboarding e command palette via Ctrl + K. CRUDs usam `/AdminApi/...`, persistem alterações demo em localStorage e exibem toasts para cada ação.
+
 # BarberSync — Manual de Uso Admin
 
 ## Primeiros passos

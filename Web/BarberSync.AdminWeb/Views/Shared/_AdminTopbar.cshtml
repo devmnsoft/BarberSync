@@ -1,6 +1,13 @@
 <header class="admin-topbar">
-  <button class="btn btn-secondary" type="button">☰</button>
-  <input class="topbar-search" placeholder="Buscar cliente, serviço, comanda..." />
-  <span class="api-status badge badge-success">API Demo</span>
-  <div class="user-area">Unidade: <strong>Barbearia Elite Demo</strong> • 🔔 • 👤 Admin Demo • <button type="button" class="link-button" data-help-open>Ajuda</button></div>
+  <button class="btn btn-secondary" type="button" data-sidebar-toggle aria-label="Alternar menu">☰</button>
+  <div class="topbar-search-wrap">
+    <span>🔎</span>
+    <input class="topbar-search" placeholder="Buscar cliente, serviço, comanda..." data-global-search />
+    <button type="button" class="kbd-button" data-command-open><kbd>Ctrl</kbd> + <kbd>K</kbd></button>
+  </div>
+  <span class="api-status badge badge-success">API/Demo OK</span>
+  <span class="badge badge-info">Unidade: Barbearia Elite Demo</span>
+  <button type="button" class="btn btn-primary" data-command-open>Nova ação</button>
+  <button type="button" class="btn btn-light" data-help-open>Ajuda</button>
+  <div class="user-area">🔔 3 • 👤 Admin Demo</div>
 </header>

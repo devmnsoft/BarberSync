@@ -6,6 +6,14 @@
 <section class="kpi-grid" data-dashboard-kpis>
 @foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
 </section>
+
+<section class="enterprise-demo-grid">
+  <article class="enterprise-card wide"><h3>Saúde da operação</h3><div class="tag-list"><span class="tag">Agenda OK</span><span class="tag">Caixa OK</span><span class="tag">Estoque atenção</span><span class="tag">Atendimento ativo</span><span class="tag">Totem online</span><span class="tag">PublicWeb online</span><span class="tag">Copilot pronto</span></div></article>
+  <article class="enterprise-card"><h3>Hoje</h3><p><strong>18</strong> agendamentos • <strong>11</strong> atendimentos • <strong>R$ 3.480</strong> faturados • <strong>6</strong> comandas • <strong>5</strong> profissionais ativos.</p></article>
+  <article class="enterprise-card"><h3>Ações recomendadas</h3><ul class="metric-list"><li>Ligar para clientes inativos.</li><li>Criar campanha de retorno.</li><li>Repor estoque crítico.</li><li>Incentivar avaliações.</li><li>Ativar serviços no totem.</li></ul></article>
+  <article class="enterprise-card wide"><h3>Demonstração</h3><div class="quick-actions-grid"><a class="btn btn-light" href="/Admin/Help">Ver roteiro</a><a class="btn btn-secondary" href="http://localhost:8082/" target="_blank" rel="noopener">Abrir PublicWeb</a><a class="btn btn-secondary" href="http://localhost:8083/Kiosk/Services" target="_blank" rel="noopener">Abrir Totem</a><button class="btn btn-primary" data-demo-action="Cliente demo criado">Criar cliente demo</button><button class="btn btn-light" onclick="window.BarberSyncDemoStore?.resetAll(); window.AdminToast?.showInfo('Dados demo resetados.');">Resetar dados demo</button></div></article>
+</section>
+
 <div class="dashboard-grid">
     <article class="panel span-6"><div class="panel-header"><h3>Serviços mais vendidos</h3><span class="badge badge-info">/AdminApi/services</span></div><ul class="metric-list" data-top-services><li>Corte Masculino</li></ul></article>
     <article class="panel span-6"><div class="panel-header"><h3>Profissionais em destaque</h3><span class="badge badge-success">Disponíveis</span></div><p>Rafael Barber, Camila Beauty e Amanda Nails com alta avaliação.</p></article>
