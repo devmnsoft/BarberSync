@@ -1,19 +1,13 @@
-# Manual de Uso — PublicWeb
+# Manual de uso do PublicWeb BarberSync
 
-## URL
-- `http://localhost:8082/`
+## Landing comercial
 
-## Objetivo
-Converter visitantes em agendamentos com experiência clara e rápida.
+A página inicial apresenta hero premium, problemas, solução, serviços, profissionais, Totem, Mobile, Dashboard, Copilot, planos, depoimentos, FAQ e footer.
 
-## Fluxo recomendado
-1. Apresentar proposta de valor no hero.
-2. Exibir serviços com preço e duração.
-3. Exibir profissionais com especialidade e avaliação.
-4. Preencher formulário de agendamento público.
-5. Confirmar envio para a API de agendamentos.
+## Agendamento público
 
-## Itens para validação durante a demo
-- Responsividade em mobile.
-- Carregamento de serviços/profissionais.
-- Feedback visual de sucesso/erro no envio do agendamento.
+O formulário coleta nome, telefone, serviço, profissional, data, hora e observação. A submissão usa `/PublicApi/appointments`; se a API falhar, o fallback mantém a experiência e exibe toast de sucesso demo.
+
+## Proxies
+
+Serviços e profissionais são carregados por `/PublicApi/services` e `/PublicApi/professionals`. O navegador nunca usa a URL interna Docker da API.

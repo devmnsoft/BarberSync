@@ -1,21 +1,25 @@
-# Manual de Uso — AdminWeb (BarberSync 2.0)
+# Manual de uso do Admin BarberSync
 
-## Acesso
-- URL: `http://localhost:8081/`
-- Usuário demo: `admin@barbersync.com`
-- Senha demo: `Admin@123`
+## Navegação
 
-## Fluxo essencial de operação
-1. **Dashboard**: acompanhe indicadores de receita, agenda e operação.
-2. **Clientes**: cadastre e mantenha base ativa.
-3. **Profissionais**: configure disponibilidade, comissão e especialidades.
-4. **Serviços**: gerencie preço, duração e visibilidade pública/totem.
-5. **Agenda**: crie, confirme, inicie e finalize atendimentos.
-6. **Comandas**: lance serviços/produtos, desconto e envio para pagamento.
-7. **Pagamentos e Caixa**: registre entradas e faça fechamento diário.
-8. **Estoque**: execute entrada/saída/ajuste e monitore críticos.
-9. **Relatórios**: valide resultado financeiro e produtividade.
-10. **Copilot**: peça recomendações e insights operacionais.
+O Admin possui sidebar escura, topbar com busca global, status de API, unidade atual e usuário Admin Demo. As telas usam `/AdminApi/*` como proxy server-side.
 
-## Demonstração comercial sugerida
-- Siga o roteiro do arquivo `Docs/DEMO_CLIENTE_ROTEIRO.md`.
+## Dashboard
+
+Acesse `/Admin/Dashboard` para KPIs executivos, serviços mais vendidos, profissionais, próximos agendamentos, comandas abertas, estoque crítico, alertas e sugestões Copilot.
+
+## CRUDs principais
+
+Clientes, Profissionais e Serviços possuem busca, cards de resumo, tabela, detalhes, criar, editar, excluir com confirmação, validação HTML5 e toasts. Em modo demo, POST/PUT/DELETE retornam sucesso para manter a demonstração fluida.
+
+## Operação
+
+- Agenda: criar agendamento e demonstrar status confirmar, check-in, iniciar, finalizar e cancelar.
+- Comandas: abrir comanda, pagar e fechar.
+- Estoque: listar produtos, ver críticos e registrar entrada/saída.
+- Relacionamento: campanhas, cupons, fidelidade e avaliações.
+- Copilot: sugestões automáticas e chat por `/AdminApi/copilot/ask`.
+
+## Segurança de integração
+
+JavaScript chama apenas rotas relativas. O host interno da API é usado somente pelos controllers MVC via `ApiSettings:BaseUrl`.

@@ -1,43 +1,29 @@
-# BarberSync 2.0 — Funcionalidades Completas
+# Funcionalidades completas BarberSync
 
-## 1) Operação
-- Dashboard executivo com KPIs, gráficos e alertas.
-- Agenda profissional com ações de ciclo (confirmar, check-in, iniciar, finalizar, cancelar, no-show).
-- Atendimento e comanda com serviços/produtos/descontos/cashback/cupom.
-- Caixa com abertura, movimentações e fechamento.
+## AdminWeb
 
-## 2) Cadastros
-- Clientes (CRUD + visão 360).
-- Profissionais (CRUD + agenda + performance).
-- Serviços (CRUD + canais + duração/preço).
-- Produtos (CRUD + controle de estoque mínimo).
+- Layout enterprise com sidebar, topbar, cards, tabelas, modais, toasts e responsividade.
+- Dashboard executivo com KPIs, agenda, comandas, estoque, alertas e Copilot.
+- CRUD visual de clientes, profissionais e serviços com criar, editar, excluir, detalhes, validação e fallback demo.
+- Agenda, comandas, estoque, campanhas, cupons, avaliações, fidelidade e Copilot visíveis para demonstração.
+- Proxies `/AdminApi/*` com fallback padronizado `{ success, message, data }`.
 
-## 3) Relacionamento
-- Fidelidade e cashback.
-- Campanhas segmentadas.
-- Cupons promocionais.
-- Avaliações e satisfação (incluindo NPS).
+## PublicWeb
 
-## 4) Gestão
-- Financeiro por período e forma de pagamento.
-- Estoque com crítico, entradas, saídas e ajustes.
-- Relatórios operacionais e executivos.
-- Copilot IA com sugestões de ação.
+- Landing premium com serviços e profissionais carregados via `/PublicApi/*`.
+- Formulário público de agendamento com validação e toast.
 
-## 5) Canais
-- AdminWeb (backoffice).
-- PublicWeb (site comercial e agendamento público).
-- KioskWeb (totem autosserviço).
-- MobileApp (cliente final).
+## KioskWeb
 
-## 6) Plataforma
-- API ASP.NET Core com Swagger.
-- PostgreSQL no schema `barber`.
-- Docker Compose para stack local.
-- Seq para observabilidade.
+- Fluxo completo de autoatendimento: serviços, cliente, profissional, confirmação, pagamento mock, sucesso e avaliação.
+- Estado local em `sessionStorage` e proxies `/KioskApi/*`.
 
-## 7) Prontidão comercial
-- Identidade visual consistente.
-- Fluxos com feedback de sucesso/erro.
-- Dados demonstráveis via seed/fallback controlado.
-- Roteiro de apresentação de 20 minutos.
+## MobileApp
+
+- Tema BarberSync com cores, tipografia, botões, cards, empty state e telas de home, serviços, agendamentos, cashback e perfil alinhadas ao produto.
+
+## Docker e infraestrutura
+
+- Static files habilitados em AdminWeb, PublicWeb e KioskWeb.
+- Controllers MVC usam `ApiSettings:BaseUrl` server-side.
+- `.dockerignore` preserva `wwwroot`, `Views` e `appsettings.json`.

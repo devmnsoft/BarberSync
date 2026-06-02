@@ -1,1 +1,16 @@
-<div></div>
+<div class="admin-modal-backdrop" id="AdminConfirmModal" hidden>
+    <div class="admin-modal bs-modal" role="dialog" aria-modal="true" aria-labelledby="AdminConfirmTitle">
+        <div class="modal-header">
+            <div>
+                <span class="modal-kicker">Confirmação</span>
+                <h3 id="AdminConfirmTitle">Confirmar ação</h3>
+            </div>
+            <button type="button" class="modal-close" data-confirm-cancel aria-label="Fechar">×</button>
+        </div>
+        <p data-confirm-message>Deseja continuar?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-light" data-confirm-cancel>Cancelar</button>
+            <button type="button" class="btn btn-danger" data-confirm-ok>Confirmar</button>
+        </div>
+    </div>
+</div>
