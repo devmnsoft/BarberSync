@@ -22,6 +22,8 @@
     const co=document.querySelector('[data-copilot-list]'); if(co) co.innerHTML=list(data.copilotSuggestions||fallback.copilotSuggestions,c=>`<li><strong>${c.title||'Copilot'}</strong><span>${c.description||c}</span></li>`);
   };
   document.addEventListener('DOMContentLoaded',async()=>{
+    document.querySelectorAll('[data-demo-action]').forEach(btn => btn.addEventListener('click', () => window.AdminToast?.show?.(btn.dataset.demoAction || 'Ação executada em modo demonstração.', 'success')));
+    document.querySelectorAll('[data-quick-action]').forEach(btn => btn.addEventListener('click', () => window.sessionStorage.setItem('BarberSync:lastQuickAction', btn.dataset.quickAction || 'Ação rápida')));
     if(!document.querySelector('[data-dashboard-kpis]')) return;
     const [dashboard, services, professionals, appointments, orders, products, stock, copilot] = await Promise.all([
       adminApiClient.get('/AdminApi/dashboard', fallback),

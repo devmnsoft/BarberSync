@@ -7,6 +7,19 @@
 @foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
 </section>
 
+
+<section class="panel quick-actions-panel">
+    <div class="panel-header"><div><h3>Ações rápidas</h3><p>Atalhos com navegação ou feedback imediato para demonstração comercial.</p></div><span class="badge badge-success">Demo Comercial 1.0</span></div>
+    <div class="quick-actions-grid">
+        <a class="btn btn-primary" href="/Admin/Clients" data-quick-action="Novo cliente">Novo cliente</a>
+        <a class="btn btn-primary" href="/Admin/Appointments" data-quick-action="Novo agendamento">Novo agendamento</a>
+        <a class="btn btn-primary" href="/Admin/ServiceOrders" data-quick-action="Abrir comanda">Abrir comanda</a>
+        <a class="btn btn-secondary" href="/Admin/Stock" data-quick-action="Entrada de estoque">Entrada de estoque</a>
+        <a class="btn btn-secondary" href="/Admin/Campaigns" data-quick-action="Criar campanha">Criar campanha</a>
+        <a class="btn btn-gold" href="/Admin/Copilot" data-quick-action="Perguntar ao Copilot">Perguntar ao Copilot</a>
+    </div>
+</section>
+
 <section class="panel dashboard-insights">
     <div class="panel-header"><div><h3>Insights para hoje</h3><p>Fallback demo via /AdminApi/copilot-suggestions quando a API estiver indisponível.</p></div><span class="badge badge-info">Copilot</span></div>
     <div class="module-feature-grid">

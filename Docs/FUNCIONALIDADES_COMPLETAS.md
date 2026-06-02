@@ -1,31 +1,26 @@
-# Funcionalidades Completas — BarberSync Demo
+# BarberSync — Funcionalidades Completas Demo Comercial 1.0
 
 ## Admin
-
-- Dashboard executivo com KPIs, painéis e gráficos visuais.
-- Clientes com CRUD visual, filtros, detalhes, agendamento e comanda.
-- Profissionais com cadastro, agenda, comissão, serviços e performance.
-- Serviços com catálogo multicanal para site, totem e mobile.
-- Agenda com timeline, status coloridos e ações de ciclo de atendimento.
-- Comandas com kanban, itens, pagamento mock e fechamento.
-- Estoque com produtos, críticos, barras e movimentos.
-- Campanhas, cupons, fidelidade e avaliações.
-- Copilot com sugestões, perguntas rápidas e histórico local.
+- Onboarding com progresso em `localStorage`.
+- Ajuda contextual e manual.
+- Dashboard executivo com KPIs, insights, plano de ação e ações rápidas.
+- Clientes com CRUD visual e Cliente 360.
+- Profissionais com performance, comissão, ranking, ocupação e meta.
+- Serviços com CRUD e canais PublicWeb/Totem/Mobile.
+- Agenda com transição de status.
+- Comandas com pagamento e recibo visual.
+- Estoque com alertas, barras e reposição demo.
+- Campanhas, cupons, fidelidade/cashback e avaliações/NPS.
+- Copilot com chat, perguntas rápidas, prioridades e ações.
 
 ## PublicWeb
+Landing comercial com CTA, planos, diferenciais e agendamento via `/PublicApi/appointments`.
 
-- Landing premium comercial com CTA, serviços, profissionais, planos, depoimentos, FAQ e formulário de agendamento.
-
-## Totem
-
-- Fluxo completo de autoatendimento com serviço, cliente, profissional, confirmação, pagamento mock, sucesso e avaliação.
+## Kiosk
+Fluxo completo com progresso, ajuda, acessibilidade, resumo lateral, pagamento mock, sucesso e avaliação.
 
 ## Mobile
+Home demonstrável com saudação, próximo agendamento, serviços em destaque, cashback, promoções e CTA de agendamento.
 
-- Identidade visual base em telas de home, serviços, agendamentos, cashback e perfil.
-
-## Integração segura
-
-- Browser usa `/AdminApi`, `/PublicApi` e `/KioskApi`.
-- Proxies MVC usam `IHttpClientFactory`, `IConfiguration` e `ILogger` para chamar a API server-side.
-- Fallback demo evita telas quebradas durante apresentações.
+## Proxies
+O browser deve consumir somente `/AdminApi`, `/PublicApi` e `/KioskApi`. Configurações internas de API são usadas server-side pelos projetos MVC.

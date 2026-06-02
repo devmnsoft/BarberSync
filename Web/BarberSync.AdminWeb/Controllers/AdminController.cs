@@ -12,6 +12,7 @@ public class AdminController : Controller
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
     [HttpGet("Appointments")] public IActionResult Appointments() => Render("Appointments");
     [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => Render("ServiceOrders");
+    [HttpGet("Attendance")] public IActionResult Attendance() => RedirectToAction(nameof(Appointments));
     [HttpGet("Cash")] public IActionResult Cash() => Render("Cash");
     [HttpGet("Payments")] public IActionResult Payments() => Render("Payments");
     [HttpGet("Products")] public IActionResult Products() => Render("Products");

@@ -120,23 +120,191 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         openServiceOrders = DemoServiceOrders().Where(x => !JsonSerializer.Serialize(x).Contains("Fechada")).ToArray(), serviceOrders = DemoServiceOrders().Take(5).ToArray(), criticalStock = DemoStockCritical(), stockCritical = DemoStockCritical(), copilotSuggestions = DemoCopilotSuggestions(), alerts = new object[] { new { type = "stock", message = "4 itens abaixo do estoque mínimo." }, new { type = "schedule", message = "Pico de demanda previsto entre 18h e 20h." }, new { type = "crm", message = "32 clientes VIP sem retorno em 30 dias." } }, isDemo = true
     };
 
-    private static object[] DemoClients() => new object[] { new { id="cli-001", name="Marcos Vinícius", type="PF", document="123.456.789-01", phone="(11) 98801-1001", whatsapp="(11) 98801-1001", email="marcos@demo.com", lastVisit="28/05/2026", cashback=42.50m, isVip=true, status="VIP" }, new { id="cli-002", name="Thiago Almeida", type="PF", document="234.567.890-12", phone="(11) 98802-1002", whatsapp="(11) 98802-1002", email="thiago@demo.com", lastVisit="27/05/2026", cashback=18.00m, isVip=false, status="Ativo" }, new { id="cli-003", name="Fernanda Costa", type="PF", document="345.678.901-23", phone="(11) 98803-1003", whatsapp="(11) 98803-1003", email="fernanda@demo.com", lastVisit="26/05/2026", cashback=75.00m, isVip=true, status="VIP" }, new { id="cli-004", name="Eduardo Lima", type="PF", document="456.789.012-34", phone="(11) 98804-1004", whatsapp="(11) 98804-1004", email="eduardo@demo.com", lastVisit="25/05/2026", cashback=12.00m, isVip=false, status="Ativo" }, new { id="cli-005", name="Barber Prime Ltda", type="PJ", document="12.345.678/0001-90", phone="(11) 3222-1005", whatsapp="(11) 98805-1005", email="prime@demo.com", lastVisit="24/05/2026", cashback=120.00m, isVip=true, status="VIP" }, new { id="cli-006", name="Renata Martins", type="PF", document="567.890.123-45", phone="(11) 98806-1006", whatsapp="(11) 98806-1006", email="renata@demo.com", lastVisit="23/05/2026", cashback=9.90m, isVip=false, status="Ativo" }, new { id="cli-007", name="Lucas Pereira", type="PF", document="678.901.234-56", phone="(11) 98807-1007", whatsapp="(11) 98807-1007", email="lucas@demo.com", lastVisit="22/05/2026", cashback=33.00m, isVip=false, status="Ativo" }, new { id="cli-008", name="Camila Rocha", type="PF", document="789.012.345-67", phone="(11) 98808-1008", whatsapp="(11) 98808-1008", email="camila@demo.com", lastVisit="21/05/2026", cashback=51.00m, isVip=true, status="VIP" }, new { id="cli-009", name="André Souza", type="PF", document="890.123.456-78", phone="(11) 98809-1009", whatsapp="(11) 98809-1009", email="andre@demo.com", lastVisit="20/05/2026", cashback=6.00m, isVip=false, status="Ativo" }, new { id="cli-010", name="Patrícia Nunes", type="PF", document="901.234.567-89", phone="(11) 98810-1010", whatsapp="(11) 98810-1010", email="patricia@demo.com", lastVisit="19/05/2026", cashback=28.00m, isVip=false, status="Ativo" }, new { id="cli-011", name="Gustavo Reis", type="PF", document="012.345.678-90", phone="(11) 98811-1011", whatsapp="(11) 98811-1011", email="gustavo@demo.com", lastVisit="18/05/2026", cashback=16.00m, isVip=false, status="Inativo" }, new { id="cli-012", name="Juliana Santos", type="PF", document="147.258.369-00", phone="(11) 98812-1012", whatsapp="(11) 98812-1012", email="juliana@demo.com", lastVisit="17/05/2026", cashback=64.00m, isVip=true, status="VIP" } };
+    private static object[] DemoClients()
+    {
+        var names = new[]
+        {
+            "Marcos Vinícius", "Thiago Almeida", "Fernanda Costa", "Eduardo Lima", "Barber Prime Ltda",
+            "Renata Martins", "Lucas Pereira", "Camila Rocha", "André Souza", "Patrícia Nunes",
+            "Gustavo Reis", "Juliana Santos", "Bruno Carvalho", "Tatiane Moura", "Felipe Andrade"
+        };
+        var cities = new[] { "São Paulo", "Santo André", "Osasco", "Guarulhos", "Campinas" };
+        var services = new[] { "Corte Masculino", "Combo Corte + Barba", "Barba Tradicional", "Hidratação Premium", "Sobrancelha" };
+        var professionals = new[] { "Rafael Barber", "Lucas Navalha", "Camila Beauty", "Amanda Nails", "Bianca Studio" };
+        return names.Select((name, i) => new
+        {
+            id = $"cli-{i + 1:000}",
+            name,
+            type = name.Contains("Ltda", StringComparison.OrdinalIgnoreCase) ? "PJ" : "PF",
+            document = name.Contains("Ltda", StringComparison.OrdinalIgnoreCase) ? "12.345.678/0001-90" : $"{123 + i:000}.456.{789 - i:000}-{i + 1:00}",
+            phone = $"(11) 988{i + 1:00}-10{i + 1:00}",
+            whatsapp = $"(11) 988{i + 1:00}-10{i + 1:00}",
+            email = $"cliente{i + 1:00}@barbersync.demo",
+            lastVisit = DateTime.Today.AddDays(-(i + 2)).ToString("dd/MM/yyyy"),
+            cashback = Math.Round(8.5m + (i * 7.35m), 2),
+            isVip = i % 4 == 0 || i == 2,
+            status = i == 10 ? "Inativo" : (i % 4 == 0 || i == 2 ? "VIP" : "Ativo"),
+            city = cities[i % cities.Length],
+            preferredService = services[i % services.Length],
+            preferredProfessional = professionals[i % professionals.Length],
+            totalSpent = 280m + (i * 145m),
+            averageTicket = 62m + (i % 5 * 9m),
+            nextAppointment = DateTime.Today.AddDays(i % 6).AddHours(10 + (i % 8)).ToString("dd/MM/yyyy HH:mm")
+        }).Cast<object>().ToArray();
+    }
 
-    private static object[] DemoProfessionals() => new object[] { new { id="pro-001", name="Rafael Barber", specialty="Fade e barba", phone="(11) 97701-1001", email="rafael@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=28400m, appointmentsToday=8, commissionPercent=40, services=new[] { "Corte Masculino", "Barba Tradicional", "Combo Corte + Barba" } }, new { id="pro-002", name="Lucas Navalha", specialty="Corte clássico", phone="(11) 97702-1002", email="lucas@barbersync.demo", status="Em atendimento", rating=4.8m, monthlyRevenue=24200m, appointmentsToday=6, commissionPercent=38, services=new[] { "Corte Masculino", "Sobrancelha" } }, new { id="pro-003", name="Camila Beauty", specialty="Visagismo e coloração", phone="(11) 97703-1003", email="camila@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=31800m, appointmentsToday=7, commissionPercent=42, services=new[] { "Coloração", "Hidratação Premium" } }, new { id="pro-004", name="Amanda Nails", specialty="Nails premium", phone="(11) 97704-1004", email="amanda@barbersync.demo", status="Disponível", rating=4.7m, monthlyRevenue=19800m, appointmentsToday=5, commissionPercent=40, services=new[] { "Manicure", "Pedicure" } }, new { id="pro-005", name="Diego Skin", specialty="Estética masculina", phone="(11) 97705-1005", email="diego@barbersync.demo", status="Folga", rating=4.8m, monthlyRevenue=17600m, appointmentsToday=0, commissionPercent=35, services=new[] { "Limpeza de pele", "Massagem capilar" } }, new { id="pro-006", name="Bianca Studio", specialty="Design de sobrancelhas", phone="(11) 97706-1006", email="bianca@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=22100m, appointmentsToday=4, commissionPercent=37, services=new[] { "Sobrancelha", "Micropigmentação" } } };
+    private static object[] DemoProfessionals() => new object[]
+    {
+        new { id="pro-001", name="Rafael Barber", specialty="Fade e barba", phone="(11) 97701-1001", email="rafael@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=28400m, appointmentsToday=8, commissionPercent=40, services=new[] { "Corte Masculino", "Barba Tradicional", "Combo Corte + Barba" }, occupancy=88, ranking=1, monthlyGoal=32000m },
+        new { id="pro-002", name="Lucas Navalha", specialty="Corte clássico", phone="(11) 97702-1002", email="lucas@barbersync.demo", status="Em atendimento", rating=4.8m, monthlyRevenue=24200m, appointmentsToday=6, commissionPercent=38, services=new[] { "Corte Masculino", "Sobrancelha" }, occupancy=79, ranking=3, monthlyGoal=28000m },
+        new { id="pro-003", name="Camila Beauty", specialty="Visagismo e coloração", phone="(11) 97703-1003", email="camila@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=31800m, appointmentsToday=7, commissionPercent=42, services=new[] { "Coloração", "Hidratação Premium" }, occupancy=91, ranking=2, monthlyGoal=35000m },
+        new { id="pro-004", name="Amanda Nails", specialty="Nails premium", phone="(11) 97704-1004", email="amanda@barbersync.demo", status="Disponível", rating=4.7m, monthlyRevenue=19800m, appointmentsToday=5, commissionPercent=40, services=new[] { "Manicure", "Pedicure" }, occupancy=72, ranking=6, monthlyGoal=24000m },
+        new { id="pro-005", name="Diego Skin", specialty="Estética masculina", phone="(11) 97705-1005", email="diego@barbersync.demo", status="Folga", rating=4.8m, monthlyRevenue=17600m, appointmentsToday=0, commissionPercent=35, services=new[] { "Limpeza de pele", "Massagem capilar" }, occupancy=64, ranking=8, monthlyGoal=22000m },
+        new { id="pro-006", name="Bianca Studio", specialty="Design de sobrancelhas", phone="(11) 97706-1006", email="bianca@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=22100m, appointmentsToday=4, commissionPercent=37, services=new[] { "Sobrancelha", "Micropigmentação" }, occupancy=83, ranking=4, monthlyGoal=26000m },
+        new { id="pro-007", name="Nicolas Prime", specialty="Barba premium", phone="(11) 97707-1007", email="nicolas@barbersync.demo", status="Disponível", rating=4.8m, monthlyRevenue=20500m, appointmentsToday=5, commissionPercent=39, services=new[] { "Barba Tradicional", "Combo Corte + Barba" }, occupancy=76, ranking=5, monthlyGoal=25000m },
+        new { id="pro-008", name="Larissa Spa", specialty="Tratamentos e bem-estar", phone="(11) 97708-1008", email="larissa@barbersync.demo", status="Disponível", rating=4.9m, monthlyRevenue=18400m, appointmentsToday=3, commissionPercent=36, services=new[] { "Hidratação Premium", "Massagem Capilar" }, occupancy=68, ranking=7, monthlyGoal=23000m }
+    };
 
-    private static object[] DemoServices() => new object[] { new { id="srv-001", name="Corte Masculino", category="Barbearia", description="Corte moderno com consultoria de estilo e acabamento.", price=45m, durationMinutes=40, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-002", name="Barba Tradicional", category="Barbearia", description="Toalha quente, navalha e balm premium.", price=35m, durationMinutes=30, commissionPercent=38, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-003", name="Combo Corte + Barba", category="Combo", description="Experiência completa BarberSync.", price=70m, durationMinutes=60, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-004", name="Sobrancelha", category="Estética", description="Design e limpeza com acabamento natural.", price=25m, durationMinutes=20, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-005", name="Hidratação Premium", category="Tratamento", description="Tratamento capilar com produtos profissionais.", price=55m, durationMinutes=45, commissionPercent=36, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-006", name="Coloração", category="Coloração", description="Coloração técnica com diagnóstico prévio.", price=120m, durationMinutes=90, commissionPercent=42, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-007", name="Manicure", category="Nails", description="Cutilagem, esmaltação e hidratação.", price=40m, durationMinutes=45, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-008", name="Pedicure", category="Nails", description="Cuidado completo para os pés.", price=48m, durationMinutes=50, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }, new { id="srv-009", name="Limpeza de Pele", category="Estética", description="Higienização facial e máscara calmante.", price=95m, durationMinutes=70, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" }, new { id="srv-010", name="Massagem Capilar", category="Bem-estar", description="Relaxamento com óleos essenciais.", price=65m, durationMinutes=35, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" } };
+    private static object[] DemoServices() => new object[]
+    {
+        new { id="srv-001", name="Corte Masculino", category="Barbearia", description="Corte moderno com consultoria de estilo e acabamento.", price=45m, durationMinutes=40, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-002", name="Barba Tradicional", category="Barbearia", description="Toalha quente, navalha e balm premium.", price=35m, durationMinutes=30, commissionPercent=38, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-003", name="Combo Corte + Barba", category="Combo", description="Experiência completa BarberSync.", price=70m, durationMinutes=60, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-004", name="Sobrancelha", category="Estética", description="Design e limpeza com acabamento natural.", price=25m, durationMinutes=20, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-005", name="Hidratação Premium", category="Tratamento", description="Tratamento capilar com produtos profissionais.", price=55m, durationMinutes=45, commissionPercent=36, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-006", name="Coloração", category="Coloração", description="Coloração técnica com diagnóstico prévio.", price=120m, durationMinutes=90, commissionPercent=42, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-007", name="Manicure", category="Nails", description="Cutilagem, esmaltação e hidratação.", price=40m, durationMinutes=45, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-008", name="Pedicure", category="Nails", description="Cuidado completo para os pés.", price=48m, durationMinutes=50, commissionPercent=40, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-009", name="Limpeza de Pele", category="Estética", description="Higienização facial e máscara calmante.", price=95m, durationMinutes=70, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-010", name="Massagem Capilar", category="Bem-estar", description="Relaxamento com óleos essenciais.", price=65m, durationMinutes=35, commissionPercent=35, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-011", name="Micropigmentação", category="Estética", description="Procedimento premium com avaliação prévia.", price=180m, durationMinutes=120, commissionPercent=45, visibleOnPublicWeb=true, visibleOnKiosk=false, visibleOnMobile=true, status="Ativo" },
+        new { id="srv-012", name="Dia do Noivo", category="Experiência", description="Pacote completo com corte, barba, spa e bebida de boas-vindas.", price=220m, durationMinutes=150, commissionPercent=42, visibleOnPublicWeb=true, visibleOnKiosk=true, visibleOnMobile=true, status="Ativo" }
+    };
 
-    private static object[] DemoAppointments() => Enumerable.Range(1, 12).Select(i => new { id=$"apt-{i:000}", clientName=DemoNames[i - 1], client=DemoNames[i - 1], professionalName=i % 3 == 0 ? "Camila Beauty" : i % 2 == 0 ? "Lucas Navalha" : "Rafael Barber", professional=i % 3 == 0 ? "Camila Beauty" : i % 2 == 0 ? "Lucas Navalha" : "Rafael Barber", serviceName=i % 4 == 0 ? "Combo Corte + Barba" : i % 3 == 0 ? "Hidratação Premium" : "Corte Masculino", service=i % 4 == 0 ? "Combo Corte + Barba" : i % 3 == 0 ? "Hidratação Premium" : "Corte Masculino", scheduledAt=DateTime.Today.AddHours(8 + i).ToString("yyyy-MM-ddTHH:mm:ss"), time=$"{8 + i:00}:00", price=i % 4 == 0 ? 70m : i % 3 == 0 ? 55m : 45m, status=i % 5 == 0 ? "Em atendimento" : i % 4 == 0 ? "Check-in" : "Confirmado", notes="Preferência registrada no CRM demo." }).Cast<object>().ToArray();
-    private static readonly string[] DemoNames = new[] { "Marcos Vinícius", "Thiago Almeida", "Fernanda Costa", "Eduardo Lima", "Renata Martins", "Lucas Pereira", "Camila Rocha", "André Souza", "Patrícia Nunes", "Gustavo Reis", "Juliana Santos", "Bruno Carvalho" };
+    private static object[] DemoAppointments()
+    {
+        var statuses = new[] { "Agendado", "Confirmado", "Check-in", "Em atendimento", "Finalizado", "Cancelado" };
+        return DemoClients().Take(15).Select((client, i) => new
+        {
+            id = $"apt-{i + 1:000}",
+            clientName = ReadProp(client, "name"),
+            client = ReadProp(client, "name"),
+            professionalName = ReadProp(DemoProfessionals()[i % 8], "name"),
+            professional = ReadProp(DemoProfessionals()[i % 8], "name"),
+            serviceName = ReadProp(DemoServices()[i % 12], "name"),
+            service = ReadProp(DemoServices()[i % 12], "name"),
+            scheduledAt = DateTime.Today.AddHours(8 + (i % 10)).AddMinutes(i % 2 == 0 ? 0 : 30).ToString("yyyy-MM-ddTHH:mm:ss"),
+            time = $"{8 + (i % 10):00}:{(i % 2 == 0 ? "00" : "30")}",
+            price = 45m + (i % 5 * 15m),
+            status = statuses[i % statuses.Length],
+            notes = "Preferência registrada no CRM demo. Confirmar WhatsApp antes do horário."
+        }).Cast<object>().ToArray();
+    }
 
-    private static object[] DemoServiceOrders() => Enumerable.Range(1, 8).Select(i => new { id=$"so-{i:000}", number=$"SO-2026-{1000 + i}", code=$"SO-2026-{1000 + i}", clientName=DemoNames[i - 1], client=DemoNames[i - 1], professionalName=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty", items=new object[] { new { name="Corte Masculino", quantity=1, total=45m }, new { name=i % 2 == 0 ? "Pomada Modeladora" : "Barba Tradicional", quantity=1, total=i % 2 == 0 ? 39m : 35m } }, subtotal=i % 2 == 0 ? 84m : 80m, discount=i % 3 == 0 ? 10m : 0m, total=(i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m), paidAmount=i > 5 ? ((i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m)) : 0m, status=i > 5 ? "Fechada" : i % 3 == 0 ? "Pagamento" : "Aberta" }).Cast<object>().ToArray();
-    private static object[] DemoProducts() => Enumerable.Range(1, 12).Select(i => new { id=$"prod-{i:000}", name=new[] { "Lâmina Platinum", "Pomada Modeladora", "Shampoo Anticaspa", "Balm para Barba", "Toalha Premium", "Óleo Essencial", "Gel Cola", "Máscara Facial", "Esmalte Nude", "Creme Hidratante", "Capa de Corte", "Luvas Nitrílicas" }[i - 1], category=i % 3 == 0 ? "Tratamento" : i % 2 == 0 ? "Revenda" : "Insumo", sku=$"BS-{i:0000}", costPrice=8m + i, salePrice=18m + (i * 3), currentStock=i < 5 ? 4 + i : 15 + i, minStock=i < 5 ? 12 : 10, stock=i < 5 ? 4 + i : 15 + i, minimum=i < 5 ? 12 : 10, status=i < 5 ? "Crítico" : "OK" }).Cast<object>().ToArray();
-    private static object[] DemoStockCritical() => DemoProducts().Take(4).ToArray();
-    private static object[] DemoCampaigns() => new object[] { new { id="camp-001", name="Volte e Ganhe", channel="WhatsApp", audience="Clientes 45 dias sem visita", period="01/06 a 15/06", status="Ativa", conversion="18%" }, new { id="camp-002", name="Combo do Mês", channel="Instagram", audience="Novos clientes", period="Maio/2026", status="Ativa", conversion="12%" }, new { id="camp-003", name="Aniversariantes", channel="SMS", audience="Clientes do mês", period="Mensal", status="Agendada", conversion="--" }, new { id="camp-004", name="VIP Black", channel="E-mail", audience="VIP", period="Última semana", status="Ativa", conversion="24%" }, new { id="camp-005", name="Indique um Amigo", channel="WhatsApp", audience="Base ativa", period="Trimestral", status="Pausada", conversion="9%" } };
-    private static object[] DemoCoupons() => new object[] { new { id="cup-001", code="BARBA10", discount="10%", validUntil="2026-06-30", status="Ativo" }, new { id="cup-002", code="VIP15", discount="15%", validUntil="2026-06-15", status="Ativo" }, new { id="cup-003", code="WELCOME5", discount="R$ 5", validUntil="2026-07-01", status="Ativo" }, new { id="cup-004", code="COMBO20", discount="20%", validUntil="2026-06-10", status="Pausado" }, new { id="cup-005", code="NIVER25", discount="25%", validUntil="2026-12-31", status="Ativo" }, new { id="cup-006", code="CASHBACKDOBRO", discount="2x cashback", validUntil="2026-06-20", status="Ativo" } };
-    private static object[] DemoReviews() => Enumerable.Range(1, 10).Select(i => new { id=$"rev-{i:000}", client=DemoNames[i - 1], rating=i % 4 == 0 ? 4 : 5, nps=i % 4 == 0 ? 8 : 10, comment=i % 2 == 0 ? "Atendimento pontual e acabamento excelente." : "Experiência premium, recomendo.", professional=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty", status="Publicado" }).Cast<object>().ToArray();
-    private static object DemoLoyalty() => new { balance=18420m, cashbackMonth=2340m, activeMembers=132, customersWithCashback=DemoClients().Where((_, i) => i < 6).ToArray(), statement=new object[] { new { date="2026-05-28", client="Marcos Vinícius", amount=12.5m, type="Crédito" }, new { date="2026-05-27", client="Fernanda Costa", amount=20m, type="Resgate" }, new { date="2026-05-26", client="Juliana Santos", amount=8m, type="Crédito" } }, tiers=new[] { "Silver", "Gold", "Black" }, status="Ativo" };
-    private static object[] DemoCopilotSuggestions() => new object[] { new { title="Retenção VIP", description="Acionar clientes VIP sem visita nos últimos 30 dias com cupom VIP15.", priority="Alta", impact="R$ 6.200" }, new { title="Escala inteligente", description="Reforçar profissionais entre 18h e 20h para reduzir espera no totem.", priority="Alta", impact="+14 atendimentos" }, new { title="Estoque crítico", description="Comprar lâminas, toalhas e pomadas antes do pico do fim de semana.", priority="Média", impact="Evita ruptura" }, new { title="Upsell de combos", description="Oferecer Combo Corte + Barba aos clientes de corte avulso.", priority="Média", impact="+R$ 18 ticket" }, new { title="Reputação", description="Solicitar avaliações após pagamentos PIX para ampliar prova social.", priority="Baixa", impact="+0,2 rating" }, new { title="Cashback inteligente", description="Dobrar cashback para clientes Black sem visita desde maio.", priority="Média", impact="+22 retornos" } };
+    private static readonly string[] DemoNames = new[] { "Marcos Vinícius", "Thiago Almeida", "Fernanda Costa", "Eduardo Lima", "Barber Prime Ltda", "Renata Martins", "Lucas Pereira", "Camila Rocha", "André Souza", "Patrícia Nunes", "Gustavo Reis", "Juliana Santos", "Bruno Carvalho", "Tatiane Moura", "Felipe Andrade" };
+
+    private static object[] DemoServiceOrders() => Enumerable.Range(1, 10).Select(i => new
+    {
+        id=$"so-{i:000}",
+        number=$"SO-2026-{1000 + i}",
+        code=$"SO-2026-{1000 + i}",
+        clientName=DemoNames[i - 1],
+        client=DemoNames[i - 1],
+        professionalName=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty",
+        items=new object[] { new { name="Corte Masculino", quantity=1, total=45m }, new { name=i % 2 == 0 ? "Pomada Modeladora" : "Barba Tradicional", quantity=1, total=i % 2 == 0 ? 39m : 35m } },
+        subtotal=i % 2 == 0 ? 84m : 80m,
+        discount=i % 3 == 0 ? 10m : 0m,
+        cashback=i % 4 == 0 ? 8m : 0m,
+        total=(i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m),
+        paidAmount=i > 6 ? ((i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m)) : 0m,
+        payments=i > 6 ? new object[] { new { method = i % 2 == 0 ? "PIX" : "Cartão", amount = (i % 2 == 0 ? 84m : 80m) - (i % 3 == 0 ? 10m : 0m) } } : Array.Empty<object>(),
+        status=i > 6 ? "Fechada" : i % 3 == 0 ? "Pagamento" : "Aberta"
+    }).Cast<object>().ToArray();
+
+    private static object[] DemoProducts()
+    {
+        var names = new[] { "Lâmina Platinum", "Pomada Modeladora", "Shampoo Anticaspa", "Balm para Barba", "Toalha Premium", "Óleo Essencial", "Gel Cola", "Máscara Facial", "Esmalte Nude", "Creme Hidratante", "Capa de Corte", "Luvas Nitrílicas", "Desinfetante Hospitalar", "Cera Modeladora", "Pós-Barba Ice" };
+        return names.Select((name, i) => new
+        {
+            id=$"prod-{i + 1:000}",
+            name,
+            category=i % 3 == 0 ? "Tratamento" : i % 2 == 0 ? "Revenda" : "Insumo",
+            sku=$"BS-{i + 1:0000}",
+            costPrice=8m + i,
+            salePrice=18m + ((i + 1) * 3),
+            currentStock=i < 5 ? 4 + i : 15 + i,
+            minStock=i < 5 ? 12 : 10,
+            stock=i < 5 ? 4 + i : 15 + i,
+            minimum=i < 5 ? 12 : 10,
+            status=i < 3 ? "Crítico" : i < 5 ? "Atenção" : "Normal",
+            purchaseSuggestion = i < 5 ? $"Comprar {20 - i} unidades antes do fim de semana." : "Estoque saudável."
+        }).Cast<object>().ToArray();
+    }
+
+    private static object[] DemoStockCritical() => DemoProducts().Take(5).ToArray();
+
+    private static object[] DemoCampaigns() => new object[]
+    {
+        new { id="camp-001", name="Volte e Ganhe", channel="WhatsApp", audience="Clientes 45 dias sem visita", period="01/06 a 15/06", status="Ativa", conversion="18%", result="R$ 6.200 previstos" },
+        new { id="camp-002", name="Combo do Mês", channel="Instagram", audience="Novos clientes", period="Maio/2026", status="Ativa", conversion="12%", result="86 agendamentos" },
+        new { id="camp-003", name="Aniversariantes", channel="SMS", audience="Clientes do mês", period="Mensal", status="Agendada", conversion="--", result="Disparo amanhã" },
+        new { id="camp-004", name="VIP Black", channel="E-mail", audience="VIP", period="Última semana", status="Ativa", conversion="24%", result="Ticket +22%" },
+        new { id="camp-005", name="Indique um Amigo", channel="WhatsApp", audience="Base ativa", period="Trimestral", status="Pausada", conversion="9%", result="31 indicações" },
+        new { id="camp-006", name="Pós-avaliação 5 estrelas", channel="WhatsApp", audience="Promotores NPS", period="Automática", status="Ativa", conversion="15%", result="Cupom compartilhado" }
+    };
+
+    private static object[] DemoCoupons() => new object[]
+    {
+        new { id="cup-001", code="BARBA10", discount="10%", validUntil="2026-06-30", usage="42/200", status="Ativo" },
+        new { id="cup-002", code="VIP15", discount="15%", validUntil="2026-06-15", usage="18/80", status="Ativo" },
+        new { id="cup-003", code="WELCOME5", discount="R$ 5", validUntil="2026-07-01", usage="65/300", status="Ativo" },
+        new { id="cup-004", code="COMBO20", discount="20%", validUntil="2026-06-10", usage="11/50", status="Pausado" },
+        new { id="cup-005", code="NIVER25", discount="25%", validUntil="2026-12-31", usage="7/120", status="Ativo" },
+        new { id="cup-006", code="CASHBACKDOBRO", discount="2x cashback", validUntil="2026-06-20", usage="29/150", status="Ativo" },
+        new { id="cup-007", code="TOTEMFAST", discount="R$ 8", validUntil="2026-06-25", usage="14/100", status="Ativo" },
+        new { id="cup-008", code="NOIVO30", discount="30%", validUntil="2026-09-30", usage="3/30", status="Ativo" }
+    };
+
+    private static object[] DemoReviews() => Enumerable.Range(1, 12).Select(i => new
+    {
+        id=$"rev-{i:000}",
+        client=DemoNames[i - 1],
+        rating=i % 6 == 0 ? 3 : i % 4 == 0 ? 4 : 5,
+        nps=i % 6 == 0 ? 6 : i % 4 == 0 ? 8 : 10,
+        comment=i % 6 == 0 ? "Tempo de espera poderia ser menor." : i % 2 == 0 ? "Atendimento pontual e acabamento excelente." : "Experiência premium, recomendo.",
+        professional=i % 2 == 0 ? "Rafael Barber" : "Camila Beauty",
+        type=i % 6 == 0 ? "Detrator" : i % 4 == 0 ? "Neutro" : "Promotor",
+        recoveryAction=i % 6 == 0 ? "Enviar pedido de desculpas e cupom de retorno." : "Solicitar indicação nas redes sociais.",
+        status="Publicado"
+    }).Cast<object>().ToArray();
+
+    private static object DemoLoyalty() => new
+    {
+        totalCashback=18420m,
+        clientsWithCashback=132,
+        expiringCashback=2140m,
+        balance=18420m,
+        cashbackMonth=2340m,
+        activeMembers=132,
+        customersWithCashback=DemoClients().Take(8).ToArray(),
+        statement=new object[] { new { date="2026-05-28", client="Marcos Vinícius", amount=12.5m, type="Crédito" }, new { date="2026-05-27", client="Fernanda Costa", amount=20m, type="Resgate" }, new { date="2026-05-26", client="Juliana Santos", amount=8m, type="Crédito" }, new { date="2026-05-25", client="Tatiane Moura", amount=14m, type="Expira em 7 dias" } },
+        tiers=new[] { "Silver", "Gold", "Black" },
+        status="Ativo"
+    };
+
+    private static object[] DemoCopilotSuggestions() => new object[]
+    {
+        new { title="Retenção VIP", description="Acionar clientes VIP sem visita nos últimos 30 dias com cupom VIP15.", priority="Alta", actionLabel="Criar campanha", impact="R$ 6.200" },
+        new { title="Escala inteligente", description="Reforçar profissionais entre 18h e 20h para reduzir espera no totem.", priority="Alta", actionLabel="Abrir agenda", impact="+14 atendimentos" },
+        new { title="Estoque crítico", description="Comprar lâminas, toalhas e pomadas antes do pico do fim de semana.", priority="Média", actionLabel="Ver estoque", impact="Evita ruptura" },
+        new { title="Upsell de combos", description="Oferecer Combo Corte + Barba aos clientes de corte avulso.", priority="Média", actionLabel="Criar cupom", impact="+R$ 18 ticket" },
+        new { title="Reputação", description="Solicitar avaliações após pagamentos PIX para ampliar prova social.", priority="Baixa", actionLabel="Ver avaliações", impact="+0,2 rating" },
+        new { title="Cashback inteligente", description="Dobrar cashback para clientes Black sem visita desde maio.", priority="Média", actionLabel="Ativar cashback", impact="+22 retornos" }
+    };
+
+    private static string ReadProp(object value, string property)
+        => value.GetType().GetProperty(property)?.GetValue(value)?.ToString() ?? string.Empty;
+
     private static object DemoKioskStatus() => new { online = true, deviceCode = "KIOSK-DEMO-001", currentStep = "Pronto para atendimento", queue = 3, lastHeartbeat = DateTime.UtcNow.ToString("o"), paymentsMockEnabled = true, status = "Online" };
     private static object DemoFinancialSummary() => new { revenueToday = 4280m, revenueMonth = 86420m, openOrders = 6, paidOrders = 38, averageTicket = 92.5m, paymentSplit = new[] { new { method = "PIX", amount = 35200m, percent = 41 }, new { method = "Cartão", amount = 29400m, percent = 34 }, new { method = "Dinheiro", amount = 11200m, percent = 13 }, new { method = "Carteira", amount = 10620m, percent = 12 } }, status = "Demo" };
     private static object DemoReportsSummary() => new { generatedToday = 7, scheduled = 4, highlights = new[] { "Receita 18% acima da semana anterior", "No-show reduzido para 4%", "Campanha VIP15 com 24% de conversão" }, exports = new[] { "DRE gerencial", "Ocupação por profissional", "Estoque crítico", "NPS e avaliações" }, status = "Demo" };

@@ -14,10 +14,11 @@
         <img src="~/img/logo-barbersync-white.svg" alt="BarberSync"/>
         <div class="kiosk-mode"><span>Modo demonstração</span><strong>KIOSK-DEMO-001</strong></div>
         <button type="button" class="kiosk-reset" data-kiosk-back>Voltar</button>
+        <button type="button" class="kiosk-reset" data-kiosk-help>Preciso de ajuda</button>
         <button type="button" class="kiosk-reset" data-kiosk-accessibility>Acessibilidade</button>
         <a href="/Kiosk/Services" class="kiosk-reset" data-kiosk-cancel>Cancelar</a>
     </header>
-    <main class="kiosk-container">@RenderBody()</main>
+    <main class="kiosk-container kiosk-shell-grid"><section>@RenderBody()</section><aside class="kiosk-side-summary" aria-live="polite"><h3>Resumo</h3><div data-kiosk-summary-lateral>Escolha um serviço para iniciar.</div><div class="kiosk-timeout"><span data-kiosk-timeout-bar></span></div><small>Tempo visual de sessão: 60s. Toque na tela para continuar.</small></aside></main>
     <script>window.BarberSyncKiosk = { deviceCode: 'KIOSK-DEMO-001' };</script>
     @await RenderSectionAsync("Scripts", required: false)
     <script src="~/js/kiosk-flow.js" asp-append-version="true"></script>

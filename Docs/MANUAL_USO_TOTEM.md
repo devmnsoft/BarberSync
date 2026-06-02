@@ -1,15 +1,22 @@
-# Manual de Uso — Totem BarberSync
+# BarberSync — Manual de Uso do Totem
 
-Acesse `http://localhost:8083/Kiosk/Services`.
+## Fluxo guiado
+1. Abrir `/Kiosk/Services`.
+2. Selecionar serviço.
+3. Informar telefone e nome.
+4. Selecionar profissional.
+5. Confirmar resumo lateral.
+6. Selecionar pagamento mock.
+7. Visualizar sucesso.
+8. Registrar avaliação com estrelas grandes.
 
-## Fluxo completo
+## Recursos de demonstração
+- Barra de progresso por etapa.
+- Botão “Preciso de ajuda”.
+- Botão de acessibilidade/alto contraste.
+- Resumo lateral com serviço, cliente, profissional e pagamento.
+- Timeout visual animado.
+- Persistência em `sessionStorage`: `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment`.
 
-1. Selecione um serviço.
-2. Informe telefone e nome.
-3. Escolha o profissional.
-4. Revise o resumo.
-5. Selecione pagamento mock.
-6. Veja a tela de sucesso.
-7. Registre avaliação.
-
-O fluxo usa `sessionStorage` para preservar serviço, cliente, profissional, pagamento e avaliação entre páginas. O browser usa somente `/KioskApi`.
+## Integração segura
+O navegador chama somente `/KioskApi/...`; a URL interna da API fica no servidor MVC.
