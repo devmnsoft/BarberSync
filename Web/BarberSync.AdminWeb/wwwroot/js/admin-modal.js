@@ -33,7 +33,8 @@
     openModal(modal);
   }
 
-  const api = { openModal, closeModal, confirmAction, open: openModal, close: closeModal };
+  const openConfirmModal = confirmAction;
+  const api = { openModal, closeModal, openConfirmModal, confirmAction, open: openModal, close: closeModal };
   window.AdminModal = api;
   window.adminModal = api;
 })();

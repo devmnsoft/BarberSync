@@ -1,25 +1,24 @@
-# Manual de uso do Admin BarberSync
+# Manual de Uso — Admin BarberSync
 
 ## Navegação
 
-O Admin possui sidebar escura, topbar com busca global, status de API, unidade atual e usuário Admin Demo. As telas usam `/AdminApi/*` como proxy server-side.
+Acesse `http://localhost:8081/Admin`. O Admin concentra dashboard, clientes, profissionais, serviços, agenda, comandas, estoque, campanhas, cupons, fidelidade, avaliações e Copilot.
 
 ## Dashboard
 
-Acesse `/Admin/Dashboard` para KPIs executivos, serviços mais vendidos, profissionais, próximos agendamentos, comandas abertas, estoque crítico, alertas e sugestões Copilot.
+Use o Dashboard Executivo para apresentar receita, agenda, clientes ativos, atendimentos, comandas, ticket médio, estoque crítico, reputação, campanhas, totem e profissionais disponíveis.
 
-## CRUDs principais
+## CRUDs demonstráveis
 
-Clientes, Profissionais e Serviços possuem busca, cards de resumo, tabela, detalhes, criar, editar, excluir com confirmação, validação HTML5 e toasts. Em modo demo, POST/PUT/DELETE retornam sucesso para manter a demonstração fluida.
+- **Clientes:** criar, editar, ver detalhes, agendar, abrir comanda e excluir.
+- **Profissionais:** criar, editar, acompanhar performance e disponibilidade.
+- **Serviços:** criar catálogo com preço, duração, comissão e canais Site/Totem/Mobile.
+- **Agenda:** criar agendamento e avançar status operacional.
+- **Comandas:** abrir, adicionar itens, pagar e fechar.
+- **Estoque:** listar produtos, ver críticos e registrar entrada/saída.
+- **Relacionamento:** campanhas, cupons, fidelidade e avaliações.
+- **Copilot:** perguntas rápidas, sugestões e respostas demo.
 
-## Operação
+## Proxies
 
-- Agenda: criar agendamento e demonstrar status confirmar, check-in, iniciar, finalizar e cancelar.
-- Comandas: abrir comanda, pagar e fechar.
-- Estoque: listar produtos, ver críticos e registrar entrada/saída.
-- Relacionamento: campanhas, cupons, fidelidade e avaliações.
-- Copilot: sugestões automáticas e chat por `/AdminApi/copilot/ask`.
-
-## Segurança de integração
-
-JavaScript chama apenas rotas relativas. O host interno da API é usado somente pelos controllers MVC via `ApiSettings:BaseUrl`.
+Todas as chamadas do Admin no browser usam `/AdminApi`. O proxy MVC chama a API server-side e retorna fallback demo em JSON 200 quando necessário.

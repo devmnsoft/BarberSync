@@ -24,14 +24,14 @@
     Clients: [
       ['name', 'Nome', 'text', true], ['personType', 'Tipo PF/PJ', 'select:PF|PJ', true], ['document', 'CPF/CNPJ', 'text', true],
       ['phone', 'Telefone', 'tel', true], ['whatsapp', 'WhatsApp', 'tel', false], ['email', 'E-mail', 'email', true],
-      ['birthDate', 'Data nascimento', 'date', false], ['address', 'Endereço', 'text', false],
+      ['birthDate', 'Data nascimento', 'date', false], ['zipCode', 'CEP', 'text', false], ['street', 'Rua', 'text', false], ['number', 'Número', 'text', false], ['district', 'Bairro', 'text', false], ['city', 'Cidade', 'text', false], ['state', 'Estado', 'text', false],
       ['preferredProfessional', 'Profissional preferido', 'text', false], ['preferredService', 'Serviço preferido', 'text', false],
       ['acceptsPromotions', 'Aceita promoções', 'select:Sim|Não', false], ['vip', 'VIP', 'select:Não|Sim', false], ['status', 'Status', 'select:Ativo|VIP|Inativo', true]
     ],
     Professionals: [
       ['name', 'Nome', 'text', true], ['phone', 'Telefone', 'tel', true], ['email', 'E-mail', 'email', true],
-      ['specialty', 'Especialidade', 'text', true], ['commission', 'Comissão (%)', 'number', true], ['status', 'Status', 'select:Disponível|Em atendimento|Folga|Inativo', true],
-      ['workDays', 'Dias de trabalho', 'text', true], ['hours', 'Horários', 'text', true], ['services', 'Serviços', 'text', true]
+      ['specialty', 'Especialidade', 'text', true], ['bio', 'Bio', 'textarea', false], ['commission', 'Comissão (%)', 'number', true], ['status', 'Status', 'select:Disponível|Em atendimento|Folga|Inativo', true],
+      ['workDays', 'Dias de trabalho', 'text', true], ['startTime', 'Horário inicial', 'time', true], ['endTime', 'Horário final', 'time', true], ['services', 'Serviços', 'text', true], ['monthlyGoal', 'Meta mensal', 'number', false]
     ],
     Services: [
       ['name', 'Nome', 'text', true], ['category', 'Categoria', 'text', true], ['description', 'Descrição', 'textarea', true],
@@ -134,7 +134,9 @@
     const load = async () => {
       const { data, fallback } = await adminApiClient.get(endpoint, demo);
       if (fallback) document.getElementById(`${module}Fallback`)?.classList.remove('d-none');
-      const list = normalizeList(data).length ? normalizeList(data) : demo;
+      const apiList = normalizeList(data).length ? normalizeList(data) : demo;
+      const demoList = JSON.parse(sessionStorage.getItem(`BarberSync:${module}:demoStore`) || '[]');
+      const list = [...demoList, ...apiList.filter(item => !demoList.some(demoItem => String(demoItem.id) === String(item.id)))];
       currentList = list;
       const activeCount = list.filter(x => /ativo|dispon|confirm|ok/i.test(status(x))).length || list.length;
       const revenue = list.reduce((acc, x) => acc + Number(x.total || x.price || x.revenueMonth || 0), 0);
@@ -159,8 +161,10 @@
       const mutationEndpoint = module === 'ServiceOrders' ? '/AdminApi/service-orders/open' : module === 'Stock' ? (body.movement === 'Saída' ? '/AdminApi/stock/exit' : '/AdminApi/stock/entry') : endpoint;
       if (editingId && ['Clients','Professionals','Services'].includes(module)) {
         await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' });
+        updateLocalDemoStore(module, 'update', { id: editingId, ...body });
       } else {
         await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
+        updateLocalDemoStore(module, 'create', { id: `${module.toLowerCase()}-${Date.now()}`, ...body, status: body.status || 'Ativo' });
       }
       window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true);
       e.target.reset();
@@ -187,9 +191,71 @@
         document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`;
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
       }
-      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && await load());
+      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && await load());
       if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); writeToast(`Agendamento atualizado: ${apptAction.textContent}.`, 'info'); }
       if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado.' : 'Comanda fechada com recibo visual.', 'success'); }
     });
   };
+
+  function openCreateModal(moduleName) {
+    document.querySelector(`[data-admin-new='${moduleName}']`)?.click();
+  }
+
+  function openEditModal(moduleName, id) {
+    document.querySelector(`[data-admin-edit][data-id='${id}']`)?.click();
+  }
+
+  function openDetailsModal(moduleName, id) {
+    document.querySelector(`[data-admin-detail][data-id='${id}']`)?.click();
+  }
+
+  function confirmDelete(moduleName, id) {
+    document.querySelector(`[data-admin-remove][data-id='${id}']`)?.click();
+  }
+
+  function submitModuleForm(moduleName) {
+    document.querySelector(`[data-admin-form='${moduleName}']`)?.requestSubmit();
+  }
+
+  function refreshModule(moduleName) {
+    document.querySelector(`[data-admin-refresh='${moduleName}']`)?.click();
+  }
+
+  function renderModuleTable(moduleName, data) {
+    const rows = document.getElementById(`${moduleName}Rows`);
+    if (!rows) return;
+    const list = normalizeList(data);
+    rows.innerHTML = list.map((item, idx) => `<tr><td><strong>${escapeHtml(name(item))}</strong></td><td>${escapeHtml(detail(item))}</td><td><span class='badge badge-success'>${escapeHtml(status(item))}</span></td><td>${actionButtons(moduleName, item, idx)}</td></tr>`).join('');
+  }
+
+  function renderModuleCards(moduleName, data) {
+    const cards = document.getElementById(`${moduleName}Cards`);
+    if (!cards) return;
+    const copy = moduleCopy[moduleName] || { icon: '💈' };
+    const list = normalizeList(data);
+    cards.innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>renderizado</span></div></article>`;
+  }
+
+  function updateLocalDemoStore(moduleName, action, item) {
+    const key = `BarberSync:${moduleName}:demoStore`;
+    const list = JSON.parse(sessionStorage.getItem(key) || '[]');
+    const id = String(item?.id || `${moduleName.toLowerCase()}-${Date.now()}`);
+    const normalized = { id, ...(item || {}) };
+    const next = action === 'delete' ? list.filter(x => String(x.id) !== id) : action === 'update' ? list.map(x => String(x.id) === id ? { ...x, ...normalized } : x) : [normalized, ...list];
+    sessionStorage.setItem(key, JSON.stringify(next));
+    return next;
+  }
+
+  function showFormErrors(errors) {
+    const message = Array.isArray(errors) ? errors.join('\n') : (errors || 'Revise os campos obrigatórios.');
+    window.AdminToast?.showError?.(message);
+  }
+
+  function clearForm(formId) {
+    const form = document.getElementById(formId) || document.querySelector(`[data-admin-form='${formId}']`);
+    form?.reset?.();
+  }
+
+  Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, updateLocalDemoStore, showFormErrors, clearForm });
+
 })();

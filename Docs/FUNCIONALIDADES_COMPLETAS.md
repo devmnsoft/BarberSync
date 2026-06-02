@@ -1,29 +1,31 @@
-# Funcionalidades completas BarberSync
+# Funcionalidades Completas — BarberSync Demo
 
-## AdminWeb
+## Admin
 
-- Layout enterprise com sidebar, topbar, cards, tabelas, modais, toasts e responsividade.
-- Dashboard executivo com KPIs, agenda, comandas, estoque, alertas e Copilot.
-- CRUD visual de clientes, profissionais e serviços com criar, editar, excluir, detalhes, validação e fallback demo.
-- Agenda, comandas, estoque, campanhas, cupons, avaliações, fidelidade e Copilot visíveis para demonstração.
-- Proxies `/AdminApi/*` com fallback padronizado `{ success, message, data }`.
+- Dashboard executivo com KPIs, painéis e gráficos visuais.
+- Clientes com CRUD visual, filtros, detalhes, agendamento e comanda.
+- Profissionais com cadastro, agenda, comissão, serviços e performance.
+- Serviços com catálogo multicanal para site, totem e mobile.
+- Agenda com timeline, status coloridos e ações de ciclo de atendimento.
+- Comandas com kanban, itens, pagamento mock e fechamento.
+- Estoque com produtos, críticos, barras e movimentos.
+- Campanhas, cupons, fidelidade e avaliações.
+- Copilot com sugestões, perguntas rápidas e histórico local.
 
 ## PublicWeb
 
-- Landing premium com serviços e profissionais carregados via `/PublicApi/*`.
-- Formulário público de agendamento com validação e toast.
+- Landing premium comercial com CTA, serviços, profissionais, planos, depoimentos, FAQ e formulário de agendamento.
 
-## KioskWeb
+## Totem
 
-- Fluxo completo de autoatendimento: serviços, cliente, profissional, confirmação, pagamento mock, sucesso e avaliação.
-- Estado local em `sessionStorage` e proxies `/KioskApi/*`.
+- Fluxo completo de autoatendimento com serviço, cliente, profissional, confirmação, pagamento mock, sucesso e avaliação.
 
-## MobileApp
+## Mobile
 
-- Tema BarberSync com cores, tipografia, botões, cards, empty state e telas de home, serviços, agendamentos, cashback e perfil alinhadas ao produto.
+- Identidade visual base em telas de home, serviços, agendamentos, cashback e perfil.
 
-## Docker e infraestrutura
+## Integração segura
 
-- Static files habilitados em AdminWeb, PublicWeb e KioskWeb.
-- Controllers MVC usam `ApiSettings:BaseUrl` server-side.
-- `.dockerignore` preserva `wwwroot`, `Views` e `appsettings.json`.
+- Browser usa `/AdminApi`, `/PublicApi` e `/KioskApi`.
+- Proxies MVC usam `IHttpClientFactory`, `IConfiguration` e `ILogger` para chamar a API server-side.
+- Fallback demo evita telas quebradas durante apresentações.
