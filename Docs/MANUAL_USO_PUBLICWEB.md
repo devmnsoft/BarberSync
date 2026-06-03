@@ -51,3 +51,9 @@ Validações obrigatórias: o navegador usa apenas `/AdminApi`, `/PublicApi` e `
 - O estado integrado fica persistido em `localStorage` na chave `barbersync.demo.state.v4`.
 - O EventBus emite eventos de cliente, agenda, comanda, pagamento, estoque, cashback, campanhas, avaliações, Copilot e dashboard.
 - A Central da Demo exporta/importa JSON, reseta dados e simula importações PublicWeb/Totem quando o armazenamento por porta não é compartilhável.
+
+## Atualização BarberSync Demo Experience 5.0
+- Use `/Admin/DemoExperience` como ponto central da apresentação.
+- O DemoStore 5.0 persiste fluxos em `barbersync.demo.state.v5` e o EventBus registra eventos em `barbersync.demo.events`.
+- Demonstre o fluxo completo: PublicWeb gera protocolo, Admin confirma agenda, Operação realiza check-in, Comanda recebe pagamento, Estoque baixa, Cashback e avaliação são gerados, Campanha e Copilot fecham a narrativa.
+- URLs de browser usam proxies locais e rotas públicas de cada aplicação; a URL interna de container da API não é exposta em JavaScript ou Razor.

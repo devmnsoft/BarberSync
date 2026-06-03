@@ -12,6 +12,7 @@ const Pill = ({ children }) => <Text style={{ backgroundColor: colors.goldSoft, 
 export default function App() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, paddingTop: 58 }}>
+      <Card accent={colors.primary}><Text style={{ color: colors.primary, fontSize: 14, fontWeight: '900' }}>LOGIN DEMO VISUAL</Text><Text style={{ color: colors.ink, fontSize: 22, fontWeight: '900', marginTop: 4 }}>Cliente Demo autenticado</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Acesso rápido por telefone, biometria mock e token de fidelidade local.</Text></Card>
       <Text style={{ color: colors.primary, fontSize: 32, fontWeight: '900' }}>BarberSync</Text>
       <Text style={{ color: colors.muted, marginTop: 6, marginBottom: 18 }}>Mobile premium para clientes: home, serviços, agenda, cashback, promoções e perfil.</Text>
       <Card accent={colors.gold}><Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>Olá, Cliente Demo 👋</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Seu próximo atendimento é hoje às 18:30 com Rafael Barber.</Text><Text style={{ color: colors.gold, marginTop: 8, fontWeight: '900' }}>Chegue 5 minutos antes e ganhe cashback extra.</Text></Card>
@@ -20,6 +21,7 @@ export default function App() {
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Cashback</Text><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ 38,50</Text><Text style={{ color: colors.muted }}>Disponível para o próximo agendamento.</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Promoções</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Cupom RETORNO20 para clientes com mais de 30 dias sem visita.</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Perfil</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Preferência: Corte + Barba • Profissional favorito: Rafael Barber • NPS: promotor.</Text></Card>
+      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Dados demo locais</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Serviços, agendamento, meus agendamentos, cashback, promoções e perfil rodam sem dependência externa para apresentação.</Text></Card>
       <View style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Agendar agora</Text></View>
     </ScrollView>
   );

@@ -1,24 +1,8 @@
 (() => {
-  const money = v => Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
   const store = () => window.BarberSyncDemoStore;
-  function render() {
-    if (!store()) return;
-    const summary = store().dashboardSummary();
-    const kpis = document.querySelector('[data-dashboard-kpis]');
-    if (kpis) {
-      const items = [
-        ['Receita hoje', money(summary.revenue), 'Pagamentos no DemoStore'], ['Leads PublicWeb hoje', summary.publicLeads, 'Importáveis pela Central da Demo'], ['Atendimentos Totem', summary.kioskAttendances, 'Fluxos do Kiosk'],
-        ['Comandas pagas hoje', summary.paidOrders, 'PDV integrado'], ['Cashback gerado', money(summary.cashback), 'Fidelidade atualizada'], ['Avaliações recebidas', summary.reviews, 'NPS demo'],
-        ['Conversão de agenda', `${summary.conversion}%`, 'Check-in/atendimento'], ['Estoque crítico', summary.criticalStock, 'Baixa automática'], ['Clientes ativos', summary.clients, 'Cliente 360'],
-        ...summary.channels.map(c => [`Receita ${c.channel}`, money(c.revenue), 'Receita por canal'])
-      ];
-      kpis.innerHTML = items.map(i => `<article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">${i[0]}</p><strong class="kpi-value">${i[1]}</strong><span class="kpi-variation">${i[2]}</span></div></article>`).join('');
-    }
-    const next = document.querySelector('[data-next-appointments]'); if (next) next.innerHTML = store().get('appointments').slice(0,5).map(a => `<li>${a.time} ${a.client} • ${a.status}</li>`).join('');
-    const stock = document.querySelector('[data-stock-critical]'); if (stock) stock.innerHTML = store().get('products').filter(p => p.stock <= p.minStock).map(p => `<li>${p.name}: ${p.stock}/${p.minStock}</li>`).join('') || '<li>Sem itens críticos.</li>';
-    const copilot = document.querySelector('[data-copilot-list]'); if (copilot) copilot.innerHTML = store().get('copilotSuggestions').map(s => `<li>${s.title}</li>`).join('');
-    const events = document.querySelector('[data-dashboard-events]'); if (events) events.innerHTML = store().get('dashboardEvents').slice(0,8).map(e => `<li><strong>${e.label || e.eventName}</strong><span>${new Date(e.at).toLocaleTimeString('pt-BR')}</span></li>`).join('');
-  }
-  document.addEventListener('click', e => { if (e.target.closest('[data-dashboard-refresh]')) store()?.refreshDashboard(); if (e.target.closest('[data-demo-action]')) { const a=e.target.closest('[data-demo-action]').dataset.demoAction; window.AdminToast?.show?.(a, 'success'); } });
-  window.addEventListener('barbersync:store-changed', render); window.addEventListener('barbersync:dashboard-refresh', render); document.addEventListener('DOMContentLoaded', render);
+  const money = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  function refreshDashboardFromStore(){ if(!store()) return; const s=store(); const summary=s.dashboardSummary(); document.querySelectorAll('[data-dashboard-kpi="revenue"]').forEach(e=>e.textContent=money(summary.revenue)); document.querySelectorAll('[data-dashboard-kpi="appointments"]').forEach(e=>e.textContent=summary.appointments); document.querySelectorAll('[data-dashboard-kpi="cashback"]').forEach(e=>e.textContent=money(summary.cashback)); document.querySelectorAll('[data-dashboard-kpi="reviews"]').forEach(e=>e.textContent=summary.reviews); const panel=document.querySelector('[data-dashboard-v5]'); if(panel){ const st=s.exportState(); panel.innerHTML=`<article class="kpi-card"><p class="kpi-label">Receita hoje</p><strong class="kpi-value">${money(summary.revenue)}</strong><span>Admin, PublicWeb, Totem e Mobile</span></article><article class="kpi-card"><p class="kpi-label">Fluxo de hoje</p><strong class="kpi-value">${summary.appointments}</strong><span>${summary.paidOrders} comandas pagas</span></article><article class="kpi-card"><p class="kpi-label">Conversão PublicWeb</p><strong class="kpi-value">${summary.publicConversion}%</strong><span>${summary.leads} leads</span></article><article class="kpi-card"><p class="kpi-label">Uso do Totem</p><strong class="kpi-value">${summary.kiosk}</strong><span>atendimentos</span></article><article class="kpi-card"><p class="kpi-label">Cashback</p><strong class="kpi-value">${money(summary.cashback)}</strong><span>gerado/acumulado</span></article><article class="kpi-card"><p class="kpi-label">Estoque crítico</p><strong class="kpi-value">${summary.criticalStock}</strong><span>${st.products.filter(p=>p.stock<=p.minStock).map(p=>p.name).join(', ')||'Sem alertas'}</span></article>`; } const ev=document.querySelector('[data-dashboard-events]'); if(ev) ev.innerHTML=(window.BarberSyncEventBus?.history().slice(-8).reverse()||[]).map(e=>`<div class="demo5-event"><strong>${e.name}</strong><small> ${new Date(e.at).toLocaleTimeString('pt-BR')}</small></div>`).join(''); }
+  window.refreshDashboardFromStore = refreshDashboardFromStore;
+  ['public:leadCreated','appointment:created','appointment:checkedIn','serviceOrder:paid','stock:changed','review:created','campaign:created','kiosk:attendanceCreated','dashboard:refresh'].forEach(ev=>window.BarberSyncEventBus?.on(ev, refreshDashboardFromStore));
+  window.addEventListener('barbersync:store-changed', refreshDashboardFromStore); document.addEventListener('DOMContentLoaded', refreshDashboardFromStore);
 })();
