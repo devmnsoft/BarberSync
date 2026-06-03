@@ -1,12 +1,22 @@
-# Manual de uso do Totem BarberSync 7.0
+# Manual do Totem — BarberSync 8.0
 
-1. Abra `http://localhost:8083/Kiosk/Services`.
-2. Escolha serviço liberado.
-3. Informe cliente.
-4. Escolha profissional.
-5. Confirme e selecione pagamento mock.
-6. Avalie o atendimento.
-7. Use “Chamar atendente” para abrir `/Kiosk/Help`.
-8. Use “Alto contraste” para alternar acessibilidade visual.
+## Acesso
 
-A configuração demonstrável fica em `/Admin/Kiosk`.
+Abra `http://localhost:8083/Kiosk/Services`.
+
+## Fluxo
+
+1. Escolha o serviço publicado.
+2. Informe cliente no teclado visual.
+3. Escolha profissional.
+4. Confirme dados.
+5. Selecione pagamento habilitado: PIX, cartão, dinheiro ou recepção.
+6. Veja resumo final, comprovante mock e avaliação.
+
+## Ajuda
+
+A rota `/Kiosk/Help` mostra: “Um atendente foi chamado. Aguarde um instante.”
+
+## Configuração
+
+O Admin em `/Admin/Kiosk` demonstra DeviceCode, status, versão, modo demo, serviços liberados, pagamentos, alto contraste, fonte grande, timeout, botão chamar atendente e reset automático.
