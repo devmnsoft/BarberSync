@@ -25,3 +25,29 @@ Roteiro comercial integrado:
 10. Encerrar mostrando Mobile demo com próximo agendamento, serviços, cashback, promoções, histórico e perfil.
 
 Validações obrigatórias: o navegador usa apenas `/AdminApi`, `/PublicApi` e `/KioskApi`; não há chamada browser direta para `http://api:8080`.
+
+## Como demonstrar o fluxo integrado — BarberSync Integrated Demo 4.0
+
+1. Abra `/Admin/DemoCenter` e carregue o cenário `busyDay`.
+2. Crie um cliente demo na Operação do Dia ou em Clientes 360.
+3. Crie um agendamento e confirme que ele aparece na Agenda e na Operação do Dia.
+4. Faça check-in e observe a mudança para a coluna de check-in.
+5. Abra `/Admin/Operations` para conduzir o atendimento no Kanban.
+6. Inicie o atendimento e avance o status para em atendimento.
+7. Abra uma comanda a partir do card operacional.
+8. Adicione um produto, como Pomada Modeladora.
+9. Pague a comanda com PIX em modo demonstração.
+10. Volte ao Dashboard e valide receita, comandas pagas, eventos recentes e canais.
+11. Abra Estoque e valide a baixa automática e a movimentação por comanda.
+12. Abra Clientes 360 e valide timeline, pagamento, cashback e avaliação.
+13. Abra Copilot e execute a ação de criar campanha de retorno.
+14. Use PublicWeb para solicitar agendamento público; o formulário usa `/PublicApi/appointments`, gera protocolo `PUB-2026-0001` e salva `barbersync.public.leads`.
+15. Use Kiosk para concluir um atendimento; o totem usa `/KioskApi`, gera atendimento, comanda e pagamento em `sessionStorage`.
+16. Abra Relatórios para validar financeiro, agenda, serviços, profissionais, estoque, campanhas, totem, PublicWeb e avaliações.
+
+### Pontos de prova da demo 4.0
+
+- O navegador usa somente proxies locais: `/AdminApi`, `/PublicApi` e `/KioskApi`.
+- O estado integrado fica persistido em `localStorage` na chave `barbersync.demo.state.v4`.
+- O EventBus emite eventos de cliente, agenda, comanda, pagamento, estoque, cashback, campanhas, avaliações, Copilot e dashboard.
+- A Central da Demo exporta/importa JSON, reseta dados e simula importações PublicWeb/Totem quando o armazenamento por porta não é compartilhável.

@@ -71,6 +71,12 @@ export function HomeScreen() {
         ))}
       </View>
 
+
+      <AppCard>
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: '900' }}>Histórico integrado</Text>
+        <Text style={{ color: colors.muted, marginTop: 8 }}>Último fluxo: PublicWeb → Agenda → Totem → Comanda PIX → Cashback → Avaliação NPS 10.</Text>
+      </AppCard>
+
       <AppCard>
         <Text style={{ color: colors.text, fontSize: 18, fontWeight: '900' }}>Resumo da experiência</Text>
         <Text style={{ color: colors.muted, marginTop: 8 }}>4 visitas no mês • avaliação média 4,9 • 2 cupons ativos • atendimento sem fila pelo totem.</Text>
