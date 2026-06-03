@@ -1,16 +1,16 @@
 (() => {
   const answers = document.getElementById('CopilotAnswers');
-  const responseHtml = (question) => `<article class="feature-card"><span class="priority-high">Alta</span><h4>Resposta para: ${question}</h4><p>Priorize reposição de estoque, confirmação da agenda e campanha para clientes inativos. A recomendação foi gerada em modo demonstração seguro.</p><div class="quick-actions-grid"><a class="btn btn-light" href="/Admin/Campaigns">Criar campanha</a><a class="btn btn-light" href="/Admin/Stock">Abrir estoque</a><a class="btn btn-light" href="/Admin/Appointments">Abrir agenda</a><a class="btn btn-light" href="/Admin/Clients">Ver clientes</a></div></article>`;
-  document.getElementById('CopilotAsk')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const question = new FormData(e.target).get('question');
-    try { await fetch('/AdminApi/copilot/ask', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ question }) }); } catch {}
-    answers?.insertAdjacentHTML('afterbegin', responseHtml(question));
-    window.AdminToast?.showSuccess?.('Copilot respondeu com ações navegáveis.');
-    e.target.reset();
+  function renderSuggestions() {
+    if (!answers || !window.BarberSyncDemoStore) return;
+    answers.innerHTML = window.BarberSyncDemoStore.get('copilotSuggestions').map(s => `<article class="feature-card"><span class="badge badge-info">${s.type}</span><h4>${s.title}</h4><p>${s.description}</p><button class="btn btn-primary" data-copilot-action="${s.action}">${s.title}</button></article>`).join('');
+  }
+  document.addEventListener('click', e => {
+    const b=e.target.closest('[data-copilot-action]'); if(!b) return; const store=window.BarberSyncDemoStore;
+    if (b.dataset.copilotAction === 'createCampaign') store.createCampaign({ name:'Campanha de retorno Copilot', audience:'Clientes inativos', createCoupon:true });
+    if (b.dataset.copilotAction === 'stockReplenishment') { store.add('copilotSuggestions', { type:'stock', title:'Pedido de reposição criado', description:'Comprar 12 Pomada Modeladora.', action:'stockReplenishment' }); window.BarberSyncEventBus?.emit('stock:changed', { message:'Copilot criou sugestão de reposição de estoque' }); }
+    if (b.dataset.copilotAction === 'fillSchedule') store.createCampaign({ name:'Preencher horários vazios', audience:'Todos', createCoupon:true, code:'AGENDA15' });
+    renderSuggestions();
   });
-  document.querySelectorAll('[data-quick-question]').forEach(button => button.addEventListener('click', () => {
-    answers?.insertAdjacentHTML('afterbegin', responseHtml(button.dataset.quickQuestion));
-    window.AdminToast?.showInfo?.('Pergunta rápida enviada ao Copilot.');
-  }));
+  document.getElementById('CopilotAsk')?.addEventListener('submit', e => { e.preventDefault(); window.AdminToast?.show?.('Copilot analisou o DemoStore e atualizou as sugestões.', 'success'); renderSuggestions(); });
+  document.addEventListener('DOMContentLoaded', renderSuggestions);
 })();

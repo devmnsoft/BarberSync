@@ -14,22 +14,23 @@
     const result = document.getElementById('publicAppointmentResult');
     const body = Object.fromEntries(new FormData(e.target).entries());
     result.textContent = 'Enviando solicitação segura...';
-    const protocol = `PUB-${Date.now().toString().slice(-6)}`;
+    const sequence = JSON.parse(localStorage.getItem('barbersync.public.leads') || '[]').length + 1;
+    const protocol = `PUB-2026-${String(sequence).padStart(4, '0')}`;
     const saveLocal = (status, response = {}) => {
-      const saved = JSON.parse(localStorage.getItem('BarberSync:PublicAppointments') || '[]');
+      const saved = JSON.parse(localStorage.getItem('barbersync.public.leads') || '[]');
       const appointment = { id: protocol, protocol, ...body, status, response, createdAt: new Date().toISOString(), channel: 'PublicWeb' };
       saved.unshift(appointment);
-      localStorage.setItem('BarberSync:PublicAppointments', JSON.stringify(saved));
+      localStorage.setItem('barbersync.public.leads', JSON.stringify(saved));
       return appointment;
     };
     try {
       const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
       const j=await r.json().catch(()=>({}));
       saveLocal(r.ok ? 'Solicitado' : 'Demo local', j);
-      result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Seu agendamento foi solicitado. A equipe confirmará em breve.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`;
-      toast('Agendamento solicitado com sucesso.'); e.target.reset();
+      result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Solicitação enviada com sucesso. Este agendamento aparecerá no painel administrativo em modo demonstração.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`;
+      toast('Solicitação enviada com sucesso.'); e.target.reset();
     }
-    catch { saveLocal('Demo local'); result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Seu agendamento foi solicitado. A equipe confirmará em breve.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`; toast('Modo demo: solicitação registrada localmente.'); }
+    catch { saveLocal('Demo local'); result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Solicitação enviada com sucesso. Este agendamento aparecerá no painel administrativo em modo demonstração.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`; toast('Solicitação enviada com sucesso em modo demonstração.'); }
   });
 })();
 

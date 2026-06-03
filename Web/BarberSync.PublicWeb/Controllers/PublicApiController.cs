@@ -20,7 +20,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/leads", payload, new { success = true, message = "Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO" } });
 
     [HttpPost("appointments")]
-    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/appointments", payload, new { success = true, message = "Solicitação recebida em modo demonstração.", data = new { protocol = "PUB-DEMO" } });
+    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/appointments", payload, new { success = true, message = "Solicitação enviada com sucesso.", data = new { protocol = "PUB-2026-0001", isDemo = true } });
 
     private async Task<IActionResult> ProxyGet(string path, object fallback)
     {
