@@ -1,22 +1,13 @@
 (() => {
+  const STORAGE_KEY = 'barbersync.demo.events';
   const listeners = new Map();
-  const recentKey = 'barbersync.demo.events.v4';
-  const labels = {
-    'client:created': 'Cliente criado', 'client:updated': 'Cliente atualizado', 'appointment:created': 'Agendamento criado',
-    'appointment:confirmed': 'Agendamento confirmado', 'appointment:checkedIn': 'Check-in realizado', 'appointment:started': 'Atendimento iniciado',
-    'appointment:finished': 'Atendimento finalizado', 'serviceOrder:opened': 'Comanda aberta', 'serviceOrder:itemAdded': 'Item adicionado na comanda',
-    'serviceOrder:paid': 'Comanda paga', 'serviceOrder:closed': 'Comanda fechada', 'stock:changed': 'Estoque alterado',
-    'campaign:created': 'Campanha criada', 'coupon:created': 'Cupom criado', 'review:created': 'Avaliação recebida',
-    'cashback:generated': 'Cashback gerado', 'dashboard:refresh': 'Dashboard atualizado', 'demo:scenarioLoaded': 'Cenário carregado'
-  };
-  const readRecent = () => {
-    try { return JSON.parse(localStorage.getItem(recentKey) || '[]'); } catch { return []; }
-  };
-  const writeRecent = events => localStorage.setItem(recentKey, JSON.stringify(events.slice(0, 60)));
-  const toast = (message, type = 'success') => {
-    const t = window.AdminToast;
-    if (t?.show) t.show(message, type);
-    else if (t?.showInfo) t.showInfo(message);
+  const read = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } };
+  const write = events => localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(-200)));
+  const toast = event => {
+    const message = `${event.name.replaceAll(':', ' › ')} registrado`;
+    if (window.AdminToast?.show) window.AdminToast.show(message, 'success');
+    else if (window.BarberSyncToast?.show) window.BarberSyncToast.show(message, 'success');
+    else window.dispatchEvent(new CustomEvent('barbersync:toast', { detail: { type: 'success', message } }));
   };
   const api = {
     on(eventName, callback) {
@@ -26,17 +17,17 @@
     },
     off(eventName, callback) { listeners.get(eventName)?.delete(callback); },
     emit(eventName, payload = {}) {
-      const entry = { id: `evt-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`, eventName, label: labels[eventName] || eventName, payload, at: new Date().toISOString() };
-      writeRecent([entry, ...readRecent()]);
-      try { window.BarberSyncDemoStore?.recordEvent?.(entry); } catch (err) { console.warn('Demo event store update failed', err); }
-      toast(entry.payload?.message || entry.label, eventName.includes('stock') ? 'warning' : 'success');
-      [...(listeners.get(eventName) || [])].forEach(cb => { try { cb(payload, entry); } catch (err) { console.error('EventBus listener error', err); } });
-      [...(listeners.get('*') || [])].forEach(cb => { try { cb(payload, entry); } catch (err) { console.error('EventBus wildcard error', err); } });
-      if (eventName !== 'dashboard:refresh') window.dispatchEvent(new CustomEvent('barbersync:dashboard-refresh', { detail: entry }));
-      window.dispatchEvent(new CustomEvent('barbersync:event', { detail: entry }));
-      return entry;
+      const event = { id: `evt-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`, name: eventName, payload, at: new Date().toISOString() };
+      const events = read(); events.push(event); write(events);
+      window.dispatchEvent(new CustomEvent('barbersync:event', { detail: event }));
+      window.dispatchEvent(new CustomEvent(`barbersync:${eventName}`, { detail: payload }));
+      (listeners.get(eventName) || []).forEach(cb => { try { cb(payload, event); } catch (err) { console.error('[BarberSyncEventBus]', err); } });
+      (listeners.get('*') || []).forEach(cb => { try { cb(payload, event); } catch (err) { console.error('[BarberSyncEventBus]', err); } });
+      toast(event);
+      return event;
     },
-    recent() { return readRecent(); }
+    history() { return read(); },
+    clearHistory() { write([]); window.dispatchEvent(new CustomEvent('barbersync:event-history-cleared')); }
   };
   window.BarberSyncEventBus = api;
 })();
