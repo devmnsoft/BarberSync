@@ -7,6 +7,7 @@ public class AdminController : Controller
 {
     [HttpGet("")] public IActionResult Index() => Render("Dashboard");
     [HttpGet("Dashboard")] public IActionResult Dashboard() => Render("Dashboard");
+    [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
     [HttpGet("Clients")] public IActionResult Clients() => Render("Clients");
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
@@ -33,7 +34,7 @@ public class AdminController : Controller
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync 2.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync 3.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }

@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Operação do Dia";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header">
+    <div>
+        <h1 class="page-title">Operação do Dia</h1>
+        <p class="page-subtitle">Fluxo comercial integrado: cliente → agendamento → check-in → atendimento → comanda → pagamento → avaliação → fidelidade.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" data-flow-reset>Resetar Demo</button>
+        <button class="btn btn-light" data-flow-scenario="busyDay">Carregar Dia Movimentado</button>
+        <button class="btn btn-light" data-flow-scenario="criticalStock">Carregar Estoque Crítico</button>
+        <button class="btn btn-primary" data-flow-scenario="campaignMode">Carregar Campanhas Ativas</button>
+    </div>
+</section>
+<div class="demo-live-summary" data-demo-live-summary></div>
+<section class="panel module-panel">
+    <div class="panel-header">
+        <div>
+            <h3>Roteiro guiado da operação</h3>
+            <p>Use os botões para demonstrar mudanças reais em localStorage, dashboard, histórico do cliente, estoque e PDV.</p>
+        </div>
+        <div class="demo-store-actions">
+            <button class="btn btn-primary" data-flow-quick-client>Criar cliente</button>
+            <button class="btn btn-light" data-flow-quick-appointment>Criar agendamento</button>
+            <button class="btn btn-light" data-flow-quick-campaign="Clientes inativos">Criar campanha de retorno</button>
+            <a class="btn btn-light" href="/Admin/Dashboard">Ver Dashboard</a>
+        </div>
+    </div>
+    <div class="operation-board" data-operations-board></div>
+</section>
+<section class="enterprise-demo-grid">
+    <article class="enterprise-card wide">
+        <h3>Como demonstrar</h3>
+        <div class="timeline-demo">
+            <div>1. Carregue Dia Movimentado e acompanhe o Kanban.</div>
+            <div>2. Faça check-in, inicie e finalize um atendimento.</div>
+            <div>3. Abra a comanda, pague com PIX e mostre cashback/avaliação.</div>
+            <div>4. Volte ao Dashboard e Estoque para provar a integração.</div>
+        </div>
+    </article>
+    <article class="enterprise-card">
+        <h3>Alertas conectados</h3>
+        <p>Itens críticos podem gerar reposição, campanhas atualizam clientes e pagamentos geram recibos.</p>
+    </article>
+</section>

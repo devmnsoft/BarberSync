@@ -17,6 +17,10 @@
     <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
 </section>
 <section class="enterprise-demo-grid"><article class="enterprise-card"><h3>Produtos críticos</h3><p>Pomada Modeladora abaixo do mínimo.</p><span class="tag">Comprar 24 unidades</span></article><article class="enterprise-card"><h3>Valor em estoque</h3><strong>R$ 18.920</strong><p>Com alertas de reposição.</p></article><article class="enterprise-card"><h3>Movimentações</h3><div class="timeline-demo"><div>Entrada Balm +20</div><div>Saída Pomada -4</div><div>Ajuste Shampoo +8</div></div></article><article class="enterprise-card full"><button class="btn btn-primary" data-demo-action="Reposição gerada">Gerar reposição</button></article></section>
+<!-- Demo Experience 3.0 injected -->
+<section class="enterprise-demo-grid">
+  <article class="enterprise-card wide"><h3>Estoque conectado ao PDV</h3><p>Produtos vendidos na comanda reduzem estoque, geram movimento e mudam status para crítico abaixo do mínimo.</p><div class="quick-actions-grid"><button class="btn btn-primary" data-flow-replenish>Gerar pedido de reposição demo</button><button class="btn btn-light" onclick="const rows=window.BarberSyncDemoStore?.filter('products','critical')||[]; const text=rows.map(p=>`${p.name};${p.stock||p.quantity};${p.minimumStock}`).join('\n'); navigator.clipboard?.writeText(text); window.AdminToast?.show('Lista de reposição exportada em modo mock.','success');">Exportar lista de reposição mock</button></div></article>
+</section>
 <section class="panel module-panel">
     <div class="panel-header">
         <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>

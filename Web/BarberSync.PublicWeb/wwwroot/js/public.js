@@ -14,8 +14,22 @@
     const result = document.getElementById('publicAppointmentResult');
     const body = Object.fromEntries(new FormData(e.target).entries());
     result.textContent = 'Enviando solicitação segura...';
-    try { const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const j=await r.json(); result.textContent = j.message || 'Solicitação recebida. Entraremos em contato pelo WhatsApp.'; toast('Agendamento solicitado com sucesso.'); e.target.reset(); }
-    catch { result.textContent = 'Solicitação recebida em modo demonstração.'; toast('Modo demo: solicitação registrada localmente.'); }
+    const protocol = `PUB-${Date.now().toString().slice(-6)}`;
+    const saveLocal = (status, response = {}) => {
+      const saved = JSON.parse(localStorage.getItem('BarberSync:PublicAppointments') || '[]');
+      const appointment = { id: protocol, protocol, ...body, status, response, createdAt: new Date().toISOString(), channel: 'PublicWeb' };
+      saved.unshift(appointment);
+      localStorage.setItem('BarberSync:PublicAppointments', JSON.stringify(saved));
+      return appointment;
+    };
+    try {
+      const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+      const j=await r.json().catch(()=>({}));
+      saveLocal(r.ok ? 'Solicitado' : 'Demo local', j);
+      result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Seu agendamento foi solicitado. A equipe confirmará em breve.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`;
+      toast('Agendamento solicitado com sucesso.'); e.target.reset();
+    }
+    catch { saveLocal('Demo local'); result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Seu agendamento foi solicitado. A equipe confirmará em breve.<br><a class='btn btn-primary' href='http://localhost:8081/Admin/Appointments' target='_blank' rel='noopener'>Ver no painel administrativo</a>`; toast('Modo demo: solicitação registrada localmente.'); }
   });
 })();
 
