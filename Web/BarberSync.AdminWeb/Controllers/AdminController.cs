@@ -7,6 +7,9 @@ public class AdminController : Controller
 {
     [HttpGet("")] public IActionResult Index() => Render("Dashboard");
     [HttpGet("Dashboard")] public IActionResult Dashboard() => Render("Dashboard");
+    [HttpGet("ChannelManager")] public IActionResult ChannelManager() => Render("ChannelManager");
+    [HttpGet("LeadToCash")] public IActionResult LeadToCash() => Render("LeadToCash");
+    [HttpGet("SaasControlCenter")] public IActionResult SaasControlCenter() => Render("SaasControlCenter");
     [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
     [HttpGet("DemoCenter")] public IActionResult DemoCenter() => Render("DemoCenter");
     [HttpGet("DemoExperience")] public IActionResult DemoExperience() => Render("DemoExperience");
@@ -37,7 +40,7 @@ public class AdminController : Controller
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync Demo Experience 5.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync SaaS Demo 6.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }

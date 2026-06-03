@@ -6,3 +6,20 @@
   ['public:leadCreated','appointment:created','appointment:checkedIn','serviceOrder:paid','stock:changed','review:created','campaign:created','kiosk:attendanceCreated','dashboard:refresh'].forEach(ev=>window.BarberSyncEventBus?.on(ev, refreshDashboardFromStore));
   window.addEventListener('barbersync:store-changed', refreshDashboardFromStore); document.addEventListener('DOMContentLoaded', refreshDashboardFromStore);
 })();
+
+(() => {
+  const store = () => window.BarberSyncDemoStore;
+  const bus = () => window.BarberSyncEventBus;
+  const row = (k,v) => `<div class="saas-row"><strong>${k}</strong><span>${v}</span></div>`;
+  function renderOmnichannel(){
+    const root=document.querySelector('[data-dashboard-omnichannel]'); if(!root) return;
+    const s=store(); if(!s) return;
+    const leads=s.get('leads'), appointments=s.get('appointments'), attendances=s.get('attendances'), payments=s.get('payments'), reviews=s.get('reviews');
+    const origins=['PublicWeb','Totem','Manual','Mobile'];
+    const leadHost=document.querySelector('[data-dashboard-leads-origin]'); if(leadHost) leadHost.innerHTML=origins.map(o=>row(o, leads.filter(l=>(l.source||'Manual')===o).length)).join('');
+    const conv=document.querySelector('[data-dashboard-conversion]'); if(conv) conv.innerHTML=row('Leads → Agendamentos', `${appointments.length}/${Math.max(1,leads.length)}`)+row('Agendamentos → Atendimentos', `${attendances.length}/${Math.max(1,appointments.length)}`)+row('Atendimentos → Pagamentos', `${payments.length}/${Math.max(1,attendances.length)}`)+row('Pagamentos → Avaliações', `${reviews.length}/${Math.max(1,payments.length)}`);
+    const alerts=document.querySelector('[data-dashboard-alerts]'); if(alerts) alerts.innerHTML=[...s.get('products').filter(p=>p.stock<=p.minStock).map(p=>`<li>Repor ${p.name}: ${p.stock}/${p.minStock}.</li>`),'<li>Clientes inativos prontos para campanha de retorno.</li>','<li>Totem online e captando autoatendimentos.</li>'].join('');
+    const events=document.querySelector('[data-dashboard-events]'); if(events) events.innerHTML=(bus()?.last(8)||[]).map(e=>`<article class="saas-event ${e.severity}"><strong>${e.title}</strong><p>${e.module} • ${e.eventName}</p></article>`).join('');
+  }
+  bus()?.on('*', renderOmnichannel); document.addEventListener('DOMContentLoaded', renderOmnichannel);
+})();
