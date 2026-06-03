@@ -1,4 +1,5 @@
 (() => {
+  const kioskDemoConfig = { message:'Bem-vindo ao Totem BarberSync. Escolha seu serviço para começar.', highContrast:false, largeFont:false, timeout:90, payments:{pix:true,card:true,cash:false,reception:true,mock:true} };
   const fallbackServices = [
     { id:'demo-corte', name:'Corte Masculino', category:'Barbearia', description:'Corte moderno com acabamento profissional.', price:45, durationMinutes:40, icon:'✂️' },
     { id:'demo-barba', name:'Barba Tradicional', category:'Barbearia', description:'Toalha quente e navalha.', price:35, durationMinutes:30, icon:'🪒' },
@@ -8,6 +9,9 @@
   const unwrap=(payload,fallback)=> Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : fallback);
   const loadJson=async(url,fallback)=>{ try{ const r=await fetch(url); if(!r.ok) throw new Error('http'); return await r.json(); }catch{return {data:fallback,message:'Modo demonstração'}} };
   document.addEventListener('DOMContentLoaded', async () => {
+    document.querySelector('[data-kiosk-message]') && (document.querySelector('[data-kiosk-message]').textContent = kioskDemoConfig.message);
+    if (kioskDemoConfig.highContrast) document.body.classList.add('kiosk-high-contrast');
+    if (kioskDemoConfig.largeFont) document.body.classList.add('kiosk-accessible');
     const renderSideSummary = () => {
       const s = KioskFlow.state;
       const side = document.querySelector('[data-kiosk-summary-lateral]');
@@ -16,7 +20,7 @@
     renderSideSummary();
     document.querySelectorAll('[data-kiosk-help]').forEach(button => button.addEventListener('click',()=> { KioskFlow.setState({ helpRequestedAt: new Date().toISOString() }); location.href='/Kiosk/Help'; }));
     document.querySelector('[data-kiosk-back]')?.addEventListener('click',()=> history.length > 1 ? history.back() : location.href='/Kiosk/Services');
-    document.querySelector('[data-kiosk-accessibility]')?.addEventListener('click',()=> { document.body.classList.toggle('kiosk-accessible'); document.body.classList.toggle('kiosk-high-contrast'); });
+    document.querySelectorAll('[data-kiosk-accessibility]').forEach(button => button.addEventListener('click',()=> { document.body.classList.toggle('kiosk-accessible'); document.body.classList.toggle('kiosk-high-contrast'); button.textContent = document.body.classList.contains('kiosk-high-contrast') ? 'Contraste normal' : 'Alto contraste'; }));
     document.querySelector('[data-kiosk-cancel]')?.addEventListener('click',()=> sessionStorage.removeItem('kiosk-flow'));
     if (document.querySelector('.kiosk-step.success') && !document.getElementById('kioskFinalSummary')) setTimeout(()=>{ location.href='/Kiosk/Services'; }, 15000);
 

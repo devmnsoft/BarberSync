@@ -1,12 +1,10 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "PublicSite"; }
-<section class="admin-page-header"><h1>PublicSite</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="PublicSiteFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="PublicSiteCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de PublicSite</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="PublicSiteRows"></tbody></table></div>
-</div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-crud.js"></script>
-<script>window.renderAdminCrudPage && window.renderAdminCrudPage('PublicSite')</script>
+@{ ViewData["Title"] = "Gestão do Site Público"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="saas7-hero" data-public-site-page><div><span class="badge">Canais > Site Público</span><h1>Gestão do PublicWeb</h1><p>Configure publicação, hero, serviços, profissionais, promoções e SEO do site público vendável em modo demo.</p></div><div class="saas7-actions"><button class="btn btn-gold" form="PublicSiteForm">Salvar PublicWeb</button><button class="btn btn-light" type="button" data-open-public>Abrir PublicWeb</button><button class="btn btn-light" type="button" data-refresh-preview>Atualizar preview</button></div></section>
+<section class="saas7-metrics" data-public-metrics></section>
+<section class="saas7-grid" style="margin-top:16px">
+  <article class="saas7-card wide"><h2>Hero e SEO</h2><form id="PublicSiteForm" class="saas7-form" data-public-site-form><label class="saas7-switch full"><input name="active" type="checkbox"> Site ativo</label><label>Título hero<input name="heroTitle"></label><label>CTA principal<input name="ctaPrimary"></label><label class="full">Subtítulo<textarea name="heroSubtitle"></textarea></label><label>CTA secundário<input name="ctaSecondary"></label><label>Imagem/ilustração<input name="image"></label><label>Título SEO<input name="seoTitle"></label><label>Palavras-chave<input name="keywords"></label><label class="full">Descrição SEO<textarea name="seoDescription"></textarea></label></form></article>
+  <article class="saas7-card"><h2>Preview</h2><div data-saas7-public-preview></div></article>
+  <article class="saas7-card"><h2>Serviços publicados</h2><div class="saas7-list" data-public-services></div></article>
+  <article class="saas7-card"><h2>Profissionais publicados</h2><div class="saas7-list" data-public-professionals></div></article>
+  <article class="saas7-card"><h2>Promoção ativa</h2><div class="saas7-log saas7-success"><strong>Combo Primeira Visita</strong><p>Corte + Barba com cupom BEMVINDO15, validade demo 31/12/2026.</p></div></article>
+</section>

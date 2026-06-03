@@ -1,18 +1,13 @@
-# Roteiro de Demonstração para Cliente
+# Roteiro comercial para cliente
 
-1. Mostre PublicWeb 3.0 e a escolha de serviço.
-2. Gere um protocolo de agendamento público.
-3. Abra Admin > SaaS Control Center para status e prontidão.
-4. Execute Lead to Cash completo.
-5. Mostre Operação ao Vivo mudando status.
-6. Abra Comandas/PDV, pague, gere recibo e cashback.
-7. Mostre estoque baixando e alerta crítico.
-8. Gere campanha de retorno e cupom.
-9. Pergunte ao Copilot e execute uma ação.
-10. Mostre Totem 5.0 com pagamento mock e avaliação.
+## Abertura
+Apresente o BarberSync como plataforma SaaS omnichannel para operação completa: agenda, PublicWeb, Totem, Mobile, comanda, caixa, estoque, relatórios, auditoria e Copilot.
 
-## Mensagem comercial
-Explique que a plataforma reduz no-show, acelera check-in, conecta comanda/caixa/estoque, aumenta recorrência com cashback e permite que o gestor veja todos os canais em uma única visão executiva.
-
-## Fechamento
-Finalize no Reports e no SaaS Control Center exportando o estado da demo para mostrar governança, rastreabilidade e repetibilidade da apresentação.
+## Sequência recomendada
+1. PublicWeb: cliente solicita horário, vê serviços, profissionais, promoções e seção “Sistema demonstrativo BarberSync”.
+2. Admin Dashboard: visão executiva e filtros por período, unidade e canal.
+3. Operação: agenda, atendimento, comanda e caixa.
+4. Totem: autoatendimento, acessibilidade, pagamento mock e chamada de atendente.
+5. Gestão: unidades/franquias, estoque, relatórios e auditoria.
+6. Copilot: diagnóstico e ação recomendada.
+7. Mobile: serviços publicados, promoções, cashback, agendamentos, perfil e notificações.

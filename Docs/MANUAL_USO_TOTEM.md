@@ -1,6 +1,12 @@
-# Manual de Uso Totem
+# Manual de uso do Totem BarberSync 7.0
 
-Acesse `/Kiosk/Services`, selecione serviço, aceite combo, informe cliente, escolha profissional, confirme, simule PIX/cartão/dinheiro, imprima mock e registre avaliação. O fluxo salva sessão em `sessionStorage`.
+1. Abra `http://localhost:8083/Kiosk/Services`.
+2. Escolha serviço liberado.
+3. Informe cliente.
+4. Escolha profissional.
+5. Confirme e selecione pagamento mock.
+6. Avalie o atendimento.
+7. Use “Chamar atendente” para abrir `/Kiosk/Help`.
+8. Use “Alto contraste” para alternar acessibilidade visual.
 
-## Recursos demo
-O Totem 5.0 simula combo automático, seleção de profissional, QR PIX fake, cartão, dinheiro, número de comanda, tempo estimado, chamada de atendente, avaliação e resumo.
+A configuração demonstrável fica em `/Admin/Kiosk`.

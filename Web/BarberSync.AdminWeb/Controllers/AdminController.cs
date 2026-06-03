@@ -34,13 +34,20 @@ public class AdminController : Controller
     [HttpGet("Kiosk")] public IActionResult Kiosk() => Render("Kiosk");
     [HttpGet("PublicSite")] public IActionResult PublicSite() => Render("PublicSite");
     [HttpGet("Settings")] public IActionResult Settings() => Render("Settings");
+    [HttpGet("PlatformSettings")] public IActionResult PlatformSettings() => Render("PlatformSettings");
+    [HttpGet("Users")] public IActionResult Users() => Render("Users");
+    [HttpGet("Branches")] public IActionResult Branches() => Render("Branches");
+    [HttpGet("Audit")] public IActionResult Audit() => Render("Audit");
+    [HttpGet("Notifications")] public IActionResult Notifications() => Render("Notifications");
+    [HttpGet("Mobile")] public IActionResult Mobile() => RedirectToAction(nameof(PublicSite));
+    [HttpGet("Manual")] public IActionResult Manual() => RedirectToAction(nameof(Help));
     [HttpGet("Help")] public IActionResult Help() => Render("Help");
     [HttpGet("Onboarding")] public IActionResult Onboarding() => Render("Onboarding");
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync SaaS Demo 6.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync SaaS Platform Demo 7.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }

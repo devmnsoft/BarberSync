@@ -1,13 +1,9 @@
-@{
-    ViewData["Title"] = "Kiosk";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<div class="page-header"><div><div class="page-title">Kiosk</div><div class="page-subtitle">Gestão do módulo com dados demo e ações rápidas.</div></div><div><button class="btn btn-primary">Novo</button></div></div>
-<section class="kpi-grid">
-  <article class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-value">128</div><div class="kpi-label">Indicador principal</div></article>
-  <article class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value">93%</div><div class="kpi-label">Eficiência</div></article>
-  <article class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-value">24h</div><div class="kpi-label">SLA médio</div></article>
+@{ ViewData["Title"] = "Gestão do Totem"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="saas7-hero" data-kiosk-settings-page><div><span class="badge">Canais > Totem</span><h1>Gestão do Totem</h1><p>Configuração visual de dispositivos, serviços, pagamentos, acessibilidade, experiência e logs do autoatendimento.</p></div><div class="saas7-actions"><button class="btn btn-gold" form="KioskSettingsForm">Salvar Totem</button><button class="btn btn-light" type="button" data-open-kiosk>Abrir Totem</button><button class="btn btn-light" type="button" data-simulate-kiosk>Simular atendimento</button></div></section>
+<section class="saas7-grid">
+  <article class="saas7-card wide"><h2>Dispositivos</h2><table class="saas7-table"><thead><tr><th>DeviceCode</th><th>Nome</th><th>Unidade</th><th>Status</th><th>Última comunicação</th><th>Versão</th></tr></thead><tbody data-kiosk-devices></tbody></table></article>
+  <article class="saas7-card"><h2>Preview do Totem</h2><div data-saas7-kiosk-preview></div></article>
+  <article class="saas7-card"><h2>Serviços liberados</h2><div class="saas7-list" data-kiosk-services></div></article>
+  <article class="saas7-card wide"><h2>Pagamentos e experiência</h2><form id="KioskSettingsForm" class="saas7-form" data-kiosk-form><label class="full">Mensagem inicial<textarea name="message"></textarea></label><label>Timeout (segundos)<input name="timeout" type="number"></label><label class="saas7-switch"><input name="highContrast" type="checkbox"> Alto contraste</label><label class="saas7-switch"><input name="largeFont" type="checkbox"> Fonte grande</label><label class="saas7-switch"><input name="attendant" type="checkbox"> Chamar atendente</label><label class="saas7-switch"><input name="autoReset" type="checkbox"> Reset automático</label><label class="saas7-switch"><input name="pix" type="checkbox"> PIX</label><label class="saas7-switch"><input name="card" type="checkbox"> Cartão</label><label class="saas7-switch"><input name="cash" type="checkbox"> Dinheiro</label><label class="saas7-switch"><input name="reception" type="checkbox"> Pagamento na recepção</label><label class="saas7-switch"><input name="mock" type="checkbox"> Mock habilitado</label></form></article>
+  <article class="saas7-card full"><h2>Logs do Totem</h2><div data-kiosk-logs></div></article>
 </section>
-<section class="panel" style="margin-top:16px"><div class="panel-header"><h3>Lista operacional</h3><button class="btn btn-secondary">Filtrar</button></div>
-<table class="table"><thead><tr><th>Item</th><th>Status</th><th>Ação</th></tr></thead><tbody><tr><td>Registro demo A</td><td><span class="badge badge-success">Ativo</span></td><td><button class="btn btn-secondary">Editar</button></td></tr><tr><td>Registro demo B</td><td><span class="badge badge-warning">Pendente</span></td><td><button class="btn btn-danger">Remover</button></td></tr></tbody></table></section>
-<div class="modal" style="display:none">Modal de criação/edição</div>
