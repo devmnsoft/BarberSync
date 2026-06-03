@@ -1,17 +1,4 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Reports"; }
-<section class="admin-page-header"><h1>Reports</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="ReportsFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="ReportsCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de Reports</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ReportsRows"></tbody></table></div>
-</div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-crud.js"></script>
-<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Reports')</script>
-
-<section class="panel"><div class="panel-header"><div><h3>Relatórios demo 4.0</h3><p>Financeiro, agenda, serviços, profissionais, estoque, campanhas, totem, PublicWeb e avaliações com filtros mock e exportações demonstráveis.</p></div></div><div data-reports-demo></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Relatórios e exportação demo</h3><p>Experiência conectada ao DemoStore 5.0 e aos eventos da demonstração.</p></div></div><div data-reports-v2></div></section>
-<section class="saas-grid"><article class="saas-card full"><h3>Reports 6.0</h3><p>Relatórios consolidados de Lead to Cash, Totem, PDV, Campanhas, Copilot, Estoque, Caixa e jornada omnichannel com dados do DemoStore v6.</p><div class="saas-actions"><a class="btn btn-primary" href="/Admin/LeadToCash">Relatório Lead to Cash</a><a class="btn btn-light" href="/Admin/ChannelManager">Relatório de canais</a><a class="btn btn-light" href="/Admin/SaasControlCenter">Estado da demo</a></div></article></section>
+@{ ViewData["Title"] = "Relatórios 2.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="saas7-hero" data-reports-7><div><span class="badge">Gestão > Relatórios</span><h1>Relatórios 2.0 omnichannel</h1><p>Financeiro, agenda, clientes, profissionais, serviços, estoque, caixa, campanhas, Totem, PublicWeb, avaliações e multiunidade com filtros, cards, gráficos, tabela e exportações mock.</p></div><div class="saas7-actions"><button class="btn btn-light" data-report-action="Impressão">Imprimir</button><button class="btn btn-light" data-report-action="PDF">Exportar PDF mock</button><button class="btn btn-light" data-report-action="Excel">Exportar Excel mock</button><button class="btn btn-gold" data-report-action="Favorito">Salvar favorito</button></div></section>
+<section class="saas7-card full"><div class="saas7-toolbar"><select><option>Hoje</option><option>7 dias</option><option>Mês</option></select><select><option>Todas unidades</option><option>Barbearia Elite Matriz</option><option>BarberSync Studio Umarizal</option><option>BarberSync Estética Premium</option><option>BarberSync Shopping Demo</option></select></div><div class="saas7-actions" style="margin-top:14px" data-reports-tabs></div></section>
+<section class="saas7-card full" data-report-content></section>

@@ -1,62 +1,6 @@
-@{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
-<section class="page-header">
-    <div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS premium com dados reais quando a API responde e fallback demo robusto via <strong>/AdminApi/dashboard</strong>.</p></div>
-    <div class="page-actions"><button class="btn btn-light" data-dashboard-refresh>Atualizar indicadores</button><a class="btn btn-light" href="/Admin/Operations">Operação do Dia</a><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a><a class="btn btn-primary" href="/Admin/Appointments">Novo Agendamento</a></div>
-</section>
-<section class="kpi-grid" data-dashboard-kpis>
-@foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
-</section>
-
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>Saúde da operação</h3><div class="tag-list"><span class="tag">Agenda OK</span><span class="tag">Caixa OK</span><span class="tag">Estoque atenção</span><span class="tag">Atendimento ativo</span><span class="tag">Totem online</span><span class="tag">PublicWeb online</span><span class="tag">Copilot pronto</span></div></article>
-  <article class="enterprise-card"><h3>Hoje</h3><p><strong>18</strong> agendamentos • <strong>11</strong> atendimentos • <strong>R$ 3.480</strong> faturados • <strong>6</strong> comandas • <strong>5</strong> profissionais ativos.</p></article>
-  <article class="enterprise-card"><h3>Ações recomendadas</h3><ul class="metric-list"><li>Ligar para clientes inativos.</li><li>Criar campanha de retorno.</li><li>Repor estoque crítico.</li><li>Incentivar avaliações.</li><li>Ativar serviços no totem.</li></ul></article>
-  <article class="enterprise-card wide"><h3>Demonstração</h3><div class="quick-actions-grid"><a class="btn btn-light" href="/Admin/Help">Ver roteiro</a><a class="btn btn-secondary" href="http://localhost:8082/" target="_blank" rel="noopener">Abrir PublicWeb</a><a class="btn btn-secondary" href="http://localhost:8083/Kiosk/Services" target="_blank" rel="noopener">Abrir Totem</a><button class="btn btn-primary" data-demo-action="Cliente demo criado">Criar cliente demo</button><button class="btn btn-light" onclick="window.BarberSyncDemoStore?.resetAll(); window.AdminToast?.showInfo('Dados demo resetados.');">Resetar dados demo</button></div></article>
-</section>
-
-<section class="panel quick-actions-panel">
-    <div class="panel-header"><div><h3>Ações rápidas</h3><p>Atalhos com navegação ou feedback imediato para demonstração comercial.</p></div><span class="badge badge-success">Integrated Demo 4.0</span></div>
-    <div class="quick-actions-grid">
-        <a class="btn btn-primary" href="/Admin/Clients" data-quick-action="Novo cliente">Novo cliente</a>
-        <a class="btn btn-primary" href="/Admin/Appointments" data-quick-action="Novo agendamento">Novo agendamento</a>
-        <a class="btn btn-primary" href="/Admin/ServiceOrders" data-quick-action="Abrir comanda">Abrir comanda</a>
-        <a class="btn btn-secondary" href="/Admin/Stock" data-quick-action="Entrada de estoque">Entrada de estoque</a>
-        <a class="btn btn-secondary" href="/Admin/Campaigns" data-quick-action="Criar campanha">Criar campanha</a>
-        <a class="btn btn-gold" href="/Admin/Copilot" data-quick-action="Perguntar ao Copilot">Perguntar ao Copilot</a>
-    </div>
-</section>
-
-<section class="panel dashboard-insights">
-    <div class="panel-header"><div><h3>Insights para hoje</h3><p>Fallback demo via /AdminApi/copilot-suggestions quando a API estiver indisponível.</p></div><span class="badge badge-info">Copilot</span></div>
-    <div class="module-feature-grid">
-        <article class="feature-card"><span>⏰</span><h4>Horário com maior movimento</h4><strong>18h às 20h</strong></article>
-        <article class="feature-card"><span>✂️</span><h4>Serviço mais vendido</h4><strong>Corte + Barba</strong></article>
-        <article class="feature-card"><span>💈</span><h4>Profissional com maior faturamento</h4><strong>Rafael Barber</strong></article>
-        <article class="feature-card"><span>📦</span><h4>Produto com estoque crítico</h4><strong>Pomada Modeladora</strong></article>
-        <article class="feature-card"><span>👥</span><h4>Clientes para reativar</h4><strong>18 clientes</strong></article>
-        <article class="feature-card"><span>🎯</span><h4>Sugestão de campanha</h4><strong>Retorno em 21 dias</strong></article>
-    </div>
-</section>
-<section class="panel action-plan">
-    <div class="panel-header"><h3>Plano de ação sugerido</h3><button class="btn btn-primary" data-demo-action="Plano de ação enviado ao Copilot">Enviar ao Copilot</button></div>
-    <ul class="metric-list"><li>Chamar clientes inativos.</li><li>Promover Corte + Barba.</li><li>Repor Pomada Modeladora.</li><li>Incentivar avaliação pós-atendimento.</li><li>Usar Totem para reduzir fila.</li></ul>
-</section>
-<div class="dashboard-grid">
-    <article class="panel span-6"><div class="panel-header"><h3>Serviços mais vendidos</h3><span class="badge badge-info">/AdminApi/services</span></div><ul class="metric-list" data-top-services><li>Corte Masculino</li></ul></article>
-    <article class="panel span-6"><div class="panel-header"><h3>Profissionais em destaque</h3><span class="badge badge-success">Disponíveis</span></div><p>Rafael Barber, Camila Beauty e Amanda Nails com alta avaliação.</p></article>
-    <article class="panel span-4"><h3>Próximos agendamentos</h3><ul class="metric-list" data-next-appointments><li>10:00 Cliente Demo</li></ul></article>
-    <article class="panel span-4"><h3>Estoque crítico</h3><ul class="metric-list" data-stock-critical><li>Lâmina Platinum</li></ul></article>
-    <article class="panel span-4"><h3>Sugestões Copilot</h3><ul class="metric-list" data-copilot-list><li>Ativar campanha de retorno.</li></ul></article>
-</div>
-
-<section class="panel"><div class="panel-header"><div><h3>Eventos recentes</h3><p>Novo agendamento, check-in, comanda paga, estoque, campanha e Copilot.</p></div><span class="badge badge-success">EventBus 4.0</span></div><ul class="metric-list" data-dashboard-events></ul></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Dashboard 5.0 em tempo real</h3><p>Resumo da operação, canais, PublicWeb, Totem, cashback, avaliações, estoque crítico, campanhas e insights Copilot.</p></div><button class="btn btn-light" onclick="window.BarberSyncDemoStore?.refreshDashboard()">Atualizar agora</button></div><section class="admin-module-grid" data-dashboard-v5></section><div class="enterprise-demo-grid"><article class="enterprise-card"><h3>Eventos recentes</h3><div data-dashboard-events></div></article><article class="enterprise-card"><h3>Insights Copilot</h3><p>Repor itens críticos, chamar clientes sem retorno e preencher horários sugeridos.</p><a class="btn btn-primary" href="/Admin/Copilot">Abrir Copilot</a></article></div></section>
-<section class="saas-grid" data-dashboard-omnichannel>
-  <article class="saas-card wide"><h3>Dashboard 6.0 • Receita por canal</h3><div class="omni-bars" data-dashboard-revenue-channels><div>Admin<div class="omni-bar"><span style="width:70%"></span></div></div><div>PublicWeb<div class="omni-bar"><span style="width:52%"></span></div></div><div>Totem<div class="omni-bar"><span style="width:38%"></span></div></div><div>Mobile<div class="omni-bar"><span style="width:44%"></span></div></div></div></article>
-  <article class="saas-card"><h3>Leads por origem</h3><div class="saas-list" data-dashboard-leads-origin></div></article>
-  <article class="saas-card"><h3>Conversão omnichannel</h3><div class="saas-list" data-dashboard-conversion></div></article>
-  <article class="saas-card wide"><h3>Saúde operacional</h3><div class="tag-list"><span class="tag">Agenda</span><span class="tag">Atendimento</span><span class="tag">Caixa</span><span class="tag">Estoque</span><span class="tag">Canais</span><span class="tag">Satisfação</span></div></article>
-  <article class="saas-card"><h3>Alertas inteligentes</h3><ul class="metric-list" data-dashboard-alerts><li>Estoque crítico monitorado.</li><li>Campanha vencendo em 3 dias.</li><li>Totem online.</li></ul></article>
-  <article class="saas-card full"><h3>Eventos recentes</h3><div class="saas-events event-panel" data-dashboard-events></div></article>
+@{ ViewData["Title"] = "Dashboard Executivo 7.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="saas7-hero" data-dashboard-7><div><span class="badge">Dashboard Executivo 7.0</span><h1>Dashboard omnichannel BarberSync</h1><p>Visão geral, operação hoje, financeiro, canais, clientes, estoque, equipe, Copilot, alertas e relatórios favoritos com filtros globais reativos.</p></div><div class="saas7-actions"><a class="btn btn-light" href="/Admin/Operations">Operação ao Vivo</a><a class="btn btn-light" href="/Admin/PublicSite">Site Público</a><a class="btn btn-light" href="/Admin/Kiosk">Totem</a><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a></div></section>
+<section class="saas7-card full"><div class="saas7-toolbar"><select data-period><option value="today">Hoje</option><option value="7">7 dias</option><option value="month">Mês</option></select><select data-unit><option>Todas unidades</option><option>Barbearia Elite Matriz</option><option>BarberSync Studio Umarizal</option><option>BarberSync Estética Premium</option><option>BarberSync Shopping Demo</option></select><select data-channel><option>Todos canais</option><option>Admin</option><option>PublicWeb</option><option>Totem</option><option>Mobile</option></select></div><div class="saas7-metrics" style="margin-top:14px" data-dashboard-7-kpis></div></section>
+<section class="saas7-grid">
+@foreach (var block in new[]{"Visão Geral","Operação Hoje","Financeiro","Canais","Clientes","Estoque","Equipe","Copilot","Alertas","Relatórios favoritos"}) { <article class="saas7-card saas7-collapsible"><div class="saas7-toolbar" style="justify-content:space-between"><h2>@block</h2><button class="btn btn-light" data-collapse>Colapsar</button></div><div data-saas7-body><p>Métricas demo reativas para @block integradas ao DemoStore 7.0, canais e fluxo operacional.</p><div class="saas7-chart"><div class="saas7-bar" style="height:40%"></div><div class="saas7-bar" style="height:68%"></div><div class="saas7-bar" style="height:52%"></div><div class="saas7-bar" style="height:84%"></div></div><div class="saas7-actions"><a class="btn btn-light" href="/Admin/Reports">Ver relatório</a><button class="btn btn-secondary" onclick="window.AdminToast?.showInfo('Ação demo executada em @block')">Executar ação</button></div></div></article> }
 </section>
