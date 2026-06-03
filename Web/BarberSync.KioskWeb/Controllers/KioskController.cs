@@ -22,6 +22,7 @@ public class KioskController(IConfiguration configuration) : Controller
     public IActionResult Confirm() => View();
     public IActionResult Payment() => View();
     public IActionResult Success() => View();
+    public IActionResult Summary() => View();
     public IActionResult Review() => View();
     public IActionResult Help() => View();
 }

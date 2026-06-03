@@ -1,7 +1,7 @@
 @{ ViewData["Title"] = "Dashboard"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
 <section class="page-header">
     <div><h1 class="page-title">Dashboard Executivo</h1><p class="page-subtitle">Visão SaaS premium com dados reais quando a API responde e fallback demo robusto via <strong>/AdminApi/dashboard</strong>.</p></div>
-    <div class="page-actions"><button class="btn btn-light">Exportar</button><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a><a class="btn btn-primary" href="/Admin/Appointments">Novo Agendamento</a></div>
+    <div class="page-actions"><button class="btn btn-light" data-dashboard-refresh>Atualizar indicadores</button><a class="btn btn-light" href="/Admin/Operations">Operação do Dia</a><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a><a class="btn btn-primary" href="/Admin/Appointments">Novo Agendamento</a></div>
 </section>
 <section class="kpi-grid" data-dashboard-kpis>
 @foreach (var item in new[]{"Receita hoje","Receita mês","Agendamentos hoje","Clientes ativos","Atendimentos","Comandas","Ticket médio","Estoque crítico","Avaliação","Campanhas","Totem","Profissionais"}) { <article class="kpi-card"><div class="kpi-icon">📊</div><div><p class="kpi-label">@item</p><strong class="kpi-value">--</strong><span class="kpi-variation">carregando</span></div></article> }
@@ -15,7 +15,7 @@
 </section>
 
 <section class="panel quick-actions-panel">
-    <div class="panel-header"><div><h3>Ações rápidas</h3><p>Atalhos com navegação ou feedback imediato para demonstração comercial.</p></div><span class="badge badge-success">Demo Comercial 1.0</span></div>
+    <div class="panel-header"><div><h3>Ações rápidas</h3><p>Atalhos com navegação ou feedback imediato para demonstração comercial.</p></div><span class="badge badge-success">Demo Experience 3.0</span></div>
     <div class="quick-actions-grid">
         <a class="btn btn-primary" href="/Admin/Clients" data-quick-action="Novo cliente">Novo cliente</a>
         <a class="btn btn-primary" href="/Admin/Appointments" data-quick-action="Novo agendamento">Novo agendamento</a>

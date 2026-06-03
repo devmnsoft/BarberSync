@@ -4,7 +4,7 @@
   const toast = (message, type = 'success') => window.AdminToast?.show ? window.AdminToast.show(message, type) : console.log(message);
   const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
   const moduleFromPath = () => (location.pathname.split('/').filter(Boolean)[1] || 'Dashboard');
-  const formatMoney = value => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatMoney = value => { const parsed = Number(String(value || 0).replace(/[^0-9,-]/g, '').replace(',', '.')); return Number.isFinite(parsed) ? parsed.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : String(value || 'R$ 0,00'); };
 
   function setMode(mode) {
     const normalized = ['commercial', 'real', 'hybrid'].includes(mode) ? mode : 'hybrid';
@@ -23,13 +23,15 @@
   function renderDashboardExperience() {
     if (document.querySelector('[data-demo-dashboard-20]')) return;
     const dashboard = getStore()?.get('dashboard') || {};
-    const k = dashboard.kpis || {};
+    const kpiArray = Array.isArray(dashboard.kpis) ? dashboard.kpis : [];
+    const findKpi = label => kpiArray.find(x => String(x.label || '').toLowerCase().includes(label))?.value || 0;
+    const k = Array.isArray(dashboard.kpis) ? { revenue: findKpi('receita'), occupancy: dashboard.flow?.scheduled ? Math.min(98, dashboard.flow.scheduled * 2) : 0, recurrence: findKpi('reativado'), satisfaction: findKpi('avaliação'), stockHealth: findKpi('estoque'), siteConversion: findKpi('publicweb') } : (dashboard.kpis || {});
     const flow = dashboard.flow || {};
     const content = document.querySelector('.admin-content');
     if (!content) return;
     content.insertAdjacentHTML('afterbegin', `
       <section class="demo-experience-panel" data-demo-dashboard-20 data-tour-target="dashboard">
-        <div class="panel-header"><div><h2>BarberSync Demo Experience 2.0</h2><p>Fluxo vivo da agenda ao pagamento, com estoque, campanhas, totem, PublicWeb e Copilot conectados.</p></div><span class="badge badge-success">Operação guiada</span></div>
+        <div class="panel-header"><div><h2>BarberSync Demo Experience 3.0</h2><p>Fluxo vivo da agenda ao pagamento, com estoque, campanhas, totem, PublicWeb e Copilot conectados.</p></div><span class="badge badge-success">Operação guiada</span></div>
         <div class="demo-experience-grid" data-tour-target="kpis">
           <article class="demo-insight-card" title="Receita acumulada no cenário demo"><span>💰 Receita</span><strong>${formatMoney(k.revenue)}</strong><small>Ticket e PDV sincronizados</small></article>
           <article class="demo-insight-card" title="Percentual de horários ocupados"><span>📅 Ocupação</span><strong>${k.occupancy || 0}%</strong><small>Agenda por profissional</small></article>

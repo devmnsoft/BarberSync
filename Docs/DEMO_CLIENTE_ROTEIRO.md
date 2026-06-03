@@ -17,3 +17,20 @@ Demonstrar a jornada completa do BarberSync para barbearias, salões, estética 
 2. O modo demo mantém a apresentação viva mesmo quando a API real está incompleta.
 3. A experiência conecta agenda, comanda, caixa, estoque, campanhas, cashback e Copilot.
 4. O Mobile complementa a jornada do cliente com serviços, próximo agendamento, cashback, promoções e perfil.
+
+## BarberSync Demo Experience 3.0
+
+Roteiro comercial integrado:
+
+1. Carregar cenário **Dia Movimentado** no banner do Admin ou em `/Admin/Operations`.
+2. Mostrar `/Admin/Dashboard` com métricas vivas de agenda, comandas, receita, estoque, cashback, PublicWeb, Totem e Mobile.
+3. Abrir `/Admin/Operations` para conduzir o fluxo Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Avaliação → Fidelidade.
+4. Criar cliente demo, criar agendamento e avançar status até abrir comanda.
+5. Pagar com PIX no PDV demo para gerar recibo, baixa de estoque, cashback e avaliação pendente.
+6. Abrir `/Admin/Stock` para comprovar estoque reduzido e pedido de reposição demo.
+7. Criar campanha pelo Copilot ou por `/Admin/Campaigns` para atualizar indicadores e timeline de clientes.
+8. Abrir PublicWeb, solicitar agendamento e apresentar protocolo com CTA para o painel administrativo.
+9. Abrir Totem, concluir atendimento, pagamento e `/Kiosk/Summary` com número da comanda.
+10. Encerrar mostrando Mobile demo com próximo agendamento, serviços, cashback, promoções, histórico e perfil.
+
+Validações obrigatórias: o navegador usa apenas `/AdminApi`, `/PublicApi` e `/KioskApi`; não há chamada browser direta para `http://api:8080`.
