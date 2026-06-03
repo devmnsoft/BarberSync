@@ -1,0 +1,13 @@
+@{ ViewData["Title"] = "SaaS Control Center"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="saas-hero" data-saas-control-center>
+  <div><span class="saas-pill">BarberSync SaaS Demo 6.0</span><h1>SaaS Control Center</h1><p>Visão executiva da plataforma com status dos serviços, canais, prontidão técnica, eventos do EventBus e ações de demonstração conectadas ao DemoStore v6.</p></div>
+  <div class="saas-actions"><button class="btn btn-gold" data-saas-action="busyDay">Carregar dia movimentado</button><button class="btn btn-light" data-saas-reset>Resetar demo</button></div>
+</section>
+<section class="saas-grid">
+  <article class="saas-card"><h3>Status da plataforma</h3><div class="saas-list" data-platform-status></div></article>
+  <article class="saas-card"><h3>Status dos canais</h3><div class="saas-list" data-channel-status></div></article>
+  <article class="saas-card"><h3>Checklist de prontidão</h3><div class="saas-list" data-readiness></div></article>
+  <article class="saas-card wide"><h3>Indicadores de demonstração</h3><div class="saas-kpis" data-saas-kpis></div></article>
+  <article class="saas-card"><h3>Ações comerciais</h3><div class="saas-actions"><button class="btn btn-primary" data-saas-action="criticalStock">Estoque crítico</button><button class="btn btn-primary" data-saas-action="campaignMode">Campanha ativa</button><button class="btn btn-primary" data-saas-action="kioskDemo">Totem em uso</button><button class="btn btn-secondary" data-saas-export>Exportar estado demo</button><a class="btn btn-light" href="/Admin/Help">Abrir roteiro</a><a class="btn btn-light" href="http://localhost:8082/" target="_blank" rel="noopener">Abrir PublicWeb</a><a class="btn btn-light" href="http://localhost:8083/Kiosk/Services" target="_blank" rel="noopener">Abrir Totem</a><a class="btn btn-light" href="http://localhost:8080/swagger" target="_blank" rel="noopener">Abrir Swagger</a></div></article>
+  <article class="saas-card full"><div class="panel-header"><h3>Eventos recentes</h3><button class="btn btn-light" data-clear-events>Limpar histórico</button></div><div class="saas-events" data-saas-events></div></article>
+</section>
