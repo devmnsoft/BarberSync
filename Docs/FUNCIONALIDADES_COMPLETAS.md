@@ -1,15 +1,35 @@
-# Funcionalidades completas BarberSync 7.0
+# Funcionalidades Completas — BarberSync SaaS Platform Demo 8.0
 
-- Admin enterprise completo com menu organizado.
-- Configurações da plataforma via DemoStore/localStorage.
-- Gestão de PublicWeb e Totem pelo Admin.
-- Usuários, perfis e permissões visuais.
-- Multiunidade/franquias com comparativo e ranking.
-- Auditoria e logs visuais.
-- Notificações internas.
-- Dashboard 7.0 omnichannel.
-- Reports 2.0 com filtros, cards, gráficos, tabela e exportações mock.
-- Copilot 5.0 com modos, diagnóstico e ações contextuais.
-- PublicWeb configurável visualmente e seção comercial.
-- Kiosk configurável visualmente, com chamada de atendente e alto contraste.
-- Mobile coerente com serviços publicados, promoções, cashback, agendamentos, perfil e notificações.
+## Plataforma
+
+- Dashboard 8.0 omnichannel.
+- Platform Settings 2.0.
+- Public Site Manager 2.0.
+- Kiosk Manager 2.0.
+- Users and Permissions 2.0.
+- Branches/Franchise 2.0.
+- Audit Center 2.0.
+- Notification Center 2.0.
+- Reports 3.0.
+- Copilot 6.0.
+
+## Operação
+
+- Agenda, atendimentos, comandas, caixa, pagamentos e recibos mock.
+- Estoque com alerta crítico e movimentações.
+- Campanhas, cupons, cashback, fidelidade e avaliações.
+- Lead to Cash com origem PublicWeb/Totem/Admin.
+
+## Canais
+
+- Admin MVC enterprise.
+- PublicWeb vendedor e configurável.
+- Totem com autoatendimento, acessibilidade, pagamento mock, ajuda e avaliação.
+- Mobile React Native visualmente coerente.
+
+## Governança
+
+- Perfis e permissões visuais.
+- Auditoria e EventBus demo.
+- Notificações internas com contador.
+- Multiunidade/franquia com comparativo executivo.
