@@ -61,8 +61,16 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         try
         {
             var response = await httpClientFactory.CreateClient().GetAsync(BuildUrl(path));
-            if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
-            logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                if (!ResponseLooksEmpty(json)) return Content(json, "application/json", Encoding.UTF8);
+                logger.LogWarning("AdminApi GET {Path} retornou payload vazio. Usando fallback demo.", path);
+            }
+            else
+            {
+                logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+            }
         }
         catch (Exception ex)
         {
@@ -107,6 +115,29 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     }
 
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
+
+    private static bool ResponseLooksEmpty(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return true;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return ElementLooksEmpty(doc.RootElement);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool ElementLooksEmpty(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Array) return element.GetArrayLength() == 0;
+        if (element.ValueKind != JsonValueKind.Object) return false;
+        if (element.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() == 0) return true;
+        if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
+        return false;
+    }
     private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message, data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
     private static object DemoMutation(string message, string id) => new { success = true, message, data = new { id, isDemo = true } };
 

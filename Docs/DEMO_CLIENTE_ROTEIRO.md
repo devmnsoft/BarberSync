@@ -1,46 +1,39 @@
-# BarberSync SaaS Platform Demo 10.0
+# Roteiro de demonstração para cliente — BarberSync Demo 10.0
 
-## Objetivo comercial
-Transformar a demonstração em uma narrativa SaaS enterprise para barbearias, salões, estética e franquias: problema, solução, canais, operação diária, caixa, estoque, fidelidade, campanhas, Copilot, relatórios, planos, add-ons, integrações, automações e ROI.
+## 1. Abertura
 
-## Como vender o BarberSync
-1. Abrir PublicWeb e apresentar a proposta SaaS, planos e calculadora de ROI.
-2. Entrar no Admin e mostrar menu por jornada: Operação, Cadastros, Relacionamento, Gestão, Canais e Sistema.
-3. Demonstrar Onboarding do Cliente para mostrar implantação rápida.
-4. Abrir Assinatura SaaS, comparar Start, Pro e Enterprise e gerar proposta mock.
-5. Ativar Add-ons e mostrar monetização adicional.
-6. Testar Integrações e demonstrar evento de auditoria demo.
-7. Executar Automações para explicar recorrência, alerta de estoque e avaliação.
-8. Fechar com Financeiro, Caixa, Pagamentos, Qualidade e Copilot.
+Apresente o BarberSync como plataforma SaaS omnichannel para barbearias, salões, estética e franquias: Admin, PublicWeb, Totem, Mobile, API, PostgreSQL e observabilidade com Seq.
 
-## Como demonstrar planos
-Use /Admin/Subscription para mostrar plano atual Pro Demo, limites de unidades, profissionais, totens, Mobile, Copilot, PublicWeb, uso do plano, simulação de upgrade, bloqueio por limite e proposta comercial mock.
+## 2. AdminWeb
 
-## Como demonstrar add-ons
-Use /Admin/AddOns. Ative Totem Inteligente, App do Cliente, Copilot IA, Campanhas Automáticas, Multiunidade, BI Executivo, WhatsApp, PIX e demais módulos conforme perfil do cliente.
+1. Abrir `http://localhost:8081/Admin`.
+2. Mostrar dashboard executivo com indicadores de agenda, receita, estoque, campanhas, reputação e totem.
+3. Navegar por Clientes, Profissionais, Serviços, Agenda, Comandas, Estoque, Campanhas, Cupons, Fidelidade e Copilot.
+4. Executar uma ação demo: criar cliente, serviço ou agendamento.
+5. Destacar persistência local via DemoStore/localStorage e eventos via EventBus.
 
-## Como demonstrar integrações
-Use /Admin/Integrations. Clique em conectar demo, configurar e testar para criar log local e evento de auditoria. Explique que conectores são mock nesta versão.
+## 3. PublicWeb
 
-## Como demonstrar automações
-Use /Admin/Automations. Ative/desative regras, execute agora, veja log e edite regra. Exemplos: lembrete de agendamento, cliente inativo, estoque mínimo, avaliação pós-pagamento e cashback.
+1. Abrir `http://localhost:8082/`.
+2. Mostrar catálogo de serviços e profissionais carregados por `/PublicApi`.
+3. Preencher o formulário de agendamento.
+4. Mostrar protocolo demo e CTA para Admin/Lead-to-Cash.
 
-## Como demonstrar ROI
-Use a calculadora do PublicWeb em /#roi. Preencha atendimentos por dia, ticket médio, profissionais e dias por mês. Mostre receita mensal estimada, ganho com recorrência, redução de faltas e potencial cashback/campanha.
+## 4. KioskWeb
 
-## Como demonstrar Kiosk
-Abra /Kiosk/Services. Mostre branding, idioma, fonte grande, alto contraste, telefone recorrente, último serviço, cashback, upsell de combo/produto, PIX QR fake, cartão, dinheiro, impressão mock, avaliação, chamar atendente e reset automático.
+1. Abrir `http://localhost:8083/Kiosk/Services`.
+2. Escolher serviço.
+3. Informar cliente.
+4. Escolher profissional.
+5. Confirmar atendimento.
+6. Simular pagamento.
+7. Ver tela de sucesso e avaliação.
+8. Mostrar `sessionStorage` com `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment`.
 
-## Como demonstrar Mobile
-Abra MobileApp no Expo/teste. Mostre Home, Serviços, Agendar, Meus agendamentos, Cashback, Cupons, Promoções, Avaliações, Perfil e Notificações como canal de relacionamento e recorrência.
+## 5. Mobile
 
-## Checklist rápido
-- Subscription, ClientOnboarding, AddOns, Automations, Integrations e KnowledgeBase existem.
-- Financeiro, Caixa, Payments e Qualidade usam dados demo e ações funcionais.
-- PublicWeb vende o SaaS com planos, add-ons e ROI.
-- Kiosk demonstra upsell, acessibilidade e pagamento mock.
-- Copilot tem categorias e plano de 7 dias.
-- Navegador usa proxies locais; não chamar API interna diretamente.
+Apresente o MobileApp como identidade visual consistente para serviços, agendamentos, cashback, cupons, notificações, avaliações e perfil.
 
-## Documento
-Este arquivo é a versão 10.0 de `DEMO_CLIENTE_ROTEIRO.md`.
+## 6. Fechamento comercial
+
+Conectar benefícios a dor operacional: menos faltas, giro de agenda, controle de estoque, comandas, caixa, canais digitais e fidelização.

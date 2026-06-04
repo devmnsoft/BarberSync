@@ -2,11 +2,21 @@ services:
   postgres:
     image: postgres:16
     container_name: barbersync-postgres
-    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-barbersync}
+      POSTGRES_USER: ${POSTGRES_USER:-barbersync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barbersync_demo_10}
     ports: ["5432:5432"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./ScriptsSQL/barber_full_database_postgresql.sql:/docker-entrypoint-initdb.d/01_barber_full_database_postgresql.sql
+      - ./ScriptsSQL/barber_full_database_postgresql.sql:/docker-entrypoint-initdb.d/01_barber_full_database_postgresql.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-barbersync} -d $${POSTGRES_DB:-barbersync}"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    restart: unless-stopped
+
   seq:
     image: datalust/seq:latest
     container_name: barbersync-seq
@@ -18,35 +28,61 @@ services:
     volumes:
       - seq-data:/data
     restart: unless-stopped
+
   api:
     build: { context: ., dockerfile: Backend/Presentation/BarberSync.Api/Dockerfile }
-    env_file: .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-barbersync};Username=${POSTGRES_USER:-barbersync};Password=${POSTGRES_PASSWORD:-barbersync_demo_10}
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:80
     ports: ["8080:8080"]
-    depends_on: [postgres]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    restart: unless-stopped
+
   admin-web:
     build: { context: ., dockerfile: Web/BarberSync.AdminWeb/Dockerfile }
-    env_file: .env
     environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
       ApiSettings__BaseUrl: http://api:8080
       ApiBaseUrl: http://api:8080
     ports: ["8081:8080"]
-    depends_on: [api]
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
   public-web:
     build: { context: ., dockerfile: Web/BarberSync.PublicWeb/Dockerfile }
-    env_file: .env
     environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
       ApiSettings__BaseUrl: http://api:8080
       ApiBaseUrl: http://api:8080
     ports: ["8082:8080"]
-    depends_on: [api]
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
   kiosk-web:
     build: { context: ., dockerfile: Web/BarberSync.KioskWeb/Dockerfile }
-    env_file: .env
     environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
       ApiSettings__BaseUrl: http://api:8080
       ApiBaseUrl: http://api:8080
     ports: ["8083:8080"]
-    depends_on: [api]
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   seq-data:

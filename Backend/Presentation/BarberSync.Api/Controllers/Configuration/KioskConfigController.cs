@@ -44,6 +44,26 @@ public class KioskConfigController(IConfigurationService configurationService, I
         }
     }
 
+
+    [HttpGet("status")]
+    public IActionResult Status([FromQuery] string? deviceCode)
+    {
+        var resolved = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
+        return Ok(ApiResponse<object>.Ok(new { online = true, deviceCode = resolved, currentStep = "Pronto para atendimento", queue = 3, lastHeartbeat = DateTime.UtcNow, paymentsMockEnabled = true, isDemo = true }, "Totem online em modo demonstração."));
+    }
+
+    [HttpPost("client/find-by-phone")]
+    public IActionResult FindClientByPhone([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { name = "Cliente Demo", phone = "(11) 99999-9999", isDemo = true }, "Cliente localizado em modo demonstração."));
+
+    [HttpPost("client/quick-register")]
+    public IActionResult QuickRegister([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { protocol = $"KIOSK-CLI-{DateTime.UtcNow:HHmmss}", isDemo = true }, "Cadastro rápido realizado em modo demonstração."));
+
+    [HttpPost("payment/mock")]
+    public IActionResult MockPayment([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { status = "APPROVED", authorizationCode = $"PAY-{DateTime.UtcNow:HHmmss}", isDemo = true }, "Pagamento simulado aprovado."));
+
+    [HttpPost("review")]
+    public IActionResult Review([FromBody] object payload) => Ok(ApiResponse<object>.Ok(new { received = true, isDemo = true }, "Avaliação recebida em modo demonstração."));
+
     private static List<KioskServiceDto> GetDemoKioskServices() =>
     [
         new() { Id = Guid.NewGuid(), Name = "Corte Masculino", Category = "Barbearia", Description = "Corte moderno com acabamento profissional.", Price = 45.00m, DurationMinutes = 40, Icon = "✂️", IsAvailable = true, IsDemo = true },
