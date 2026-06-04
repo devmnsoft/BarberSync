@@ -1,6 +1,19 @@
 (() => {
-  const fallbackServices=[{name:'Corte Masculino',price:45,durationMinutes:40,category:'Barbearia',description:'Corte premium com finalização.'},{name:'Combo Corte + Barba',price:78,durationMinutes:70,category:'Combo',description:'Experiência completa com cashback.'},{name:'Barboterapia',price:65,durationMinutes:50,category:'Premium',description:'Relaxamento e cuidado da barba.'}];
-  const fallbackPros=[{name:'Rafael Barber',specialty:'Corte e barba',rating:4.9},{name:'Bruna Estética',specialty:'Estética premium',rating:4.8},{name:'Marcos Fade',specialty:'Degradê e desenho',rating:4.7}];
+  const cfg = (() => { try { return JSON.parse(localStorage.getItem('barbersync.demo.state.v8') || '{}').settings || {}; } catch { return {}; } })();
+  const params = new URLSearchParams(location.search);
+  const branding = { ...(cfg.branding || {}), publicName: params.get('company') || cfg.branding?.publicName, slogan: params.get('slogan') || cfg.branding?.slogan, primary: params.get('primary') || cfg.branding?.primary, secondary: params.get('secondary') || cfg.branding?.secondary };
+  const publicWeb = { ...(cfg.publicWeb || {}), heroTitle: params.get('title') || cfg.publicWeb?.heroTitle, heroSubtitle: params.get('subtitle') || cfg.publicWeb?.heroSubtitle, ctaPrimary: params.get('cta') || cfg.publicWeb?.ctaPrimary };
+  const fallbackServices = publicWeb.services || [{name:'Corte Masculino',price:45,durationMinutes:40,category:'Barbearia',description:'Corte premium com finalização.'},{name:'Combo Corte + Barba',price:78,durationMinutes:70,category:'Combo',description:'Experiência completa com cashback.'},{name:'Barboterapia',price:65,durationMinutes:50,category:'Premium',description:'Relaxamento e cuidado da barba.'}];
+  const fallbackPros = publicWeb.professionals || [{name:'Rafael Barber',specialty:'Corte e barba',rating:4.9},{name:'Bruna Estética',specialty:'Estética premium',rating:4.8},{name:'Marcos Fade',specialty:'Degradê e desenho',rating:4.7}];
+  if (branding.primary) document.documentElement.style.setProperty('--public-primary', branding.primary);
+  if (branding.secondary) document.documentElement.style.setProperty('--public-gold', branding.secondary);
+  const setText = (selector, value) => { const el = document.querySelector(selector); if (el && value) el.textContent = value; };
+  setText('[data-public-title]', publicWeb.heroTitle);
+  setText('[data-public-subtitle]', publicWeb.heroSubtitle);
+  setText('[data-public-cta-primary]', publicWeb.ctaPrimary);
+  setText('[data-public-cta-secondary]', publicWeb.ctaSecondary);
+  setText('[data-public-company]', branding.publicName);
+  setText('[data-public-slogan]', branding.slogan);
   const toast = (message) => { const el = document.getElementById('publicToast'); if (!el) return; el.textContent = message; el.hidden = false; setTimeout(() => el.hidden = true, 4200); };
   const render=(id,arr,fn)=>{const e=document.getElementById(id); if(e) { e.classList.remove('skeleton-grid'); e.innerHTML=(Array.isArray(arr)?arr:[]).map(fn).join(''); }};
   const load = async (url, fallback) => { try { const r = await fetch(url); if (!r.ok) return fallback; const j = await r.json(); const data = j.data || j.items || j; return Array.isArray(data) && data.length ? data : fallback; } catch { return fallback; } };
