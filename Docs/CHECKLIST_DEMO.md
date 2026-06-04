@@ -1,94 +1,46 @@
-# BarberSync SaaS Platform Demo 8.0 — CHECKLIST DEMO
+# BarberSync SaaS Platform Demo 9.0
 
-> Documento atualizado para a etapa 8.0 da demonstração comercial BarberSync.
+## Objetivo comercial
+Transformar a demonstração em uma narrativa SaaS enterprise para barbearias, salões, estética e franquias: problema, solução, canais, operação diária, caixa, estoque, fidelidade, campanhas, Copilot, relatórios, planos, add-ons, integrações, automações e ROI.
 
-## Escopo 8.0
+## Como vender o BarberSync
+1. Abrir PublicWeb e apresentar a proposta SaaS, planos e calculadora de ROI.
+2. Entrar no Admin e mostrar menu por jornada: Operação, Cadastros, Relacionamento, Gestão, Canais e Sistema.
+3. Demonstrar Onboarding do Cliente para mostrar implantação rápida.
+4. Abrir Assinatura SaaS, comparar Start, Pro e Enterprise e gerar proposta mock.
+5. Ativar Add-ons e mostrar monetização adicional.
+6. Testar Integrações e demonstrar evento de auditoria demo.
+7. Executar Automações para explicar recorrência, alerta de estoque e avaliação.
+8. Fechar com Financeiro, Caixa, Pagamentos, Qualidade e Copilot.
 
-- Plataforma SaaS demonstrável com Admin, PublicWeb, Totem, Mobile, API, PostgreSQL, Docker Compose e Seq.
-- Configurações centralizadas no DemoStore/localStorage `barbersync.demo.state.v8`.
-- Proxies obrigatórios para browser: `/AdminApi`, `/PublicApi` e `/KioskApi`.
-- `ApiSettings:BaseUrl` e `http://api:8080` ficam restritos ao server-side/Docker.
+## Como demonstrar planos
+Use /Admin/Subscription para mostrar plano atual Pro Demo, limites de unidades, profissionais, totens, Mobile, Copilot, PublicWeb, uso do plano, simulação de upgrade, bloqueio por limite e proposta comercial mock.
 
-## Como rodar Docker
+## Como demonstrar add-ons
+Use /Admin/AddOns. Ative Totem Inteligente, App do Cliente, Copilot IA, Campanhas Automáticas, Multiunidade, BI Executivo, WhatsApp, PIX e demais módulos conforme perfil do cliente.
 
-```bash
-docker compose build --no-cache
-docker compose up -d
-docker compose ps
-```
+## Como demonstrar integrações
+Use /Admin/Integrations. Clique em conectar demo, configurar e testar para criar log local e evento de auditoria. Explique que conectores são mock nesta versão.
 
-URLs de demonstração: API `http://localhost:8080/swagger`, Admin `http://localhost:8081/Admin`, PublicWeb `http://localhost:8082/`, Totem `http://localhost:8083/Kiosk/Services`.
+## Como demonstrar automações
+Use /Admin/Automations. Ative/desative regras, execute agora, veja log e edite regra. Exemplos: lembrete de agendamento, cliente inativo, estoque mínimo, avaliação pós-pagamento e cashback.
 
-## Como rodar Windows/local
+## Como demonstrar ROI
+Use a calculadora do PublicWeb em /#roi. Preencha atendimentos por dia, ticket médio, profissionais e dias por mês. Mostre receita mensal estimada, ganho com recorrência, redução de faltas e potencial cashback/campanha.
 
-1. Configure a API local em `http://localhost:8080`.
-2. Configure Admin/Public/Kiosk para usar os proxies server-side.
-3. Abra as URLs principais e valide assets CSS/JS.
+## Como demonstrar Kiosk
+Abra /Kiosk/Services. Mostre branding, idioma, fonte grande, alto contraste, telefone recorrente, último serviço, cashback, upsell de combo/produto, PIX QR fake, cartão, dinheiro, impressão mock, avaliação, chamar atendente e reset automático.
 
-## Reset e cenários da demo
+## Como demonstrar Mobile
+Abra MobileApp no Expo/teste. Mostre Home, Serviços, Agendar, Meus agendamentos, Cashback, Cupons, Promoções, Avaliações, Perfil e Notificações como canal de relacionamento e recorrência.
 
-- No Admin, use Configurações da Plataforma para restaurar padrão.
-- Para reset manual, remova `barbersync.demo.state.v8` do localStorage.
-- Cenários comerciais: multiunidade, operação ao vivo, lead-to-cash, estoque crítico, campanha/Copilot e Totem com pagamento mock.
+## Checklist rápido
+- Subscription, ClientOnboarding, AddOns, Automations, Integrations e KnowledgeBase existem.
+- Financeiro, Caixa, Payments e Qualidade usam dados demo e ações funcionais.
+- PublicWeb vende o SaaS com planos, add-ons e ROI.
+- Kiosk demonstra upsell, acessibilidade e pagamento mock.
+- Copilot tem categorias e plano de 7 dias.
+- Navegador usa proxies locais; não chamar API interna diretamente.
 
-## Demonstrações obrigatórias
-
-- Configurações: empresa, branding, horários, agenda, financeiro e canais.
-- Multiunidade: ranking, comparativo, receita, agendamentos, ticket, avaliação, ocupação e estoque crítico.
-- Canais: PublicWeb publicado, Totem liberado/configurado e Mobile visual coerente.
-- Auditoria: eventos do EventBus, ações de usuário, status, comandas, estoque, campanhas e Copilot.
-- Notificações: contador no topbar, lista, marcar como lida e abrir módulo relacionado.
-- Relatórios: filtros, cards, gráficos, tabela, imprimir, exportar PDF/Excel mock e favorito.
-
-## Checklist comercial rápido
-
-- Platform Settings 2.0 salva no DemoStore e aplica branding.
-- Public Site Manager 2.0 publica hero, serviços, profissionais, promoções e SEO demo.
-- Kiosk Manager 2.0 gerencia dispositivos, serviços, pagamentos, acessibilidade e logs.
-- Users/Profiles mostra matriz visual de permissões.
-- Branches/Franchise mostra quatro unidades demo.
-- Audit e Notifications estão preenchidos e acionáveis.
-- Reports 3.0, Dashboard 8.0 e Copilot 6.0 têm ações reais de interface.
-
-
-## Conteúdo anterior
-
-# Checklist Demo BarberSync 8.0
-
-## Pré-demo
-
-- [ ] `dotnet build` concluído.
-- [ ] `docker compose build --no-cache` concluído quando aplicável.
-- [ ] `docker compose up -d` com API, Admin, PublicWeb, Kiosk, PostgreSQL e Seq ativos.
-- [ ] Swagger abre em `http://localhost:8080/swagger`.
-- [ ] Admin abre em `http://localhost:8081/Admin`.
-- [ ] PublicWeb abre em `http://localhost:8082/`.
-- [ ] Totem abre em `http://localhost:8083/Kiosk/Services`.
-- [ ] DevTools sem chamada do browser para URL interna da API Docker.
-
-## Proxies
-
-- [ ] `/AdminApi/dashboard` retorna 200.
-- [ ] `/AdminApi/clients` retorna 200.
-- [ ] `/AdminApi/professionals` retorna 200.
-- [ ] `/AdminApi/services` retorna 200.
-- [ ] `/AdminApi/appointments` retorna 200.
-- [ ] `/AdminApi/service-orders` retorna 200.
-- [ ] `/AdminApi/products` retorna 200.
-- [ ] `/PublicApi/services` retorna 200.
-- [ ] `/PublicApi/professionals` retorna 200.
-- [ ] `/KioskApi/services?deviceCode=KIOSK-DEMO-001` retorna 200.
-
-## Roteiro visual
-
-- [ ] Menu final organizado por Operação, Cadastros, Relacionamento, Gestão, Canais e Sistema.
-- [ ] Platform Settings salva, restaura e aplica branding.
-- [ ] PublicSite publica hero, serviços, profissionais, promoção e SEO demo.
-- [ ] Kiosk Manager altera dispositivos, serviços, pagamentos, acessibilidade e logs.
-- [ ] Users/Profiles demonstra matriz de permissões.
-- [ ] Branches mostra unidades, ranking e comparativo.
-- [ ] Audit filtra e exporta eventos mock.
-- [ ] Notifications mostra contador na topbar e marca lidas.
-- [ ] Reports 3.0 tem filtros, cards, gráfico, tabela e exportações mock.
-- [ ] Dashboard 8.0 reage a filtros e colapsa blocos.
-- [ ] Copilot 6.0 responde por modo e cria alerta/ação.
+## Documento
+Este arquivo é a versão 9.0 de `CHECKLIST_DEMO.md`.

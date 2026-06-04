@@ -30,3 +30,5 @@
     result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Solicitação registrada. <a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Abrir Admin</a>`; toast('Solicitação enviada com sucesso.'); e.target.reset();
   });
 })();
+
+(() => { const f=document.getElementById('roiCalculator'); if(!f)return; const calc=()=>{const d=new FormData(f); const att=+d.get('att')||0,t=+d.get('ticket')||0,pros=+d.get('pros')||0,days=+d.get('days')||0; const revenue=att*t*days; const recurrence=revenue*.12; const noShow=revenue*.06; const cashback=revenue*.04; document.getElementById('roiResult').innerHTML=`Receita mensal estimada: <strong>R$ ${revenue.toLocaleString('pt-BR')}</strong><br>Ganho com recorrência: R$ ${recurrence.toLocaleString('pt-BR',{maximumFractionDigits:0})}<br>Redução de faltas: R$ ${noShow.toLocaleString('pt-BR',{maximumFractionDigits:0})}<br>Potencial cashback/campanha: R$ ${cashback.toLocaleString('pt-BR',{maximumFractionDigits:0})}<br>Capacidade por profissional: ${Math.round(att/pros)} atendimentos/dia`;}; f.addEventListener('submit',e=>{e.preventDefault();calc();}); calc(); })();

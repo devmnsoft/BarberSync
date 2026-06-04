@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Assinatura SaaS";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header saas-page-header">
+  <div><span class="eyebrow">BarberSync SaaS Platform Demo 9.0</span><h1 class="page-title">Assinatura SaaS</h1><p class="page-subtitle">Planos, limites, uso e proposta comercial mock para vender o BarberSync como SaaS.</p></div>
+  <div class="page-actions"><button class="btn btn-light" data-demo-action="reset">Recarregar demo</button><button class="btn btn-primary" data-demo-action="primary">Executar ação guiada</button></div>
+</section>
+<section class="saas-hero-grid"><article class="panel featured"><div class="panel-header"><h3>Plano atual</h3><span class="badge badge-success" id="subscriptionStatus">Ativo</span></div><div id="currentPlan" class="metric-list"></div></article><article class="panel"><h3>Uso do plano</h3><div id="planUsage" class="usage-grid"></div></article></section><section class="grid-section"><h2>Planos disponíveis</h2><div id="availablePlans" class="card-grid pricing-grid"></div></section><section class="panel"><div class="panel-header"><h3>Ações comerciais demo</h3><span class="badge badge-info">DemoStore</span></div><div class="action-grid"><button class="btn btn-light" data-sub-action="change">Alterar plano demo</button><button class="btn btn-primary" data-sub-action="upgrade">Simular upgrade</button><button class="btn btn-warning" data-sub-action="block">Simular bloqueio por limite</button><button class="btn btn-light" data-sub-action="features">Ver recursos do plano</button><button class="btn btn-success" data-sub-action="proposal">Gerar proposta comercial mock</button></div><pre id="subscriptionOutput" class="demo-console">Pronto para simular assinatura SaaS.</pre></section>

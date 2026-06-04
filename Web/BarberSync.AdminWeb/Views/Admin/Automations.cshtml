@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Automações";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header saas-page-header">
+  <div><span class="eyebrow">BarberSync SaaS Platform Demo 9.0</span><h1 class="page-title">Automações</h1><p class="page-subtitle">Regras demonstráveis com gatilho, ação, canal, próxima execução e log.</p></div>
+  <div class="page-actions"><button class="btn btn-light" data-demo-action="reset">Recarregar demo</button><button class="btn btn-primary" data-demo-action="primary">Executar ação guiada</button></div>
+</section>
+<section class="panel"><div class="panel-header"><h3>Automações de operação e relacionamento</h3><span class="badge badge-info">App • WhatsApp mock • E-mail mock • Interno</span></div><div id="automationsList" class="automation-list"></div></section><section class="panel"><h3>Log da automação</h3><pre id="automationLog" class="demo-console">Selecione uma automação.</pre></section>

@@ -43,11 +43,17 @@ public class AdminController : Controller
     [HttpGet("Manual")] public IActionResult Manual() => RedirectToAction(nameof(Help));
     [HttpGet("Help")] public IActionResult Help() => Render("Help");
     [HttpGet("Onboarding")] public IActionResult Onboarding() => Render("Onboarding");
+    [HttpGet("Subscription")] public IActionResult Subscription() => Render("Subscription");
+    [HttpGet("ClientOnboarding")] public IActionResult ClientOnboarding() => Render("ClientOnboarding");
+    [HttpGet("AddOns")] public IActionResult AddOns() => Render("AddOns");
+    [HttpGet("Automations")] public IActionResult Automations() => Render("Automations");
+    [HttpGet("Integrations")] public IActionResult Integrations() => Render("Integrations");
+    [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync SaaS Platform Demo 8.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync SaaS Platform Demo 9.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }
