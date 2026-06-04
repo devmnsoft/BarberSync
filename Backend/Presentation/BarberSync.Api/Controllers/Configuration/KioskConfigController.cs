@@ -7,7 +7,7 @@ namespace BarberSync.Api.Controllers.Configuration;
 
 [ApiController]
 [Route("api/kiosk")]
-public class KioskConfigController(IConfigurationService configurationService, ILogger<KioskConfigController> logger, IWebHostEnvironment environment) : ControllerBase
+public class KioskConfigController(IConfigurationService configurationService, ILogger<KioskConfigController> logger) : ControllerBase
 {
     [HttpGet("services")]
     public ActionResult<ApiResponse<IReadOnlyList<KioskServiceDto>>> Services([FromQuery] string? deviceCode)
@@ -15,27 +15,26 @@ public class KioskConfigController(IConfigurationService configurationService, I
         var resolved = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
         try
         {
-            logger.LogInformation("Kiosk services requested for deviceCode {DeviceCode}", resolved);
+            var kioskConfig = configurationService.GetKioskByDevice(resolved);
+            logger.LogInformation("Kiosk services requested for deviceCode {DeviceCode} tenant {TenantSlug}", resolved, kioskConfig.TenantSlug);
             var data = GetDemoKioskServices();
             return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(data, "Serviços carregados com sucesso em modo demonstração."));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao carregar serviços kiosk para {DeviceCode}", resolved);
-            if (environment.IsDevelopment())
-            {
-                return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(GetDemoKioskServices(), "Serviços carregados em modo demonstração após falha temporária."));
-            }
-            return StatusCode(500, ApiResponse<IReadOnlyList<KioskServiceDto>>.Fail("Falha ao carregar serviços do kiosk."));
+            return Ok(ApiResponse<IReadOnlyList<KioskServiceDto>>.Ok(GetDemoKioskServices(), "Serviços carregados em modo demonstração após falha temporária."));
         }
     }
 
     [HttpGet("professionals")]
-    public ActionResult<ApiResponse<IReadOnlyList<KioskProfessionalDto>>> Professionals([FromQuery] Guid? serviceId, [FromQuery] string? deviceCode)
+    public ActionResult<ApiResponse<IReadOnlyList<KioskProfessionalDto>>> Professionals([FromQuery] string? serviceId, [FromQuery] string? deviceCode)
     {
         try
         {
-            logger.LogInformation("Kiosk professionals requested for service {ServiceId} and device {DeviceCode}", serviceId, deviceCode);
+            var resolvedDevice = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
+            var kioskConfig = configurationService.GetKioskByDevice(resolvedDevice);
+            logger.LogInformation("Kiosk professionals requested for service {ServiceId} and device {DeviceCode} tenant {TenantSlug}", serviceId, resolvedDevice, kioskConfig.TenantSlug);
             return Ok(ApiResponse<IReadOnlyList<KioskProfessionalDto>>.Ok(GetDemoProfessionals(), "Profissionais carregados com sucesso em modo demonstração."));
         }
         catch (Exception ex)
