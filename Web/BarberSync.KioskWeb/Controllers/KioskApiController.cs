@@ -79,14 +79,18 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         new { id = "demo-corte", name = "Corte Masculino", category = "Barbearia", description = "Corte moderno com acabamento profissional.", price = 45.00, durationMinutes = 40, icon = "✂️", isAvailable = true, isDemo = true },
         new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", description = "Barba alinhada com toalha quente e navalha.", price = 35.00, durationMinutes = 30, icon = "🪒", isAvailable = true, isDemo = true },
-        new { id = "demo-combo", name = "Combo Corte + Barba", category = "Combo", description = "Atendimento completo com preço especial.", price = 70.00, durationMinutes = 60, icon = "💈", isAvailable = true, isDemo = true },
-        new { id = "demo-sobrancelha", name = "Sobrancelha", category = "Estética", description = "Design rápido para completar o visual.", price = 25.00, durationMinutes = 20, icon = "✨", isAvailable = true, isDemo = true }
+        new { id = "demo-combo", name = "Corte + Barba", category = "Combo", description = "Atendimento completo com preço especial.", price = 70.00, durationMinutes = 60, icon = "💈", isAvailable = true, isDemo = true },
+        new { id = "demo-sobrancelha", name = "Sobrancelha", category = "Estética", description = "Design rápido para completar o visual.", price = 25.00, durationMinutes = 20, icon = "✨", isAvailable = true, isDemo = true },
+        new { id = "demo-hidratacao", name = "Hidratação Capilar", category = "Estética", description = "Tratamento capilar profissional para brilho e recuperação.", price = 60.00, durationMinutes = 45, icon = "💧", isAvailable = true, isDemo = true },
+        new { id = "demo-manicure", name = "Manicure", category = "Beleza", description = "Cuidado completo para unhas em atendimento rápido.", price = 40.00, durationMinutes = 50, icon = "💅", isAvailable = true, isDemo = true }
     };
 
     private static object[] DemoProfessionals() => new object[]
     {
         new { id = "pro-rafael", name = "Rafael Barber", specialty = "Fade e barba", rating = 4.9, estimatedWaitMinutes = 10, isDemo = true },
         new { id = "pro-lucas", name = "Lucas Navalha", specialty = "Corte clássico", rating = 4.8, estimatedWaitMinutes = 15, isDemo = true },
-        new { id = "pro-camila", name = "Camila Beauty", specialty = "Visagismo", rating = 4.9, estimatedWaitMinutes = 20, isDemo = true }
+        new { id = "pro-bruno", name = "Bruno Estilo", specialty = "Corte social", rating = 4.7, estimatedWaitMinutes = 18, isDemo = true },
+        new { id = "pro-camila", name = "Camila Beauty", specialty = "Visagismo e estética", rating = 4.9, estimatedWaitMinutes = 20, isDemo = true },
+        new { id = "pro-amanda", name = "Amanda Nails", specialty = "Manicure premium", rating = 4.8, estimatedWaitMinutes = 12, isDemo = true }
     };
 }

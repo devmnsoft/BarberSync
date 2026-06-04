@@ -1,5 +1,6 @@
 const fs = require('fs');
 const requiredFiles = [
+  'index.js',
   'App.js',
   'src/services/api.js',
   'src/screens/LoginScreen.js',
