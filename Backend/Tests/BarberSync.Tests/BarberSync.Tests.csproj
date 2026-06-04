@@ -3,4 +3,5 @@
   <ItemGroup><PackageReference Include="xunit" Version="2.9.2" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../Domain/BarberSync.Domain/BarberSync.Domain.csproj" />  <ProjectReference Include="../../Application/BarberSync.Application/BarberSync.Application.csproj" />
   </ItemGroup>
+  <ItemGroup><Using Include="Xunit" /></ItemGroup>
 </Project>

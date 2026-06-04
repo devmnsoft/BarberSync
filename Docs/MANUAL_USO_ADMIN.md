@@ -1,21 +1,21 @@
-# Manual de uso — AdminWeb BarberSync Demo 10.0
+# Manual de uso — AdminWeb BarberSync 11.0
 
 ## Acesso
 
 URL: `http://localhost:8081/Admin`.
 
-## Operação principal
+## Módulos de operação
 
-- Dashboard: visão de receita, agenda, canais, estoque, reputação e Copilot.
-- Clientes: listar, criar, editar, excluir, visualizar perfil 360 e fidelidade.
-- Profissionais: gerenciar agenda, serviços, status e performance.
-- Serviços: controlar preço, duração, comissão e publicação no Site/Totem/Mobile.
-- Agenda: criar, confirmar, check-in, iniciar, finalizar e cancelar atendimento.
-- Comandas: abrir, adicionar serviço/produto, pagar, fechar e emitir recibo demo.
-- Estoque: entrada, saída, crítico e sugestão de reposição.
-- Campanhas/Cupons: criação demo, status e resultado comercial.
-- Copilot: perguntas e ações recomendadas para retenção, escala e estoque.
+- Dashboard: visão executiva de receita, agenda, canais e alertas.
+- Clientes: listar, criar, editar, excluir e abrir visão 360.
+- Profissionais: cadastro, disponibilidade, performance e inativação visual.
+- Serviços: preço, duração, disponibilidade em Site/Totem/Mobile e status.
+- Agenda: criar, confirmar, check-in, iniciar, finalizar e cancelar.
+- Comandas: abrir, adicionar itens, pagar, fechar e emitir recibo demo.
+- Estoque: produtos, entrada, saída, crítico e reposição demo.
+- Campanhas/Cupons: criar, editar, status e resultado demo.
+- Copilot: perguntar, receber sugestão e executar ação demo.
 
-## Proxies
+## Integração segura
 
-Todas as chamadas do browser devem usar `/AdminApi/...`. `ApiSettings:BaseUrl` é server-side.
+O JavaScript do Admin chama apenas `/AdminApi/...`. A URL interna da API é lida server-side pelo proxy MVC.

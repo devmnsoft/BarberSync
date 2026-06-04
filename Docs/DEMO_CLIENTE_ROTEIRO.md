@@ -1,23 +1,24 @@
-# Roteiro de demonstração para cliente — BarberSync Demo 10.0
+# Roteiro de demonstração comercial — BarberSync 11.0
 
 ## 1. Abertura
 
-Apresente o BarberSync como plataforma SaaS omnichannel para barbearias, salões, estética e franquias: Admin, PublicWeb, Totem, Mobile, API, PostgreSQL e observabilidade com Seq.
+Apresente o BarberSync como plataforma SaaS para barbearias, salões, estética e franquias, unificando agenda, PDV, comanda, caixa, estoque, fidelidade, canais digitais e inteligência operacional.
 
-## 2. AdminWeb
-
-1. Abrir `http://localhost:8081/Admin`.
-2. Mostrar dashboard executivo com indicadores de agenda, receita, estoque, campanhas, reputação e totem.
-3. Navegar por Clientes, Profissionais, Serviços, Agenda, Comandas, Estoque, Campanhas, Cupons, Fidelidade e Copilot.
-4. Executar uma ação demo: criar cliente, serviço ou agendamento.
-5. Destacar persistência local via DemoStore/localStorage e eventos via EventBus.
-
-## 3. PublicWeb
+## 2. PublicWeb
 
 1. Abrir `http://localhost:8082/`.
-2. Mostrar catálogo de serviços e profissionais carregados por `/PublicApi`.
-3. Preencher o formulário de agendamento.
-4. Mostrar protocolo demo e CTA para Admin/Lead-to-Cash.
+2. Mostrar hero, problemas do mercado, solução e planos.
+3. Demonstrar serviços e profissionais carregados via `/PublicApi`.
+4. Preencher nome e telefone no formulário de agendamento/proposta.
+5. Mostrar protocolo demo e explicar que o lead entra no fluxo comercial.
+
+## 3. AdminWeb
+
+1. Abrir `http://localhost:8081/Admin`.
+2. Mostrar dashboard com receita, agenda, cashback, avaliações e status operacional.
+3. Navegar por clientes, profissionais, serviços, agenda, comandas, estoque, campanhas, cupons e Copilot.
+4. Executar uma ação visual: criar cliente, confirmar agendamento, pagar comanda ou gerar campanha.
+5. Explicar DemoStore/localStorage e EventBus como camada de demonstração resiliente.
 
 ## 4. KioskWeb
 
@@ -26,14 +27,9 @@ Apresente o BarberSync como plataforma SaaS omnichannel para barbearias, salões
 3. Informar cliente.
 4. Escolher profissional.
 5. Confirmar atendimento.
-6. Simular pagamento.
-7. Ver tela de sucesso e avaliação.
-8. Mostrar `sessionStorage` com `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment`.
+6. Simular pagamento mock.
+7. Abrir sucesso, resumo e avaliação.
 
-## 5. Mobile
+## 5. Fechamento
 
-Apresente o MobileApp como identidade visual consistente para serviços, agendamentos, cashback, cupons, notificações, avaliações e perfil.
-
-## 6. Fechamento comercial
-
-Conectar benefícios a dor operacional: menos faltas, giro de agenda, controle de estoque, comandas, caixa, canais digitais e fidelização.
+Conectar a demonstração aos ganhos comerciais: menos faltas, maior ticket médio, recorrência, controle de estoque, padronização multiunidade e diferenciação por autoatendimento.
