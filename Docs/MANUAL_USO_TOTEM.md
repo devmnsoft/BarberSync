@@ -1,30 +1,20 @@
-# Manual de uso — Totem/Kiosk BarberSync Demo 10.0
+# Manual de uso — KioskWeb BarberSync 11.0
 
 ## Acesso
 
 URL: `http://localhost:8083/Kiosk/Services`.
+Device demo: `KIOSK-DEMO-001`.
 
-## Fluxo
+## Fluxo obrigatório
 
-1. Escolha um serviço.
-2. Informe telefone/nome do cliente.
-3. Escolha profissional.
-4. Confirme dados.
-5. Simule pagamento em PIX, cartão ou recepção.
-6. Veja sucesso/comanda.
-7. Registre avaliação.
+1. Escolher serviço.
+2. Informar telefone e nome do cliente.
+3. Escolher profissional.
+4. Conferir resumo.
+5. Simular pagamento mock.
+6. Visualizar sucesso e resumo.
+7. Registrar avaliação.
 
-## Persistência local
+## Resiliência
 
-O fluxo grava em `sessionStorage`:
-
-- `selectedService`
-- `selectedClient`
-- `selectedProfessional`
-- `selectedPayment`
-- `kiosk-flow`
-- `kiosk-summary`
-
-## Proxy
-
-O browser chama somente `/KioskApi/...`; a comunicação com a API real é server-side.
+O Totem consome `/KioskApi/services`, `/KioskApi/professionals`, `/KioskApi/payment/mock` e `/KioskApi/review`. Se a API falhar, o proxy MVC retorna dados demo com status 200 para evitar tela vazia.

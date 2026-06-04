@@ -1,38 +1,39 @@
-# BarberSync SaaS Platform Demo 10.0 — Correções atuais
+# BarberSync Hardening + Demo Comercial 11.0 — Correções atuais
 
 Data da consolidação: 2026-06-04.
 
-## Diagnóstico encontrado
+## Diagnóstico executado
 
-- O ambiente de execução do agente não possui `dotnet` nem `docker`, então a validação de build/containers ficou registrada como limitação de ambiente e deve ser repetida em uma estação com SDK .NET 8 e Docker Engine.
-- O `docker-compose.yml` dependia de `env_file: .env`; quando o arquivo não existia, a subida do stack ficava frágil para demonstração limpa.
-- A API `/api/services` retornava lista vazia, fazendo AdminWeb/PublicWeb dependerem de fallback visual mesmo quando a API respondia 200.
-- Os proxies MVC não tratavam payloads 200 semanticamente vazios como fallback demo, o que poderia deixar tabelas/cards sem dados.
-- O PublicWeb tinha fallback com menos serviços/profissionais que o catálogo obrigatório da demo 10.0.
-- O fluxo Kiosk salvava `selectedService`, `selectedProfessional` e `selectedPayment` de forma mínima; foi consolidado para objetos JSON em `sessionStorage`.
+- A raiz do repositório não possuía uma solution principal para o comando `dotnet build` solicitado na rotina de aceite.
+- Docker Compose aponta corretamente os serviços MVC para `http://api:8080` apenas em variáveis server-side; nenhuma ocorrência browser-side foi encontrada em JS/CSHTML/HTML.
+- `Program.cs` dos projetos AdminWeb, PublicWeb e KioskWeb mantém `app.UseStaticFiles()` antes de `app.UseRouting()`.
+- API possui Swagger, middleware global de exceção e `IConfigurationService` registrado para o fluxo Kiosk.
+- Proxies MVC `/AdminApi`, `/PublicApi` e `/KioskApi` possuem fallbacks demo para evitar tela vazia quando API/infra falhar.
+- PublicWeb tinha JS para renderizar serviços/profissionais, mas não tinha os containers `#services` e `#pros`; a vitrine dinâmica foi adicionada.
 
-## Correções realizadas
+## Correções aplicadas
 
-- Docker Compose consolidado sem dependência obrigatória de `.env`, com defaults seguros para PostgreSQL, healthcheck, `ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT=Docker`, BaseUrl server-side para MVC e Seq configurado.
-- API `/api/services` passou a entregar catálogo demo real com Corte Masculino, Barba Tradicional, Corte + Barba, Sobrancelha, Hidratação Capilar e Manicure.
-- API Kiosk recebeu endpoints demo complementares para status, cliente, pagamento mock e avaliação, sempre com resposta 200 em modo demonstração.
-- `ConfigurationService` passou a expor catálogo público/totem completo e profissionais obrigatórios da demo.
-- AdminApi e PublicApi passaram a detectar payloads vazios (`items: []`, `data.items: []`, arrays vazios) e retornar fallback demo com 200.
-- PublicApi foi marcado como `ApiController` e ganhou fallback completo para serviços e profissionais.
-- KioskFlow passou a persistir `selectedService`, `selectedClient`, `selectedProfessional` e `selectedPayment` no `sessionStorage` em formato JSON.
+1. Criada `BarberSync.sln` na raiz com API, Application, Domain, Infrastructure, AdminWeb, PublicWeb, KioskWeb e Tests.
+2. PublicWeb recebeu seções dinâmicas de serviços e profissionais alimentadas por `/PublicApi/services` e `/PublicApi/professionals`.
+3. Âncora de agendamento do PublicWeb alinhada para `#agendamento`.
+4. Identidade visual textual atualizada para `Demo Comercial 11.0` no Admin e PublicWeb.
+5. Documentação de demo, operação e checklist atualizada para a etapa 11.0.
 
-## Validações de proxy
+## Comunicação browser/API
 
-O browser deve chamar somente:
+- Browser AdminWeb: usar somente `/AdminApi/...`.
+- Browser PublicWeb: usar somente `/PublicApi/...`.
+- Browser KioskWeb: usar somente `/KioskApi/...`.
+- `http://api:8080` permanece restrito ao Docker/server-side via `ApiSettings:BaseUrl` e variáveis de ambiente do Compose.
 
-- `/AdminApi/...`
-- `/PublicApi/...`
-- `/KioskApi/...`
+## Validações realizadas neste ambiente
 
-`http://api:8080` permanece restrito a Docker/server-side no `docker-compose.yml` e appsettings Docker.
+- `node --check` em scripts JS dos projetos AdminWeb, PublicWeb e KioskWeb.
+- `npm test` no MobileApp.
+- Auditoria de ocorrências de `http://api:8080`, `api:8080`, `localhost:8083/api` e `8083/api`.
 
-## Pendências reais
+## Limitações reais do ambiente
 
-- Reexecutar `dotnet build`, builds por projeto e `docker compose build --no-cache` em ambiente com SDK .NET/Docker instalados.
-- Reexecutar validação HTTP/PowerShell após containers subirem.
-- Fazer validação visual em navegador/DevTools para confirmar ausência de chamadas browser-side a `http://api:8080` e ausência de erros críticos de console.
+- `dotnet` não está instalado no container de execução, impedindo validação local de `dotnet build`.
+- `docker` não está instalado no container de execução, impedindo `docker compose build`, `up`, `ps` e logs.
+- Endpoints HTTP em `localhost:8080-8083` dependem de Docker/.NET indisponíveis neste ambiente.
