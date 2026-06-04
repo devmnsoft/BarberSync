@@ -194,3 +194,30 @@ No ambiente atual não foi possível subir serviços HTTP porque `dotnet` e `doc
 - Validar HTTP 200 real dos endpoints e assets após `docker compose up -d`.
 - Validar visualmente Swagger, Admin, PublicWeb e Kiosk no navegador com Ctrl+F5.
 - Confirmar DevTools sem `ReferenceError`, sem asset principal 404 e sem chamada browser-side para `http://api:8080`.
+
+## Consolidação Demo 10.0 — 2026-06-04
+
+### Diagnóstico encontrado
+- O SDK `dotnet` e o binário `docker` não estão disponíveis neste ambiente de execução, impedindo validação local de build .NET, `docker compose build`, `docker compose up` e endpoints via serviços em execução.
+- A tentativa de instalar o SDK .NET 8 via `https://dot.net/v1/dotnet-install.sh` retornou HTTP 403 neste ambiente.
+- A varredura de browser files não encontrou `http://api:8080`, `api:8080`, `localhost:8083/api` ou `8083/api` em JavaScript, Razor, Views ou MobileApp; as ocorrências restantes seguem restritas a Docker/appsettings server-side e documentação explicativa.
+- O fallback do proxy MVC do Totem e o fallback local do JavaScript do Totem não listavam todos os serviços e profissionais obrigatórios para uma demonstração comercial completa.
+- O MobileApp declarava `main: index.js`, mas o arquivo `index.js` não existia; alguns componentes TypeScript também referenciavam aliases de tema não declarados (`text`, `dark`, `dark3`).
+
+### Correções aplicadas
+- Atualizada a versão-alvo visual/documental para **BarberSync SaaS Platform Demo 10.0** nos manuais e telas principais da demonstração.
+- Ampliados os dados demo obrigatórios do Totem para `Corte Masculino`, `Barba Tradicional`, `Corte + Barba`, `Sobrancelha`, `Hidratação Capilar` e `Manicure`.
+- Ampliados os profissionais demo obrigatórios do Totem para `Rafael Barber`, `Lucas Navalha`, `Bruno Estilo`, `Camila Beauty` e `Amanda Nails`.
+- Corrigida proteção JavaScript do fluxo de avaliação do Totem para evitar falha caso o input de rating não esteja presente.
+- Criado `MobileApp/index.js` com `registerRootComponent(App)` para alinhar o ponto de entrada do Expo ao `package.json`.
+- Adicionados aliases de tema mobile usados pelos componentes existentes e expandido o smoke test para validar o entrypoint Expo.
+
+### Validações executadas neste ambiente
+- `node --check` nos JavaScripts críticos de Admin, PublicWeb e Totem passou sem erro de sintaxe.
+- `npm test` em `MobileApp` passou com o smoke test local.
+- `rg` confirmou ausência dos hosts internos proibidos em arquivos expostos ao browser.
+
+### Pendências de ambiente
+- Rodar `dotnet build` e builds por projeto em ambiente com SDK .NET 8.
+- Rodar `docker compose build --no-cache`, `docker compose up -d`, `docker compose ps` e varredura de logs em ambiente com Docker.
+- Com os containers ativos, validar HTTP 200 dos endpoints AdminApi, PublicApi, KioskApi e API Kiosk listados no checklist.

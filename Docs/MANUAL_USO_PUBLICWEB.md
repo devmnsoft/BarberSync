@@ -1,4 +1,4 @@
-# BarberSync SaaS Platform Demo 9.0
+# BarberSync SaaS Platform Demo 10.0
 
 ## Objetivo comercial
 Transformar a demonstração em uma narrativa SaaS enterprise para barbearias, salões, estética e franquias: problema, solução, canais, operação diária, caixa, estoque, fidelidade, campanhas, Copilot, relatórios, planos, add-ons, integrações, automações e ROI.
@@ -43,4 +43,4 @@ Abra MobileApp no Expo/teste. Mostre Home, Serviços, Agendar, Meus agendamentos
 - Navegador usa proxies locais; não chamar API interna diretamente.
 
 ## Documento
-Este arquivo é a versão 9.0 de `MANUAL_USO_PUBLICWEB.md`.
+Este arquivo é a versão 10.0 de `MANUAL_USO_PUBLICWEB.md`.
