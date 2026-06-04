@@ -1,13 +1,4 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Cash"; }
-<section class="admin-page-header"><h1>Cash</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="CashFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="CashCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de Cash</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="CashRows"></tbody></table></div>
-</div>
-<script src="~/js/admin-api-client.js"></script>
-<script src="~/js/admin-crud.js"></script>
-<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Cash')</script>
-<section class="saas-grid" data-cash-30><article class="saas-card"><h3>Caixa integrado</h3><div class="saas-actions"><button class="btn btn-primary" data-cash-open>Abrir caixa</button><button class="btn btn-light" data-cash-supply>Suprimento</button><button class="btn btn-light" data-cash-withdraw>Sangria</button><button class="btn btn-gold" data-cash-close>Fechar caixa</button></div></article><article class="saas-card wide"><h3>Resumo por forma e divergência demo</h3><div class="saas-list" data-cash-summary></div></article></section>
+@{ ViewData["Title"] = "Caixa"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header"><div><h1 class="page-title">Caixa operacional</h1><p class="page-subtitle">Abertura, fechamento, sangria, suprimento, entradas, saídas, divergência e resumo por forma de pagamento.</p></div><div class="page-actions"><button class="btn btn-primary" data-cash-action="open">Abrir caixa</button><button class="btn btn-light" data-cash-action="close">Fechar caixa</button></div></section>
+<section class="dashboard-grid" id="cashKpis"></section>
+<section class="panel"><div class="panel-header"><h3>Movimentações do caixa</h3><span class="badge badge-info" id="cashStatus">Fechado</span></div><div class="action-grid"><button class="btn btn-light" data-cash-action="sangria">Sangria</button><button class="btn btn-light" data-cash-action="suprimento">Suprimento</button><button class="btn btn-light" data-cash-action="entrada">Entrada</button><button class="btn btn-light" data-cash-action="saida">Saída</button><button class="btn btn-warning" data-cash-action="divergencia">Simular divergência</button></div><div class="table-responsive"><table class="table admin-table"><thead><tr><th>Hora</th><th>Tipo</th><th>Valor</th><th>Forma</th></tr></thead><tbody id="cashRows"></tbody></table></div></section>

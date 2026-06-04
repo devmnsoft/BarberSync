@@ -1,7 +1,7 @@
 (() => {
-  const STORAGE_KEY = 'barbersync.demo.state.v8';
-  const OLD_KEY = 'barbersync.demo.state.v6';
-  const SCHEMA_VERSION = 8;
+  const STORAGE_KEY = 'barbersync.demo.state.v9';
+  const OLD_KEY = 'barbersync.demo.state.v8';
+  const SCHEMA_VERSION = 9;
   const modules = ['tenants','branches','users','leads','clients','professionals','services','appointments','attendances','serviceOrders','serviceOrderItems','products','stockMovements','payments','receipts','campaigns','coupons','reviews','loyalty','copilotSuggestions','dashboardEvents','publicLeads','kioskAttendances','reports','settings'];
   const clone = v => JSON.parse(JSON.stringify(v));
   const today = () => new Date().toISOString().slice(0, 10);

@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Base de Conhecimento";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header saas-page-header">
+  <div><span class="eyebrow">BarberSync SaaS Platform Demo 9.0</span><h1 class="page-title">Base de Conhecimento</h1><p class="page-subtitle">Artigos operacionais para treinar equipe e conduzir demonstrações comerciais.</p></div>
+  <div class="page-actions"><button class="btn btn-light" data-demo-action="reset">Recarregar demo</button><button class="btn btn-primary" data-demo-action="primary">Executar ação guiada</button></div>
+</section>
+<section class="panel"><div class="panel-header"><h3>Treinamento e base de conhecimento</h3><input id="kbSearch" class="form-control" placeholder="Buscar artigo" /></div><div id="kbArticles" class="knowledge-grid"></div></section><section class="panel"><h3>Artigo selecionado</h3><div id="kbDetail" class="article-detail">Escolha um artigo para iniciar o treinamento.</div></section>

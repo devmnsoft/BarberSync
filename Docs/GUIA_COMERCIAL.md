@@ -43,4 +43,4 @@ Abra MobileApp no Expo/teste. Mostre Home, Serviços, Agendar, Meus agendamentos
 - Navegador usa proxies locais; não chamar API interna diretamente.
 
 ## Documento
-Este arquivo é a versão 9.0 de `MANUAL_USO_TOTEM.md`.
+Este arquivo é a versão 9.0 de `GUIA_COMERCIAL.md`.

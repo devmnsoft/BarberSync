@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Onboarding do Cliente";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header saas-page-header">
+  <div><span class="eyebrow">BarberSync SaaS Platform Demo 9.0</span><h1 class="page-title">Onboarding do Cliente</h1><p class="page-subtitle">Implantação assistida com checklist, dados mínimos e publicação de canais.</p></div>
+  <div class="page-actions"><button class="btn btn-light" data-demo-action="reset">Recarregar demo</button><button class="btn btn-primary" data-demo-action="primary">Executar ação guiada</button></div>
+</section>
+<section class="panel onboarding-shell"><div class="panel-header"><h3>Progresso de implantação</h3><strong id="onboardingPercent">0%</strong></div><div class="progress"><span id="onboardingBar" style="width:0%"></span></div><div class="onboarding-layout"><aside id="onboardingChecklist" class="checklist"></aside><form id="onboardingForm" class="admin-form onboarding-form"><h2 id="stepTitle">Dados da empresa</h2><p id="stepTip" class="page-subtitle">Preencha e avance.</p><div id="stepFields" class="form-grid"></div><div class="page-actions"><button type="button" class="btn btn-light" id="saveStep">Salvar etapa</button><button type="button" class="btn btn-primary" id="nextStep">Próximo</button></div></form></div><div id="onboardingDone" class="success-panel" hidden>Ambiente pronto para operar.</div></section>

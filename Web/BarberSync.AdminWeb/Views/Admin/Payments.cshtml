@@ -1,4 +1,3 @@
-@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = Model.Title; }
-<section class="admin-page-header"><h1>@Model.Module</h1><p>@Model.Subtitle</p></section>
-<div class="card"><div class="card-body"><p>Módulo <strong>@Model.Module</strong> ativo em /Admin/@Model.Module.</p></div></div>
+@{ ViewData["Title"] = "Pagamentos"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header"><div><h1 class="page-title">Pagamentos</h1><p class="page-subtitle">Lista de pagamentos por status, forma, origem, comanda, recibo e reembolso mock.</p></div><div class="page-actions"><button class="btn btn-primary" data-payment-action="create">Criar pagamento mock</button><button class="btn btn-light" data-payment-action="reconcile">Conciliar</button></div></section>
+<section class="panel"><div class="panel-header"><h3>Pagamentos demo</h3><span class="badge badge-success">DemoStore</span></div><div class="table-responsive"><table class="table admin-table"><thead><tr><th>Status</th><th>Forma</th><th>Origem</th><th>Comanda</th><th>Recibo</th><th>Valor</th><th>Ações</th></tr></thead><tbody id="paymentsRows"></tbody></table></div></section>
