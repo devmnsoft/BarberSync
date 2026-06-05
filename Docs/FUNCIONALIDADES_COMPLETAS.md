@@ -1,33 +1,30 @@
-# Funcionalidades completas demonstráveis
-
-## Admin
-
-- Dashboard operacional.
-- Clientes 360.
-- Profissionais e performance.
-- Serviços multicanal.
-- Agenda operacional.
-- Comandas/PDV.
-- Estoque e ruptura.
-- Campanhas, cupons e fidelidade.
-- Avaliações/NPS.
-- Copilot e sugestões.
-- Configurações SaaS, unidades, usuários, integrações, assinatura e auditoria.
-
-## PublicWeb
-
-- Landing page comercial.
-- Serviços e profissionais via proxy.
-- Agendamento com protocolo demo.
-
-## Kiosk
-
-- Autoatendimento completo.
-- Pagamento mock.
-- Avaliação final.
-- Fallback demo para não ficar vazio.
+# Funcionalidades Completas — Stable Demo Release 13.0
 
 ## API
 
-- Swagger.
-- Endpoints demo para dashboard, serviços, profissionais e kiosk.
+- Swagger habilitado.
+- Controllers de dashboard, serviços, profissionais, clientes, agenda, fidelidade, reviews, campanhas, cupons e kiosk.
+- Kiosk API demo com serviços, profissionais, status, cliente rápido, pagamento mock e avaliação.
+
+## AdminWeb
+
+- Rotas administrativas principais sem tela vazia.
+- Proxies `/AdminApi` para GETs e mutações demo.
+- DemoStore/localStorage, EventBus, toasts, modais, tabelas e CRUD visual.
+
+## PublicWeb
+
+- Landing SaaS comercial.
+- Serviços/profissionais por proxy.
+- Agendamento com protocolo demo.
+
+## KioskWeb
+
+- Fluxo completo de autoatendimento.
+- SessionStorage para estado do atendimento.
+- Pagamento mock e avaliação.
+
+## Docker
+
+- Compose com API, AdminWeb, PublicWeb, KioskWeb, PostgreSQL e Seq.
+- MVCs acessam API internamente por `ApiSettings:BaseUrl`.

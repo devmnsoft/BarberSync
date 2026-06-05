@@ -1,38 +1,31 @@
-# Checklist demo BarberSync
+# Checklist Demo — BarberSync Stable Demo Release 13.0
 
-## Build e containers
+## Build e infraestrutura
 
-- [ ] `dotnet build`
-- [ ] `dotnet build Backend/Presentation/BarberSync.Api/BarberSync.Api.csproj`
-- [ ] `dotnet build Web/BarberSync.AdminWeb/BarberSync.AdminWeb.csproj`
-- [ ] `dotnet build Web/BarberSync.PublicWeb/BarberSync.PublicWeb.csproj`
-- [ ] `dotnet build Web/BarberSync.KioskWeb/BarberSync.KioskWeb.csproj`
-- [ ] `docker compose build --no-cache`
-- [ ] `docker compose up -d`
-- [ ] `docker compose ps`
+- [ ] `dotnet build` passa sem erros.
+- [ ] Builds individuais da API, AdminWeb, PublicWeb e KioskWeb passam.
+- [ ] `docker compose build --no-cache` passa.
+- [ ] `docker compose up -d` sobe `api`, `admin-web`, `public-web`, `kiosk-web`, `postgres` e `seq`.
+- [ ] `docker compose ps` mostra serviços principais `Up`.
 
 ## URLs principais
 
-- [ ] API Swagger: `http://localhost:8080/swagger`
-- [ ] Admin: `http://localhost:8081/Admin`
-- [ ] PublicWeb: `http://localhost:8082/`
-- [ ] Kiosk: `http://localhost:8083/Kiosk/Services`
+- [ ] Swagger: http://localhost:8080/swagger
+- [ ] Admin: http://localhost:8081/Admin
+- [ ] PublicWeb: http://localhost:8082/
+- [ ] Kiosk: http://localhost:8083/Kiosk/Services
 
-## Proxies
+## Proxies e comunicação segura
 
-- [ ] AdminWeb usa `/AdminApi/...`
-- [ ] PublicWeb usa `/PublicApi/...`
-- [ ] KioskWeb usa `/KioskApi/...`
-- [ ] Browser não chama `http://api:8080`
+- [ ] Browser chama `/AdminApi/...` no AdminWeb.
+- [ ] Browser chama `/PublicApi/...` no PublicWeb.
+- [ ] Browser chama `/KioskApi/...` no KioskWeb.
+- [ ] Browser não chama `http://api:8080`.
+- [ ] `ApiSettings:BaseUrl` é usado somente server-side.
 
-## Static files principais
+## Fluxos demonstráveis
 
-- [ ] Admin CSS/JS/logo retornam 200.
-- [ ] Public CSS/JS/logo retornam 200.
-- [ ] Kiosk CSS/JS/logo retornam 200.
-
-## Fluxos
-
-- [ ] Admin mostra dashboard, cadastros, agenda, comanda, estoque e Copilot.
-- [ ] PublicWeb renderiza serviços/profissionais e agenda com protocolo.
+- [ ] Admin lista dados demo em dashboard, clientes, profissionais, serviços, agenda, comandas e estoque.
+- [ ] CRUDs principais abrem modal, salvam demo e mostram toast.
+- [ ] PublicWeb renderiza serviços/profissionais e envia agendamento com protocolo.
 - [ ] Kiosk conclui serviço → cliente → profissional → confirmação → pagamento mock → sucesso → avaliação.

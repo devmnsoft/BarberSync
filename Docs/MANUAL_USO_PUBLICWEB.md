@@ -1,18 +1,20 @@
-# Manual de uso — PublicWeb
+# Manual de Uso — PublicWeb
 
 ## Acesso
 
-- URL: `http://localhost:8082/`
+- URL local: http://localhost:8082/
+- Browser deve chamar apenas `/PublicApi`.
 
-## Áreas
+## Seções
 
 - Hero comercial.
 - Serviços publicados.
-- Profissionais publicados.
-- Formulário de agendamento.
+- Profissionais.
+- Planos e add-ons.
+- Calculadora ROI.
+- Formulário de agendamento/proposta.
 - CTAs para Admin e Totem.
-- Rodapé e calculadora ROI.
 
-## Agendamento
+## Agendamento demo
 
-O formulário valida nome e telefone pelo HTML, envia para `/PublicApi/appointments`, grava lead local demo e mostra protocolo `PUB-2026-0001+`.
+O formulário valida nome e telefone, envia para `/PublicApi/appointments`, salva histórico em localStorage e mostra protocolo retornado pelo proxy ou protocolo local de fallback.

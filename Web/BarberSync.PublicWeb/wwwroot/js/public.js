@@ -26,9 +26,10 @@
     e.preventDefault(); if (!e.target.checkValidity()) return; const result = document.getElementById('publicAppointmentResult'); const body = Object.fromEntries(new FormData(e.target).entries()); result.textContent = 'Enviando solicitação segura...';
     const saved = safeJson(localStorage.getItem('barbersync.public.leads'), []); const protocol = `PUB-2026-${String(saved.length + 1).padStart(4, '0')}`;
     const saveLocal = (status, response = {}) => { saved.unshift({ id: protocol, protocol, ...body, status, response, createdAt: new Date().toISOString(), channel:'PublicWeb' }); localStorage.setItem('barbersync.public.leads', JSON.stringify(saved)); };
-    try { const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); saveLocal(r.ok?'Solicitado':'Demo local', j); }
+    let responseProtocol = protocol;
+    try { const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); responseProtocol = j?.data?.protocol || j?.protocol || protocol; saveLocal(r.ok?'Solicitado':'Demo local', j); }
     catch { saveLocal('Demo local'); }
-    result.innerHTML = `<strong>Protocolo ${protocol}</strong><br>Solicitação registrada. <a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Abrir Admin</a>`; toast('Solicitação enviada com sucesso.'); e.target.reset();
+    result.innerHTML = `<strong>Protocolo ${responseProtocol}</strong><br>Solicitação registrada. <a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Abrir Admin</a>`; toast('Solicitação enviada com sucesso.'); e.target.reset();
   });
 })();
 

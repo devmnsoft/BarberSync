@@ -60,7 +60,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         try
         {
-            var response = await httpClientFactory.CreateClient().GetAsync(BuildUrl(path));
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl(path));
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
@@ -86,7 +86,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         {
             using var request = new HttpRequestMessage(method, BuildUrl(path));
             if (payload.HasValue) request.Content = new StringContent(payload.Value.GetRawText(), Encoding.UTF8, "application/json");
-            var response = await httpClientFactory.CreateClient().SendAsync(request);
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").SendAsync(request);
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}. Usando fallback demo.", method, path, response.StatusCode);
         }
@@ -102,7 +102,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         try
         {
-            var response = await httpClientFactory.CreateClient().DeleteAsync(BuildUrl(path));
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").DeleteAsync(BuildUrl(path));
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
         }
