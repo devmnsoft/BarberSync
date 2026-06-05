@@ -1,19 +1,15 @@
-# Correções Atuais — BarberSync Quality Gate + Demo Ready 16.0
+# Correções Atuais - BarberSync Quality Gate + Demo Ready 16.0
 
 ## Entregas
 
-- Criado `Scripts/quality-gate.ps1` com build, Docker, endpoints, assets, auditoria de URLs proibidas e logs.
-- Criada tela `/Admin/Diagnostics` com checks visuais, testes JS do DemoStore, reset e exportação mock.
-- Adicionado teste JS `wwwroot/js/tests/demo-store-tests.js` cobrindo DemoStore, EventBus, Dashboard e localStorage.
-- Adicionado botão de validação automática no FullServiceFlow.
-- Adicionado painel `Status da Demonstração` no Dashboard.
-- Adicionados endpoints demo de produtos e comandas na API para reduzir fallback por 404.
-- Adicionados smoke tests .NET para API e proxies MVC.
+- Quality Gate PowerShell com cores, validações de build, Docker, endpoints, assets, auditoria browser e logs.
+- Relatório automático em `Docs/quality-gate-last-run.md`.
+- Diagnóstico Admin com cards para API, proxies, Swagger, assets, DemoStore, EventBus, localStorage, FullServiceFlow, PublicWeb, Kiosk e Docker.
+- Testes JS do DemoStore com tempo de execução e validação do FullServiceFlow.
+- Dashboard com painel de Status da Demonstração e ações rápidas.
+- Testes backend smoke cobrindo serviços, profissionais, kiosk services/professionals e fallbacks dos proxies.
 
-## Auditoria de comunicação
+## Pendências operacionais
 
-A comunicação browser-side continua restrita a proxies MVC e rotas relativas. A URL interna Docker da API permanece apenas em configuração Docker/server-side e documentação operacional.
-
-## Pendências conhecidas
-
-A validação visual completa depende de ambiente com Docker e portas 8080–8083 livres.
+- Executar Quality Gate em ambiente com SDK .NET, Docker e PowerShell disponíveis.
+- Validar visualmente com browsers reais antes de apresentação comercial.
