@@ -16,6 +16,19 @@
     'cashback:generated':['Cashback gerado','Fidelidade','success'], 'review:created':['Avaliação criada','Avaliações','success'],
     'campaign:created':['Campanha criada','Campanhas','success'], 'coupon:created':['Cupom criado','Cupons','success'],
     'copilot:actionExecuted':['Ação Copilot executada','Copilot','success'], 'dashboard:refresh':['Dashboard atualizado','Dashboard','info'],
+    'commercialFlow:started':['Fluxo comercial iniciado','Fluxo Comercial','info'],
+    'commercialFlow:originSelected':['Origem selecionada','Fluxo Comercial','success'],
+    'commercialFlow:clientSelected':['Cliente selecionado','Fluxo Comercial','success'],
+    'commercialFlow:appointmentCreated':['Agendamento criado no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:checkInDone':['Check-in realizado no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:attendanceStarted':['Atendimento iniciado no fluxo comercial','Fluxo Comercial','info'],
+    'commercialFlow:attendanceFinished':['Atendimento finalizado no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:serviceOrderOpened':['Comanda aberta no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:paymentDone':['Pagamento concluído no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:receiptGenerated':['Recibo gerado no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:cashbackGenerated':['Cashback confirmado no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:reviewCreated':['Avaliação criada no fluxo comercial','Fluxo Comercial','success'],
+    'commercialFlow:completed':['Fluxo comercial concluído','Fluxo Comercial','success'],
     'flow:started':['Fluxo completo iniciado','Atendimento Completo','info'],
     'flow:clientCreated':['Cliente criado no fluxo','Atendimento Completo','success'],
     'flow:appointmentCreated':['Agendamento criado no fluxo','Atendimento Completo','success'],
@@ -84,13 +97,13 @@
       window.dispatchEvent(new CustomEvent(`barbersync:${eventName}`, { detail: payload }));
       call(eventName, payload, event); call('*', payload, event);
       notify(event);
-      if (eventName.startsWith('flow:') && window.BarberSyncDemoStore) {
+      if ((eventName.startsWith('flow:') || eventName.startsWith('commercialFlow:')) && window.BarberSyncDemoStore) {
         try {
           const store = window.BarberSyncDemoStore;
           store.add('dashboardEvents', { type:'flow', title:event.title, module:event.module, eventName:event.eventName, at:event.createdAt });
           const settings = store.getSettings ? store.getSettings() : {};
           const notifications = settings.notifications || {};
-          notifications.items = [{ title:event.title, module:event.module, type:event.severity, read:false, route:'/Admin/FullServiceFlow' }, ...(notifications.items || [])].slice(0, 20);
+          notifications.items = [{ title:event.title, module:event.module, type:event.severity, read:false, route:eventName.startsWith('commercialFlow:') ? '/Admin/CommercialFlow' : '/Admin/FullServiceFlow' }, ...(notifications.items || [])].slice(0, 20);
           notifications.unread = (notifications.items || []).filter(x => !x.read).length;
           store.updateSettings?.('notifications', notifications);
           store.add('reports', { name:'Auditoria demo - ' + event.title, status:'Registrado', module:event.module, eventName:event.eventName, at:event.createdAt });

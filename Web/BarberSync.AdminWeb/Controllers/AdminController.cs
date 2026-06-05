@@ -12,6 +12,7 @@ public class AdminController : Controller
     [HttpGet("SaasControlCenter")] public IActionResult SaasControlCenter() => Render("SaasControlCenter");
     [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
     [HttpGet("FullServiceFlow")] public IActionResult FullServiceFlow() => Render("FullServiceFlow");
+    [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => Render("CommercialFlow");
     [HttpGet("DemoCenter")] public IActionResult DemoCenter() => Render("DemoCenter");
     [HttpGet("DemoExperience")] public IActionResult DemoExperience() => Render("DemoExperience");
     [HttpGet("CustomerJourney")] public IActionResult CustomerJourney() => Render("CustomerJourney");

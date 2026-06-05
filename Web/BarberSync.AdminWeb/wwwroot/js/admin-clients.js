@@ -24,3 +24,18 @@
   bus()?.on('*', renderFlowClient360);
   document.addEventListener('DOMContentLoaded', renderFlowClient360);
 })();
+
+(() => {
+  const store=()=>window.BarberSyncDemoStore;
+  const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  function renderCommercialFlowClient360(){
+    const hosts=[document.querySelector('[data-client-commercial-flow]'), document.getElementById('client360CommercialFlow')].filter(Boolean);
+    if(!hosts.length || !store()) return;
+    const s=store(), f=s.exportState().commercialFlow || {}, c=f.clientId?s.find('clients',f.clientId):f.client;
+    const html=f.id?`<article class="enterprise-card wide"><h3>Fluxo comercial executado</h3><p><strong>${c?.name||'Cliente demo'}</strong> veio de ${f.origin||'Admin'} e concluiu ${f.status||'em andamento'}.</p><div class="summary-row"><span>Recibo</span><strong>${f.receipt?.number||'-'}</strong></div><div class="summary-row"><span>Cashback</span><strong>${money(f.cashback?.generated)}</strong></div><div class="summary-row"><span>Avaliação</span><strong>${f.review?.rating||'-'} ⭐</strong></div><div class="timeline-demo"><div>Origem: ${f.origin||'-'}</div><div>Próxima melhor ação: convidar retorno em 30 dias com cupom VIP.</div></div></article>`:'<p>Nenhum fluxo comercial executado ainda.</p>';
+    hosts.forEach(h=>h.innerHTML=html);
+  }
+  window.addEventListener('barbersync:store-changed', renderCommercialFlowClient360);
+  window.BarberSyncEventBus?.on('*', renderCommercialFlowClient360);
+  document.addEventListener('DOMContentLoaded', renderCommercialFlowClient360);
+})();

@@ -14,3 +14,7 @@
 Use `/Admin/FullServiceFlow` como roteiro principal da apresentação. O fluxo permite demonstrar começo, meio e fim: criação/seleção de cliente, agendamento, check-in, atendimento, comanda, pagamento, recibo, baixa de estoque, cashback, avaliação e dashboard atualizado.
 
 Após concluir o fluxo, abra Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação para comprovar que os dados foram persistidos no DemoStore/localStorage e distribuídos pelos eventos `flow:*`.
+
+## Fluxo Comercial Completo 15.0
+
+Use `/Admin/CommercialFlow` como roteiro comercial principal quando a apresentação precisar provar operação ponta a ponta. Demonstre origem Admin/PublicWeb/Totem/Mobile, cliente, agendamento, check-in, atendimento, comanda, pagamento, recibo, baixa de estoque, cashback, avaliação e resultado. Depois abra Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação ao Vivo para mostrar que a jornada deixou rastros reais no DemoStore e no EventBus `commercialFlow:*`.

@@ -15,3 +15,15 @@
   }
   window.addEventListener('barbersync:store-changed',renderFlowOrder); window.BarberSyncEventBus?.on('*',renderFlowOrder); document.addEventListener('DOMContentLoaded',renderFlowOrder);
 })();
+
+(() => {
+  const store=()=>window.BarberSyncDemoStore;
+  const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  function renderCommercialFlowOrder(){
+    const host=document.querySelector('[data-commercial-flow-order]'); if(!host||!store()) return;
+    const s=store(), f=s.exportState().commercialFlow||{}, o=f.orderId?s.find('serviceOrders',f.orderId):f.serviceOrder;
+    if(!o){ host.innerHTML='<p>Nenhuma comanda do Fluxo Comercial 15.0 ainda.</p>'; return; }
+    host.innerHTML=`<div class="enterprise-demo-grid"><article class="enterprise-card"><h3>Kanban</h3><span class="badge badge-info">${o.status}</span><p>Comanda #${o.number} • ${f.origin||'Admin'}</p></article><article class="enterprise-card wide"><h3>Itens e pagamentos</h3>${(o.items||[]).map(i=>`<div class="summary-row"><span>${i.quantity||1}x ${i.name}</span><strong>${money((i.amount||0)*(i.quantity||1))}</strong></div>`).join('')}<hr><div class="summary-row"><strong>Total</strong><strong>${money(o.total)}</strong></div><div class="summary-row"><span>Pagamento</span><strong>${o.paymentMethod||'-'}</strong></div></article><article class="enterprise-card"><h3>Recibo</h3><p>${f.receipt?.number||'Pendente'}</p><button class="btn btn-light" onclick="window.print()">Imprimir</button></article></div>`;
+  }
+  window.addEventListener('barbersync:store-changed',renderCommercialFlowOrder); window.BarberSyncEventBus?.on('*',renderCommercialFlowOrder); document.addEventListener('DOMContentLoaded',renderCommercialFlowOrder);
+})();

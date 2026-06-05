@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Fluxo Comercial Completo 15.0";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="commercial-hero">
+    <div>
+        <span class="commercial-eyebrow">Vertical Slice + Produto Comercial 15.0</span>
+        <h1>Fluxo Comercial Completo</h1>
+        <p>Execute uma demonstração ponta a ponta: origem omnichannel, cliente, agenda, check-in, atendimento, comanda, pagamento, recibo, estoque, cashback, avaliação e resultado operacional.</p>
+    </div>
+    <div class="commercial-hero-actions">
+        <button class="btn btn-light" data-commercial-reset>Recomeçar fluxo</button>
+        <button class="btn btn-secondary" data-commercial-origin-shortcut="Totem">Simular origem Totem</button>
+        <a class="btn btn-gold" href="/Admin/Dashboard">Ver Dashboard</a>
+    </div>
+</section>
+
+<section class="commercial-shell" data-commercial-flow>
+    <aside class="commercial-stepper" data-commercial-stepper aria-label="Etapas do fluxo comercial"></aside>
+
+    <main class="commercial-stage">
+        <article class="commercial-card" data-step-panel="1">
+            <span class="commercial-card-icon">🌐</span><h2>1. Origem do atendimento</h2><p>Selecione o canal que originou a jornada comercial.</p>
+            <div class="origin-grid">
+                <button data-origin="Admin">👤<strong>Admin</strong><small>Fluxo manual da recepção</small></button>
+                <button data-origin="PublicWeb">🛬<strong>PublicWeb</strong><small>Lead público PUB-DEMO</small></button>
+                <button data-origin="Totem">🖥️<strong>Totem</strong><small>Device KIOSK-DEMO-001</small></button>
+                <button data-origin="Mobile">📱<strong>Mobile</strong><small>Cliente recorrente no app</small></button>
+            </div>
+            <div class="commercial-highlight" data-origin-preview>Escolha uma origem para iniciar.</div>
+        </article>
+
+        <article class="commercial-card" data-step-panel="2" hidden>
+            <span class="commercial-card-icon">👥</span><h2>2. Cliente</h2><p>Selecione um cliente existente ou cadastre um cliente rápido.</p>
+            <div class="commercial-two-columns">
+                <label>Cliente existente<select data-client-select></select></label>
+                <form data-client-form class="commercial-form">
+                    <label>Nome<input name="name" value="Marina Cliente Demo" required /></label>
+                    <label>Telefone<input name="phone" value="(11) 97777-1515" required /></label>
+                    <label>WhatsApp<input name="whatsapp" value="(11) 97777-1515" /></label>
+                    <label>E-mail<input name="email" type="email" value="marina.demo@barbersync.com" /></label>
+                    <label class="checkbox-line"><input name="vip" type="checkbox" checked /> Cliente VIP</label>
+                    <label class="full">Observação<textarea name="observation">Preferência por horários no fim da tarde.</textarea></label>
+                    <button class="btn btn-primary" type="submit">Salvar cliente rápido</button>
+                </form>
+            </div>
+        </article>
+
+        <article class="commercial-card" data-step-panel="3" hidden>
+            <span class="commercial-card-icon">📅</span><h2>3. Agendamento</h2><p>Serviços e profissionais são carregados via <strong>/AdminApi</strong> com fallback demo.</p>
+            <form data-appointment-form class="commercial-form appointment-form">
+                <label>Serviço<select name="serviceId" data-service-select required></select></label>
+                <label>Profissional<select name="professionalId" data-professional-select required></select></label>
+                <label>Data<input name="date" type="date" required /></label>
+                <label>Hora<input name="time" type="time" value="15:30" required /></label>
+                <label class="full">Observação<textarea name="notes">Cliente veio pelo fluxo comercial 15.0.</textarea></label>
+                <button class="btn btn-primary" type="submit">Criar agendamento</button>
+            </form>
+        </article>
+
+        <article class="commercial-card" data-step-panel="4" hidden>
+            <span class="commercial-card-icon">✅</span><h2>4. Check-in</h2><div data-checkin-summary class="commercial-highlight"></div><button class="btn btn-primary" data-checkin>Realizar Check-in</button>
+        </article>
+
+        <article class="commercial-card" data-step-panel="5" hidden>
+            <span class="commercial-card-icon">💈</span><h2>5. Atendimento</h2><div class="timer-demo" data-attendance-timer>00:00</div><div data-attendance-summary class="commercial-highlight"></div><div class="commercial-actions"><button class="btn btn-primary" data-attendance-start>Iniciar atendimento</button><button class="btn btn-secondary" data-attendance-finish>Finalizar atendimento</button></div>
+        </article>
+
+        <article class="commercial-card" data-step-panel="6" hidden>
+            <span class="commercial-card-icon">🧾</span><h2>6. Comanda</h2><p>Adicione serviços/produtos, desconto, cupom e cashback usado. A baixa de estoque só ocorre no pagamento.</p>
+            <div class="commercial-actions"><button class="btn btn-primary" data-open-order>Abrir comanda a partir do agendamento</button><button class="btn btn-light" data-add-service>Adicionar serviço</button><button class="btn btn-light" data-add-product>Adicionar produto</button></div>
+            <div class="commercial-two-columns"><label>Desconto<input data-order-discount type="number" min="0" value="10" /></label><label>Cupom<input data-order-coupon value="BEMVINDO15" /></label><label>Cashback usado<input data-order-cashback type="number" min="0" value="5" /></label></div>
+            <div data-order-preview class="commercial-receipt-mini"></div><button class="btn btn-secondary" data-save-order>Salvar comanda e avançar</button>
+        </article>
+
+        <article class="commercial-card" data-step-panel="7" hidden>
+            <span class="commercial-card-icon">💳</span><h2>7. Pagamento</h2>
+            <form data-payment-form class="commercial-form">
+                <label>Forma<select name="method"><option>PIX</option><option>Cartão</option><option>Dinheiro</option><option>Misto</option></select></label>
+                <label>Valor pago<input name="paid" type="number" min="0" step="0.01" /></label>
+                <label>Desconto<input name="discount" type="number" min="0" step="0.01" value="0" /></label>
+                <label>Troco<input name="change" type="number" min="0" step="0.01" readonly /></label>
+                <label class="full">Observação<textarea name="note">Pagamento confirmado em modo demonstração.</textarea></label>
+                <button class="btn btn-primary" type="submit">Registrar pagamento</button>
+            </form>
+        </article>
+
+        <article class="commercial-card" data-step-panel="8" hidden>
+            <span class="commercial-card-icon">🧾</span><h2>8. Recibo</h2><div class="receipt-shell" data-receipt-preview></div><div class="commercial-actions"><button class="btn btn-light" data-print-receipt>Imprimir</button><button class="btn btn-light" data-pdf-mock>Baixar PDF mock</button><button class="btn btn-light" data-share-mock>Compartilhar mock</button><a class="btn btn-light" href="/Admin/ServiceOrders">Ver comanda</a><button class="btn btn-primary" data-continue-cashback>Continuar</button></div>
+        </article>
+
+        <article class="commercial-card" data-step-panel="9" hidden>
+            <span class="commercial-card-icon">💎</span><h2>9. Cashback</h2><div data-cashback-preview class="commercial-highlight"></div><button class="btn btn-primary" data-confirm-cashback>Confirmar cashback</button>
+        </article>
+
+        <article class="commercial-card" data-step-panel="10" hidden>
+            <span class="commercial-card-icon">⭐</span><h2>10. Avaliação</h2>
+            <form data-review-form class="commercial-form">
+                <label>Nota<select name="rating"><option value="5">5 - Excelente</option><option value="4">4 - Muito bom</option><option value="3">3 - Regular</option><option value="2">2 - Ruim</option><option value="1">1 - Crítico</option></select></label>
+                <label>Avaliar profissional<select name="professionalRating"><option value="5">5</option><option value="4">4</option><option value="3">3</option></select></label>
+                <label>Avaliar serviço<select name="serviceRating"><option value="5">5</option><option value="4">4</option><option value="3">3</option></select></label>
+                <label class="full">Comentário<textarea name="comment">Atendimento rápido, comanda clara, cashback gerado e experiência premium.</textarea></label>
+                <button class="btn btn-primary" type="submit">Salvar avaliação</button>
+            </form>
+        </article>
+
+        <article class="commercial-card" data-step-panel="11" hidden>
+            <span class="commercial-card-icon">🏁</span><h2>11. Resultado</h2><div data-result-summary></div><div class="result-grid" data-result-cards></div><div class="commercial-actions wrap"><a class="btn btn-gold" href="/Admin/Dashboard">Ver Dashboard</a><a class="btn btn-light" href="/Admin/Clients">Ver Cliente 360</a><a class="btn btn-light" href="/Admin/Appointments">Ver Agenda</a><a class="btn btn-light" href="/Admin/ServiceOrders">Ver Comanda</a><a class="btn btn-light" href="/Admin/Stock">Ver Estoque</a><a class="btn btn-light" href="/Admin/Reviews">Ver Avaliações</a><button class="btn btn-light" data-commercial-reset>Recomeçar fluxo</button><button class="btn btn-primary" data-export-summary>Exportar resumo demo</button></div>
+        </article>
+
+        <footer class="commercial-nav"><button class="btn btn-light" data-step-back>Voltar</button><span data-step-status>Etapa 1 de 11</span><button class="btn btn-secondary" data-step-next>Avançar</button></footer>
+    </main>
+
+    <aside class="commercial-summary"><h3>Resumo ao vivo</h3><div data-flow-badges></div><div data-flow-summary></div><h4>Eventos gerados</h4><div class="flow-events" data-flow-events></div></aside>
+</section>

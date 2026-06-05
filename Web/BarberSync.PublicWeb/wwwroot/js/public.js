@@ -1,5 +1,5 @@
 (() => {
-  const cfg = (() => { try { return JSON.parse(localStorage.getItem('barbersync.demo.state.v8') || '{}').settings || {}; } catch { return {}; } })();
+  const cfg = (() => { try { return JSON.parse(localStorage.getItem('barbersync.demo.state.v9') || '{}').settings || {}; } catch { return {}; } })();
   const params = new URLSearchParams(location.search);
   const branding = { ...(cfg.branding || {}), publicName: params.get('company') || cfg.branding?.publicName, slogan: params.get('slogan') || cfg.branding?.slogan, primary: params.get('primary') || cfg.branding?.primary, secondary: params.get('secondary') || cfg.branding?.secondary };
   const publicWeb = { ...(cfg.publicWeb || {}), heroTitle: params.get('title') || cfg.publicWeb?.heroTitle, heroSubtitle: params.get('subtitle') || cfg.publicWeb?.heroSubtitle, ctaPrimary: params.get('cta') || cfg.publicWeb?.ctaPrimary };
@@ -29,7 +29,7 @@
     let responseProtocol = protocol;
     try { const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); responseProtocol = j?.data?.protocol || j?.protocol || protocol; saveLocal(r.ok?'Solicitado':'Demo local', j); }
     catch { saveLocal('Demo local'); }
-    result.innerHTML = `<strong>Protocolo ${responseProtocol}</strong><br>Solicitação registrada. <a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Abrir Admin</a>`; toast('Solicitação enviada com sucesso.'); e.target.reset();
+    result.innerHTML = `<strong>Protocolo ${responseProtocol}</strong><br>Solicitação registrada.<div class='hero-actions' style='margin-top:12px'><a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Ver no Admin</a><a class='btn-secondary' href='http://localhost:8081/Admin/CommercialFlow' target='_blank' rel='noopener'>Executar fluxo completo no Admin</a></div>`; toast('Solicitação enviada com sucesso.'); e.target.reset();
   });
 })();
 
