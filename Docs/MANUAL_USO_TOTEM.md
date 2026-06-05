@@ -1,20 +1,20 @@
-# Manual de uso — KioskWeb BarberSync 11.0
+# Manual de uso — Totem/KioskWeb
 
 ## Acesso
 
-URL: `http://localhost:8083/Kiosk/Services`.
-Device demo: `KIOSK-DEMO-001`.
+- URL inicial: `http://localhost:8083/Kiosk/Services`
+- Device demo: `KIOSK-DEMO-001`
 
 ## Fluxo obrigatório
 
 1. Escolher serviço.
-2. Informar telefone e nome do cliente.
+2. Informar cliente.
 3. Escolher profissional.
-4. Conferir resumo.
-5. Simular pagamento mock.
-6. Visualizar sucesso e resumo.
-7. Registrar avaliação.
+4. Confirmar resumo.
+5. Pagar em modo mock.
+6. Ver tela de sucesso.
+7. Enviar avaliação.
 
 ## Resiliência
 
-O Totem consome `/KioskApi/services`, `/KioskApi/professionals`, `/KioskApi/payment/mock` e `/KioskApi/review`. Se a API falhar, o proxy MVC retorna dados demo com status 200 para evitar tela vazia.
+O browser usa `/KioskApi/...`. Se a API retornar 409, 404, 500, vazio ou ficar indisponível, o proxy mantém serviços e profissionais demo para evitar tela vazia.

@@ -39,7 +39,14 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
                 return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
             }
 
-            return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            var json = await response.Content.ReadAsStringAsync();
+            if (!ResponseLooksEmpty(json))
+            {
+                return Content(json, "application/json", Encoding.UTF8);
+            }
+
+            logger.LogWarning("KioskApi proxy GET {Path} retornou payload vazio", path);
+            return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
         }
         catch (Exception ex)
         {
@@ -73,6 +80,29 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         var baseUrl = configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080";
         return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
+    }
+
+    private static bool ResponseLooksEmpty(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return true;
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return ElementLooksEmpty(document.RootElement);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool ElementLooksEmpty(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Array) return element.GetArrayLength() == 0;
+        if (element.ValueKind != JsonValueKind.Object) return false;
+        if (element.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() == 0) return true;
+        if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
+        return false;
     }
 
     private static object[] DemoServices() => new object[]
