@@ -50,7 +50,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "KioskApi proxy GET {Path} lançou exceção", path);
+            logger.LogWarning(ex, "KioskApi proxy GET {Path} lançou exceção. Usando fallback demo.", path);
             return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
         }
     }
@@ -71,7 +71,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "KioskApi proxy POST {Path} lançou exceção", path);
+            logger.LogWarning(ex, "KioskApi proxy POST {Path} lançou exceção. Usando fallback demo.", path);
             return Ok(fallback);
         }
     }
