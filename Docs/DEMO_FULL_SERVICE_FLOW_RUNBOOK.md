@@ -65,3 +65,22 @@ Este roteiro consolida a demonstração navegável do BarberSync com API, AdminW
 - Assets principais de `css`, `js` e `img` retornam 200.
 - Seq recebe logs de API, pagamentos mock, totem e auditoria.
 - FullServiceFlow conclui de Cliente até Avaliação sem `ReferenceError` no console.
+
+## Validação pós-consolidação 2026-06-05
+
+### Proxies e endpoints sem warnings esperados
+- `GET /KioskApi/services?deviceCode=KIOSK-DEMO-001` deve responder com dados da API demo por meio de `GET /api/kiosk/services`.
+- `GET /KioskApi/professionals?serviceId=demo-corte&deviceCode=KIOSK-DEMO-001` deve responder com profissionais demo por meio de `GET /api/kiosk/professionals`.
+- `POST /KioskApi/client/quick-register` deve sincronizar o cadastro rápido com o endpoint demo `POST /api/kiosk/client/quick-register`.
+- `POST /KioskApi/payment/mock` e `POST /KioskApi/review` devem usar os endpoints canônicos `POST /api/kiosk/payment/mock` e `POST /api/kiosk/review`, mantendo o fluxo do Totem sem fallback ruidoso quando a API está online.
+- `GET /AdminApi/kiosk-status` deve usar `GET /api/kiosk/status`, mantendo o Dashboard/Kiosk sem fallback ruidoso quando a API está online.
+
+### PowerShell/cURL sugerido
+```powershell
+Invoke-WebRequest http://localhost:8080/health
+Invoke-WebRequest http://localhost:8080/swagger
+Invoke-WebRequest http://localhost:8080/api/full-service-flow/snapshot
+Invoke-WebRequest http://localhost:8081/AdminApi/full-service-flow/snapshot
+Invoke-WebRequest http://localhost:8082/PublicApi/services
+Invoke-WebRequest 'http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001'
+```
