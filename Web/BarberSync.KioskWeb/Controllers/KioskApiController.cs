@@ -31,7 +31,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         try
         {
-            var client = httpClientFactory.CreateClient();
+            var client = httpClientFactory.CreateClient("BarberSyncApi");
             var response = await client.GetAsync(BuildApiUrl(path));
             if (!response.IsSuccessStatusCode)
             {
@@ -59,7 +59,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     {
         try
         {
-            var client = httpClientFactory.CreateClient();
+            var client = httpClientFactory.CreateClient("BarberSyncApi");
             var response = await client.PostAsync(BuildApiUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
             if (!response.IsSuccessStatusCode)
             {

@@ -1,27 +1,29 @@
-# Arquitetura demo BarberSync
+# Arquitetura Demo — BarberSync Stable Demo Release 13.0
 
 ## Componentes
 
-- API ASP.NET Core em `localhost:8080`.
-- AdminWeb MVC em `localhost:8081`.
-- PublicWeb MVC em `localhost:8082`.
-- KioskWeb MVC em `localhost:8083`.
-- PostgreSQL.
-- Seq.
+- `Backend/Presentation/BarberSync.Api`: API ASP.NET Core com Swagger.
+- `Web/BarberSync.AdminWeb`: Admin MVC com proxy `/AdminApi`.
+- `Web/BarberSync.PublicWeb`: site público MVC com proxy `/PublicApi`.
+- `Web/BarberSync.KioskWeb`: Totem MVC com proxy `/KioskApi`.
+- `MobileApp`: React Native + Expo para canal mobile.
+- `docker-compose.yml`: orquestra API, web apps, PostgreSQL e Seq.
 
 ## Comunicação
 
-O navegador nunca chama a URL interna Docker. As aplicações Web expõem proxies relativos:
+```text
+Browser Admin    -> /AdminApi/*  -> AdminWeb server-side  -> ApiSettings:BaseUrl
+Browser Public   -> /PublicApi/* -> PublicWeb server-side -> ApiSettings:BaseUrl
+Browser Kiosk    -> /KioskApi/*  -> KioskWeb server-side  -> ApiSettings:BaseUrl
+Docker MVC -> http://api:8080
+Local MVC  -> http://localhost:8080
+```
 
-- Admin: `/AdminApi/...`
-- PublicWeb: `/PublicApi/...`
-- KioskWeb: `/KioskApi/...`
-
-`ApiSettings:BaseUrl` e `ApiBaseUrl` são usados apenas server-side pelos controllers/proxies MVC. No Docker, esses valores apontam para o serviço interno da API; em execução local, usam `localhost:8080`.
+`http://api:8080` é endereço interno Docker e não deve aparecer em fetch/browser-side.
 
 ## Estratégia de estabilidade
 
-- Controllers MVC chamam a API via `IHttpClientFactory`.
-- Falhas da API retornam fallback demo com status 200.
-- Static files são servidos antes do roteamento MVC.
-- JavaScript usa rotas relativas, tratamento de erro e estado local demo.
+- Proxies MVC envolvem chamadas em fallback demo.
+- GET usado por tela não deixa payload vazio.
+- Mutação demo responde sucesso controlado.
+- Static files são servidos antes de routing nos MVCs.

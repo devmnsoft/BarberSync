@@ -27,7 +27,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     {
         try
         {
-            var response = await httpClientFactory.CreateClient().GetAsync(BuildUrl(path));
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl(path));
             if (!response.IsSuccessStatusCode) return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
             var json = await response.Content.ReadAsStringAsync();
             if (ResponseLooksEmpty(json)) return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
@@ -39,7 +39,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     {
         try
         {
-            var response = await httpClientFactory.CreateClient().PostAsync(BuildUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").PostAsync(BuildUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
             if (!response.IsSuccessStatusCode) return Ok(fallback);
             return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
         }

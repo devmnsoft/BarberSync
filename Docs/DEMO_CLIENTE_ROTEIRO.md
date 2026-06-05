@@ -1,13 +1,10 @@
-# Roteiro de demonstração para cliente
+# Roteiro de Demonstração ao Cliente — Stable Demo Release 13.0
 
-1. Abrir Swagger e mostrar que a API está ativa.
-2. Abrir Admin em `/Admin` e apresentar visão de operação: KPIs, agenda, comandas e alertas.
-3. Entrar em Clientes, Profissionais e Serviços para demonstrar CRUD visual em modo demo.
-4. Abrir Agenda e executar confirmação, check-in, início, finalização e cancelamento demo.
-5. Abrir Comandas para simular abertura, pagamento e fechamento.
-6. Abrir Estoque para demonstrar entrada, saída e itens críticos.
-7. Abrir Campanhas/Cupons e mostrar recorrência/fidelidade.
-8. Abrir Copilot e pedir sugestão de ação comercial.
-9. Abrir PublicWeb, selecionar intenção de agendamento e gerar protocolo.
-10. Abrir Kiosk e concluir o fluxo completo com pagamento mock e avaliação.
-11. Fechar destacando que o navegador usa apenas proxies relativos e a API Docker fica server-side.
+1. Abrir o Swagger e explicar que a API é o núcleo do SaaS.
+2. Abrir o Admin em `/Admin` e apresentar dashboard, agenda, clientes, profissionais, serviços, comandas e estoque.
+3. Mostrar que telas usam `/AdminApi` e mantêm fallback demo se a API estiver temporariamente indisponível.
+4. Abrir PublicWeb, apresentar hero, serviços, profissionais e formulário de agendamento.
+5. Enviar um agendamento demo e destacar o protocolo gerado.
+6. Abrir o Totem em `/Kiosk/Services` e executar o fluxo completo de autoatendimento.
+7. Finalizar com avaliação e explicar como o ciclo alimenta CRM, fidelidade e relatórios.
+8. Demonstrar módulos comerciais: planos, add-ons, integrações, automações, Copilot e relatórios.
