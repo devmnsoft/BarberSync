@@ -25,6 +25,9 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("financial-summary")] public Task<IActionResult> FinancialSummary() => ProxyGet("/api/financial/summary", DemoFinancialSummary(), "Resumo financeiro carregado em modo demonstração.");
     [HttpGet("reports-summary")] public Task<IActionResult> ReportsSummary() => ProxyGet("/api/reports/summary", DemoReportsSummary(), "Resumo de relatórios carregado em modo demonstração.");
 
+    [HttpGet("api-health")] public Task<IActionResult> ApiHealth() => ProxyGet("/health", new { status = "demo", context = "admin-proxy", isDemo = true }, "Health check carregado em modo demonstração.");
+    [HttpGet("swagger.json")] public Task<IActionResult> SwaggerJson() => ProxySwaggerJson();
+
     [HttpPost("clients")] public Task<IActionResult> CreateClient([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/clients", payload, DemoMutation("Cliente criado em modo demonstração.", payload));
     [HttpPut("clients/{id}")] public Task<IActionResult> UpdateClient(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Put, $"/api/clients/{Uri.EscapeDataString(id)}", payload, DemoMutation("Cliente atualizado em modo demonstração.", payload, id));
     [HttpDelete("clients/{id}")] public Task<IActionResult> DeleteClient(string id) => ProxyDelete($"/api/clients/{Uri.EscapeDataString(id)}", DemoMutation("Cliente removido em modo demonstração.", id));
@@ -78,6 +81,23 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         }
 
         return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
+    }
+
+
+    private async Task<IActionResult> ProxySwaggerJson()
+    {
+        try
+        {
+            var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl("/swagger/v1/swagger.json"));
+            if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            logger.LogWarning("AdminApi Swagger proxy retornou {StatusCode}. Usando contrato OpenAPI demo.", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "AdminApi Swagger proxy lançou exceção. Usando contrato OpenAPI demo.");
+        }
+
+        return Ok(DemoOpenApi());
     }
 
     private async Task<IActionResult> ProxySend(HttpMethod method, string path, JsonElement? payload, object fallback)
@@ -140,6 +160,38 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     }
     private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message, data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
     private static object DemoMutation(string message, string id) => new { success = true, message, data = new { id, isDemo = true } };
+
+
+    private static object DemoOpenApi()
+    {
+        static object Operation(string tag, string summary, string description) => new
+        {
+            tags = new[] { tag },
+            summary,
+            responses = new Dictionary<string, object>
+            {
+                ["200"] = new { description }
+            }
+        };
+
+        return new
+        {
+            openapi = "3.0.1",
+            info = new { title = "BarberSync API Demo", version = "v1", description = "Contrato demo servido via proxy AdminApi para evitar chamadas diretas do browser ao host interno da API." },
+            paths = new Dictionary<string, object>
+            {
+                ["/health"] = new Dictionary<string, object> { ["get"] = Operation("health", "Health check", "OK") },
+                ["/api/dashboard/summary"] = new Dictionary<string, object> { ["get"] = Operation("dashboard", "Resumo executivo", "Dashboard demo") },
+                ["/api/appointments"] = new Dictionary<string, object>
+                {
+                    ["get"] = Operation("appointments", "Agenda", "Lista agenda"),
+                    ["post"] = Operation("appointments", "Criar agendamento demo", "Agendamento criado")
+                },
+                ["/api/full-service-flow"] = new Dictionary<string, object> { ["post"] = Operation("demo", "Executar fluxo vertical completo", "Fluxo completo atualizado") },
+                ["/api/kiosk/payment/mock"] = new Dictionary<string, object> { ["post"] = Operation("kiosk", "Pagamento mock", "Pagamento aprovado") }
+            }
+        };
+    }
 
     private static object DemoDashboard() => new
     {
