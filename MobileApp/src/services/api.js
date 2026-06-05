@@ -5,7 +5,8 @@ const demo = {
     revenueToday: 4280,
     occupancy: 88,
     waiting: 3,
-    currentFlow: 'Cliente → Check-in → Comanda → Pagamento → Cashback'
+    currentFlow: 'Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard',
+    steps: ['Cliente', 'Agendamento', 'Check-in', 'Atendimento', 'Comanda', 'Pagamento', 'Recibo', 'Estoque', 'Cashback', 'Avaliação', 'Dashboard']
   },
   appointments: [
     { id: 'mob-001', serviceName: 'Corte + Barba', professionalName: 'Rafael Barber', time: '18:30', status: 'Confirmado' },
@@ -13,7 +14,12 @@ const demo = {
   ],
   loyalty: [
     { id: 'loy-001', pointsBalance: 1280, cashbackBalance: 38.5, tierLevel: 3 }
-  ]
+  ],
+  coupons: [
+    { code: 'RETORNO20', discount: '20%', status: 'Ativo' },
+    { code: 'BEMVINDO15', discount: '15%', status: 'Ativo' }
+  ],
+  notifications: ['Agendamento confirmado', 'Cashback disponível', 'Check-in no Totem liberado']
 };
 
 function unwrap(payload, fallback) {
@@ -36,9 +42,11 @@ async function httpGet(path, fallback) {
 async function getMobileSummary() {
   const summary = await httpGet('/api/mobile/summary', demo);
   return {
-    operations: summary.operations ?? demo.operations,
+    operations: { ...demo.operations, ...(summary.operations ?? {}) },
     appointments: summary.appointments ?? demo.appointments,
-    loyalty: summary.loyalty ?? demo.loyalty
+    loyalty: summary.loyalty ?? demo.loyalty,
+    coupons: summary.coupons ?? demo.coupons,
+    notifications: summary.notifications ?? demo.notifications
   };
 }
 

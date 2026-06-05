@@ -84,3 +84,15 @@ Invoke-WebRequest http://localhost:8081/AdminApi/full-service-flow/snapshot
 Invoke-WebRequest http://localhost:8082/PublicApi/services
 Invoke-WebRequest 'http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001'
 ```
+
+## Atualização Mobile/Resumo — 2026-06-05
+
+- A API demo em `GET /api/mobile/summary` retorna `operations`, `profile`, `appointments`, `loyalty`, `coupons` e `notifications` para alimentar o MobileApp com o mesmo contexto do FullServiceFlow.
+- O MobileApp apresenta a trilha completa Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard, com CTA de agendamento e telas auxiliares de login, agenda e histórico com feedback visual.
+- Para validação rápida do canal mobile:
+  ```bash
+  npm test --prefix MobileApp
+  node --check MobileApp/src/screens/LoginScreen.js
+  node --check MobileApp/src/screens/ScheduleScreen.js
+  node --check MobileApp/src/screens/HistoryScreen.js
+  ```

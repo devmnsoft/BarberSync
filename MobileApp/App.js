@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { colors } from './src/theme/colors';
 import { radius, spacing } from './src/theme/spacing';
 import { mobileApi } from './src/services/api';
@@ -12,6 +12,7 @@ const Pill = ({ children }) => <Text style={{ backgroundColor: colors.goldSoft, 
 
 export default function App() {
   const [snapshot, setSnapshot] = useState(mobileApi.demo);
+  const [lastAction, setLastAction] = useState('Pronto para agendar.');
 
   useEffect(() => {
     let active = true;
@@ -24,6 +25,11 @@ export default function App() {
 
   const nextAppointment = Array.isArray(snapshot.appointments) ? snapshot.appointments[0] : null;
   const loyalty = Array.isArray(snapshot.loyalty) ? snapshot.loyalty[0] : null;
+  const coupons = Array.isArray(snapshot.coupons) ? snapshot.coupons : [];
+  const notifications = Array.isArray(snapshot.notifications) ? snapshot.notifications : [];
+  const flowSteps = Array.isArray(snapshot.operations?.steps) && snapshot.operations.steps.length
+    ? snapshot.operations.steps
+    : ['Cliente', 'Agendamento', 'Check-in', 'Atendimento', 'Comanda', 'Pagamento', 'Recibo', 'Estoque', 'Cashback', 'Avaliação', 'Dashboard'];
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, paddingTop: 58 }}>
@@ -35,13 +41,14 @@ export default function App() {
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Serviços publicados no Mobile</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Mesma curadoria visual do Admin 10.0, com toggles de canal simulados.</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap' }}><Pill>✂️ Corte R$ 45</Pill><Pill>💈 Combo R$ 78</Pill><Pill>🧴 Hidratação R$ 89</Pill></View></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Agendamentos</Text><Text style={{ marginTop: 10, color: colors.slate }}>{nextAppointment?.time || 'Hoje 18:30'} • {nextAppointment?.serviceName || 'Corte + Barba'} • {nextAppointment?.professionalName || 'Rafael Barber'}</Text><Text style={{ color: colors.muted }}>Status: {nextAppointment?.status || 'confirmado'} • Check-in disponível no Totem.</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Cashback</Text><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ {Number(loyalty?.cashbackBalance ?? 38.5).toFixed(2).replace('.', ',')}</Text><Text style={{ color: colors.muted }}>{loyalty?.pointsBalance ?? 1280} pontos • Disponível para o próximo agendamento.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Promoções publicadas</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Cupom RETORNO20 e BEMVINDO15 com validade e segmentação demo configuráveis no Admin.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Notificações demo</Text><Text style={{ color: colors.muted, marginTop: 8 }}>🔔 Agendamento confirmado • 💸 Cashback disponível • 🎁 Promoção ativa • 🖥️ Check-in no Totem liberado.</Text></Card>
+      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Promoções publicadas</Text><Text style={{ color: colors.muted, marginTop: 8 }}>{coupons.length ? coupons.map((coupon) => `${coupon.code} ${coupon.discount}`).join(' • ') : 'Cupom RETORNO20 e BEMVINDO15'} com validade e segmentação demo configuráveis no Admin.</Text></Card>
+      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Notificações demo</Text><Text style={{ color: colors.muted, marginTop: 8 }}>{notifications.length ? notifications.map((item) => `🔔 ${item}`).join(' • ') : '🔔 Agendamento confirmado • 💸 Cashback disponível • 🎁 Promoção ativa • 🖥️ Check-in no Totem liberado.'}</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Histórico de serviços</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Últimos atendimentos: Corte + Barba, Hidratação e Barboterapia com recibos demo locais.</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Avaliação</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Avalie seu último atendimento com NPS, comentário e estrelas em modo demo.</Text></Card>
       <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Perfil</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Preferência: Corte + Barba • Profissional favorito: Rafael Barber • NPS: promotor.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Dados demo integrados</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Serviços, agendamento, cashback e histórico refletem a API demo quando disponível e usam fallback local quando offline. Fluxo: {snapshot.operations?.currentFlow || 'Cliente → Pagamento → Cashback'}.</Text></Card>
-      <View style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Agendar agora</Text></View>
+      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Dados demo integrados</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Serviços, agendamento, cashback e histórico refletem a API demo quando disponível e usam fallback local quando offline. Fluxo: {snapshot.operations?.currentFlow || flowSteps.join(' → ')}.</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm }}>{flowSteps.map((step) => <Pill key={step}>{step}</Pill>)}</View></Card>
+      <Pressable accessibilityRole='button' onPress={() => setLastAction('Agendamento demo preparado e pronto para sincronizar com PublicWeb, Kiosk e Admin.')} style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Agendar agora</Text></Pressable>
+      <Text style={{ color: colors.muted, textAlign: 'center', marginTop: spacing.md }}>{lastAction}</Text>
     </ScrollView>
   );
 }
