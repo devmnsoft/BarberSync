@@ -15,9 +15,9 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([mobileApi.getOperationsSnapshot(), mobileApi.getAppointments(), mobileApi.getLoyaltyAccounts()])
-      .then(([operations, appointments, loyalty]) => {
-        if (active) setSnapshot({ operations, appointments, loyalty });
+    mobileApi.getMobileSummary()
+      .then((summary) => {
+        if (active) setSnapshot(summary);
       });
     return () => { active = false; };
   }, []);
