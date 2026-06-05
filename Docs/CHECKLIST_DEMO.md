@@ -45,3 +45,17 @@
 - [ ] Salvar avaliação.
 - [ ] Concluir o fluxo e validar Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação.
 - [ ] Confirmar que o browser usa somente proxies relativos (`/AdminApi`, `/PublicApi`, `/KioskApi`).
+
+## Checklist Fluxo Comercial Completo 15.0
+
+- [ ] Acessar `/Admin/CommercialFlow`.
+- [ ] Selecionar origem Admin, PublicWeb, Totem ou Mobile.
+- [ ] Criar cliente rápido ou selecionar cliente existente.
+- [ ] Criar agendamento por `/AdminApi/services` e `/AdminApi/professionals` com fallback.
+- [ ] Realizar check-in, iniciar e finalizar atendimento.
+- [ ] Abrir comanda, adicionar serviço/produto, aplicar desconto, cupom e cashback.
+- [ ] Pagar a comanda e confirmar baixa de estoque.
+- [ ] Gerar recibo visual, PDF mock e compartilhamento mock.
+- [ ] Confirmar cashback e salvar avaliação.
+- [ ] Validar Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação ao Vivo.
+- [ ] Confirmar eventos `commercialFlow:*` em auditoria/notificações/demo center via EventBus.
