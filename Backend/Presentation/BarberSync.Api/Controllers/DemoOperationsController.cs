@@ -99,6 +99,7 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     public IActionResult KioskReview([FromBody] JsonElement payload) => RegisterKiosk("Avaliação registrada no totem.", payload, "ReviewCreated");
 
     [HttpGet("api/demo-operations/kiosk/status")]
+    [HttpGet("api/kiosk/demo-status")]
     public IActionResult KioskStatus() => Ok(Envelope(new { online = true, deviceCode = "KIOSK-DEMO-001", currentStep = "Pronto", attendances = KioskAttendances.Count, paymentsMockEnabled = true, lastHeartbeat = DateTime.UtcNow }, "Totem online."));
 
     [HttpGet("api/audit/events")]

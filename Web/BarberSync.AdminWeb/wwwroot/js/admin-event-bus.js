@@ -40,6 +40,9 @@
     'flow:itemAdded':['Item adicionado no fluxo','Atendimento Completo','info'],
     'flow:paymentDone':['Pagamento realizado no fluxo','Atendimento Completo','success'],
     'flow:receiptGenerated':['Recibo gerado no fluxo','Atendimento Completo','success'],
+    'flow:stockUpdated':['Estoque atualizado no fluxo','Atendimento Completo','success'],
+    'flow:apiSynced':['API sincronizada no fluxo','Atendimento Completo','success'],
+    'flow:apiSyncFallback':['API indisponível no fluxo','Atendimento Completo','warning'],
     'flow:cashbackGenerated':['Cashback gerado no fluxo','Atendimento Completo','success'],
     'flow:reviewCreated':['Avaliação criada no fluxo','Atendimento Completo','success'],
     'flow:completed':['Fluxo completo concluído','Atendimento Completo','success']

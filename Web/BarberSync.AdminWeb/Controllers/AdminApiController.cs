@@ -25,6 +25,11 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("financial-summary")] public Task<IActionResult> FinancialSummary() => ProxyGet("/api/financial/summary", DemoFinancialSummary(), "Resumo financeiro carregado em modo demonstração.");
     [HttpGet("reports-summary")] public Task<IActionResult> ReportsSummary() => ProxyGet("/api/reports/summary", DemoReportsSummary(), "Resumo de relatórios carregado em modo demonstração.");
 
+    [HttpGet("full-service-flow/snapshot")] public Task<IActionResult> FullServiceFlowSnapshot() => ProxyGet("/api/full-service-flow/snapshot", DemoFullServiceSnapshot(), "Fluxo completo carregado em modo demonstração.");
+    [HttpPost("full-service-flow/run")] public Task<IActionResult> RunFullServiceFlow([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/full-service-flow/run", payload, DemoMutation("Fluxo FullServiceFlow executado em modo demonstração.", payload));
+    [HttpGet("full-service-flow/loyalty/accounts")] public Task<IActionResult> FullServiceFlowLoyalty() => ProxyGet("/api/full-service-flow/loyalty/accounts", DemoLoyaltyAccounts(), "Cashback do fluxo carregado em modo demonstração.");
+    [HttpGet("audit-events")] public Task<IActionResult> AuditEvents() => ProxyGet("/api/audit/events", Array.Empty<object>(), "Eventos de auditoria carregados em modo demonstração.");
+
     [HttpGet("api-health")] public Task<IActionResult> ApiHealth() => ProxyGet("/health", new { status = "demo", context = "admin-proxy", isDemo = true }, "Health check carregado em modo demonstração.");
     [HttpGet("swagger.json")] public Task<IActionResult> SwaggerJson() => ProxySwaggerJson();
 
@@ -161,6 +166,20 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message, data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
     private static object DemoMutation(string message, string id) => new { success = true, message, data = new { id, isDemo = true } };
 
+    private static object DemoFullServiceSnapshot() => new
+    {
+        currentFlow = "Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard",
+        revenueToday = 1840m,
+        occupancy = 88,
+        waiting = 3,
+        steps = new[] { "Cliente", "Agendamento", "Check-in", "Atendimento", "Comanda", "Pagamento", "Recibo", "Estoque", "Cashback", "Avaliação", "Dashboard" },
+        lastOrders = DemoServiceOrders().Take(5).ToArray(),
+        cashbackAccounts = DemoLoyaltyAccounts(),
+        reviews = DemoReviews().Take(5).ToArray(),
+        audit = Array.Empty<object>(),
+        isDemo = true
+    };
+
 
     private static object DemoOpenApi()
     {
@@ -187,7 +206,8 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
                     ["get"] = Operation("appointments", "Agenda", "Lista agenda"),
                     ["post"] = Operation("appointments", "Criar agendamento demo", "Agendamento criado")
                 },
-                ["/api/full-service-flow"] = new Dictionary<string, object> { ["post"] = Operation("demo", "Executar fluxo vertical completo", "Fluxo completo atualizado") },
+                ["/api/full-service-flow/snapshot"] = new Dictionary<string, object> { ["get"] = Operation("demo", "Snapshot do fluxo vertical completo", "Fluxo completo carregado") },
+                ["/api/full-service-flow/run"] = new Dictionary<string, object> { ["post"] = Operation("demo", "Executar fluxo vertical completo", "Fluxo completo atualizado") },
                 ["/api/kiosk/payment/mock"] = new Dictionary<string, object> { ["post"] = Operation("kiosk", "Pagamento mock", "Pagamento aprovado") }
             }
         };
@@ -360,6 +380,12 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         recoveryAction=i % 6 == 0 ? "Enviar pedido de desculpas e cupom de retorno." : "Solicitar indicação nas redes sociais.",
         status="Publicado"
     }).Cast<object>().ToArray();
+
+    private static object[] DemoLoyaltyAccounts() => new object[]
+    {
+        new { id = "loy-001", clientId = "cli-001", clientName = "Lucas Almeida", pointsBalance = 1280, cashbackBalance = 38.50m, tierLevel = 3, tier = "Black", status = "Ativo" },
+        new { id = "loy-002", clientId = "cli-002", clientName = "Marina Costa", pointsBalance = 640, cashbackBalance = 18.75m, tierLevel = 2, tier = "Gold", status = "Ativo" }
+    };
 
     private static object DemoLoyalty() => new
     {
