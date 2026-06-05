@@ -26,10 +26,10 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     public Task<IActionResult> QuickRegister([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/client/quick-register", payload, new { success = true, message = "Cadastro rápido realizado em modo demonstração.", data = new { protocol = "DEMO-001", isDemo = true } });
 
     [HttpPost("payment/mock")]
-    public Task<IActionResult> MockPayment([FromBody] JsonElement payload) => ProxyPost("/api/demo-operations/kiosk/payment/mock", payload, new { success = true, message = "Pagamento simulado aprovado.", data = new { status = "APPROVED", isDemo = true } });
+    public Task<IActionResult> MockPayment([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/payment/mock", payload, new { success = true, message = "Pagamento simulado aprovado.", data = new { status = "APPROVED", isDemo = true } });
 
     [HttpPost("review")]
-    public Task<IActionResult> Review([FromBody] JsonElement payload) => ProxyPost("/api/demo-operations/kiosk/review", payload, new { success = true, message = "Avaliação recebida em modo demonstração.", data = new { isDemo = true } });
+    public Task<IActionResult> Review([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/review", payload, new { success = true, message = "Avaliação recebida em modo demonstração.", data = new { isDemo = true } });
 
     private async Task<IActionResult> ProxyGet(string path, object fallbackData, string fallbackMessage)
     {

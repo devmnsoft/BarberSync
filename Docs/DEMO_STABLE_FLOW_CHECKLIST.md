@@ -69,3 +69,8 @@ Validar uma apresentação navegável e funcional do BarberSync com AdminWeb, Pu
 - Docker Compose mantendo a API como serviço interno e proxies relativos no browser.
 - EventBus e DemoStore registrando ações de Admin, PublicWeb e KioskWeb.
 - Eventos esperados no FullServiceFlow: `flow:receiptGenerated`, `flow:stockUpdated`, `flow:cashbackGenerated`, `flow:reviewCreated`, `flow:apiSynced` e `flow:completed`.
+
+## Consolidação 2026-06-05
+- KioskWeb aponta seus pagamentos e avaliações mock para os endpoints canônicos `POST /api/kiosk/payment/mock` e `POST /api/kiosk/review`, mantendo o browser restrito a `/KioskApi/*` e reduzindo warnings de proxy durante a apresentação.
+- MobileApp possui tokens visuais JavaScript em `src/theme/colors.js` e `src/theme/spacing.js`, garantindo que o bundle Expo resolva imports do `App.js` mesmo sem pipeline TypeScript.
+- Smoke test mobile valida presença dos arquivos críticos, imports de tema/API e sintaxe JavaScript com `node --check`.
