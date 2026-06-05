@@ -97,3 +97,10 @@ Validação pós-criação:
 ```bash
 psql -U postgres -d barbersync -f ScriptsSQL/validate_barbersync_database.sql
 ```
+
+
+## Runbook de estabilização da demo
+
+- Checklist demonstrável, regras de proxy e comandos de smoke test em `docs/DEMO_STABILIZATION_RUNBOOK.md`.
+- O browser deve usar `/AdminApi`, `/PublicApi` e `/KioskApi`; `ApiSettings:BaseUrl` fica restrito ao server-side/Docker.
+- AdminWeb expõe `/AdminApi/swagger.json` para validar Swagger por proxy, evitando host interno de API no navegador.

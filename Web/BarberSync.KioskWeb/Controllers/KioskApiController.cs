@@ -15,6 +15,10 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     public Task<IActionResult> Professionals([FromQuery] string? serviceId, [FromQuery] string? deviceCode)
         => ProxyGet($"/api/kiosk/professionals?serviceId={Uri.EscapeDataString(serviceId ?? string.Empty)}&deviceCode={Uri.EscapeDataString(deviceCode ?? "KIOSK-DEMO-001")}", DemoProfessionals(), "Profissionais carregados em modo demonstração.");
 
+    [HttpGet("operations-snapshot")]
+    public Task<IActionResult> OperationsSnapshot()
+        => ProxyGet("/api/futuristic-automation/operations-snapshot", DemoOperationsSnapshot(), "Snapshot operacional carregado em modo demonstração.");
+
     [HttpPost("client/find-by-phone")]
     public Task<IActionResult> FindByPhone([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/client/find-by-phone", payload, new { success = true, message = "Cliente não encontrado em produção. Modo demonstração ativo.", data = new { name = "Cliente Demo", phone = "(11) 99999-9999", isDemo = true } });
 
@@ -104,6 +108,26 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
         return false;
     }
+
+
+    private static object DemoOperationsSnapshot() => new
+    {
+        generatedAtUtc = DateTime.UtcNow,
+        kpis = new Dictionary<string, decimal>
+        {
+            ["occupancy"] = 81.4m,
+            ["nps"] = 89.3m,
+            ["automation_coverage"] = 78.1m,
+            ["prediction_accuracy"] = 92.8m
+        },
+        notifications = new object[]
+        {
+            new { type = "stock-critical", channel = "operations", message = "Estoque crítico de pomada matte. Reposição sugerida em 45 min.", scheduledAtUtc = DateTime.UtcNow.AddMinutes(1), isDemo = true },
+            new { type = "service-delay", channel = "totem", message = "Cliente avisado sobre espera estimada de 8 minutos.", scheduledAtUtc = DateTime.UtcNow.AddMinutes(2), isDemo = true }
+        },
+        professionals = DemoProfessionals(),
+        isDemo = true
+    };
 
     private static object[] DemoServices() => new object[]
     {
