@@ -40,3 +40,54 @@
   bus()?.on('*', render); window.addEventListener('barbersync:store-changed', () => { if($('[data-flow-stage]')) summary(); });
   document.addEventListener('DOMContentLoaded', async () => { if(!$('[data-flow-stage]')) return; state.services=await loadProxy('/AdminApi/services',fallbackServices); state.pros=await loadProxy('/AdminApi/professionals',fallbackPros); const products=store()?.get('products') || []; const map=new Map([...fallbackProducts,...products].map(p=>[p.id,p])); state.products=[...map.values()]; flow(); render(); });
 })();
+
+(() => {
+  const store = () => window.BarberSyncDemoStore;
+  const bus = () => window.BarberSyncEventBus;
+  const toast = (message, type = 'success') => window.AdminToast?.show?.(message, type) || window.BarberSyncToast?.show?.(message, type);
+  const today = () => new Date().toISOString().slice(0, 10);
+  async function syncFlow(flow, order) {
+    try {
+      const response = await fetch('/AdminApi/full-service-flow/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ localFlowId: flow?.id, clientName: order?.client, serviceName: order?.items?.find(item => item.type === 'service')?.name, professionalName: order?.professional, paymentMethod: order?.paymentMethod })
+      });
+      const json = await response.json().catch(() => null);
+      bus()?.emit?.('flow:apiSynced', { title: 'API sincronizada', description: json?.message || `HTTP ${response.status}`, payload: json });
+    } catch (error) {
+      bus()?.emit?.('flow:apiSyncFallback', { title: 'API indisponível', description: error?.message || 'Fluxo mantido localmente.' });
+    }
+  }
+  function runAutoValidation() {
+    const s = store();
+    if (!s) { toast('DemoStore indisponível para validação automática.', 'error'); return; }
+    s.resetFullServiceFlow?.();
+    const client = s.createFlowClient({ name: 'Cliente Demo Quality Gate', phone: '(11) 91600-0001', email: 'quality@barbersync.demo', vip: true });
+    const appointment = s.createFlowAppointment({ clientId: client.id, serviceId: 'srv-003', professionalId: 'pro-001', date: today(), time: '16:00' });
+    s.confirmFlowAppointment(appointment.id);
+    s.checkInFlowAppointment(appointment.id);
+    s.startFlowAttendance(appointment.id);
+    s.finishFlowAttendance(appointment.id);
+    const order = s.openFlowServiceOrder(appointment.id);
+    s.addFlowService(order.id, 'srv-003');
+    s.addFlowProduct(order.id, 'prd-001', 1);
+    const paid = s.payFlowServiceOrder(order.id, { method: 'PIX', amount: 999, discount: 0, note: 'Quality Gate 16.0' });
+    s.generateFlowReceipt(order.id);
+    s.confirmFlowStock?.();
+    s.generateFlowCashback(client.id, order.id);
+    s.createFlowReview(client.id, order.id, 5, 'Fluxo completo validado automaticamente para demonstração.');
+    const completed = s.completeFullServiceFlow();
+    window.refreshDashboardFromStore?.();
+    bus()?.emit?.('flow:autoValidated', { title: 'Fluxo completo validado automaticamente', module: 'Atendimento Completo', flow: completed, order: paid });
+    syncFlow(completed, paid);
+    toast('Fluxo completo validado automaticamente e dashboard atualizado.');
+  }
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-flow-auto-validate]')) {
+      event.preventDefault();
+      runAutoValidation();
+      document.querySelector('[data-flow-stage]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+})();

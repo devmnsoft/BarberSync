@@ -1,0 +1,40 @@
+@{ ViewData["Title"] = "Diagnóstico BarberSync 16.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="diagnostics-hero">
+  <div>
+    <span class="badge">Quality Gate + Demo Ready 16.0</span>
+    <h1>Diagnóstico do Sistema</h1>
+    <p>Valide API, proxies MVC, assets, DemoStore, EventBus, localStorage e últimos eventos antes da apresentação comercial.</p>
+  </div>
+  <div class="diagnostics-actions">
+    <button class="btn btn-gold" type="button" data-run-diagnostics>Rodar diagnóstico</button>
+    <button class="btn btn-light" type="button" data-reset-demo-store>Resetar DemoStore</button>
+    <button class="btn btn-light" type="button" data-export-diagnostics>Exportar diagnóstico mock</button>
+  </div>
+</section>
+
+<section class="diagnostics-grid" data-diagnostics-summary>
+  <article class="diagnostic-card" data-diagnostic-card="api"><span class="diagnostic-dot attention"></span><h2>API</h2><p data-diagnostic-detail="api">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="adminApi"><span class="diagnostic-dot attention"></span><h2>AdminApi</h2><p data-diagnostic-detail="adminApi">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="publicApi"><span class="diagnostic-dot attention"></span><h2>PublicApi</h2><p data-diagnostic-detail="publicApi">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="kioskApi"><span class="diagnostic-dot attention"></span><h2>KioskApi</h2><p data-diagnostic-detail="kioskApi">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="swagger"><span class="diagnostic-dot attention"></span><h2>Swagger</h2><p data-diagnostic-detail="swagger">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="assets"><span class="diagnostic-dot attention"></span><h2>Assets</h2><p data-diagnostic-detail="assets">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="demoStore"><span class="diagnostic-dot attention"></span><h2>DemoStore</h2><p data-diagnostic-detail="demoStore">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="eventBus"><span class="diagnostic-dot attention"></span><h2>EventBus</h2><p data-diagnostic-detail="eventBus">Aguardando validação.</p></article>
+  <article class="diagnostic-card" data-diagnostic-card="localStorage"><span class="diagnostic-dot attention"></span><h2>localStorage</h2><p data-diagnostic-detail="localStorage">Aguardando validação.</p></article>
+</section>
+
+<section class="diagnostics-columns">
+  <article class="diagnostics-panel">
+    <div class="saas7-toolbar"><h2>Testes DemoStore no navegador</h2><button class="btn btn-light" type="button" data-run-demo-store-tests>Executar testes JS</button></div>
+    <div data-demo-store-tests class="diagnostic-test-list"></div>
+  </article>
+  <article class="diagnostics-panel">
+    <h2>Últimos erros registrados</h2>
+    <div data-diagnostics-errors class="diagnostic-log empty">Nenhum erro crítico registrado nesta sessão.</div>
+  </article>
+  <article class="diagnostics-panel">
+    <h2>Últimos eventos</h2>
+    <div data-diagnostics-events class="diagnostic-log empty">Nenhum evento carregado ainda.</div>
+  </article>
+</section>

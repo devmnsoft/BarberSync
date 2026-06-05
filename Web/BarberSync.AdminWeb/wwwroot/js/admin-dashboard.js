@@ -23,3 +23,45 @@
   }
   bus()?.on('*', renderOmnichannel); document.addEventListener('DOMContentLoaded', renderOmnichannel);
 })();
+
+(() => {
+  const statusItems = [
+    ['API OK', '/AdminApi/api-health'],
+    ['AdminApi OK', '/AdminApi/dashboard'],
+    ['PublicApi OK', '/AdminApi/services'],
+    ['KioskApi OK', '/AdminApi/kiosk-status'],
+    ['FullServiceFlow OK', null],
+    ['DemoStore OK', null],
+    ['EventBus OK', null],
+    ['Assets OK', '/css/admin-design-system.css'],
+    ['Docker OK', null]
+  ];
+  const localStatus = (label) => {
+    if (label === 'FullServiceFlow OK') return window.BarberSyncDemoStore?.getFullServiceFlow ? 'OK' : 'Atenção';
+    if (label === 'DemoStore OK') return window.BarberSyncDemoStore ? 'OK' : 'Falha';
+    if (label === 'EventBus OK') return window.BarberSyncEventBus ? 'OK' : 'Falha';
+    if (label === 'Docker OK') return 'Validar via script';
+    return 'Atenção';
+  };
+  async function loadDemoStatus() {
+    const root = document.querySelector('[data-demo-status-items]');
+    if (!root) return;
+    const cards = [];
+    for (const [label, url] of statusItems) {
+      let status = localStatus(label);
+      if (url) {
+        try {
+          const response = await fetch(url, { headers: { Accept: 'application/json,text/css,*/*' } });
+          status = response.ok ? 'OK' : `HTTP ${response.status}`;
+        } catch (error) {
+          status = error?.message || 'Falha';
+        }
+      }
+      const ok = status === 'OK' || status === 'Validar via script';
+      cards.push(`<article class="kpi-card"><p class="kpi-label">${label}</p><strong class="kpi-value">${status}</strong><span>${ok ? 'Pronto para demo' : 'Revisar no Diagnóstico'}</span></article>`);
+    }
+    root.innerHTML = cards.join('');
+  }
+  document.addEventListener('DOMContentLoaded', loadDemoStatus);
+  window.addEventListener('barbersync:store-changed', loadDemoStatus);
+})();

@@ -51,6 +51,7 @@ public class AdminController : Controller
     [HttpGet("Automations")] public IActionResult Automations() => Render("Automations");
     [HttpGet("Integrations")] public IActionResult Integrations() => Render("Integrations");
     [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
+    [HttpGet("Diagnostics")] public IActionResult Diagnostics() => Render("Diagnostics");
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
