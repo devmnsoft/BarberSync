@@ -7,7 +7,7 @@ namespace BarberSync.Api.Controllers;
 [Route("api")]
 public class CommercialOpsController : ControllerBase
 {
-    [HttpGet("service-orders")]
+    [HttpGet("commercial-ops/service-orders")]
     public IActionResult GetServiceOrders()
         => Ok(new[]
         {
@@ -15,7 +15,7 @@ public class CommercialOpsController : ControllerBase
             new { id = Guid.NewGuid(), number = "CMD-2026-002", client = "Carlos Lima", professional = "Rafael", items = 2, total = 95.00m, status = "Paid" }
         });
 
-    [HttpGet("products")]
+    [HttpGet("commercial-ops/products")]
     public IActionResult GetProducts()
         => Ok(new[]
         {
@@ -23,7 +23,7 @@ public class CommercialOpsController : ControllerBase
             new { id = Guid.NewGuid(), name = "Shampoo Anticaspa", category = "Higiene", stock = 24, minStock = 8, salePrice = 39.90m, status = "Active" }
         });
 
-    [HttpGet("stock/critical")]
+    [HttpGet("commercial-ops/stock/critical")]
     public IActionResult GetCriticalStock()
         => Ok(new[]
         {
@@ -31,15 +31,15 @@ public class CommercialOpsController : ControllerBase
             new { id = Guid.NewGuid(), product = "Navalha Profissional", current = 4, minimum = 12, gap = 8 }
         });
 
-    [HttpPost("leads")]
+    [HttpPost("commercial-ops/leads")]
     public IActionResult CreateLead([FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Lead recebido com sucesso.", data = new { id = Guid.NewGuid(), protocol = $"LEAD-{DateTime.UtcNow:yyyyMMddHHmmss}", payload } });
 
-    [HttpGet("loyalty/summary")]
+    [HttpGet("commercial-ops/loyalty/summary")]
     public IActionResult LoyaltySummary()
         => Ok(new { success = true, data = new { cashbackBalance = 1240.50m, pointsIssued = 42800, activeMembers = 318, redemptionRate = 27, tier = "Gold Demo" } });
 
-    [HttpGet("copilot/suggestions")]
+    [HttpGet("commercial-ops/copilot/suggestions")]
     public IActionResult CopilotSuggestions()
         => Ok(new[]
         {
@@ -56,11 +56,11 @@ public class CommercialOpsController : ControllerBase
     public IActionResult ReportsSummary()
         => Ok(new { generatedToday = 7, exports = 3, scheduled = 5, lastReport = "DRE Gerencial Demo", status = "Atualizado" });
 
-    [HttpGet("kiosk/status")]
+    [HttpGet("commercial-ops/kiosk/status")]
     public IActionResult KioskStatus()
         => Ok(new { online = true, deviceCode = "KIOSK-DEMO-001", status = "Operando", currentStep = "Aguardando cliente", attendancesToday = 12, lastSync = DateTime.UtcNow });
 
-    [HttpGet("kiosk/services")]
+    [HttpGet("commercial-ops/kiosk/services")]
     public IActionResult KioskServices([FromQuery] string? deviceCode)
         => Ok(new { success = true, data = new[]
         {
@@ -70,7 +70,7 @@ public class CommercialOpsController : ControllerBase
             new { id = "demo-manicure", name = "Manicure", category = "Beleza", description = "Cuidado completo para unhas.", price = 40.00m, durationMinutes = 50, icon = "💅", isAvailable = true }
         }, deviceCode = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode });
 
-    [HttpGet("kiosk/professionals")]
+    [HttpGet("commercial-ops/kiosk/professionals")]
     public IActionResult KioskProfessionals([FromQuery] string? serviceId, [FromQuery] string? deviceCode)
         => Ok(new { success = true, data = new[]
         {
@@ -79,42 +79,42 @@ public class CommercialOpsController : ControllerBase
             new { id = "pro-camila", name = "Camila Beauty", specialty = "Visagismo e estética", rating = 4.9m, estimatedWaitMinutes = 20 }
         }, serviceId, deviceCode = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode });
 
-    [HttpPost("kiosk/client/find-by-phone")]
+    [HttpPost("commercial-ops/kiosk/client/find-by-phone")]
     public IActionResult KioskFindClient([FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Cliente identificado.", data = new { id = "cli-demo", name = "Cliente Demo", phone = payload.TryGetProperty("phone", out var phone) ? phone.GetString() : "(11) 99999-9999" } });
 
-    [HttpPost("kiosk/client/quick-register")]
+    [HttpPost("commercial-ops/kiosk/client/quick-register")]
     public IActionResult KioskQuickRegister([FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Cadastro rápido realizado.", data = new { id = Guid.NewGuid(), protocol = $"KSK-{DateTime.UtcNow:HHmmss}", payload } });
 
-    [HttpPost("kiosk/payment/mock")]
+    [HttpPost("commercial-ops/kiosk/payment/mock")]
     public IActionResult KioskMockPayment([FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Pagamento simulado aprovado.", data = new { status = "APPROVED", authorizationCode = $"PIX-{DateTime.UtcNow:HHmmss}", payload } });
 
-    [HttpPost("kiosk/review")]
+    [HttpPost("commercial-ops/kiosk/review")]
     public IActionResult KioskReview([FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Avaliação recebida.", data = new { id = Guid.NewGuid(), payload } });
 
-    [HttpPost("appointments/{id}/confirm")]
+    [HttpPost("commercial-ops/appointments/{id}/confirm")]
     public IActionResult ConfirmAppointment(string id) => AppointmentAction(id, "Confirmado");
 
-    [HttpPost("appointments/{id}/check-in")]
+    [HttpPost("commercial-ops/appointments/{id}/check-in")]
     public IActionResult CheckInAppointment(string id) => AppointmentAction(id, "Check-in");
 
-    [HttpPost("appointments/{id}/start")]
+    [HttpPost("commercial-ops/appointments/{id}/start")]
     public IActionResult StartAppointment(string id) => AppointmentAction(id, "Em atendimento");
 
-    [HttpPost("appointments/{id}/finish")]
+    [HttpPost("commercial-ops/appointments/{id}/finish")]
     public IActionResult FinishAppointment(string id) => AppointmentAction(id, "Atendimento finalizado");
 
-    [HttpPost("appointments/{id}/cancel")]
+    [HttpPost("commercial-ops/appointments/{id}/cancel")]
     public IActionResult CancelAppointment(string id) => AppointmentAction(id, "Cancelado");
 
-    [HttpPost("service-orders/{id}/pay")]
+    [HttpPost("commercial-ops/service-orders/{id}/pay")]
     public IActionResult PayServiceOrder(string id, [FromBody] JsonElement payload)
         => Ok(new { success = true, message = "Pagamento aprovado, estoque baixado e cashback gerado.", data = new { id, status = "Paid", receiptNumber = $"REC-{DateTime.UtcNow:yyyyMMddHHmmss}", payload } });
 
-    [HttpPost("service-orders/{id}/close")]
+    [HttpPost("commercial-ops/service-orders/{id}/close")]
     public IActionResult CloseServiceOrder(string id)
         => Ok(new { success = true, message = "Comanda fechada com recibo visual.", data = new { id, status = "Closed", closedAt = DateTime.UtcNow } });
 

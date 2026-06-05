@@ -1,8 +1,11 @@
 using BarberSync.Api.Middleware;
 using BarberSync.Api.Swagger;
 using BarberSync.Api.Services.Configuration;
+using BarberSync.Api.Validators;
+using BarberSync.Application.DTOs;
 using BarberSync.Application;
 using BarberSync.Infrastructure;
+using FluentValidation;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +20,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IValidator<LoginRequestDto>, LoginRequestValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
