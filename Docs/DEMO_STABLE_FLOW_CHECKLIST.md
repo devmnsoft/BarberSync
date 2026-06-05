@@ -74,3 +74,9 @@ Validar uma apresentação navegável e funcional do BarberSync com AdminWeb, Pu
 - KioskWeb aponta seus pagamentos e avaliações mock para os endpoints canônicos `POST /api/kiosk/payment/mock` e `POST /api/kiosk/review`, mantendo o browser restrito a `/KioskApi/*` e reduzindo warnings de proxy durante a apresentação.
 - MobileApp possui tokens visuais JavaScript em `src/theme/colors.js` e `src/theme/spacing.js`, garantindo que o bundle Expo resolva imports do `App.js` mesmo sem pipeline TypeScript.
 - Smoke test mobile valida presença dos arquivos críticos, imports de tema/API e sintaxe JavaScript com `node --check`.
+
+## Ajustes enterprise adicionais — 2026-06-05
+- MobileApp agora expõe ações demonstráveis nas telas críticas `LoginScreen`, `ScheduleScreen` e `HistoryScreen`, evitando telas vazias e botões sem efeito durante a apresentação.
+- `MobileApp/App.js` mostra o fluxo vertical completo com 11 etapas, cupom/notificações vindos de `/api/mobile/summary` e CTA com feedback visual.
+- `/api/mobile/summary` inclui perfil, cupons, notificações e snapshot do FullServiceFlow para manter Mobile, Admin, PublicWeb e KioskWeb coerentes durante a demo.
+- Validação local possível neste ambiente sem SDK .NET/Docker: smoke test mobile, `node --check` nas telas JS críticas e verificação estática de ausência de `http://api:8080` em código executado no browser.

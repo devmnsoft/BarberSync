@@ -119,13 +119,16 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     public IActionResult MobileSummary() => Ok(Envelope(new
     {
         operations = FullServiceSnapshotObject(),
+        profile = new { id = "mob-cli-001", name = "Cliente Demo", tier = "Gold", preferredProfessional = "Rafael Barber", favoriteService = "Corte + Barba" },
         appointments = new[]
         {
             new { id = "mob-001", serviceName = "Corte + Barba", professionalName = "Rafael Barber", time = "18:30", status = "Confirmado" },
             new { id = "mob-002", serviceName = "Hidratação Capilar", professionalName = "Camila Beauty", time = "Amanhã 10:00", status = "Disponível" }
         },
-        loyalty = CashbackAccounts.Take(1)
-    }, "Resumo mobile sincronizado."));
+        loyalty = CashbackAccounts.Take(1),
+        coupons = new[] { new { code = "RETORNO20", discount = "20%", status = "Ativo" }, new { code = "BEMVINDO15", discount = "15%", status = "Ativo" } },
+        notifications = new[] { "Agendamento confirmado", "Cashback disponível", "Check-in no Totem liberado", "Avaliação NPS pendente" }
+    }, "Resumo mobile sincronizado com FullServiceFlow."));
 
     [HttpGet("api/full-service-flow/snapshot")]
     public IActionResult FullServiceFlowSnapshot() => Ok(Envelope(FullServiceSnapshotObject(), "Fluxo completo sincronizado."));
