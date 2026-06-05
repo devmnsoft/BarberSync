@@ -3,6 +3,12 @@
 
   const normalize = (url) => {
     if (!url) return '/AdminApi/dashboard';
+    if (/^https?:\/\//i.test(url)) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.pathname.startsWith('/api/')) return `/AdminApi/${parsed.pathname.substring(5)}${parsed.search}`;
+      } catch { return '/AdminApi/dashboard'; }
+    }
     if (url.startsWith('/AdminApi') || url.startsWith('/PublicApi') || url.startsWith('/KioskApi')) return url;
     if (url.startsWith('/api/')) return `/AdminApi/${url.substring(5)}`;
     return url;

@@ -1,20 +1,18 @@
-# Manual de uso — PublicWeb BarberSync 11.0
+# Manual de uso — PublicWeb
 
 ## Acesso
 
-URL: `http://localhost:8082/`.
+- URL: `http://localhost:8082/`
 
-## Componentes
+## Áreas
 
 - Hero comercial.
-- Problemas e solução.
-- Módulos e canais.
-- Serviços publicados via `/PublicApi/services`.
-- Profissionais via `/PublicApi/professionals`.
-- Calculadora de ROI.
-- Formulário de agendamento/proposta.
+- Serviços publicados.
+- Profissionais publicados.
+- Formulário de agendamento.
 - CTAs para Admin e Totem.
+- Rodapé e calculadora ROI.
 
-## Agendamento demo
+## Agendamento
 
-O formulário valida nome e telefone, envia para `/PublicApi/appointments`, salva protocolo em localStorage e exibe feedback visual ao usuário.
+O formulário valida nome e telefone pelo HTML, envia para `/PublicApi/appointments`, grava lead local demo e mostra protocolo `PUB-2026-0001+`.

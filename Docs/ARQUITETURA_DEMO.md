@@ -1,25 +1,27 @@
-# Arquitetura de demonstração — BarberSync Demo 10.0
+# Arquitetura demo BarberSync
 
 ## Componentes
 
-- API ASP.NET Core em `http://localhost:8080`.
-- AdminWeb ASP.NET Core MVC em `http://localhost:8081/Admin`.
-- PublicWeb ASP.NET Core MVC em `http://localhost:8082/`.
-- KioskWeb ASP.NET Core MVC em `http://localhost:8083/Kiosk/Services`.
-- MobileApp React Native + Expo.
-- PostgreSQL 16.
+- API ASP.NET Core em `localhost:8080`.
+- AdminWeb MVC em `localhost:8081`.
+- PublicWeb MVC em `localhost:8082`.
+- KioskWeb MVC em `localhost:8083`.
+- PostgreSQL.
 - Seq.
 
 ## Comunicação
 
-- AdminWeb browser → `/AdminApi/...` → AdminApiController → API server-side.
-- PublicWeb browser → `/PublicApi/...` → PublicApiController → API server-side.
-- KioskWeb browser → `/KioskApi/...` → KioskApiController → API server-side.
+O navegador nunca chama a URL interna Docker. As aplicações Web expõem proxies relativos:
 
-## Regra de rede
+- Admin: `/AdminApi/...`
+- PublicWeb: `/PublicApi/...`
+- KioskWeb: `/KioskApi/...`
 
-`http://api:8080` é exclusivo de Docker/server-side. O navegador nunca deve chamar esse host.
+`ApiSettings:BaseUrl` e `ApiBaseUrl` são usados apenas server-side pelos controllers/proxies MVC. No Docker, esses valores apontam para o serviço interno da API; em execução local, usam `localhost:8080`.
 
-## Resiliência demo
+## Estratégia de estabilidade
 
-Os proxies MVC retornam fallback 200 quando a API falha ou retorna payload vazio, evitando telas vazias durante apresentação comercial.
+- Controllers MVC chamam a API via `IHttpClientFactory`.
+- Falhas da API retornam fallback demo com status 200.
+- Static files são servidos antes do roteamento MVC.
+- JavaScript usa rotas relativas, tratamento de erro e estado local demo.

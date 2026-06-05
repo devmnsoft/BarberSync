@@ -15,6 +15,7 @@
   setText('[data-public-company]', branding.publicName);
   setText('[data-public-slogan]', branding.slogan);
   const toast = (message) => { const el = document.getElementById('publicToast'); if (!el) return; el.textContent = message; el.hidden = false; setTimeout(() => el.hidden = true, 4200); };
+  const safeJson = (value, fallback) => { try { return JSON.parse(value || ''); } catch { return fallback; } };
   const render=(id,arr,fn)=>{const e=document.getElementById(id); if(e) { e.classList.remove('skeleton-grid'); e.innerHTML=(Array.isArray(arr)?arr:[]).map(fn).join(''); }};
   const load = async (url, fallback) => { try { const r = await fetch(url); if (!r.ok) return fallback; const j = await r.json(); const data = j.data || j.items || j; return Array.isArray(data) && data.length ? data : fallback; } catch { return fallback; } };
   Promise.all([load('/PublicApi/services', fallbackServices), load('/PublicApi/professionals', fallbackPros)]).then(([services, pros]) => {
@@ -23,7 +24,7 @@
   });
   document.getElementById('publicAppointment')?.addEventListener('submit', async (e) => {
     e.preventDefault(); if (!e.target.checkValidity()) return; const result = document.getElementById('publicAppointmentResult'); const body = Object.fromEntries(new FormData(e.target).entries()); result.textContent = 'Enviando solicitação segura...';
-    const saved = JSON.parse(localStorage.getItem('barbersync.public.leads') || '[]'); const protocol = `PUB-2026-${String(saved.length + 1).padStart(4, '0')}`;
+    const saved = safeJson(localStorage.getItem('barbersync.public.leads'), []); const protocol = `PUB-2026-${String(saved.length + 1).padStart(4, '0')}`;
     const saveLocal = (status, response = {}) => { saved.unshift({ id: protocol, protocol, ...body, status, response, createdAt: new Date().toISOString(), channel:'PublicWeb' }); localStorage.setItem('barbersync.public.leads', JSON.stringify(saved)); };
     try { const r = await fetch('/PublicApi/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); saveLocal(r.ok?'Solicitado':'Demo local', j); }
     catch { saveLocal('Demo local'); }
