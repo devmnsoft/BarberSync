@@ -37,6 +37,7 @@ Consolidar a demonstração enterprise do BarberSync como um fluxo vertical nave
 - Subir `docker compose up --build` em ambiente com Docker e .NET SDK disponíveis.
 - Abrir Seq em `http://localhost:5341` e confirmar logs sem exceções críticas.
 - Abrir Swagger em `http://localhost:8080/swagger` e confirmar carregamento do JSON.
+- Validar o contrato proxy do Admin em `http://localhost:8081/AdminApi/swagger.json` quando a API estiver atrás do Docker.
 - Abrir Admin em `http://localhost:8081/Admin/Dashboard`.
 - Abrir PublicWeb em `http://localhost:8082`.
 - Abrir Totem em `http://localhost:8083/Kiosk/Services`.
@@ -45,7 +46,7 @@ Consolidar a demonstração enterprise do BarberSync como um fluxo vertical nave
 
 - No PublicWeb, enviar um agendamento demo e copiar o protocolo.
 - No Admin, abrir **Lead to Cash** e demonstrar o lead criado/persistido localmente.
-- No Admin, abrir **Atendimento Completo** e executar todos os passos do FullServiceFlow.
+- No Admin, abrir **Atendimento Completo** e executar todos os passos do FullServiceFlow até a etapa **Dashboard**; ao concluir, o Admin chama `/AdminApi/full-service-flow/run` e sincroniza o backend demo sem expor `http://api:8080` ao browser.
 - No Totem, selecionar serviço, informar cliente, escolher profissional, confirmar, pagar e avaliar.
 - No Admin, abrir Dashboard, Clientes, Comandas, Estoque, Fidelidade e Avaliações para demonstrar atualização visual.
 - No MobileApp, mostrar resumo, próximo agendamento, cashback e histórico em fallback/integração demo.
@@ -61,6 +62,9 @@ $urls = @(
   'http://localhost:8080/swagger/v1/swagger.json',
   'http://localhost:8081/Admin/Dashboard',
   'http://localhost:8081/AdminApi/dashboard',
+  'http://localhost:8081/AdminApi/full-service-flow/snapshot',
+  'http://localhost:8081/AdminApi/full-service-flow/loyalty/accounts',
+  'http://localhost:8081/AdminApi/audit-events',
   'http://localhost:8082/',
   'http://localhost:8082/PublicApi/services',
   'http://localhost:8083/Kiosk/Services',
@@ -85,6 +89,8 @@ foreach ($url in $urls) {
 
 - Browser chama somente proxies locais (`/AdminApi`, `/PublicApi`, `/KioskApi`).
 - `http://api:8080` fica restrito a comunicação server-side dentro do Docker Compose.
+- FullServiceFlow possui 11 etapas explícitas: Cliente, Agendamento, Check-in, Atendimento, Comanda, Pagamento, Recibo, Estoque, Cashback, Avaliação e Dashboard.
+- A etapa Estoque registra `flow:stockUpdated`; a conclusão dispara `flow:apiSynced` quando `/AdminApi/full-service-flow/run` responde com sucesso.
 - Proxies retornam fallback demo com HTTP 200 quando a API está indisponível ou retorna payload vazio.
 - Rotas duplicadas da API devem ser evitadas para não gerar `AmbiguousMatchException` ou HTTP 500.
 - Serviços usados por controllers devem estar registrados em DI.

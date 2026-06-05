@@ -26,7 +26,7 @@ Validar uma apresentação navegável e funcional do BarberSync com AdminWeb, Pu
 ## Checklist de demo por canal
 ### AdminWeb
 - Abrir `/Admin/Dashboard` e confirmar KPIs preenchidos.
-- Abrir `/Admin/FullServiceFlow` e executar todas as etapas até Dashboard.
+- Abrir `/Admin/FullServiceFlow` e executar todas as 11 etapas até Dashboard, confirmando a baixa de estoque antes do cashback.
 - Abrir `/Admin/Clients`, `/Admin/Appointments`, `/Admin/ServiceOrders`, `/Admin/Stock`, `/Admin/Loyalty` e `/Admin/Reviews` para confirmar reflexo do DemoStore.
 - Abrir `/Admin/DemoExperience` para visualizar histórico do EventBus.
 
@@ -55,6 +55,9 @@ Validar uma apresentação navegável e funcional do BarberSync com AdminWeb, Pu
 - `GET /api/mobile/summary`
 - `GET /api/loyalty/accounts`
 - `GET /AdminApi/dashboard`
+- `GET /AdminApi/full-service-flow/snapshot`
+- `POST /AdminApi/full-service-flow/run`
+- `GET /AdminApi/audit-events`
 - `GET /PublicApi/services`
 - `GET /KioskApi/services?deviceCode=KIOSK-DEMO-001`
 
@@ -65,3 +68,4 @@ Validar uma apresentação navegável e funcional do BarberSync com AdminWeb, Pu
 - Assets CSS, JS e SVG carregando por `~/`/static files.
 - Docker Compose mantendo a API como serviço interno e proxies relativos no browser.
 - EventBus e DemoStore registrando ações de Admin, PublicWeb e KioskWeb.
+- Eventos esperados no FullServiceFlow: `flow:receiptGenerated`, `flow:stockUpdated`, `flow:cashbackGenerated`, `flow:reviewCreated`, `flow:apiSynced` e `flow:completed`.
