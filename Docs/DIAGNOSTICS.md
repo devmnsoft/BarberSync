@@ -1,28 +1,26 @@
-# Diagnóstico BarberSync
+# Diagnóstico BarberSync 16.0
 
-A tela `/Admin/Diagnostics` valida a prontidão demo do AdminWeb sem depender de módulos grandes novos.
+A tela `/Admin/Diagnostics` é o painel visual de saúde da demonstração. Ela não depende da API para renderizar conteúdo inicial e usa cards com status verde, amarelo ou vermelho.
 
-## Itens monitorados
+## Itens exibidos
 
 - API via `/AdminApi/api-health`.
 - AdminApi via `/AdminApi/dashboard`.
-- PublicApi representado pelo proxy demo de serviços.
-- KioskApi representado pelo proxy/status do totem.
+- PublicApi via `http://localhost:8082/PublicApi/services`.
+- KioskApi via `http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001`.
 - Swagger via `/AdminApi/swagger.json`.
-- Assets principais do Admin.
+- Assets Admin.
 - DemoStore.
 - EventBus.
 - localStorage.
-- Últimos erros e eventos registrados.
+- FullServiceFlow.
+- PublicWeb.
+- Kiosk.
+- Docker como validação manual/demo pelo Quality Gate.
 
-## Ações disponíveis
+## Ações
 
-- **Rodar diagnóstico**: executa checks HTTP e testes JS do DemoStore.
-- **Resetar DemoStore**: restaura dados demo e limpa histórico de eventos.
-- **Exportar diagnóstico mock**: gera JSON local com resumo e últimos eventos.
-
-## Semáforo
-
-- Verde: OK para demonstração.
-- Amarelo: atenção controlada ou validação aguardando execução.
-- Vermelho: falha que deve ser corrigida antes da demo.
+- **Rodar diagnóstico**: executa probes HTTP e testes locais.
+- **Resetar DemoStore**: limpa dados demo e recalcula status.
+- **Exportar diagnóstico mock**: baixa JSON com eventos e resumo local.
+- **Executar testes JS**: valida DemoStore, EventBus, localStorage e FullServiceFlow no navegador.

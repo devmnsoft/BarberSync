@@ -34,13 +34,14 @@
     ['DemoStore OK', null],
     ['EventBus OK', null],
     ['Assets OK', '/css/admin-design-system.css'],
-    ['Docker OK', null]
+    ['Swagger OK', '/AdminApi/swagger.json'],
+    ['PublicWeb OK', 'http://localhost:8082/'],
+    ['Kiosk OK', 'http://localhost:8083/Kiosk/Services']
   ];
   const localStatus = (label) => {
     if (label === 'FullServiceFlow OK') return window.BarberSyncDemoStore?.getFullServiceFlow ? 'OK' : 'Atenção';
     if (label === 'DemoStore OK') return window.BarberSyncDemoStore ? 'OK' : 'Falha';
     if (label === 'EventBus OK') return window.BarberSyncEventBus ? 'OK' : 'Falha';
-    if (label === 'Docker OK') return 'Validar via script';
     return 'Atenção';
   };
   async function loadDemoStatus() {
@@ -62,6 +63,14 @@
     }
     root.innerHTML = cards.join('');
   }
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-dashboard-reset-store]')) {
+      window.BarberSyncDemoStore?.resetAll?.();
+      window.BarberSyncEventBus?.emit?.('dashboard:demoStoreReset', { title: 'DemoStore resetado pelo Dashboard', module: 'Dashboard', severity: 'warning' });
+      window.AdminToast?.show?.('DemoStore resetado. Status da demonstração será recalculado.', 'info');
+      loadDemoStatus();
+    }
+  });
   document.addEventListener('DOMContentLoaded', loadDemoStatus);
   window.addEventListener('barbersync:store-changed', loadDemoStatus);
 })();

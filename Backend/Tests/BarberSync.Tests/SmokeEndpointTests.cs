@@ -42,6 +42,17 @@ public class SmokeEndpointTests
         Assert.Contains("Serviços", JsonSerializer.Serialize(ok.Value));
     }
 
+
+    [Fact]
+    public void Api_kiosk_professionals_endpoint_returns_200_envelope()
+    {
+        var controller = new KioskConfigController(new StubConfigurationService(), NullLogger<KioskConfigController>.Instance);
+        var action = controller.Professionals("demo", "KIOSK-DEMO-001");
+        var ok = Assert.IsType<OkObjectResult>(action.Result);
+        Assert.Equal(200, ok.StatusCode ?? 200);
+        Assert.Contains("Profissionais", JsonSerializer.Serialize(ok.Value));
+    }
+
     [Fact]
     public async Task AdminApi_swagger_json_returns_200_fallback_contract()
     {

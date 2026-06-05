@@ -7,13 +7,42 @@ param(
 $ErrorActionPreference = 'Stop'
 $results = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
+$warnings = New-Object System.Collections.Generic.List[string]
+$reportPath = Join-Path (Get-Location) 'Docs/quality-gate-last-run.md'
 
 function Add-Result {
     param([string]$Name, [string]$Target, [string]$Status, [string]$Detail = '')
     $results.Add([pscustomobject]@{ Name = $Name; Target = $Target; Status = $Status; Detail = $Detail }) | Out-Null
     $icon = if ($Status -eq 'OK') { '✅' } elseif ($Status -eq 'WARN') { '⚠️' } else { '❌' }
-    Write-Host "$icon $Name -> $Target $Detail"
+    $color = if ($Status -eq 'OK') { 'Green' } elseif ($Status -eq 'WARN') { 'Yellow' } else { 'Red' }
+    Write-Host "$icon $Name -> $Target $Detail" -ForegroundColor $color
     if ($Status -eq 'FAIL') { $failures.Add("$Name -> $Target $Detail") | Out-Null }
+    if ($Status -eq 'WARN') { $warnings.Add("$Name -> $Target $Detail") | Out-Null }
+}
+
+function Save-QualityGateReport {
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add('# BarberSync Quality Gate - Última execução') | Out-Null
+    $lines.Add('') | Out-Null
+    $lines.Add("- Executado em UTC: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss'))") | Out-Null
+    $lines.Add("- Status final: $(if ($failures.Count -eq 0) { 'APROVADO' } else { 'FALHOU' })") | Out-Null
+    $lines.Add("- Falhas críticas: $($failures.Count)") | Out-Null
+    $lines.Add("- Alertas: $($warnings.Count)") | Out-Null
+    $lines.Add('') | Out-Null
+    $lines.Add('| Validação | Alvo | Status | Detalhe |') | Out-Null
+    $lines.Add('|---|---|---|---|') | Out-Null
+    foreach ($result in $results) {
+        $detail = (($result.Detail -replace '\r?\n', '<br>') -replace '\|', '\|')
+        $lines.Add("| $($result.Name) | $($result.Target) | $($result.Status) | $detail |") | Out-Null
+    }
+    $lines.Add('') | Out-Null
+    $lines.Add('## Como agir') | Out-Null
+    $lines.Add('- Falhas em endpoints/proxies: confira se `docker compose up -d` subiu API, AdminWeb, PublicWeb e KioskWeb e valide os fallbacks MVC.') | Out-Null
+    $lines.Add('- Falhas em assets: confira publicação de `wwwroot` e caminhos citados neste relatório.') | Out-Null
+    $lines.Add('- Falhas de browser URL: remova chamadas diretas a hosts internos Docker dos arquivos web expostos ao navegador.') | Out-Null
+    $lines.Add('- Falhas em logs: revise as linhas listadas antes de uma demonstração comercial.') | Out-Null
+    New-Item -ItemType Directory -Force -Path (Split-Path $reportPath) | Out-Null
+    Set-Content -Path $reportPath -Value $lines -Encoding UTF8
 }
 
 function Invoke-Step {
@@ -129,6 +158,8 @@ Assert-CleanLogs
 
 Write-Host "`n=== Relatório Final BarberSync Quality Gate + Demo Ready 16.0 ===" -ForegroundColor Cyan
 $results | Format-Table -AutoSize
+Save-QualityGateReport
+Write-Host "`nRelatório salvo em Docs/quality-gate-last-run.md" -ForegroundColor Cyan
 if ($failures.Count -gt 0) {
     Write-Host "`nQuality Gate FALHOU:" -ForegroundColor Red
     $failures | ForEach-Object { Write-Host " - $_" -ForegroundColor Red }
