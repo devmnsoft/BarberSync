@@ -19,6 +19,21 @@ public class AppointmentsController : ControllerBase
     [HttpPut("{id:guid}")]
     public IActionResult Update(Guid id, [FromBody] object request) => Ok(request);
 
+    [HttpPost("{id}/confirm")]
+    public IActionResult Confirm(string id) => Ok(new { success = true, message = "Agendamento confirmado com sucesso.", data = new { id, status = "Confirmed" }, isDemo = true });
+
+    [HttpPost("{id}/check-in")]
+    public IActionResult CheckIn(string id) => Ok(new { success = true, message = "Check-in realizado com sucesso.", data = new { id, status = "CheckedIn" }, isDemo = true });
+
+    [HttpPost("{id}/start")]
+    public IActionResult Start(string id) => Ok(new { success = true, message = "Atendimento iniciado com sucesso.", data = new { id, status = "InService" }, isDemo = true });
+
+    [HttpPost("{id}/finish")]
+    public IActionResult Finish(string id) => Ok(new { success = true, message = "Atendimento finalizado com sucesso.", data = new { id, status = "Finished" }, isDemo = true });
+
+    [HttpPost("{id}/cancel")]
+    public IActionResult Cancel(string id) => Ok(new { success = true, message = "Agendamento cancelado com sucesso.", data = new { id, status = "Canceled" }, isDemo = true });
+
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id) => NoContent();
 }
