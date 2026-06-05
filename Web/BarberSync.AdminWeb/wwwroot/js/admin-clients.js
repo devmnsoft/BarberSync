@@ -2,3 +2,25 @@
  document.addEventListener('click',e=>{const b=e.target.closest('[data-client-act]'); if(!b||!store()) return; const id=b.dataset.id; if(b.dataset.clientAct==='appointment') store().createAppointment({clientId:id,serviceId:'srv-001',professionalId:'pro-001'}); if(b.dataset.clientAct==='order') store().openServiceOrder({clientId:id,professionalId:'pro-001'}); if(b.dataset.clientAct==='coupon') store().createCoupon({code:'VIP20',clientId:id}); if(b.dataset.clientAct==='note'){ const c=store().find('clients',id); store().patch('clients',id,{notes:[...(c.notes||[]),'Observação comercial registrada']}); } store().refreshDashboard(); render();}); window.addEventListener('barbersync:store-changed',render); document.addEventListener('DOMContentLoaded',render); })();
 
 (() => { const store=()=>window.BarberSyncDemoStore; const bus=()=>window.BarberSyncEventBus; const row=(k,v)=>`<div class="saas-row"><strong>${k}</strong><span>${v}</span></div>`; function render(){ if(!document.querySelector('[data-client360]'))return; const s=store(); const c=s?.get('clients')[0]; if(!c)return; const orders=s.get('serviceOrders').filter(o=>o.clientId===c.id); const total=orders.reduce((a,o)=>a+(o.total||0),0); document.querySelector('[data-client-profile]').innerHTML=row('Perfil',c.name)+row('Score',c.recurrenceScore||88)+row('Lifetime value',`R$ ${(c.totalSpent||total).toFixed(2)}`)+row('Ticket médio',`R$ ${(orders.length?total/orders.length:95).toFixed(2)}`)+row('Frequência','21 dias')+row('Cashback',`R$ ${(c.cashback||0).toFixed(2)}`)+row('Origem',c.source||'Admin')+row('Próxima melhor ação','Campanha de retorno com cupom'); document.querySelector('[data-client-timeline]').innerHTML=(bus()?.last(10)||[]).map(e=>`<div class="saas-row"><strong>${e.title}</strong><span>${e.module}</span></div>`).join('')+row('Serviços',orders.flatMap(o=>o.items||[]).map(i=>i.name).join(', ')||'Corte + Barba')+row('Avaliações',s.get('reviews').filter(r=>r.clientId===c.id).length)+row('Cupons usados',s.get('coupons').length); } document.addEventListener('click',e=>{ if(e.target.closest('[data-client-copilot]')){ const c=store()?.get('clients')[0]; store()?.add('copilotSuggestions',{title:`Reativar ${c?.name} com cashback`,clientId:c?.id,priority:'Alta'}); bus()?.emit('copilot:actionExecuted',{title:'Recomendação Copilot gerada para Cliente 360',module:'Cliente 360'}); location.href='/Admin/Copilot?clientId='+(c?.id||''); }}); bus()?.on('*',render); document.addEventListener('DOMContentLoaded',render); })();
+
+(() => {
+  const store = () => window.BarberSyncDemoStore;
+  const bus = () => window.BarberSyncEventBus;
+  const money = v => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  function renderFlowClient360(){
+    const host = document.querySelector('[data-flow-client360]'); if(!host || !store()) return;
+    const s = store().exportState(); const f = s.fullServiceFlow || store().getFullServiceFlow?.();
+    const c = s.clients.find(x=>x.id===f?.clientId); if(!c){ host.innerHTML='<p class="text-muted">Execute o Atendimento Completo para preencher esta visão.</p>'; return; }
+    const appointments = s.appointments.filter(a=>a.clientId===c.id);
+    const orders = s.serviceOrders.filter(o=>o.clientId===c.id);
+    const payments = s.payments.filter(p=>orders.some(o=>o.id===p.orderId));
+    const receipts = s.receipts.filter(r=>orders.some(o=>o.id===r.orderId));
+    const loyalty = s.loyalty.find(l=>l.clientId===c.id);
+    const reviews = s.reviews.filter(r=>r.clientId===c.id);
+    const events = (bus()?.last(20) || []).filter(e=>e.eventName.startsWith('flow:'));
+    host.innerHTML = `<div class="enterprise-demo-grid"><article class="enterprise-card"><h3>${c.name}</h3><p>${c.phone || ''}<br>Cashback ${money(c.cashback || loyalty?.balance)}</p><span class="badge badge-success">${c.segment || 'Cliente fluxo'}</span></article><article class="enterprise-card"><h3>Agenda</h3>${appointments.map(a=>`<p>${a.date} ${a.time} • ${a.service} • ${a.status}</p>`).join('')}</article><article class="enterprise-card"><h3>Comandas e pagamentos</h3>${orders.map(o=>`<p>#${o.number} • ${o.status} • ${money(o.total)}</p>`).join('')}${payments.map(p=>`<p>Pagamento ${p.method} • ${money(p.amount)}</p>`).join('')}${receipts.map(r=>`<p>Recibo ${r.number}</p>`).join('')}</article><article class="enterprise-card"><h3>Cashback e avaliação</h3><p>Saldo ${money(loyalty?.balance)}</p>${reviews.map(r=>`<p>${r.rating}★ • ${r.comment || ''}</p>`).join('')}</article><article class="enterprise-card wide"><h3>Timeline do fluxo</h3><div class="timeline-demo">${events.map(e=>`<div>${e.title} • ${new Date(e.createdAt).toLocaleTimeString('pt-BR')}</div>`).join('')}</div></article></div>`;
+  }
+  window.addEventListener('barbersync:store-changed', renderFlowClient360);
+  bus()?.on('*', renderFlowClient360);
+  document.addEventListener('DOMContentLoaded', renderFlowClient360);
+})();
