@@ -59,3 +59,7 @@
 - [ ] Confirmar cashback e salvar avaliação.
 - [ ] Validar Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação ao Vivo.
 - [ ] Confirmar eventos `commercialFlow:*` em auditoria/notificações/demo center via EventBus.
+
+## Runbook consolidado Enterprise
+
+Consulte também `Docs/DEMO_FULL_SERVICE_FLOW_RUNBOOK.md` para o roteiro validado de API, AdminWeb, PublicWeb, KioskWeb, MobileApp, Docker, Swagger, Seq e FullServiceFlow fim a fim.
