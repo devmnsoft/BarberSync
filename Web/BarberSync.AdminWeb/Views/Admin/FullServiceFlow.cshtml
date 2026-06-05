@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Atendimento Completo";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="full-flow-hero">
+    <div>
+        <span class="badge">Vertical Slice Demo 14.0</span>
+        <h1>Atendimento Completo BarberSync</h1>
+        <p>Roteiro ponta a ponta: cliente, agenda, check-in, atendimento, comanda, pagamento, recibo, estoque, cashback, avaliação e dashboard atualizado.</p>
+    </div>
+    <div class="full-flow-actions">
+        <button class="btn btn-light" data-flow-reset>Reiniciar fluxo</button>
+        <a class="btn btn-light" href="/Admin/Dashboard">Ver Dashboard</a>
+        <button class="btn btn-primary" data-flow-start>Iniciar demo</button>
+    </div>
+</section>
+
+<section class="full-flow-progress-card">
+    <div class="full-flow-progress-meta"><strong data-flow-current-step>Cliente</strong><span data-flow-progress-label>0% concluído</span></div>
+    <div class="full-flow-progress"><span data-flow-progress-bar></span></div>
+    <div class="full-flow-stepper" data-flow-stepper></div>
+</section>
+
+<section class="full-flow-layout">
+    <main class="full-flow-stage" data-flow-stage>
+        <noscript>Habilite JavaScript para executar a demonstração completa.</noscript>
+    </main>
+    <aside class="full-flow-summary">
+        <div class="summary-card">
+            <h2>Resumo do fluxo</h2>
+            <div class="summary-list" data-flow-summary></div>
+        </div>
+        <div class="summary-card">
+            <h2>Eventos recentes</h2>
+            <div class="flow-events" data-flow-events></div>
+        </div>
+        <div class="summary-card">
+            <h2>Impacto no sistema</h2>
+            <ul>
+                <li>Cliente aparece em Cliente 360.</li>
+                <li>Agenda e Operação mudam status em tempo real.</li>
+                <li>Comanda paga gera recibo e baixa estoque.</li>
+                <li>Cashback e avaliação atualizam o dashboard.</li>
+            </ul>
+        </div>
+    </aside>
+</section>

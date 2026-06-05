@@ -8,3 +8,9 @@
 6. Abrir o Totem em `/Kiosk/Services` e executar o fluxo completo de autoatendimento.
 7. Finalizar com avaliação e explicar como o ciclo alimenta CRM, fidelidade e relatórios.
 8. Demonstrar módulos comerciais: planos, add-ons, integrações, automações, Copilot e relatórios.
+
+## Atendimento Completo 14.0
+
+Use `/Admin/FullServiceFlow` como roteiro principal da apresentação. O fluxo permite demonstrar começo, meio e fim: criação/seleção de cliente, agendamento, check-in, atendimento, comanda, pagamento, recibo, baixa de estoque, cashback, avaliação e dashboard atualizado.
+
+Após concluir o fluxo, abra Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação para comprovar que os dados foram persistidos no DemoStore/localStorage e distribuídos pelos eventos `flow:*`.

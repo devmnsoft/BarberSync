@@ -29,3 +29,19 @@
 - [ ] CRUDs principais abrem modal, salvam demo e mostram toast.
 - [ ] PublicWeb renderiza serviços/profissionais e envia agendamento com protocolo.
 - [ ] Kiosk conclui serviço → cliente → profissional → confirmação → pagamento mock → sucesso → avaliação.
+
+## Checklist Atendimento Completo 14.0
+
+- [ ] Acessar `/Admin/FullServiceFlow`.
+- [ ] Criar ou selecionar cliente.
+- [ ] Criar agendamento com serviço e profissional.
+- [ ] Realizar check-in.
+- [ ] Iniciar e finalizar atendimento.
+- [ ] Abrir comanda, adicionar serviço e produto.
+- [ ] Aplicar desconto/cupom/cashback usado quando necessário.
+- [ ] Pagar a comanda e confirmar baixa de estoque.
+- [ ] Gerar recibo mock.
+- [ ] Confirmar cashback.
+- [ ] Salvar avaliação.
+- [ ] Concluir o fluxo e validar Dashboard, Cliente 360, Agenda, Comandas, Estoque, Avaliações e Operação.
+- [ ] Confirmar que o browser usa somente proxies relativos (`/AdminApi`, `/PublicApi`, `/KioskApi`).

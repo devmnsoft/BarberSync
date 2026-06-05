@@ -15,7 +15,21 @@
     'payment:created':['Pagamento criado','Pagamentos','success'], 'stock:changed':['Estoque movimentado','Estoque','info'], 'stock:critical':['Estoque crítico','Estoque','danger'],
     'cashback:generated':['Cashback gerado','Fidelidade','success'], 'review:created':['Avaliação criada','Avaliações','success'],
     'campaign:created':['Campanha criada','Campanhas','success'], 'coupon:created':['Cupom criado','Cupons','success'],
-    'copilot:actionExecuted':['Ação Copilot executada','Copilot','success'], 'dashboard:refresh':['Dashboard atualizado','Dashboard','info']
+    'copilot:actionExecuted':['Ação Copilot executada','Copilot','success'], 'dashboard:refresh':['Dashboard atualizado','Dashboard','info'],
+    'flow:started':['Fluxo completo iniciado','Atendimento Completo','info'],
+    'flow:clientCreated':['Cliente criado no fluxo','Atendimento Completo','success'],
+    'flow:appointmentCreated':['Agendamento criado no fluxo','Atendimento Completo','success'],
+    'flow:appointmentConfirmed':['Agendamento confirmado no fluxo','Atendimento Completo','success'],
+    'flow:checkInDone':['Check-in realizado no fluxo','Atendimento Completo','success'],
+    'flow:attendanceStarted':['Atendimento iniciado no fluxo','Atendimento Completo','info'],
+    'flow:attendanceFinished':['Atendimento finalizado no fluxo','Atendimento Completo','success'],
+    'flow:serviceOrderOpened':['Comanda aberta no fluxo','Atendimento Completo','success'],
+    'flow:itemAdded':['Item adicionado no fluxo','Atendimento Completo','info'],
+    'flow:paymentDone':['Pagamento realizado no fluxo','Atendimento Completo','success'],
+    'flow:receiptGenerated':['Recibo gerado no fluxo','Atendimento Completo','success'],
+    'flow:cashbackGenerated':['Cashback gerado no fluxo','Atendimento Completo','success'],
+    'flow:reviewCreated':['Avaliação criada no fluxo','Atendimento Completo','success'],
+    'flow:completed':['Fluxo completo concluído','Atendimento Completo','success']
   };
   const clone = value => JSON.parse(JSON.stringify(value));
   const read = () => {
@@ -70,6 +84,19 @@
       window.dispatchEvent(new CustomEvent(`barbersync:${eventName}`, { detail: payload }));
       call(eventName, payload, event); call('*', payload, event);
       notify(event);
+      if (eventName.startsWith('flow:') && window.BarberSyncDemoStore) {
+        try {
+          const store = window.BarberSyncDemoStore;
+          store.add('dashboardEvents', { type:'flow', title:event.title, module:event.module, eventName:event.eventName, at:event.createdAt });
+          const settings = store.getSettings ? store.getSettings() : {};
+          const notifications = settings.notifications || {};
+          notifications.items = [{ title:event.title, module:event.module, type:event.severity, read:false, route:'/Admin/FullServiceFlow' }, ...(notifications.items || [])].slice(0, 20);
+          notifications.unread = (notifications.items || []).filter(x => !x.read).length;
+          store.updateSettings?.('notifications', notifications);
+          store.add('reports', { name:'Auditoria demo - ' + event.title, status:'Registrado', module:event.module, eventName:event.eventName, at:event.createdAt });
+          store.refreshDashboard?.();
+        } catch (err) { console.warn('[BarberSyncEventBus] fluxo demo auditável indisponível', err); }
+      }
       return clone(event);
     },
     history() { return clone(read()); },
