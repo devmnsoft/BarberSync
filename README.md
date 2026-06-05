@@ -104,3 +104,9 @@ psql -U postgres -d barbersync -f ScriptsSQL/validate_barbersync_database.sql
 - Checklist demonstrável, regras de proxy e comandos de smoke test em `docs/DEMO_STABILIZATION_RUNBOOK.md`.
 - O browser deve usar `/AdminApi`, `/PublicApi` e `/KioskApi`; `ApiSettings:BaseUrl` fica restrito ao server-side/Docker.
 - AdminWeb expõe `/AdminApi/swagger.json` para validar Swagger por proxy, evitando host interno de API no navegador.
+
+## Enterprise Consolidation 2026-06-05
+
+- Runbook final de consolidação enterprise, checklist de demonstração, topologia Docker/Seq e validações HTTP em `Docs/ENTERPRISE_CONSOLIDATION_2026-06-05.md`.
+- Rotas de browser continuam restritas aos proxies locais `/AdminApi`, `/PublicApi` e `/KioskApi`; a URL interna `http://api:8080` permanece apenas em comunicação server-side no Docker Compose.
+- FullServiceFlow demonstrável: Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard.

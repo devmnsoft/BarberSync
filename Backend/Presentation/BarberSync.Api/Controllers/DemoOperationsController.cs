@@ -92,13 +92,13 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     [HttpPost("api/kiosk/service-order")]
     public IActionResult KioskServiceOrder([FromBody] JsonElement payload) => RegisterKiosk("Comanda do totem criada.", payload, "ServiceOrderCreated");
 
-    [HttpPost("api/kiosk/payment/mock")]
+    [HttpPost("api/demo-operations/kiosk/payment/mock")]
     public IActionResult KioskPayment([FromBody] JsonElement payload) => RegisterKiosk("Pagamento mock aprovado no totem.", payload, "PaymentApproved");
 
-    [HttpPost("api/kiosk/review")]
+    [HttpPost("api/demo-operations/kiosk/review")]
     public IActionResult KioskReview([FromBody] JsonElement payload) => RegisterKiosk("Avaliação registrada no totem.", payload, "ReviewCreated");
 
-    [HttpGet("api/kiosk/status")]
+    [HttpGet("api/demo-operations/kiosk/status")]
     public IActionResult KioskStatus() => Ok(Envelope(new { online = true, deviceCode = "KIOSK-DEMO-001", currentStep = "Pronto", attendances = KioskAttendances.Count, paymentsMockEnabled = true, lastHeartbeat = DateTime.UtcNow }, "Totem online."));
 
     [HttpGet("api/audit/events")]
@@ -111,7 +111,7 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         return Ok(Mutation("Evento de auditoria registrado.", payload));
     }
 
-    [HttpGet("api/loyalty/accounts")]
+    [HttpGet("api/full-service-flow/loyalty/accounts")]
     public IActionResult LoyaltyAccounts() => Ok(Envelope(CashbackAccounts, "Contas de cashback carregadas com sucesso."));
 
     [HttpGet("api/mobile/summary")]
