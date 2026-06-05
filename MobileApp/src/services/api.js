@@ -24,7 +24,7 @@ function unwrap(payload, fallback) {
 
 async function httpGet(path, fallback) {
   try {
-    const response = await fetch(`${API_URL}${path}`);
+    const response = await fetch(`${API_URL}${path}`, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Request failed for ${path} with status ${response.status}`);
     return unwrap(await response.json(), fallback);
   } catch (error) {
@@ -33,7 +33,17 @@ async function httpGet(path, fallback) {
   }
 }
 
+async function getMobileSummary() {
+  const summary = await httpGet('/api/mobile/summary', demo);
+  return {
+    operations: summary.operations ?? demo.operations,
+    appointments: summary.appointments ?? demo.appointments,
+    loyalty: summary.loyalty ?? demo.loyalty
+  };
+}
+
 export const mobileApi = {
+  getMobileSummary,
   getOperationsSnapshot: () => httpGet('/api/full-service-flow/snapshot', demo.operations),
   getAppointments: () => httpGet('/api/appointments', demo.appointments),
   getLoyaltyAccounts: () => httpGet('/api/loyalty/accounts', demo.loyalty),

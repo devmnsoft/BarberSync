@@ -26,6 +26,11 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     ];
 
     private static readonly List<object> KioskAttendances = [];
+    private static readonly List<object> Reviews = [];
+    private static readonly List<object> CashbackAccounts =
+    [
+        new { id = "loy-001", clientId = "cli-001", clientName = "Lucas Almeida", pointsBalance = 1280, cashbackBalance = 38.50m, tierLevel = 3, tier = "Black", status = "Ativo" }
+    ];
     private static readonly List<object> AuditEvents = [];
 
     [HttpGet("api/products")]
@@ -106,19 +111,65 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         return Ok(Mutation("Evento de auditoria registrado.", payload));
     }
 
-    [HttpGet("api/full-service-flow/snapshot")]
-    public IActionResult FullServiceFlowSnapshot() => Ok(Envelope(new
+    [HttpGet("api/loyalty/accounts")]
+    public IActionResult LoyaltyAccounts() => Ok(Envelope(CashbackAccounts, "Contas de cashback carregadas com sucesso."));
+
+    [HttpGet("api/mobile/summary")]
+    public IActionResult MobileSummary() => Ok(Envelope(new
     {
+        operations = FullServiceSnapshotObject(),
+        appointments = new[]
+        {
+            new { id = "mob-001", serviceName = "Corte + Barba", professionalName = "Rafael Barber", time = "18:30", status = "Confirmado" },
+            new { id = "mob-002", serviceName = "Hidratação Capilar", professionalName = "Camila Beauty", time = "Amanhã 10:00", status = "Disponível" }
+        },
+        loyalty = CashbackAccounts.Take(1)
+    }, "Resumo mobile sincronizado."));
+
+    [HttpGet("api/full-service-flow/snapshot")]
+    public IActionResult FullServiceFlowSnapshot() => Ok(Envelope(FullServiceSnapshotObject(), "Fluxo completo sincronizado."));
+
+    [HttpPost("api/full-service-flow/run")]
+    public IActionResult RunFullServiceFlow([FromBody] JsonElement payload)
+    {
+        var now = DateTime.UtcNow;
+        var flowId = $"fsf-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var client = new { id = $"cli-{Random.Shared.Next(100, 999)}", name = ReadString(payload, "clientName", "Cliente Full Service"), phone = ReadString(payload, "phone", "(11) 99999-0000"), status = "Ativo", channel = "FullServiceFlow" };
+        var appointment = new { id = $"apt-{Random.Shared.Next(1000, 9999)}", clientId = client.id, serviceName = ReadString(payload, "serviceName", "Corte + Barba"), professionalName = ReadString(payload, "professionalName", "Rafael Barber"), status = "Finished", scheduledAt = now.AddMinutes(15) };
+        var order = new { id = $"so-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", number = $"CMD-{Random.Shared.Next(2000, 9999)}", client = client.name, professional = appointment.professionalName, status = "Paid", total = 110m, channel = "FullServiceFlow", items = new[] { appointment.serviceName, "Pomada Matte" } };
+        ServiceOrders.Insert(0, order);
+        var payment = new { id = $"pay-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", serviceOrderId = order.id, method = ReadString(payload, "paymentMethod", "PIX"), status = "APPROVED", amount = order.total, paidAt = now };
+        var receipt = new { id = $"rec-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", orderId = order.id, number = $"REC-{Random.Shared.Next(10000, 99999)}", total = order.total, issuedAt = now };
+        var cashback = new { id = $"cash-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", clientId = client.id, amount = 5.50m, percent = 5, expiresAt = now.AddDays(90) };
+        CashbackAccounts.Insert(0, new { id = cashback.id, clientId = client.id, clientName = client.name, pointsBalance = 110, cashbackBalance = cashback.amount, tierLevel = 1, tier = "Silver", status = "Ativo" });
+        Products.RemoveAll(IsCritical);
+        Products.Add(new { id = "prd-restock-demo", name = "Kit Reposição FullService", category = "Reposição", stock = 20, minStock = 8, price = 79.90m, status = "OK" });
+        var review = new { id = $"rev-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", client = client.name, rating = 5, nps = 10, comment = "Experiência completa validada no fluxo demo.", source = "FullServiceFlow", createdAt = now };
+        Reviews.Insert(0, review);
+        var result = new { flowId, client, appointment, checkIn = new { status = "CheckedIn", at = now }, attendance = new { status = "Finished", startedAt = now, finishedAt = now.AddMinutes(45) }, serviceOrder = order, payment, receipt, stock = Products.Take(5), cashback, review, dashboard = FullServiceSnapshotObject() };
+        RegisterAudit("flow:completed", result);
+        return Ok(Mutation("Fluxo FullServiceFlow executado de ponta a ponta.", result, flowId));
+    }
+
+    private object FullServiceSnapshotObject() => new
+    {
+        currentFlow = "Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard",
+        revenueToday = ServiceOrders.Where(o => ReadObjectString(o, "status") is "Paid" or "Fechada").Sum(o => ReadObjectDecimal(o, "total")),
+        occupancy = 88,
+        waiting = Math.Max(0, KioskAttendances.Count),
         steps = new[] { "Cliente", "Agendamento", "Check-in", "Atendimento", "Comanda", "Pagamento", "Recibo", "Estoque", "Cashback", "Avaliação", "Dashboard" },
         lastOrders = ServiceOrders.Take(5),
         kioskAttendances = KioskAttendances.Take(5),
+        cashbackAccounts = CashbackAccounts.Take(5),
+        reviews = Reviews.Take(5),
         audit = AuditEvents.Take(10)
-    }, "Fluxo completo sincronizado."));
+    };
 
     private IActionResult RegisterKiosk(string message, JsonElement payload, string status)
     {
         var attendance = new { id = $"kiosk-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", status, payload = ToObject(payload), createdAt = DateTime.UtcNow, channel = "Kiosk" };
         KioskAttendances.Insert(0, attendance);
+        if (status == "ReviewCreated") Reviews.Insert(0, new { id = $"rev-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", source = "Kiosk", payload = ToObject(payload), createdAt = DateTime.UtcNow });
         RegisterAudit($"kiosk:{status}", attendance);
         logger.LogInformation("{Message} {@Attendance}", message, attendance);
         return Ok(Mutation(message, attendance));
@@ -129,6 +180,25 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     private static object Mutation(string message, object data, string? id = null) => new { success = true, message, data, id, isDemo = true, traceId = Guid.NewGuid().ToString("N") };
 
     private static object? ToObject(JsonElement payload) => JsonSerializer.Deserialize<object>(payload.GetRawText());
+
+    private static string ReadString(JsonElement payload, string property, string fallback)
+    {
+        if (payload.ValueKind == JsonValueKind.Object && payload.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String)
+        {
+            return value.GetString() ?? fallback;
+        }
+
+        return fallback;
+    }
+
+    private static string ReadObjectString(object value, string property)
+        => value.GetType().GetProperty(property)?.GetValue(value)?.ToString() ?? string.Empty;
+
+    private static decimal ReadObjectDecimal(object value, string property)
+    {
+        var raw = value.GetType().GetProperty(property)?.GetValue(value);
+        return raw is null ? 0 : Convert.ToDecimal(raw);
+    }
 
     private static bool IsCritical(object product)
     {
