@@ -7,7 +7,7 @@ Transformar o BarberSync em uma demonstração SaaS enterprise vendável para ba
 - O navegador do Admin usa somente `/AdminApi/...`.
 - O navegador do PublicWeb usa somente `/PublicApi/...`.
 - O navegador do Totem usa somente `/KioskApi/...`.
-- `ApiSettings:BaseUrl` e `ApiBaseUrl` permanecem server-side para Docker/local.
+- `ApiSettings:BaseUrl` permanece server-side para Docker/local.
 - No Docker, os serviços MVC acessam a API por `http://api:8080`; isso não deve ser renderizado em JS/CSHTML do browser.
 
 ## Módulos 7.0
