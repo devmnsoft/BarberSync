@@ -10,7 +10,7 @@ $results = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $reportPath = Join-Path (Get-Location) 'Docs/quality-gate-last-run.md'
-$demoVersion = 'BarberSync Demo Ready Stabilization 18.0'
+$demoVersion = 'BarberSync Demo Ready Guided Release 19.0'
 
 function Add-Result {
     param([string]$Name, [string]$Target, [string]$Status, [string]$Detail = '')
@@ -162,6 +162,7 @@ $endpoints = @(
 $routes = @(
     @{Name='Admin route'; Url='http://localhost:8081/Admin'},
     @{Name='Admin route'; Url='http://localhost:8081/Admin/Diagnostics'},
+    @{Name='Admin route'; Url='http://localhost:8081/Admin/DemoWizard'},
     @{Name='Admin route'; Url='http://localhost:8081/Admin/FullServiceFlow'},
     @{Name='Admin route'; Url='http://localhost:8081/Admin/Dashboard'},
     @{Name='Admin route'; Url='http://localhost:8081/Admin/Clients'},
@@ -178,6 +179,8 @@ $assets = @(
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-dashboard.js'},
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-demo-store.js'},
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-event-bus.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/js/admin-demo-wizard.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/css/admin-demo-wizard.css'},
     @{Name='Admin asset'; Url='http://localhost:8081/img/logo-barbersync.svg'},
     @{Name='Public asset'; Url='http://localhost:8082/css/public-design-system.css'},
     @{Name='Public asset'; Url='http://localhost:8082/js/public.js'},

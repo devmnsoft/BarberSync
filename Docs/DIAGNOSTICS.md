@@ -1,33 +1,17 @@
-# Diagnostics Admin BarberSync
+# Diagnostics BarberSync 19.0
 
-## Rota
+## Tela
 
-- `GET /Admin/Diagnostics`
+A rota `/Admin/Diagnostics` mostra status de API, Swagger, AdminApi, PublicApi, KioskApi, assets, DemoStore, EventBus, localStorage, FullServiceFlow, PublicWeb, Kiosk e Docker/Quality Gate.
 
-## Validações exibidas
+## Ações disponíveis
 
-- API via `/AdminApi/api-health`.
-- AdminApi via `/AdminApi/dashboard`.
-- PublicApi e KioskApi por seus endpoints demo.
-- Swagger via `/AdminApi/swagger.json`.
-- Assets principais.
-- DemoStore, EventBus e localStorage.
-- FullServiceFlow local.
-- PublicWeb e Kiosk.
-- Últimos erros/eventos registrados.
-- Testes JS do DemoStore.
+- **Rodar diagnóstico**: executa validações browser-side com fallback.
+- **Resetar DemoStore**: restaura cenário demo inicial.
+- **Exportar diagnóstico**: baixa JSON local com eventos e snapshot.
+- **Abrir FullServiceFlow**, **PublicWeb**, **Kiosk** e **Swagger**.
+- **Executar novamente** os testes JS do DemoStore.
 
-## Estados visuais
+## Testes JS exibidos
 
-- Verde: OK.
-- Amarelo: atenção controlada/fallback/ambiente indisponível.
-- Vermelho: falha real.
-
-A tela nunca fica vazia: todos os cartões iniciam em estado de atenção e são atualizados progressivamente.
-
-## Ações
-
-- **Rodar diagnóstico**: executa endpoints e testes locais.
-- **Resetar DemoStore**: limpa estado demo e histórico local.
-- **Exportar diagnóstico mock**: baixa JSON com eventos e resumo local.
-- Links operacionais para FullServiceFlow, Dashboard e artefatos documentais.
+DemoStore inicializa, adiciona cliente, cria agendamento, abre comanda, registra pagamento, gera cashback, cria avaliação, registra EventBus, lê dashboard, persiste localStorage, inicia e conclui FullServiceFlow.

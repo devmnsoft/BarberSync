@@ -1,34 +1,19 @@
-# FullServiceFlow BarberSync 18.0
+# FullServiceFlow BarberSync 19.0
 
 ## Objetivo
 
-Validar o atendimento completo de ponta a ponta em modo demo, sem banco real obrigatório.
+Demonstrar o ciclo completo: cliente, agendamento, check-in, atendimento, comanda/PDV, serviço, produto, pagamento, recibo, baixa de estoque, cashback, avaliação e dashboard.
 
-## Etapas
+## Execução
 
-1. Criar cliente.
-2. Criar agendamento.
-3. Confirmar e fazer check-in.
-4. Iniciar atendimento.
-5. Finalizar atendimento.
-6. Abrir comanda.
-7. Adicionar serviço.
-8. Adicionar produto.
-9. Realizar pagamento.
-10. Gerar recibo.
-11. Confirmar estoque.
-12. Gerar cashback.
-13. Criar avaliação.
-14. Concluir e atualizar dashboard.
-
-## Automação
-
-Na rota `/Admin/FullServiceFlow`, clique **Validar fluxo completo automaticamente**. A ação usa dados demo, atualiza DemoStore, emite eventos do EventBus, tenta sincronizar `/AdminApi/full-service-flow/run` e dispara `flow:autoValidated`.
+1. Acesse `/Admin/FullServiceFlow`.
+2. Use o fluxo manual ou clique **Rodar fluxo automático de teste** / **Validar fluxo completo automaticamente**.
+3. Confira o evento `flow:autoValidated` no EventBus e eventos recentes do Dashboard.
 
 ## Persistência
 
-- Estado principal: `barbersync.demo.state.v9`.
-- Fluxo completo: `barbersync.fullServiceFlow.v14`.
+- Estado principal do DemoStore: `barbersync.demo.state.v9`.
+- Estado do FullServiceFlow: `barbersync.fullServiceFlow.v14`.
 - Eventos: `barbersync.demo.events.v6`.
 
 ## Eventos esperados

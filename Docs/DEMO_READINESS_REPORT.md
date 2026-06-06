@@ -1,77 +1,53 @@
-# BarberSync Demo Ready Stabilization 18.0 - Readiness Report
+# BarberSync Demo Ready Guided Release 19.0 - Readiness Report
 
-- **Última validação:** 2026-06-06 UTC
-- **Status geral:** **Atenção controlada no ambiente do agente**. O repositório foi consolidado para demo, mas a validação executável completa de .NET/Docker não pôde ser concluída neste container porque `dotnet`, `docker` e `pwsh` não estão instalados.
-- **Regra crítica:** nenhuma chamada browser-side em `Web/**/*.js`, `Web/**/*.cshtml` ou `Web/**/*.html` aponta para `http://api:8080`, `api:8080`, `localhost:8083/api` ou `8083/api`. O endereço interno Docker permanece permitido apenas em `ApiSettings:BaseUrl` server-side.
+- **Última validação:** 2026-06-06 UTC.
+- **Status geral:** **Atenção controlada no ambiente do agente**. A consolidação de código, JS, Mobile, documentação, Quality Gate e Demo Wizard foi realizada. A validação .NET/Docker completa não pôde ser executada neste container porque `dotnet`, `docker` e `pwsh` não estão instalados.
+- **Regra crítica:** a busca browser-side em `Web/**/*.js`, `Web/**/*.cshtml` e `Web/**/*.html` não encontrou chamadas para `http://api:8080`, `api:8080`, `localhost:8083/api` ou `8083/api`. O host interno Docker permanece somente em configuração server-side.
 
 ## Status por área
 
 | Área | Status | Evidência / observação |
 |---|---|---|
-| API | Atenção | Endpoints alvo documentados no Quality Gate; execução bloqueada por ausência de SDK .NET/Docker no container. |
-| Swagger | Atenção | `/swagger` e `/swagger/v1/swagger.json` são validados por `Scripts/quality-gate.ps1`; Admin também consulta `/AdminApi/swagger.json`. |
-| AdminWeb | Revisado | Diagnostics 18.0, Dashboard 18.0, FullServiceFlow 18.0 e assets principais revisados. |
-| PublicWeb | Revisado | `public.js` usa `/PublicApi/services`, `/PublicApi/professionals` e POST `/PublicApi/appointments`, com fallback local. |
-| KioskWeb | Revisado | `kiosk.js`/`kiosk-flow.js` persistem sessão em `sessionStorage`, usam `/KioskApi/*` e fallback demo. |
+| API | Atenção | Endpoints `/api/services`, `/api/professionals`, `/api/kiosk/services`, `/api/kiosk/professionals` e `/api/dashboard/summary` constam no Quality Gate; execução bloqueada por ausência de SDK .NET/Docker. |
+| Swagger | Atenção | `/swagger` e `/swagger/v1/swagger.json` são validados por `Scripts/quality-gate.ps1`; execução real depende de Docker/.NET. |
+| Admin | Revisado | Rotas `/Admin`, `/Admin/Dashboard`, `/Admin/Diagnostics`, `/Admin/DemoWizard` e `/Admin/FullServiceFlow` existem no controlador MVC. |
+| PublicWeb | Revisado | Fluxo usa `/PublicApi/services`, `/PublicApi/professionals` e `/PublicApi/appointments`, com fallback visual. |
+| Kiosk | Revisado | Fluxo usa `/KioskApi/*`, `sessionStorage`, botões de navegação e fallback visual. |
 | Mobile | OK | `npm install && npm test` executado em `MobileApp`; smoke test passou. |
-| Docker | Atenção | `docker compose build --no-cache`, `up -d`, `ps` e logs estão no Quality Gate, mas Docker não existe neste container. |
-| Proxies | Revisado | `/AdminApi`, `/PublicApi` e `/KioskApi` permanecem como fronteiras browser-side. |
-| Assets | Revisado | Quality Gate valida CSS/JS/logos principais de Admin, Public e Kiosk. |
-| FullServiceFlow | Revisado | Botão **Validar fluxo completo automaticamente** executa cliente → agenda → check-in → atendimento → comanda → pagamento → recibo → estoque → cashback → avaliação → dashboard. |
-| DemoStore | Revisado | Mantém CRUD genérico, `barbersync.fullServiceFlow.v14` e funções do fluxo completo sem depender de banco real. |
-| EventBus | Revisado | Inclui `on`, `off`, `emit`, `history`, `clearHistory`, wildcard e evento `flow:autoValidated`. |
+| Docker | Atenção | Comandos obrigatórios foram tentados e falharam por `docker: command not found` neste container. |
+| Proxies | Revisado | `/AdminApi`, `/PublicApi` e `/KioskApi` são a fronteira browser-side. |
+| Assets | Revisado | Quality Gate valida CSS/JS/logos principais, incluindo `admin-demo-wizard.js` e `admin-demo-wizard.css`. |
+| FullServiceFlow | Revisado | Fluxo automático cria cliente, agenda, check-in, atendimento, comanda, pagamento, recibo, estoque, cashback, avaliação e evento `flow:autoValidated`. |
+| DemoWizard | Criado | Nova tela `/Admin/DemoWizard` com 15 etapas, estado persistido e menu em Sistema. |
+| DemoStore | Revisado | CRUD genérico e funções do FullServiceFlow usam fallback/localStorage; chave do fluxo `barbersync.fullServiceFlow.v14`. |
+| EventBus | Revisado | `on`, `off`, `emit`, `history`, `clearHistory`, wildcard e eventos do FullServiceFlow disponíveis. |
 
-## Auditoria realizada
+## Pendências reais
 
-1. Busca estática de URLs proibidas em arquivos expostos ao browser.
-2. Tentativa de `dotnet build` geral e builds individuais de API/Admin/Public/Kiosk.
-3. Tentativa de validação Docker e Quality Gate.
-4. Validação sintática com `node --check` dos JS críticos.
-5. Smoke check MobileApp com `npm install && npm test`.
-6. Revisão manual de Diagnostics, FullServiceFlow, DemoStore, EventBus, PublicWeb, Kiosk e Quality Gate.
-
-## Resultado real dos comandos neste container
-
-| Comando | Resultado |
-|---|---|
-| `dotnet build` | Bloqueado: `dotnet: command not found`. |
-| `dotnet test` | Bloqueado: `dotnet: command not found`. |
-| Builds individuais `.csproj` | Bloqueados: `dotnet: command not found`. |
-| `docker compose build --no-cache` | Bloqueado: `docker: command not found`. |
-| `docker compose up -d` / `docker compose ps` / logs | Bloqueados: `docker: command not found`. |
-| `pwsh -File ./Scripts/quality-gate.ps1` | Bloqueado: `pwsh: command not found`. |
-| `node --check` JS crítico | OK. |
-| `cd MobileApp && npm install && npm test` | OK: `Mobile smoke test passed`. |
+- Executar `dotnet build`, `dotnet test`, `docker compose build --no-cache`, `docker compose up -d`, `docker compose ps` e `pwsh -File .\Scripts\quality-gate.ps1` em ambiente com ferramentas instaladas.
+- Fazer validação visual com Ctrl+F5 nas URLs principais e conferir console browser.
+- Atualizar `Docs/quality-gate-last-run.md` com o resultado real do ambiente Docker.
 
 ## Como demonstrar
 
-1. Subir a stack: `docker compose build --no-cache && docker compose up -d`.
-2. Abrir Swagger: `http://localhost:8080/swagger`.
-3. Abrir Admin: `http://localhost:8081/Admin`.
-4. Abrir Diagnostics: `http://localhost:8081/Admin/Diagnostics` e clicar **Rodar diagnóstico**.
-5. Abrir FullServiceFlow: `http://localhost:8081/Admin/FullServiceFlow` e clicar **Validar fluxo completo automaticamente**.
-6. Conferir Dashboard: `http://localhost:8081/Admin/Dashboard`.
-7. Abrir PublicWeb: `http://localhost:8082/`, preencher agendamento e conferir protocolo demo.
-8. Abrir Kiosk: `http://localhost:8083/Kiosk/Services` e concluir o fluxo do totem.
+1. Subir a stack.
+2. Abrir `http://localhost:8080/swagger`.
+3. Abrir `http://localhost:8081/Admin/DemoWizard` e seguir as 15 etapas.
+4. Rodar Diagnostics.
+5. Executar FullServiceFlow automático.
+6. Conferir Dashboard, Cliente 360, Agenda, Comandas, Estoque e Avaliações.
+7. Agendar no PublicWeb.
+8. Concluir autoatendimento no Kiosk.
 
-## Como resetar a demo
+## Como resetar demo
 
-- Admin Diagnostics: botão **Resetar DemoStore**.
-- Dashboard: botão **Resetar DemoStore**.
-- FullServiceFlow: botão **Reiniciar fluxo**.
-- Kiosk: botão de reinício/cancelamento do fluxo quando disponível.
-- Manualmente no browser: limpar `localStorage` e `sessionStorage` das origens `localhost:8081`, `localhost:8082` e `localhost:8083`.
+- Diagnostics: **Resetar DemoStore**.
+- Demo Wizard: **Resetar progresso**.
+- FullServiceFlow: **Reiniciar fluxo**.
+- Browser: limpar `localStorage`/`sessionStorage` das origens `localhost:8081`, `localhost:8082` e `localhost:8083`.
 
-## Como rodar o Quality Gate
+## Como rodar Quality Gate
 
 ```powershell
 pwsh -NoLogo -NoProfile -File .\Scripts\quality-gate.ps1
 ```
-
-O relatório de execução é salvo em `Docs/quality-gate-last-run.md` e o script retorna exit code diferente de zero se houver falha crítica.
-
-## Pendências reais
-
-- Executar a validação final em ambiente com SDK .NET, PowerShell e Docker instalados.
-- Após a execução real, anexar o conteúdo atualizado de `Docs/quality-gate-last-run.md` à preparação da demo.
-- Validar visualmente o console do browser com Ctrl+F5 nas URLs principais.

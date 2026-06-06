@@ -15,6 +15,7 @@ public class AdminController : Controller
     [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => Render("CommercialFlow");
     [HttpGet("DemoCenter")] public IActionResult DemoCenter() => Render("DemoCenter");
     [HttpGet("DemoExperience")] public IActionResult DemoExperience() => Render("DemoExperience");
+    [HttpGet("DemoWizard")] public IActionResult DemoWizard() => Render("DemoWizard");
     [HttpGet("CustomerJourney")] public IActionResult CustomerJourney() => Render("CustomerJourney");
     [HttpGet("Clients")] public IActionResult Clients() => Render("Clients");
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
@@ -56,7 +57,7 @@ public class AdminController : Controller
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync Demo Ready Stabilization 18.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync Demo Ready Guided Release 19.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }

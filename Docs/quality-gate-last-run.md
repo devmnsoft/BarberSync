@@ -1,6 +1,6 @@
 # BarberSync Quality Gate - Última execução
 
-- Versão alvo: BarberSync Demo Ready Stabilization 18.0
+- Versão alvo: BarberSync Demo Ready Guided Release 19.0
 - Executado em UTC: 2026-06-06
 - Resultado final: REPROVADO NO AMBIENTE DO AGENTE POR PRÉ-REQUISITOS AUSENTES
 - Falhas críticas ambientais: SDK .NET ausente, Docker ausente, PowerShell (`pwsh`) ausente.

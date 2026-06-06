@@ -1,0 +1,44 @@
+@model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
+@{
+    ViewData["Title"] = "Demo Wizard";
+}
+
+<section class="demo-wizard-page" data-demo-wizard>
+  <div class="demo-wizard-hero">
+    <div>
+      <p class="eyebrow">BarberSync Demo Ready Guided Release 19.0</p>
+      <h1>Demo Wizard guiado</h1>
+      <p>Roteiro comercial executivo para validar ambiente, carregar cenário, executar atendimento completo, demonstrar PublicWeb e concluir o Totem sem explicação técnica excessiva.</p>
+      <div class="demo-wizard-actions">
+        <button class="btn btn-gold" type="button" data-wizard-start>Iniciar apresentação</button>
+        <button class="btn btn-light" type="button" data-wizard-reset>Resetar progresso</button>
+        <a class="btn btn-light" href="/Admin/Diagnostics">Abrir diagnóstico</a>
+        <a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir FullServiceFlow</a>
+      </div>
+    </div>
+    <aside class="demo-wizard-scorecard">
+      <span>Progresso salvo em localStorage</span>
+      <strong data-wizard-progress-text>0/15</strong>
+      <div class="demo-wizard-progress"><i data-wizard-progress-bar></i></div>
+      <small>Chave: barbersync.demoWizard.progress.v18</small>
+    </aside>
+  </div>
+
+  <div class="demo-wizard-grid">
+    <aside class="demo-wizard-panel">
+      <h2>Checklist de apresentação</h2>
+      <p>Use os botões em sequência. Cada ação registra evento no EventBus e mantém fallback visual mesmo com a API fora.</p>
+      <div class="demo-wizard-statuses">
+        <div><span class="wizard-dot pending"></span>Pendente</div>
+        <div><span class="wizard-dot running"></span>Em execução</div>
+        <div><span class="wizard-dot done"></span>Concluído</div>
+        <div><span class="wizard-dot attention"></span>Atenção</div>
+      </div>
+      <div class="demo-wizard-mini-log" data-wizard-log>Nenhum evento do wizard ainda.</div>
+    </aside>
+
+    <section class="demo-wizard-steps" data-wizard-steps aria-live="polite">
+      <noscript>Ative JavaScript para executar o Demo Wizard guiado.</noscript>
+    </section>
+  </div>
+</section>

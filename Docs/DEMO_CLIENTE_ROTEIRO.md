@@ -1,28 +1,28 @@
-# Roteiro de demonstração para cliente - BarberSync 18.0
+# Roteiro de demonstração para cliente - BarberSync 19.0
 
 ## Abertura
 
-1. Explique que o BarberSync centraliza agenda, PDV, comandas, estoque, cashback, fidelidade, site público e totem.
+1. Explique que o BarberSync centraliza agenda, PDV, comandas, estoque, cashback, fidelidade, site público, totem e Copilot.
 2. Mostre o Swagger como evidência da API.
-3. Abra o Admin e destaque o Dashboard executivo.
+3. Abra `/Admin/DemoWizard` e explique que a apresentação possui roteiro guiado.
 
 ## Diagnóstico
 
-1. Acesse `/Admin/Diagnostics`.
+1. Acesse `/Admin/Diagnostics` pelo Wizard.
 2. Clique **Rodar diagnóstico**.
-3. Explique status verde/amarelo/vermelho e o Quality Gate.
+3. Explique status verde/amarelo/vermelho, DemoStore, EventBus e Quality Gate.
 
 ## Fluxo principal
 
 1. Acesse `/Admin/FullServiceFlow`.
-2. Clique **Validar fluxo completo automaticamente**.
-3. Mostre eventos, comanda, pagamento, recibo, cashback, avaliação e dashboard atualizado.
+2. Clique **Rodar fluxo automático de teste** ou **Validar fluxo completo automaticamente**.
+3. Mostre cliente, agendamento, check-in, atendimento, comanda, pagamento, recibo, baixa de estoque, cashback, avaliação e Dashboard atualizado.
 
 ## PublicWeb
 
 1. Acesse `http://localhost:8082/`.
 2. Escolha serviço/profissional, informe nome e telefone.
-3. Mostre o protocolo demo e explique que o lead entra no Admin.
+3. Mostre protocolo demo e explique entrada do lead/agendamento pelo canal público.
 
 ## Kiosk
 
@@ -32,4 +32,4 @@
 
 ## Fechamento
 
-- Reforce operação omnichannel, fallback demo, prontidão de apresentação e possibilidade de evolução para produção.
+- Reforce operação omnichannel, fallback demo, prontidão comercial, roteiro guiado e próximos passos de implantação.
