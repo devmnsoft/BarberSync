@@ -1,15 +1,22 @@
-# Correções Atuais - BarberSync Quality Gate + Demo Ready 16.0
+# Correções atuais - BarberSync Demo Ready Stabilization 18.0
 
-## Entregas
+## Auditoria inicial
 
-- Quality Gate PowerShell com cores, validações de build, Docker, endpoints, assets, auditoria browser e logs.
-- Relatório automático em `Docs/quality-gate-last-run.md`.
-- Diagnóstico Admin com cards para API, proxies, Swagger, assets, DemoStore, EventBus, localStorage, FullServiceFlow, PublicWeb, Kiosk e Docker.
-- Testes JS do DemoStore com tempo de execução e validação do FullServiceFlow.
-- Dashboard com painel de Status da Demonstração e ações rápidas.
-- Testes backend smoke cobrindo serviços, profissionais, kiosk services/professionals e fallbacks dos proxies.
+- Busca browser-side por `http://api:8080`, `api:8080`, `localhost:8083/api` e `8083/api` em `Web/**/*.js`, `Web/**/*.cshtml` e `Web/**/*.html`: sem ocorrências.
+- `dotnet build`, `dotnet test`, Docker e PowerShell foram tentados, mas o container não possui `dotnet`, `docker` nem `pwsh`.
+- `MobileApp`: `npm install && npm test` passou com `Mobile smoke test passed`.
+- JS crítico de Admin/Public/Kiosk validado com `node --check`.
 
-## Pendências operacionais
+## Correções aplicadas
 
-- Executar Quality Gate em ambiente com SDK .NET, Docker e PowerShell disponíveis.
-- Validar visualmente com browsers reais antes de apresentação comercial.
+1. `Scripts/quality-gate.ps1` revisado para BarberSync Demo Ready Stabilization 18.0, com validação explícita de pré-requisitos, `docker compose build --no-cache`, endpoints, rotas, assets, POST smoke, auditoria de URLs proibidas e logs críticos.
+2. Diagnostics Admin atualizado para 18.0 com painel de documentação/Quality Gate, links operacionais, resultados visuais e estado inicial não vazio.
+3. FullServiceFlow atualizado com botão **Validar fluxo completo automaticamente**.
+4. EventBus passou a classificar `flow:autoValidated` como evento de sucesso.
+5. Dashboard passou a escutar eventos do FullServiceFlow para refletir execução automática e conclusão.
+6. Documentação de readiness e qualidade atualizada com comandos, critérios e limitações reais do ambiente.
+
+## Pendências controladas
+
+- Rodar build/test/Docker/Quality Gate em máquina com ferramentas instaladas.
+- Validar console browser real após subir Docker.

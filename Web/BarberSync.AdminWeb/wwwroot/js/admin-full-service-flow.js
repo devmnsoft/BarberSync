@@ -72,7 +72,7 @@
     const order = s.openFlowServiceOrder(appointment.id);
     s.addFlowService(order.id, 'srv-003');
     s.addFlowProduct(order.id, 'prd-001', 1);
-    const paid = s.payFlowServiceOrder(order.id, { method: 'PIX', amount: 999, discount: 0, note: 'Quality Gate 17.0' });
+    const paid = s.payFlowServiceOrder(order.id, { method: 'PIX', amount: 999, discount: 0, note: 'Quality Gate 18.0' });
     s.generateFlowReceipt(order.id);
     s.confirmFlowStock?.();
     s.generateFlowCashback(client.id, order.id);

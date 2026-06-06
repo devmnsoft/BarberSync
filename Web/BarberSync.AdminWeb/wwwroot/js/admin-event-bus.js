@@ -45,7 +45,8 @@
     'flow:apiSyncFallback':['API indisponível no fluxo','Atendimento Completo','warning'],
     'flow:cashbackGenerated':['Cashback gerado no fluxo','Atendimento Completo','success'],
     'flow:reviewCreated':['Avaliação criada no fluxo','Atendimento Completo','success'],
-    'flow:completed':['Fluxo completo concluído','Atendimento Completo','success']
+    'flow:completed':['Fluxo completo concluído','Atendimento Completo','success'],
+    'flow:autoValidated':['Fluxo completo validado automaticamente','Atendimento Completo','success']
   };
   const clone = value => JSON.parse(JSON.stringify(value));
   const read = () => {

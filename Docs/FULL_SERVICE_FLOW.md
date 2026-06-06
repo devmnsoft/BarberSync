@@ -1,23 +1,36 @@
-# FullServiceFlow BarberSync 16.0
+# FullServiceFlow BarberSync 18.0
 
-O fluxo em `/Admin/FullServiceFlow` valida a jornada completa de atendimento: cliente, agenda, check-in, atendimento, comanda, pagamento, recibo, estoque, cashback, avaliação e dashboard.
+## Objetivo
 
-## Validação automática
+Validar o atendimento completo de ponta a ponta em modo demo, sem banco real obrigatório.
 
-Use o botão **Validar fluxo completo automaticamente** para executar uma massa demo ponta a ponta. A ação:
+## Etapas
 
-1. Reinicia o fluxo local.
-2. Cria cliente demo.
-3. Cria e confirma agendamento.
-4. Realiza check-in.
-5. Inicia e finaliza atendimento.
-6. Abre comanda.
-7. Adiciona serviço e produto.
-8. Registra pagamento PIX mock.
-9. Gera recibo.
-10. Confirma baixa de estoque.
-11. Gera cashback.
-12. Cria avaliação 5 estrelas.
-13. Conclui o fluxo, atualiza dashboard e emite `flow:autoValidated`.
+1. Criar cliente.
+2. Criar agendamento.
+3. Confirmar e fazer check-in.
+4. Iniciar atendimento.
+5. Finalizar atendimento.
+6. Abrir comanda.
+7. Adicionar serviço.
+8. Adicionar produto.
+9. Realizar pagamento.
+10. Gerar recibo.
+11. Confirmar estoque.
+12. Gerar cashback.
+13. Criar avaliação.
+14. Concluir e atualizar dashboard.
 
-Se a API estiver indisponível, o DemoStore/localStorage mantém a demonstração funcionando.
+## Automação
+
+Na rota `/Admin/FullServiceFlow`, clique **Validar fluxo completo automaticamente**. A ação usa dados demo, atualiza DemoStore, emite eventos do EventBus, tenta sincronizar `/AdminApi/full-service-flow/run` e dispara `flow:autoValidated`.
+
+## Persistência
+
+- Estado principal: `barbersync.demo.state.v9`.
+- Fluxo completo: `barbersync.fullServiceFlow.v14`.
+- Eventos: `barbersync.demo.events.v6`.
+
+## Eventos esperados
+
+`flow:started`, `flow:clientCreated`, `flow:appointmentCreated`, `flow:checkInDone`, `flow:attendanceStarted`, `flow:attendanceFinished`, `flow:serviceOrderOpened`, `flow:itemAdded`, `flow:paymentDone`, `flow:receiptGenerated`, `flow:cashbackGenerated`, `flow:reviewCreated`, `flow:completed`, `flow:autoValidated`.

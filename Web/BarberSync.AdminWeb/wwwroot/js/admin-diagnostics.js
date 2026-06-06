@@ -5,7 +5,7 @@
     { key: 'publicApi', label: 'PublicApi', url: 'http://localhost:8082/PublicApi/services' },
     { key: 'kioskApi', label: 'KioskApi', url: 'http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001' },
     { key: 'swagger', label: 'Swagger', url: '/AdminApi/swagger.json' },
-    { key: 'assets', label: 'Assets', url: '/css/admin-design-system.css', accept: 'text/css,*/*' },
+    { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/js/admin-dashboard.js', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
     { key: 'publicWeb', label: 'PublicWeb', url: 'http://localhost:8082/', accept: 'text/html,*/*' },
     { key: 'kiosk', label: 'Kiosk', url: 'http://localhost:8083/Kiosk/Services', accept: 'text/html,*/*' }
   ];
@@ -78,8 +78,14 @@
   async function runDiagnostics() {
     runLocalChecks();
     for (const check of checks) {
-      const result = await safeFetch(check.url, check.accept);
-      setCard(check.key, statusClass(result), result.ok ? `${check.label} respondeu HTTP ${result.status}.` : `${check.label} requer atenção: ${result.error || `HTTP ${result.status}`}`);
+      const targets = check.urls || [check.url];
+      const results = await Promise.all(targets.map(url => safeFetch(url, check.accept)));
+      const failures = results.filter(result => !result.ok);
+      const result = failures[0] || results[0];
+      const detail = failures.length === 0
+        ? `${check.label} respondeu HTTP ${result.status} em ${targets.length} validação(ões).`
+        : `${check.label} requer atenção em ${failures.length}/${targets.length}: ${result.error || `HTTP ${result.status}`}`;
+      setCard(check.key, failures.length === 0 ? 'ok' : statusClass(result), detail);
     }
     const tests = await window.BarberSyncDemoStoreTests?.run?.();
     if (tests) renderTests(tests);

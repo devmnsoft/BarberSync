@@ -1,31 +1,26 @@
 # BarberSync Quality Gate - Última execução
 
-- Executado em UTC: 2026-06-05 23:11:30
-- Resultado final: REPROVADO
-- Passos executados: 5
-- Falhas críticas: 3
-- Alertas: 0
+- Versão alvo: BarberSync Demo Ready Stabilization 18.0
+- Executado em UTC: 2026-06-06
+- Resultado final: REPROVADO NO AMBIENTE DO AGENTE POR PRÉ-REQUISITOS AUSENTES
+- Falhas críticas ambientais: SDK .NET ausente, Docker ausente, PowerShell (`pwsh`) ausente.
+- Validações estáticas/JS/Mobile executadas com sucesso.
 
 | Validação | Alvo | Status | Detalhe |
 |---|---|---|---|
-| PowerShell disponível | `pwsh -NoLogo -NoProfile -File Scripts/quality-gate.ps1` | FAIL | `/bin/bash: line 1: pwsh: command not found` neste container. |
-| dotnet disponível | `dotnet --version` | FAIL | `/bin/bash: line 1: dotnet: command not found` neste container. |
-| Docker disponível | `docker --version && docker compose version` | FAIL | `/bin/bash: line 1: docker: command not found` neste container. |
-| Mobile smoke | `cd MobileApp && npm install && npm test` | OK | `Mobile smoke test passed.` |
-| Front syntax/browser URL audit | `node --check` em `Web/**/wwwroot/js/*.js` e `rg` de URLs proibidas no front | OK | Sem erro de sintaxe JS e sem chamadas diretas browser para host interno Docker. |
+| Pré-requisito dotnet | `dotnet` | FAIL | `/bin/bash: dotnet: command not found` |
+| Pré-requisito docker | `docker` | FAIL | `/bin/bash: docker: command not found` |
+| Pré-requisito pwsh | `pwsh` | FAIL | `/bin/bash: pwsh: command not found` |
+| Auditoria URL proibida no front | `Web/**/*.{js,cshtml,html}` | OK | Sem chamadas diretas para `http://api:8080`, `api:8080`, `localhost:8083/api` ou `8083/api`. |
+| JS syntax check | JS crítico Admin/Public/Kiosk | OK | `node --check` passou nos arquivos críticos. |
+| Mobile smoke | `MobileApp` | OK | `npm install && npm test` passou com `Mobile smoke test passed`. |
 
 ## Falhas encontradas
 
-- Ambiente local do agente não possui PowerShell (`pwsh`), .NET SDK (`dotnet`) nem Docker (`docker`).
-- Por limitação de ambiente, não foi possível executar build .NET, testes .NET, Docker Compose, endpoints HTTP reais, Swagger real e logs Docker.
+- O Quality Gate completo precisa ser executado em ambiente com SDK .NET, Docker e PowerShell instalados.
 
 ## Como corrigir
 
-- Executar `pwsh -NoLogo -NoProfile -File Scripts/quality-gate.ps1` em uma máquina de demo/CI com PowerShell, .NET SDK e Docker instalados.
-- Se endpoints/proxies falharem: confira `docker compose up -d`, health da API e fallbacks MVC.
-- Se assets falharem: confira publicação dos diretórios `wwwroot` e referências nos layouts.
-- Se aparecer URL proibida no front: remover chamadas diretas a `http://api:8080`, `api:8080`, `localhost:8083/api` ou `8083/api` de `.js`, `.cshtml` e `.html`.
-
-## Resultado final
-
-**REPROVADO no container atual por limitação de ferramentas**, com validações estáticas e Mobile smoke aprovados. Reexecutar o Quality Gate completo no ambiente com .NET/Docker/PowerShell antes da apresentação comercial.
+- Instale SDK .NET compatível, Docker Engine/Desktop e PowerShell 7+.
+- Rode `pwsh -NoLogo -NoProfile -File .\Scripts\quality-gate.ps1` na raiz do repositório.
+- Corrija qualquer endpoint, asset, proxy ou log crítico reportado pelo script.
