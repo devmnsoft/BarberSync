@@ -1,26 +1,33 @@
-# Diagnóstico BarberSync 16.0
+# Diagnostics Admin BarberSync
 
-A tela `/Admin/Diagnostics` é o painel visual de saúde da demonstração. Ela não depende da API para renderizar conteúdo inicial e usa cards com status verde, amarelo ou vermelho.
+## Rota
 
-## Itens exibidos
+- `GET /Admin/Diagnostics`
+
+## Validações exibidas
 
 - API via `/AdminApi/api-health`.
 - AdminApi via `/AdminApi/dashboard`.
-- PublicApi via `http://localhost:8082/PublicApi/services`.
-- KioskApi via `http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001`.
+- PublicApi e KioskApi por seus endpoints demo.
 - Swagger via `/AdminApi/swagger.json`.
-- Assets Admin.
-- DemoStore.
-- EventBus.
-- localStorage.
-- FullServiceFlow.
-- PublicWeb.
-- Kiosk.
-- Docker como validação manual/demo pelo Quality Gate.
+- Assets principais.
+- DemoStore, EventBus e localStorage.
+- FullServiceFlow local.
+- PublicWeb e Kiosk.
+- Últimos erros/eventos registrados.
+- Testes JS do DemoStore.
+
+## Estados visuais
+
+- Verde: OK.
+- Amarelo: atenção controlada/fallback/ambiente indisponível.
+- Vermelho: falha real.
+
+A tela nunca fica vazia: todos os cartões iniciam em estado de atenção e são atualizados progressivamente.
 
 ## Ações
 
-- **Rodar diagnóstico**: executa probes HTTP e testes locais.
-- **Resetar DemoStore**: limpa dados demo e recalcula status.
+- **Rodar diagnóstico**: executa endpoints e testes locais.
+- **Resetar DemoStore**: limpa estado demo e histórico local.
 - **Exportar diagnóstico mock**: baixa JSON com eventos e resumo local.
-- **Executar testes JS**: valida DemoStore, EventBus, localStorage e FullServiceFlow no navegador.
+- Links operacionais para FullServiceFlow, Dashboard e artefatos documentais.

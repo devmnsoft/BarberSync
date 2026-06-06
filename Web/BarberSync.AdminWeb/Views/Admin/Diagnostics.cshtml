@@ -1,14 +1,34 @@
-@{ ViewData["Title"] = "Diagnóstico BarberSync 16.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@{ ViewData["Title"] = "Diagnóstico BarberSync 18.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
 <section class="diagnostics-hero">
   <div>
-    <span class="badge">Quality Gate + Demo Ready 16.0</span>
+    <span class="badge">Quality Gate + Demo Ready Stabilization 18.0</span>
     <h1>Diagnóstico do Sistema</h1>
-    <p>Valide API, proxies MVC, assets, DemoStore, EventBus, localStorage e últimos eventos antes da apresentação comercial.</p>
+    <p>Valide API, Swagger, proxies MVC, assets, DemoStore, EventBus, localStorage, FullServiceFlow e últimos eventos antes da apresentação comercial.</p>
   </div>
   <div class="diagnostics-actions">
     <button class="btn btn-gold" type="button" data-run-diagnostics>Rodar diagnóstico</button>
     <button class="btn btn-light" type="button" data-reset-demo-store>Resetar DemoStore</button>
     <button class="btn btn-light" type="button" data-export-diagnostics>Exportar diagnóstico mock</button>
+    <a class="btn btn-light" href="/Admin/FullServiceFlow">FullServiceFlow</a>
+  </div>
+</section>
+
+<section class="diagnostics-panel" id="quality-gate" style="margin-bottom:22px">
+  <div class="saas7-toolbar" style="justify-content:space-between;gap:16px;align-items:flex-start">
+    <div>
+      <h2>Documentação e Quality Gate</h2>
+      <p>Os links abaixo apontam para os artefatos versionados. Em ambiente local, rode <code>Scripts/quality-gate.ps1</code> e atualize <code>Docs/quality-gate-last-run.md</code>.</p>
+    </div>
+    <div class="diagnostics-actions">
+      <a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir FullServiceFlow</a>
+      <a class="btn btn-light" href="/Admin/Dashboard">Abrir Dashboard</a>
+    </div>
+  </div>
+  <div class="diagnostic-links">
+    <code>Docs/DEMO_READINESS_REPORT.md</code>
+    <code>Docs/QUALITY_GATE.md</code>
+    <code>Docs/quality-gate-last-run.md</code>
+    <code>Docs/CHECKLIST_DEMO.md</code>
   </div>
 </section>
 
@@ -30,8 +50,9 @@
 
 <section class="diagnostics-columns">
   <article class="diagnostics-panel">
-    <div class="saas7-toolbar"><h2>Testes DemoStore no navegador</h2><button class="btn btn-light" type="button" data-run-demo-store-tests>Executar testes JS</button></div>
-    <div data-demo-store-tests class="diagnostic-test-list"></div>
+    <div class="saas7-toolbar"><h2>Testes DemoStore no navegador</h2><button class="btn btn-light" type="button" data-run-demo-store-tests>Executar novamente</button></div>
+    <p>Valida inicialização, cliente, agendamento, comanda, pagamento, cashback, avaliação, EventBus, dashboard, localStorage e FullServiceFlow.</p>
+    <div data-demo-store-tests class="diagnostic-test-list">Aguardando execução automática.</div>
   </article>
   <article class="diagnostics-panel">
     <h2>Últimos erros registrados</h2>

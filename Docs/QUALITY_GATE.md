@@ -1,46 +1,47 @@
-# BarberSync Quality Gate + Demo Ready 16.0
+# Quality Gate BarberSync
 
 ## Como rodar
 
 ```powershell
-.\Scripts\quality-gate.ps1
+pwsh -NoLogo -NoProfile -File .\Scripts\quality-gate.ps1
 ```
 
-Parâmetros úteis:
+Opções úteis:
 
-- `-SkipDotnetBuild`: pula `dotnet build` quando a solução já foi compilada.
-- `-SkipDockerBuild`: pula `docker compose build` quando as imagens já estão atualizadas.
-- `-WarmupSeconds 30`: aumenta o tempo de aquecimento dos containers.
+```powershell
+pwsh -File .\Scripts\quality-gate.ps1 -SkipDockerBuild
+pwsh -File .\Scripts\quality-gate.ps1 -WarmupSeconds 40
+```
 
-## O que valida
+## O que o script valida
 
-1. `dotnet build`.
-2. `docker compose build`.
-3. `docker compose up -d`.
-4. `docker compose ps`.
-5. Swagger UI e `swagger/v1/swagger.json`.
-6. Endpoints API `/api/services`, `/api/professionals` e kiosk.
-7. Proxies MVC `/AdminApi`, `/PublicApi` e `/KioskApi`.
-8. Assets principais de AdminWeb, PublicWeb e KioskWeb.
-9. Ausência de chamadas browser para hosts internos Docker em arquivos web.
-10. Logs Docker sem padrões críticos.
-
-O relatório da última execução é salvo em `Docs/quality-gate-last-run.md`.
+1. Pré-requisitos `dotnet` e `docker`.
+2. `dotnet build BarberSync.sln`.
+3. `dotnet test BarberSync.sln --no-build` quando há projetos de teste.
+4. `docker compose build --no-cache`.
+5. `docker compose up -d` e `docker compose ps`.
+6. Swagger, API, AdminApi, PublicApi e KioskApi.
+7. Rotas visuais Admin/Public/Kiosk.
+8. Assets principais CSS/JS/SVG.
+9. POST smoke de agendamento público e pagamento mock do totem.
+10. Busca por URLs proibidas em arquivos browser-side.
+11. Logs Docker com padrões críticos.
+12. Relatório final em `Docs/quality-gate-last-run.md`.
 
 ## Como interpretar falhas
 
-- **Endpoint 404/500**: confira rota, controller e fallback demo do respectivo proxy.
-- **Asset 404**: confira caminho em `wwwroot`, layout e Dockerfile/publicação.
-- **Browser URL proibida**: substitua chamadas diretas por `/AdminApi`, `/PublicApi` ou `/KioskApi`.
-- **Logs críticos**: revise exceções, falhas de DI, Swagger quebrado, assets 404 e erros de proxy.
+- **Pré-requisito falhou:** instale SDK .NET, Docker Engine/Desktop ou PowerShell.
+- **Endpoint 404/500:** confirme rota MVC/API, fallback demo e proxy correto.
+- **Asset 404:** confirme `wwwroot`, nomes de arquivo e publicação Docker.
+- **URL proibida no front:** troque chamada direta por `/AdminApi`, `/PublicApi` ou `/KioskApi`.
+- **Logs críticos:** investigue antes de qualquer demo comercial.
 
 ## Como corrigir endpoints
 
-- API direta deve responder em `http://localhost:8080`.
-- AdminWeb deve usar `/AdminApi/*` no browser.
-- PublicWeb deve usar `/PublicApi/*` no browser.
-- KioskWeb deve usar `/KioskApi/*` no browser.
-- `ApiSettings:BaseUrl` é server-side e pode apontar para o host interno do Docker Compose.
+- Browser Admin deve chamar `/AdminApi/...`.
+- Browser PublicWeb deve chamar `/PublicApi/...`.
+- Browser Kiosk deve chamar `/KioskApi/...`.
+- `ApiSettings:BaseUrl` é permitido somente no server-side MVC/Docker.
 
 ## Como validar Docker
 
@@ -56,8 +57,9 @@ docker compose logs --tail=300
 Abra com Ctrl+F5:
 
 - `http://localhost:8080/swagger`
-- `http://localhost:8081/Admin`
 - `http://localhost:8081/Admin/Diagnostics`
 - `http://localhost:8081/Admin/FullServiceFlow`
 - `http://localhost:8082/`
 - `http://localhost:8083/Kiosk/Services`
+
+O console não deve exibir `ERR_NAME_NOT_RESOLVED`, `ReferenceError` do BarberSync, assets principais 404 ou chamadas para host interno Docker.
