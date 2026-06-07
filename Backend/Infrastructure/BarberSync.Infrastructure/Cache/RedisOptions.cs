@@ -1,2 +1,8 @@
 namespace BarberSync.Infrastructure.Cache;
-public class RedisOptions { public string ConnectionString { get; set; } = "localhost:6379"; }
+
+public sealed class RedisOptions
+{
+    public string ConnectionString { get; set; } = "";
+
+    public bool Enabled { get; set; }
+}
