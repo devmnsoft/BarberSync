@@ -34,7 +34,18 @@
       copilotSuggestions:[{ id:'sug-001', type:'campaign', title:'Chamar clientes sem retorno', description:'Crie campanha com cupom VOLTE20 para clientes inativos.', action:'createCampaign' },{ id:'sug-002', type:'stock', title:'Repor Pomada Modeladora', description:'Produto abaixo do mínimo.', action:'stockReplenishment' },{ id:'sug-003', type:'agenda', title:'Preencher amanhã 15h', description:'Envie oferta para clientes VIP.', action:'fillSchedule' }], dashboardEvents:[] };
   }
   let state;
-  function save() { state.updatedAt = now(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); if (state.fullServiceFlow) localStorage.setItem('barbersync.fullServiceFlow.v14', JSON.stringify(state.fullServiceFlow)); if (state.commercialFlow) localStorage.setItem(COMMERCIAL_FLOW_KEY, JSON.stringify(state.commercialFlow)); window.dispatchEvent(new CustomEvent('barbersync:store-changed', { detail: api.exportState() })); }
+  function save() {
+    state.updatedAt = now();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (state.fullServiceFlow) localStorage.setItem('barbersync.fullServiceFlow.v14', JSON.stringify(state.fullServiceFlow));
+      if (state.commercialFlow) localStorage.setItem(COMMERCIAL_FLOW_KEY, JSON.stringify(state.commercialFlow));
+    } catch (error) {
+      console.warn('[BarberSync DemoStore] persistência local indisponível', error?.message || error);
+      emit('demo:storageWarning', { title: 'Persistência local indisponível', severity: 'warning', message: error?.message || String(error) });
+    }
+    try { window.dispatchEvent(new CustomEvent('barbersync:store-changed', { detail: api.exportState() })); } catch { /* evento opcional em modo demo */ }
+  }
   function load() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { const parsed = JSON.parse(raw); if (parsed.schemaVersion === SCHEMA_VERSION) return parsed; } if (localStorage.getItem(OLD_KEY)) localStorage.removeItem(OLD_KEY); } catch {} return seed(); }
   function ensure(moduleName) { if (!modules.includes(moduleName)) throw new Error(`Módulo demo inválido: ${moduleName}`); state[moduleName] ||= []; return state[moduleName]; }
   function recalc(order) { order.subtotal = order.items.reduce((s,i) => s + money(i.amount || i.price) * money(i.quantity || 1), 0); order.total = Math.max(0, order.subtotal - money(order.discount) - money(order.cashbackUsed)); return order; }

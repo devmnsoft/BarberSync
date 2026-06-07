@@ -1,15 +1,18 @@
-@{ ViewData["Title"] = "Diagnóstico BarberSync 18.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@{ ViewData["Title"] = "Diagnóstico BarberSync 20.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
 <section class="diagnostics-hero">
   <div>
-    <span class="badge">Quality Gate + Demo Ready Guided Release 19.0</span>
+    <span class="badge">Quality Gate + Demo Ready Fix & Validate 20.0</span>
     <h1>Diagnóstico do Sistema</h1>
     <p>Valide API, Swagger, proxies MVC, assets, DemoStore, EventBus, localStorage, FullServiceFlow e últimos eventos antes da apresentação comercial.</p>
   </div>
   <div class="diagnostics-actions">
     <button class="btn btn-gold" type="button" data-run-diagnostics>Rodar diagnóstico</button>
     <button class="btn btn-light" type="button" data-reset-demo-store>Resetar DemoStore</button>
-    <button class="btn btn-light" type="button" data-export-diagnostics>Exportar diagnóstico mock</button>
-    <a class="btn btn-light" href="/Admin/FullServiceFlow">FullServiceFlow</a>
+    <button class="btn btn-light" type="button" data-export-diagnostics>Exportar diagnóstico</button>
+    <a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir FullServiceFlow</a>
+    <a class="btn btn-light" href="http://localhost:8082/">Abrir PublicWeb</a>
+    <a class="btn btn-light" href="http://localhost:8083/Kiosk/Services">Abrir Kiosk</a>
+    <a class="btn btn-light" href="/AdminApi/swagger">Abrir Swagger</a>
   </div>
 </section>
 
@@ -22,6 +25,7 @@
     <div class="diagnostics-actions">
       <a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir FullServiceFlow</a>
       <a class="btn btn-light" href="/Admin/Dashboard">Abrir Dashboard</a>
+      <a class="btn btn-light" href="/AdminApi/swagger.json">Ver Swagger JSON</a>
     </div>
   </div>
   <div class="diagnostic-links">

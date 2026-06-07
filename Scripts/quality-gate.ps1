@@ -10,7 +10,7 @@ $results = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $reportPath = Join-Path (Get-Location) 'Docs/quality-gate-last-run.md'
-$demoVersion = 'BarberSync Demo Ready Guided Release 19.0'
+$demoVersion = 'BarberSync Demo Ready Fix & Validate 20.0'
 
 function Add-Result {
     param([string]$Name, [string]$Target, [string]$Status, [string]$Detail = '')
@@ -125,7 +125,18 @@ function Assert-CleanLogs {
 $dotnetAvailable = Test-CommandAvailable 'dotnet'
 $dockerAvailable = Test-CommandAvailable 'docker'
 
-if (-not $SkipDotnetBuild -and $dotnetAvailable) { Invoke-Step 'dotnet build' { dotnet build BarberSync.sln } }
+if (-not $SkipDotnetBuild -and $dotnetAvailable) {
+    Invoke-Step 'dotnet build' { dotnet build BarberSync.sln }
+    $projectBuilds = @(
+        'Backend/Presentation/BarberSync.Api/BarberSync.Api.csproj',
+        'Web/BarberSync.AdminWeb/BarberSync.AdminWeb.csproj',
+        'Web/BarberSync.PublicWeb/BarberSync.PublicWeb.csproj',
+        'Web/BarberSync.KioskWeb/BarberSync.KioskWeb.csproj'
+    )
+    foreach ($project in $projectBuilds) {
+        Invoke-Step "dotnet build $project" { dotnet build $project }
+    }
+}
 if (-not $SkipDotnetTest -and $dotnetAvailable) {
     $testProjects = Get-ChildItem -Path . -Recurse -Filter *.csproj | Where-Object { $_.FullName -match '[\\/]Tests[\\/]|\.Tests\.csproj$' }
     if ($testProjects.Count -gt 0) { Invoke-Step 'dotnet test' { dotnet test BarberSync.sln --no-build } } else { Add-Result 'dotnet test' 'BarberSync.sln' 'WARN' 'nenhum projeto de teste encontrado' }
@@ -153,6 +164,11 @@ $endpoints = @(
     @{Name='AdminApi Service Orders'; Url='http://localhost:8081/AdminApi/service-orders'},
     @{Name='AdminApi Products'; Url='http://localhost:8081/AdminApi/products'},
     @{Name='AdminApi Stock Critical'; Url='http://localhost:8081/AdminApi/stock-critical'},
+    @{Name='AdminApi Campaigns'; Url='http://localhost:8081/AdminApi/campaigns'},
+    @{Name='AdminApi Coupons'; Url='http://localhost:8081/AdminApi/coupons'},
+    @{Name='AdminApi Reviews'; Url='http://localhost:8081/AdminApi/reviews'},
+    @{Name='AdminApi Loyalty'; Url='http://localhost:8081/AdminApi/loyalty'},
+    @{Name='AdminApi Copilot Suggestions'; Url='http://localhost:8081/AdminApi/copilot-suggestions'},
     @{Name='PublicApi Services'; Url='http://localhost:8082/PublicApi/services'},
     @{Name='PublicApi Professionals'; Url='http://localhost:8082/PublicApi/professionals'},
     @{Name='KioskApi Services'; Url='http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001'},
@@ -179,6 +195,11 @@ $assets = @(
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-dashboard.js'},
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-demo-store.js'},
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-event-bus.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/js/admin-diagnostics.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/js/admin-full-service-flow.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/js/tests/demo-store-tests.js'},
+    @{Name='Admin asset'; Url='http://localhost:8081/css/admin-diagnostics.css'},
+    @{Name='Admin asset'; Url='http://localhost:8081/css/admin-full-service-flow.css'},
     @{Name='Admin asset'; Url='http://localhost:8081/js/admin-demo-wizard.js'},
     @{Name='Admin asset'; Url='http://localhost:8081/css/admin-demo-wizard.css'},
     @{Name='Admin asset'; Url='http://localhost:8081/img/logo-barbersync.svg'},
@@ -192,8 +213,13 @@ $assets = @(
 )
 
 $postEndpoints = @(
+    @{Name='AdminApi Copilot Ask POST'; Url='http://localhost:8081/AdminApi/copilot/ask'; Json='{"question":"Como melhorar a agenda hoje?"}'},
     @{Name='PublicApi Appointment POST'; Url='http://localhost:8082/PublicApi/appointments'; Json='{"name":"Quality Gate","phone":"(11) 99999-0000","serviceId":"srv-001"}'},
-    @{Name='KioskApi Payment Mock POST'; Url='http://localhost:8083/KioskApi/payment/mock'; Json='{"amount":75,"method":"PIX"}'}
+    @{Name='PublicApi Lead POST'; Url='http://localhost:8082/PublicApi/leads'; Json='{"name":"Lead Quality Gate","phone":"(11) 98888-0000"}'},
+    @{Name='KioskApi Client Find POST'; Url='http://localhost:8083/KioskApi/client/find-by-phone'; Json='{"phone":"(11) 99999-0000"}'},
+    @{Name='KioskApi Client Quick Register POST'; Url='http://localhost:8083/KioskApi/client/quick-register'; Json='{"name":"Cliente Kiosk","phone":"(11) 99999-0000"}'},
+    @{Name='KioskApi Payment Mock POST'; Url='http://localhost:8083/KioskApi/payment/mock'; Json='{"amount":75,"method":"PIX"}'},
+    @{Name='KioskApi Review POST'; Url='http://localhost:8083/KioskApi/review'; Json='{"rating":5,"comment":"Aprovado"}'}
 )
 
 Write-Host "`n=== Endpoints ===" -ForegroundColor Cyan
