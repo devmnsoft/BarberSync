@@ -1,11 +1,11 @@
 (() => {
   const checks = [
     { key: 'api', label: 'API', url: '/AdminApi/api-health' },
-    { key: 'adminApi', label: 'AdminApi', url: '/AdminApi/dashboard' },
-    { key: 'publicApi', label: 'PublicApi', url: 'http://localhost:8082/PublicApi/services' },
-    { key: 'kioskApi', label: 'KioskApi', url: 'http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001' },
-    { key: 'swagger', label: 'Swagger', url: '/AdminApi/swagger.json' },
-    { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/js/admin-dashboard.js', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
+    { key: 'adminApi', label: 'AdminApi', urls: ['/AdminApi/dashboard', '/AdminApi/clients', '/AdminApi/services', '/AdminApi/service-orders'] },
+    { key: 'publicApi', label: 'PublicApi', urls: ['http://localhost:8082/PublicApi/services', 'http://localhost:8082/PublicApi/professionals'] },
+    { key: 'kioskApi', label: 'KioskApi', urls: ['http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001', 'http://localhost:8083/KioskApi/professionals?serviceId=demo&deviceCode=KIOSK-DEMO-001'] },
+    { key: 'swagger', label: 'Swagger', urls: ['/AdminApi/swagger', '/AdminApi/swagger.json'] },
+    { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/css/admin-diagnostics.css', '/css/admin-full-service-flow.css', '/js/admin-dashboard.js', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/js/admin-diagnostics.js', '/js/admin-full-service-flow.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
     { key: 'publicWeb', label: 'PublicWeb', url: 'http://localhost:8082/', accept: 'text/html,*/*' },
     { key: 'kiosk', label: 'Kiosk', url: 'http://localhost:8083/Kiosk/Services', accept: 'text/html,*/*' }
   ];
@@ -102,7 +102,7 @@
       await runDiagnostics();
     }
     if (event.target.closest('[data-export-diagnostics]')) {
-      const payload = { generatedAt: new Date().toISOString(), events: window.BarberSyncEventBus?.last?.(20) || [], state: window.BarberSyncDemoStore?.dashboardSummary?.() || null, qualityGate: 'Scripts/quality-gate.ps1' };
+      const payload = { generatedAt: new Date().toISOString(), events: window.BarberSyncEventBus?.last?.(20) || [], state: window.BarberSyncDemoStore?.dashboardSummary?.() || null, qualityGate: 'Scripts/quality-gate.ps1', targetVersion: 'BarberSync Demo Ready Fix & Validate 20.0' };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
