@@ -270,7 +270,15 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
         command.Parameters.AddWithValue("delta", delta);
         var critical = await command.ExecuteScalarAsync(cancellationToken);
         await AuditAsync(connection, "Estoque", movementType, "products", productId, $"Movimento de estoque {movementType} aplicado.", payload.GetRawText(), cancellationToken);
-        if (critical is bool true) await NotifyAsync(connection, "Produto abaixo do estoque mínimo.", "products", productId, cancellationToken);
+        if (critical is bool isCritical && isCritical)
+        {
+            await NotifyAsync(
+                connection,
+                "Produto abaixo do estoque mínimo.",
+                "products",
+                productId,
+                cancellationToken);
+        }
     }
 
     private async Task NotifyOnCreateAsync(NpgsqlConnection connection, string resource, Guid id, string json, CancellationToken cancellationToken)
