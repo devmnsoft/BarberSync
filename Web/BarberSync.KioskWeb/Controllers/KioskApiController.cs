@@ -40,22 +40,16 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("KioskApi proxy GET {Path} falhou com status {StatusCode}", path, response.StatusCode);
-                return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
+                return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            if (!ResponseLooksEmpty(json))
-            {
-                return Content(json, "application/json", Encoding.UTF8);
-            }
-
-            logger.LogWarning("KioskApi proxy GET {Path} retornou payload vazio", path);
-            return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
+            return Content(json, "application/json", Encoding.UTF8);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "KioskApi proxy GET {Path} lançou exceção. Usando fallback demo.", path);
-            return Ok(new { success = true, message = fallbackMessage, data = fallbackData });
+            return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
         }
     }
 
