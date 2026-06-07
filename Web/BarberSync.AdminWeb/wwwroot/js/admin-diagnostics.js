@@ -2,6 +2,7 @@
   const checks = [
     { key: 'api', label: 'API', url: '/AdminApi/api-health' },
     { key: 'adminApi', label: 'AdminApi', urls: ['/AdminApi/dashboard', '/AdminApi/clients', '/AdminApi/services', '/AdminApi/service-orders'] },
+    { key: 'databaseSchema', label: 'Database schema BarberSync', url: '/AdminApi/health/database' },
     { key: 'publicApi', label: 'PublicApi', urls: ['http://localhost:8082/PublicApi/services', 'http://localhost:8082/PublicApi/professionals'] },
     { key: 'kioskApi', label: 'KioskApi', urls: ['http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001', 'http://localhost:8083/KioskApi/professionals?serviceId=demo&deviceCode=KIOSK-DEMO-001'] },
     { key: 'swagger', label: 'Swagger', urls: ['/AdminApi/swagger', '/AdminApi/swagger.json'] },

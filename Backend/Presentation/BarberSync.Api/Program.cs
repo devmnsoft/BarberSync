@@ -47,11 +47,14 @@ builder.Services.AddAuthorization();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddSingleton<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
 
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+await app.Services.GetRequiredService<IBarberSchemaInitializer>().InitializeAsync(app.Lifetime.ApplicationStopping);
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 

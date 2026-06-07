@@ -4,10 +4,8 @@ using NpgsqlTypes;
 
 namespace BarberSync.Api.Services.Enterprise;
 
-public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<EnterpriseDataService> logger)
+public sealed class EnterpriseDataService(IConfiguration configuration)
 {
-    private static readonly SemaphoreSlim SchemaLock = new(1, 1);
-    private static bool _schemaReady;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
         ?? "Host=localhost;Port=5432;Database=barber;Username=barbersync;Password=barbersync_demo_10";
@@ -39,7 +37,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(string resource, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         await using var connection = await OpenAsync(cancellationToken);
         var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where deleted_at is null order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
@@ -54,7 +51,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>?> GetAsync(string resource, Guid id, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         await using var connection = await OpenAsync(cancellationToken);
         var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where id = @id and deleted_at is null";
         await using var command = new NpgsqlCommand(sql, connection);
@@ -65,7 +61,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>> CreateAsync(string resource, JsonElement payload, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         var validation = Validate(resource, payload, null);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
 
@@ -95,7 +90,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>> UpdateAsync(string resource, Guid id, JsonElement payload, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         var validation = Validate(resource, payload, id);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
 
@@ -116,7 +110,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task SoftDeleteAsync(string resource, Guid id, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         await using var connection = await OpenAsync(cancellationToken);
         var sql = $"update barber.{Table(resource)} set deleted_at = now(), is_active = false, status = 'Inactive', updated_at = now() where id = @id and deleted_at is null";
         await using var command = new NpgsqlCommand(sql, connection);
@@ -127,7 +120,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>> ChangeAppointmentStatusAsync(Guid id, string targetStatus, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         var appointment = await GetAsync("appointments", id, cancellationToken) ?? throw new KeyNotFoundException("Agendamento não encontrado.");
         var current = appointment.TryGetValue("status", out var value) ? value?.ToString() ?? "Scheduled" : "Scheduled";
         if (!CanTransition(current, targetStatus))
@@ -153,7 +145,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>> DashboardAsync(CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         await using var connection = await OpenAsync(cancellationToken);
         async Task<int> Count(string table, string where = "deleted_at is null")
         {
@@ -223,7 +214,6 @@ public sealed class EnterpriseDataService(IConfiguration configuration, ILogger<
 
     public async Task<Dictionary<string, object?>> PayServiceOrderAsync(Guid orderId, JsonElement payload, CancellationToken cancellationToken = default)
     {
-        await EnsureSchemaAsync(cancellationToken);
         await using var connection = await OpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         try
@@ -304,33 +294,6 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
         var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
         return connection;
-    }
-
-    private async Task EnsureSchemaAsync(CancellationToken cancellationToken)
-    {
-        if (_schemaReady) return;
-        await SchemaLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (_schemaReady) return;
-            await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
-            var scriptPath = Path.Combine(AppContext.BaseDirectory, "ScriptsSQL", "barber_full_database_postgresql.sql");
-            var sql = File.Exists(scriptPath) ? await File.ReadAllTextAsync(scriptPath, cancellationToken) : EmbeddedSchema;
-            if (!sql.Contains("CREATE SCHEMA IF NOT EXISTS barber", StringComparison.OrdinalIgnoreCase)) sql = EmbeddedSchema;
-            await using var command = new NpgsqlCommand(sql, connection) { CommandTimeout = 120 };
-            await command.ExecuteNonQueryAsync(cancellationToken);
-            _schemaReady = true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Falha ao preparar schema BarberSync.");
-            throw;
-        }
-        finally
-        {
-            SchemaLock.Release();
-        }
     }
 
     private async Task AuditAsync(NpgsqlConnection connection, string module, string action, string entityName, Guid entityId, string description, string metadata, CancellationToken cancellationToken)
@@ -479,7 +442,6 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
     private static string Table(string resource) => Tables.TryGetValue(resource, out var table) ? table : throw new ArgumentOutOfRangeException(nameof(resource), resource, "Recurso não mapeado.");
     private static string Module(string resource) => resource.Replace('-', ' ').Replace('_', ' ');
 
-    private const string EmbeddedSchema = "CREATE SCHEMA IF NOT EXISTS barber;";
 }
 
 public sealed class EnterpriseValidationException(IReadOnlyCollection<FieldError> errors) : Exception("Existem campos inválidos.")

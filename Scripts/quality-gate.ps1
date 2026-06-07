@@ -86,6 +86,28 @@ function Test-Url200 {
     } catch { Add-Result $Name $Url 'FAIL' $_.Exception.Message }
 }
 
+
+function Test-DatabaseHealth {
+    param([string]$Url)
+    try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 3
+        $body = $response.Content | ConvertFrom-Json
+        $hasControlledMessage = -not [string]::IsNullOrWhiteSpace([string]$body.message)
+        $hasExpectedFlags = $null -ne $body.databaseConnected -and $null -ne $body.schemaReady
+        if ([int]$response.StatusCode -ne 200) {
+            Add-Result 'API Database Health Semântico' $Url 'FAIL' "HTTP $($response.StatusCode)"
+        } elseif (-not $hasControlledMessage -or -not $hasExpectedFlags) {
+            Add-Result 'API Database Health Semântico' $Url 'FAIL' 'resposta sem message/databaseConnected/schemaReady controlados'
+        } elseif ($body.schemaReady -eq $true) {
+            Add-Result 'API Database Health Semântico' $Url 'OK' $body.message
+        } else {
+            Add-Result 'API Database Health Semântico' $Url 'WARN' $body.message
+        }
+    } catch {
+        Add-Result 'API Database Health Semântico' $Url 'FAIL' $_.Exception.Message
+    }
+}
+
 function Test-HttpPost200 {
     param([string]$Name, [string]$Url, [string]$Json = '{}')
     $environmentName = $env:ASPNETCORE_ENVIRONMENT
@@ -157,6 +179,7 @@ if ($dockerAvailable) {
 $endpoints = @(
     @{Name='API Swagger UI'; Url='http://localhost:8080/swagger'},
     @{Name='API Swagger JSON'; Url='http://localhost:8080/swagger/v1/swagger.json'},
+    @{Name='API Database Health'; Url='http://localhost:8080/api/health/database'},
     @{Name='API Services'; Url='http://localhost:8080/api/services'},
     @{Name='API Professionals'; Url='http://localhost:8080/api/professionals'},
     @{Name='API Clients'; Url='http://localhost:8080/api/clients'},
@@ -237,6 +260,7 @@ $postEndpoints = @(
 )
 
 Write-Host "`n=== Endpoints ===" -ForegroundColor Cyan
+Test-DatabaseHealth "http://localhost:8080/api/health/database"
 $endpoints | ForEach-Object { Test-Url200 $_.Name $_.Url }
 Write-Host "`n=== Visual routes ===" -ForegroundColor Cyan
 $routes | ForEach-Object { Test-Url200 $_.Name $_.Url }
