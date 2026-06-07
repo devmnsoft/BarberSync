@@ -10,7 +10,7 @@ $results = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $reportPath = Join-Path (Get-Location) 'Docs/quality-gate-last-run.md'
-$demoVersion = 'BarberSync Demo Ready Fix & Validate 20.0'
+$demoVersion = 'BarberSync Real Data + Business Rules 21.0'
 
 function Add-Result {
     param([string]$Name, [string]$Target, [string]$Status, [string]$Detail = '')
@@ -88,6 +88,11 @@ function Test-Url200 {
 
 function Test-HttpPost200 {
     param([string]$Name, [string]$Url, [string]$Json = '{}')
+    $environmentName = $env:ASPNETCORE_ENVIRONMENT
+    if ($environmentName -and $environmentName.Equals('Production', [System.StringComparison]::OrdinalIgnoreCase)) {
+        Add-Result $Name $Url 'WARN' 'POST smoke ignorado para não executar teste destrutivo em Production'
+        return
+    }
     try {
         $response = Invoke-WebRequest -Uri $Url -Method Post -Body $Json -ContentType 'application/json' -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 3
         if ([int]$response.StatusCode -eq 200) { Add-Result $Name $Url 'OK' "HTTP $($response.StatusCode)" } else { Add-Result $Name $Url 'FAIL' "HTTP $($response.StatusCode)" }
@@ -154,6 +159,11 @@ $endpoints = @(
     @{Name='API Swagger JSON'; Url='http://localhost:8080/swagger/v1/swagger.json'},
     @{Name='API Services'; Url='http://localhost:8080/api/services'},
     @{Name='API Professionals'; Url='http://localhost:8080/api/professionals'},
+    @{Name='API Clients'; Url='http://localhost:8080/api/clients'},
+    @{Name='API Products'; Url='http://localhost:8080/api/products'},
+    @{Name='API Appointments'; Url='http://localhost:8080/api/appointments'},
+    @{Name='API Dashboard Summary'; Url='http://localhost:8080/api/dashboard/summary'},
+    @{Name='API Public Services'; Url='http://localhost:8080/api/public/services'},
     @{Name='API Kiosk Services'; Url='http://localhost:8080/api/kiosk/services?deviceCode=KIOSK-DEMO-001'},
     @{Name='API Kiosk Professionals'; Url='http://localhost:8080/api/kiosk/professionals?serviceId=demo&deviceCode=KIOSK-DEMO-001'},
     @{Name='AdminApi Dashboard'; Url='http://localhost:8081/AdminApi/dashboard'},
@@ -212,9 +222,13 @@ $assets = @(
     @{Name='Kiosk asset'; Url='http://localhost:8083/img/logo-barbersync.svg'}
 )
 
+$qualityGateClientDocument = "QG-$([guid]::NewGuid().ToString('N').Substring(0,8))"
+$publicAppointmentAt = (Get-Date).AddDays(1).ToString('yyyy-MM-ddTHH:mm:ss')
 $postEndpoints = @(
     @{Name='AdminApi Copilot Ask POST'; Url='http://localhost:8081/AdminApi/copilot/ask'; Json='{"question":"Como melhorar a agenda hoje?"}'},
-    @{Name='PublicApi Appointment POST'; Url='http://localhost:8082/PublicApi/appointments'; Json='{"name":"Quality Gate","phone":"(11) 99999-0000","serviceId":"srv-001"}'},
+    @{Name='API Client Create POST'; Url='http://localhost:8080/api/clients'; Json="{`"name`":`"Quality Gate Cliente`",`"phone`":`"(11) 99999-0000`",`"document`":`"$qualityGateClientDocument`"}"},
+    @{Name='API Service Create POST'; Url='http://localhost:8080/api/services'; Json='{"name":"Serviço Quality Gate","category":"Teste","price":49.90,"durationMinutes":30,"commissionPercent":10}'},
+    @{Name='PublicApi Appointment POST'; Url='http://localhost:8082/PublicApi/appointments'; Json="{`"clientName`":`"Quality Gate`",`"phone`":`"(11) 99999-0000`",`"serviceName`":`"Corte Masculino`",`"professionalName`":`"Rafael Barber`",`"scheduledAt`":`"$publicAppointmentAt`"}"},
     @{Name='PublicApi Lead POST'; Url='http://localhost:8082/PublicApi/leads'; Json='{"name":"Lead Quality Gate","phone":"(11) 98888-0000"}'},
     @{Name='KioskApi Client Find POST'; Url='http://localhost:8083/KioskApi/client/find-by-phone'; Json='{"phone":"(11) 99999-0000"}'},
     @{Name='KioskApi Client Quick Register POST'; Url='http://localhost:8083/KioskApi/client/quick-register'; Json='{"name":"Cliente Kiosk","phone":"(11) 99999-0000"}'},

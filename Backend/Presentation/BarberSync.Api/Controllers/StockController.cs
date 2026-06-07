@@ -16,4 +16,5 @@ public sealed class StockController(EnterpriseDataService data, ILogger<StockCon
     [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
     [HttpPost("entry")] public Task<IActionResult> Entry([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.StockMovementAsync("entry", payload, cancellationToken), "Entrada de estoque registrada.")));
     [HttpPost("exit")] public Task<IActionResult> Exit([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.StockMovementAsync("exit", payload, cancellationToken), "Saída de estoque registrada.")));
+    [HttpPost("adjustment")] public Task<IActionResult> Adjustment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.StockMovementAsync("adjustment", payload, cancellationToken), "Ajuste de estoque registrado.")));
 }

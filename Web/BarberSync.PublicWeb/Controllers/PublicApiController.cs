@@ -18,10 +18,10 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments());
 
     [HttpPost("leads")]
-    public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/public/leads", payload, new { success = true, message = "Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO" } });
+    public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/public/leads", payload, new { success = true, message = "Operação simulada em modo demonstração. Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO", isDemo = true }, isDemo = true });
 
     [HttpPost("appointments")]
-    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/public/appointments", payload, new { success = true, message = "Solicitação enviada com sucesso.", data = new { protocol = "PUB-2026-0001", isDemo = true } });
+    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/public/appointments", payload, new { success = true, message = "Operação simulada em modo demonstração. Solicitação enviada com sucesso.", data = new { protocol = "PUB-2026-0001", isDemo = true }, isDemo = true });
 
     private async Task<IActionResult> ProxyGet(string path, object fallback)
     {
@@ -45,7 +45,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(fallback); }
     }
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
-    private static object DemoEnvelope(object data, string message) => new { success = true, message, data, isDemo = true };
+    private static object DemoEnvelope(object data, string message) => new { success = true, message = $"API indisponível. {message}", data, isDemo = true };
     private static bool ResponseLooksEmpty(string json)
     {
         if (string.IsNullOrWhiteSpace(json)) return true;

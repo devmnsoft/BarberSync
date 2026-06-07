@@ -18,5 +18,6 @@ public sealed class AppointmentsController(EnterpriseDataService data, ILogger<A
     [HttpPost("{id:guid}/start")] public Task<IActionResult> Start(Guid id, CancellationToken cancellationToken) => Change(id, "InService", cancellationToken);
     [HttpPost("{id:guid}/finish")] public Task<IActionResult> Finish(Guid id, CancellationToken cancellationToken) => Change(id, "Finished", cancellationToken);
     [HttpPost("{id:guid}/cancel")] public Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken) => Change(id, "Cancelled", cancellationToken);
+    [HttpPost("{id:guid}/no-show")] public Task<IActionResult> NoShow(Guid id, CancellationToken cancellationToken) => Change(id, "NoShow", cancellationToken);
     private Task<IActionResult> Change(Guid id, string status, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.ChangeAppointmentStatusAsync(id, status, cancellationToken), "Status alterado com sucesso.")));
 }
