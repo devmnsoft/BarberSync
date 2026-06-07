@@ -78,12 +78,16 @@
       responsePayload = { message: error?.message || 'Fallback local' };
     }
     const responseProtocol = responsePayload?.data?.protocol || responsePayload?.protocol || protocol;
-    const appointment = window.BarberSyncDemoStore.add('appointments', { id: responseProtocol, protocol: responseProtocol, ...body, status, response: responsePayload, channel:'PublicWeb', createdAt: new Date().toISOString() });
-    window.BarberSyncDemoStore.add('leads', { ...appointment, source: 'PublicWeb' });
+    const isDemo = !!responsePayload?.isDemo || !!responsePayload?.data?.isDemo || status === 'Demo local';
+    const appointment = { id: responseProtocol, protocol: responseProtocol, ...body, status: isDemo ? 'Demo local' : 'Persistido', response: responsePayload, channel:'PublicWeb', createdAt: new Date().toISOString() };
+    if (isDemo) {
+      window.BarberSyncDemoStore.add('appointments', appointment);
+      window.BarberSyncDemoStore.add('leads', { ...appointment, source: 'PublicWeb' });
+    }
     window.BarberSyncEventBus.emit('public:leadCreated', appointment);
     window.BarberSyncEventBus.emit('public:appointmentRequested', appointment);
-    result.innerHTML = `<strong>Protocolo ${responseProtocol}</strong><br>Solicitação registrada no DemoStore do PublicWeb.<div class='hero-actions' style='margin-top:12px'><a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Ver no Admin</a><a class='btn-secondary' href='http://localhost:8081/Admin/FullServiceFlow' target='_blank' rel='noopener'>Executar fluxo completo</a></div>`;
-    toast('Solicitação enviada e persistida com sucesso.'); e.target.reset();
+    result.innerHTML = `<strong>Protocolo ${responseProtocol}</strong><br>${isDemo ? 'API indisponível. Solicitação simulada em modo demonstração.' : 'Solicitação persistida via /PublicApi/appointments.'}<div class='hero-actions' style='margin-top:12px'><a class='btn-primary' href='http://localhost:8081/Admin/LeadToCash' target='_blank' rel='noopener'>Ver no Admin</a><a class='btn-secondary' href='http://localhost:8081/Admin/FullServiceFlow' target='_blank' rel='noopener'>Executar fluxo completo</a></div>`;
+    toast(isDemo ? 'Operação simulada em modo demonstração.' : 'Solicitação enviada e persistida com sucesso.'); e.target.reset();
   });
 })();
 

@@ -1,24 +1,16 @@
+using System.Text.Json;
+using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class PaymentsController : ControllerBase
+[Route("api/payments")]
+public sealed class PaymentsController(EnterpriseDataService data, ILogger<PaymentsController> logger) : EnterpriseCrudController(data, logger, "payments")
 {
-    [HttpGet]
-    public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? sortBy = null, [FromQuery] string? sortOrder = "asc", [FromQuery] string? search = null)
-        => Ok(new { page, pageSize, sortBy, sortOrder, search, items = Array.Empty<object>() });
-
-    [HttpGet("{id:guid}")]
-    public IActionResult GetById(Guid id) => Ok(new { id });
-
-    [HttpPost]
-    public IActionResult Create([FromBody] object request) => CreatedAtAction(nameof(GetById), new { id = Guid.NewGuid() }, request);
-
-    [HttpPut("{id:guid}")]
-    public IActionResult Update(Guid id, [FromBody] object request) => Ok(request);
-
-    [HttpDelete("{id:guid}")]
-    public IActionResult Delete(Guid id) => NoContent();
+    [HttpGet] public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
+    [HttpGet("{id:guid}")] public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
+    [HttpPost] public Task<IActionResult> CreatePayment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
+    [HttpPut("{id:guid}")] public Task<IActionResult> UpdatePayment(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
+    [HttpDelete("{id:guid}")] public Task<IActionResult> DeletePayment(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
 }
