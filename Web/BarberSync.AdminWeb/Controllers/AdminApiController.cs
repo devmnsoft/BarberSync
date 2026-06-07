@@ -31,6 +31,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("audit-events")] public Task<IActionResult> AuditEvents() => ProxyGet("/api/audit/events", Array.Empty<object>(), "Eventos de auditoria carregados em modo demonstração.");
 
     [HttpGet("api-health")] public Task<IActionResult> ApiHealth() => ProxyGet("/health", new { status = "demo", context = "admin-proxy", isDemo = true }, "Health check carregado em modo demonstração.");
+    [HttpGet("health/database")] public Task<IActionResult> DatabaseHealth() => ProxyGet("/api/health/database", new { success = false, databaseConnected = false, schemaReady = false, message = "Health database indisponível via proxy AdminApi.", isDemo = true }, "Health database indisponível via proxy AdminApi.");
     [HttpGet("swagger")] public IActionResult SwaggerUi() => Redirect("/AdminApi/swagger.json");
     [HttpGet("swagger.json")] public Task<IActionResult> SwaggerJson() => ProxySwaggerJson();
 

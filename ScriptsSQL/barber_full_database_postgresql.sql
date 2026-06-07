@@ -54,11 +54,11 @@ BEGIN
         payload jsonb not null default '{}'::jsonb
       );
     $fmt$, t);
-    EXECUTE format('CREATE INDEX IF NOT EXISTS ix_%1$s_tenant_id ON barber.%1$I (tenant_id);', t);
-    EXECUTE format('CREATE INDEX IF NOT EXISTS ix_%1$s_branch_id ON barber.%1$I (branch_id);', t);
-    EXECUTE format('CREATE INDEX IF NOT EXISTS ix_%1$s_status ON barber.%1$I (status);', t);
-    EXECUTE format('CREATE INDEX IF NOT EXISTS ix_%1$s_created_at ON barber.%1$I (created_at);', t);
-    EXECUTE format('CREATE INDEX IF NOT EXISTS ix_%1$s_deleted_at ON barber.%1$I (deleted_at);', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON barber.%I (tenant_id);', 'ix_' || t || '_tenant_id', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON barber.%I (branch_id);', 'ix_' || t || '_branch_id', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON barber.%I (status);', 'ix_' || t || '_status', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON barber.%I (created_at);', 'ix_' || t || '_created_at', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON barber.%I (deleted_at);', 'ix_' || t || '_deleted_at', t);
   END LOOP;
 END $$;
 
@@ -198,5 +198,5 @@ VALUES ('00000000-0000-0000-0000-000000001101','11111111-1111-1111-1111-11111111
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO barber.audit_logs (tenant_id, branch_id, module, action, entity_name, description, metadata)
-VALUES ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','Seed','DatabaseSeeded','barber_full_database_postgresql','Seeds mínimos de desenvolvimento aplicados.','{"source":"ScriptsSQL/barber_full_database_postgresql.sql"}'::jsonb)
-ON CONFLICT DO NOTHING;
+SELECT '11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','Seed','DatabaseSeeded','barber_full_database_postgresql','Seeds mínimos de desenvolvimento aplicados.','{"source":"ScriptsSQL/barber_full_database_postgresql.sql"}'::jsonb
+WHERE NOT EXISTS (select 1 from barber.audit_logs where module = 'Seed' and action = 'DatabaseSeeded' and entity_name = 'barber_full_database_postgresql');
