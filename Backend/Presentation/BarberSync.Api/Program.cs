@@ -1,6 +1,7 @@
 using BarberSync.Api.Middleware;
 using BarberSync.Api.Swagger;
 using BarberSync.Api.Services.Configuration;
+using BarberSync.Api.Services.Enterprise;
 using BarberSync.Api.Validators;
 using BarberSync.Application.DTOs;
 using BarberSync.Application;
@@ -46,6 +47,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<EnterpriseDataService>();
 
 builder.Services.AddHealthChecks();
 

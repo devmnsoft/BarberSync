@@ -1,21 +1,16 @@
-using BarberSync.Application.DTOs;
-using BarberSync.Application.Services.Saas;
+using System.Text.Json;
+using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
-public class ReviewsController(ReviewService reviewService) : ControllerBase
+[Route("api/reviews")]
+public sealed class ReviewsController(EnterpriseDataService data, ILogger<ReviewsController> logger) : EnterpriseCrudController(data, logger, "reviews")
 {
-    [HttpGet("api/reviews")]
-    public ActionResult<object> GetReviews() => Ok(new { success = true, message = "Avaliações carregadas com sucesso.", data = new[] { new { id = "rev-001", client = "Lucas Almeida", rating = 5, nps = 10, comment = "Experiência premium e pontual.", status = "Publicado" }, new { id = "rev-002", client = "Marina Costa", rating = 5, nps = 10, comment = "Totem simples e atendimento excelente.", status = "Publicado" } }, isDemo = true });
-
-    [HttpPost("api/reviews")]
-    public ActionResult<ReviewDto> CreateReview([FromBody] ReviewDto review) => Ok(reviewService.AddReview(review));
-
-    [HttpPost("api/nps")]
-    public ActionResult<NpsResponseDto> CreateNps([FromBody] NpsResponseDto nps) => Ok(reviewService.AddNps(nps));
-
-    [HttpGet("api/reports/satisfaction/{tenantId:guid}")]
-    public ActionResult<SatisfactionReportDto> Satisfaction(Guid tenantId) => Ok(reviewService.Report(tenantId));
+    [HttpGet] public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
+    [HttpGet("{id:guid}")] public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
+    [HttpPost] public Task<IActionResult> CreateReview([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
+    [HttpPut("{id:guid}")] public Task<IActionResult> UpdateReview(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
+    [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteReview(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
 }

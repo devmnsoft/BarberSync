@@ -73,8 +73,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                if (!ResponseLooksEmpty(json)) return Content(json, "application/json", Encoding.UTF8);
-                logger.LogWarning("AdminApi GET {Path} retornou payload vazio. Usando fallback demo.", path);
+                return Content(json, "application/json", Encoding.UTF8);
             }
             else
             {
@@ -164,8 +163,8 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
         return false;
     }
-    private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message, data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
-    private static object DemoMutation(string message, string id) => new { success = true, message, data = new { id, isDemo = true } };
+    private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message = $"Operação simulada em modo demonstração. {message}", data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
+    private static object DemoMutation(string message, string id) => new { success = true, message = $"Operação simulada em modo demonstração. {message}", data = new { id, isDemo = true } };
 
     private static object DemoFullServiceSnapshot() => new
     {

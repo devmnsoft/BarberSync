@@ -3,7 +3,7 @@ services:
     image: postgres:16
     container_name: barbersync-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-barbersync}
+      POSTGRES_DB: ${POSTGRES_DB:-barber}
       POSTGRES_USER: ${POSTGRES_USER:-barbersync}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barbersync_demo_10}
     ports: ["5432:5432"]
@@ -11,7 +11,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./ScriptsSQL/barber_full_database_postgresql.sql:/docker-entrypoint-initdb.d/01_barber_full_database_postgresql.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-barbersync} -d $${POSTGRES_DB:-barbersync}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-barbersync} -d $${POSTGRES_DB:-barber}"]
       interval: 10s
       timeout: 5s
       retries: 8
@@ -34,7 +34,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-barbersync};Username=${POSTGRES_USER:-barbersync};Password=${POSTGRES_PASSWORD:-barbersync_demo_10}
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-barber};Username=${POSTGRES_USER:-barbersync};Password=${POSTGRES_PASSWORD:-barbersync_demo_10}
       Serilog__WriteTo__1__Args__serverUrl: http://seq:80
     ports: ["8080:8080"]
     depends_on:

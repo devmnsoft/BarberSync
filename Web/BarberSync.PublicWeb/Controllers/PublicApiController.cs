@@ -9,19 +9,19 @@ namespace BarberSync.PublicWeb.Controllers;
 public class PublicApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<PublicApiController> logger) : ControllerBase
 {
     [HttpGet("services")]
-    public Task<IActionResult> Services() => ProxyGet("/api/services", DemoServices());
+    public Task<IActionResult> Services() => ProxyGet("/api/public/services", DemoServices());
 
     [HttpGet("professionals")]
-    public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", DemoProfessionals());
+    public Task<IActionResult> Professionals() => ProxyGet("/api/public/professionals", DemoProfessionals());
 
     [HttpGet("appointments")]
     public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments());
 
     [HttpPost("leads")]
-    public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/leads", payload, new { success = true, message = "Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO" } });
+    public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/public/leads", payload, new { success = true, message = "Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO" } });
 
     [HttpPost("appointments")]
-    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/appointments", payload, new { success = true, message = "Solicitação enviada com sucesso.", data = new { protocol = "PUB-2026-0001", isDemo = true } });
+    public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxyPost("/api/public/appointments", payload, new { success = true, message = "Solicitação enviada com sucesso.", data = new { protocol = "PUB-2026-0001", isDemo = true } });
 
     private async Task<IActionResult> ProxyGet(string path, object fallback)
     {
@@ -30,7 +30,6 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
             var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl(path));
             if (!response.IsSuccessStatusCode) return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
             var json = await response.Content.ReadAsStringAsync();
-            if (ResponseLooksEmpty(json)) return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
             return Content(json, "application/json", Encoding.UTF8);
         }
         catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração.")); }

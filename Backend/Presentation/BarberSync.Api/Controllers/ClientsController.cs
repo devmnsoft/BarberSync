@@ -1,44 +1,16 @@
-using BarberSync.Api.Models;
+using System.Text.Json;
+using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class ClientsController(ILogger<ClientsController> logger) : ControllerBase
+[Route("api/clients")]
+public sealed class ClientsController(EnterpriseDataService data, ILogger<ClientsController> logger) : EnterpriseCrudController(data, logger, "clients")
 {
-    [HttpGet]
-    public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
-    {
-        try
-        {
-            var data = new PagedResult<object>([], page, pageSize, 0);
-            return Ok(ApiResponse<PagedResult<object>>.Ok(data, "Consulta realizada com sucesso.", HttpContext.TraceIdentifier));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Erro ao listar clientes.");
-            return StatusCode(500, ApiResponse<object>.Fail("Ocorreu um erro inesperado. Tente novamente ou contate o suporte.", traceId: HttpContext.TraceIdentifier));
-        }
-    }
-
-    [HttpPost]
-    public IActionResult Create([FromBody] object request)
-    {
-        try
-        {
-            return Ok(ApiResponse<object>.Ok(request, "Registro salvo com sucesso.", HttpContext.TraceIdentifier));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Erro ao criar cliente.");
-            return StatusCode(500, ApiResponse<object>.Fail("Ocorreu um erro inesperado. Tente novamente ou contate o suporte.", traceId: HttpContext.TraceIdentifier));
-        }
-    }
-
-    [HttpPut("{id:guid}")]
-    public IActionResult Update(Guid id, [FromBody] object request) => Ok(ApiResponse<object>.Ok(request, "Registro atualizado com sucesso.", HttpContext.TraceIdentifier));
-
-    [HttpDelete("{id:guid}")]
-    public IActionResult Delete(Guid id) => Ok(ApiResponse<object>.Ok(new { id }, "Registro removido com sucesso.", HttpContext.TraceIdentifier));
+    [HttpGet] public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
+    [HttpGet("{id:guid}")] public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
+    [HttpPost] public Task<IActionResult> CreateClient([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
+    [HttpPut("{id:guid}")] public Task<IActionResult> UpdateClient(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
+    [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteClient(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
 }
