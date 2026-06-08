@@ -28,7 +28,11 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         try
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl(path));
-            if (!response.IsSuccessStatusCode) return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
+            if (!response.IsSuccessStatusCode)
+            {
+                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
+                return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
+            }
             var json = await response.Content.ReadAsStringAsync();
             return Content(json, "application/json", Encoding.UTF8);
         }
@@ -39,11 +43,22 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         try
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").PostAsync(BuildUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
-            if (!response.IsSuccessStatusCode) return Ok(fallback);
+            if (!response.IsSuccessStatusCode)
+            {
+                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
+                return Ok(fallback);
+            }
             return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
         }
         catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(fallback); }
     }
+    private static async Task<ContentResult> ReadJsonOrTextAsync(HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
+        return new ContentResult { Content = content, ContentType = contentType, StatusCode = (int)response.StatusCode };
+    }
+
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
     private static object DemoEnvelope(object data, string message) => new { success = true, message = $"API indisponível. {message}", data, isDemo = true };
     private static bool ResponseLooksEmpty(string json)

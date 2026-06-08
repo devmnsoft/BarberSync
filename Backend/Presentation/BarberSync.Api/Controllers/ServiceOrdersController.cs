@@ -20,5 +20,5 @@ public sealed class ServiceOrdersController(EnterpriseDataService data, ILogger<
     [HttpPost("{id:guid}/apply-coupon")] public Task<IActionResult> ApplyCoupon(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
     [HttpPost("{id:guid}/apply-cashback")] public Task<IActionResult> ApplyCashback(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
     [HttpPost("{id:guid}/pay")] public Task<IActionResult> Pay(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.PayServiceOrderAsync(id, payload, cancellationToken), "Pagamento registrado com sucesso.")));
-    [HttpPost("{id:guid}/close")] public Task<IActionResult> Close(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
+    [HttpPost("{id:guid}/close")] public Task<IActionResult> Close(Guid id, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.ChangeServiceOrderStatusAsync(id, "Closed", cancellationToken), "Comanda fechada com sucesso.")));
 }

@@ -65,12 +65,12 @@
 
   function fieldHtml([key, label, type, required]) {
     const req = required ? 'required' : '';
-    if (type === 'textarea') return `<label>${label}<textarea name="${key}" ${req} rows="3" placeholder="${label}"></textarea></label>`;
+    if (type === 'textarea') return `<label>${label}${required ? ' *' : ''}<textarea name="${key}" ${req} rows="3" placeholder="${label}"></textarea></label>`;
     if (type.startsWith('select:')) {
-      return `<label>${label}<select name="${key}" ${req}>${type.substring(7).split('|').map(o => `<option>${o}</option>`).join('')}</select></label>`;
+      return `<label>${label}${required ? ' *' : ''}<select name="${key}" ${req}>${type.substring(7).split('|').map(o => `<option>${o}</option>`).join('')}</select></label>`;
     }
     const step = type === 'number' ? ' step="0.01" min="0"' : '';
-    return `<label>${label}<input name="${key}" type="${type}" ${req}${step} placeholder="${label}" /></label>`;
+    return `<label>${label}${required ? ' *' : ''}<input name="${key}" type="${type}" ${req}${step} placeholder="${label}" /></label>`;
   }
 
   function hydrateModal(module) {
@@ -131,6 +131,32 @@
     if (module === 'Reviews') return `<div class="detail-grid"><div><span>Nota média</span><strong>4,8</strong></div><div><span>NPS</span><strong>72</strong></div><div><span>5 estrelas</span><strong>78%</strong></div><div><span>Promotores</span><strong>134</strong></div><div><span>Detratores</span><strong>6</strong></div></div><p>Comentário: Atendimento excelente e pontual.</p>`;
     return Object.entries(item).slice(0, 14).map(([k, v]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`).join('');
   }
+
+  function normalizePayload(module, body) {
+    const normalized = { ...body };
+    if (module === 'Professionals' && normalized.commission && !normalized.commissionPercent) normalized.commissionPercent = Number(normalized.commission);
+    if (module === 'Services') {
+      if (normalized.commission && !normalized.commissionPercent) normalized.commissionPercent = Number(normalized.commission);
+      normalized.visibleOnPublicWeb = normalized.site !== 'Não';
+      normalized.visibleOnKiosk = normalized.kiosk !== 'Não';
+    }
+    if (module === 'Appointments' && normalized.date && normalized.time && !normalized.scheduledAt) normalized.scheduledAt = `${normalized.date}T${normalized.time}:00`;
+    if (module === 'ServiceOrders') {
+      normalized.clientName ||= normalized.client;
+      normalized.serviceName ||= normalized.service;
+      normalized.professionalName ||= normalized.professional;
+      normalized.total ||= 70;
+      if (!normalized.items) normalized.items = [{ type: 'service', name: normalized.serviceName || 'Serviço', quantity: 1, price: Number(normalized.total || 70) }];
+    }
+    if (module === 'Stock') {
+      normalized.name ||= normalized.product;
+      normalized.salePrice ||= Number(normalized.cost || 1);
+      normalized.currentStock ||= Number(normalized.quantity || 0);
+      normalized.minStock ||= 0;
+    }
+    return normalized;
+  }
+
   window.renderAdminCrudPage = async function (module) {
     const endpoint = endpointMap[module] || '/AdminApi/dashboard';
     const copy = moduleCopy[module] || { icon: '💈', singular: module };
@@ -171,19 +197,27 @@
     document.querySelector(`[data-admin-form='${module}']`)?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!e.target.checkValidity()) { document.querySelector(`[data-form-error='${module}']`).hidden = false; return; }
-      const body = Object.fromEntries(new FormData(e.target).entries());
+      const body = normalizePayload(module, Object.fromEntries(new FormData(e.target).entries()));
+      const submitButton = e.target.querySelector('button[type="submit"]');
       const mutationEndpoint = module === 'ServiceOrders' ? '/AdminApi/service-orders/open' : module === 'Stock' ? (body.movement === 'Saída' ? '/AdminApi/stock/exit' : '/AdminApi/stock/entry') : endpoint;
-      if (editingId && ['Clients','Professionals','Services'].includes(module)) {
-        await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' });
-        updateLocalDemoStore(module, 'update', { id: editingId, ...body });
-      } else {
-        await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
-        updateLocalDemoStore(module, 'create', { id: `${module.toLowerCase()}-${Date.now()}`, ...body, status: body.status || 'Ativo' });
+      adminApiClient.setLoading(submitButton, true);
+      try {
+        const result = editingId && ['Clients','Professionals','Services'].includes(module)
+          ? await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' })
+          : await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
+        if (result?.success === false) {
+          document.querySelector(`[data-form-error='${module}']`).hidden = false;
+          showFormErrors((result.errors || []).map(error => error.message || error.Message || error));
+          return;
+        }
+        if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, editingId ? 'update' : 'create', { id: editingId || `${module.toLowerCase()}-${Date.now()}`, ...body, status: body.status || 'Ativo' });
+        window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true);
+        e.target.reset();
+        writeToast(result?.message || `${copy.singular} salvo com sucesso.`);
+        await load();
+      } finally {
+        adminApiClient.setLoading(submitButton, false);
       }
-      window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true);
-      e.target.reset();
-      writeToast(`${copy.singular} salvo com sucesso.`);
-      await load();
     });
     document.getElementById(`${module}Rows`)?.addEventListener('click', async (e) => {
       const edit = e.target.closest('[data-admin-edit]');
@@ -211,9 +245,9 @@
         document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`;
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
       }
-      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }); updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(`${copy.singular} excluído em modo demonstração.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true }) && (updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }), writeToast(`${copy.singular} excluído em modo demonstração.`), await load()));
-      if (apptAction) { await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true }); const map = { confirm: 'Confirmado', 'check-in': 'Check-in', start: 'Em atendimento', finish: 'Atendimento finalizado', cancel: 'Cancelado' }; const statusText = map[apptAction.dataset.appointmentAction] || apptAction.textContent; window.BarberSyncDemoStore?.updateStatus('Appointments', apptAction.dataset.id || 'demo', statusText); if (apptAction.dataset.appointmentAction === 'finish') window.BarberSyncDemoStore?.createServiceOrderFromAppointment(apptAction.dataset.id || 'demo'); apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = statusText); writeToast(`Agendamento atualizado: ${statusText}.`, 'info'); await load(); }
-      if (orderAction) { await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, {}, { success: true }); if (orderAction.dataset.orderAction === 'pay') { window.BarberSyncDemoStore?.payServiceOrder(orderAction.dataset.id || 'demo', { method: 'PIX' }); } else { window.BarberSyncDemoStore?.updateStatus('ServiceOrders', orderAction.dataset.id || 'demo', 'Fechada'); } writeToast(orderAction.dataset.orderAction === 'pay' ? 'Pagamento mock aprovado, estoque baixado, cashback e avaliação gerados.' : 'Comanda fechada com recibo visual.', 'success'); await load(); }
+      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { const result = await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true, isDemo: true }); if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(result?.message || `${copy.singular} excluído com sucesso.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true, isDemo: true }).then(result => { if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(result?.message || `${copy.singular} excluído com sucesso.`); return load(); }));
+      if (apptAction) { const result = await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true, isDemo: true }); const map = { confirm: 'Confirmado', 'check-in': 'Check-in', start: 'Em atendimento', finish: 'Atendimento finalizado', cancel: 'Cancelado' }; const statusText = map[apptAction.dataset.appointmentAction] || apptAction.textContent; if (adminApiClient.isDemoResponse(result)) { window.BarberSyncDemoStore?.updateStatus('Appointments', apptAction.dataset.id || 'demo', statusText); if (apptAction.dataset.appointmentAction === 'finish') window.BarberSyncDemoStore?.createServiceOrderFromAppointment(apptAction.dataset.id || 'demo'); } apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = statusText); writeToast(`Agendamento atualizado: ${statusText}.`, 'info'); await load(); }
+      if (orderAction) { const result = await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, { amount: 70, method: 'PIX' }, { success: true, isDemo: true }); if (adminApiClient.isDemoResponse(result)) { if (orderAction.dataset.orderAction === 'pay') { window.BarberSyncDemoStore?.payServiceOrder(orderAction.dataset.id || 'demo', { method: 'PIX' }); } else { window.BarberSyncDemoStore?.updateStatus('ServiceOrders', orderAction.dataset.id || 'demo', 'Fechada'); } } writeToast(result?.message || (orderAction.dataset.orderAction === 'pay' ? 'Pagamento aprovado, estoque baixado, cashback e avaliação gerados.' : 'Comanda fechada com recibo visual.'), 'success'); await load(); }
     });
   };
 

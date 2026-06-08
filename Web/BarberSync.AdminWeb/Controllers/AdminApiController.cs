@@ -89,10 +89,13 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
                 var json = await response.Content.ReadAsStringAsync();
                 return Content(json, "application/json", Encoding.UTF8);
             }
-            else
+
+            if ((int)response.StatusCode < 500)
             {
-                logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+                return await ReadJsonOrTextAsync(response);
             }
+
+            logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
         }
         catch (Exception ex)
         {
@@ -127,6 +130,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             if (payload.HasValue) request.Content = new StringContent(payload.Value.GetRawText(), Encoding.UTF8, "application/json");
             var response = await httpClientFactory.CreateClient("BarberSyncApi").SendAsync(request);
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
             logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}. Usando fallback demo.", method, path, response.StatusCode);
         }
         catch (Exception ex)
@@ -143,6 +147,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").DeleteAsync(BuildUrl(path));
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
             logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
         }
         catch (Exception ex)
@@ -151,6 +156,13 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         }
 
         return Ok(fallback);
+    }
+
+    private static async Task<ContentResult> ReadJsonOrTextAsync(HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
+        return new ContentResult { Content = content, ContentType = contentType, StatusCode = (int)response.StatusCode };
     }
 
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";

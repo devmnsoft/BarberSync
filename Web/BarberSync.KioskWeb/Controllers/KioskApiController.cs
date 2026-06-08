@@ -39,6 +39,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
             var response = await client.GetAsync(BuildApiUrl(path));
             if (!response.IsSuccessStatusCode)
             {
+                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
                 logger.LogWarning("KioskApi proxy GET {Path} falhou com status {StatusCode}", path, response.StatusCode);
                 return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
             }
@@ -61,6 +62,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
             var response = await client.PostAsync(BuildApiUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
             if (!response.IsSuccessStatusCode)
             {
+                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
                 logger.LogWarning("KioskApi proxy POST {Path} falhou com status {StatusCode}", path, response.StatusCode);
                 return Ok(fallback);
             }
@@ -72,6 +74,13 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
             logger.LogWarning(ex, "KioskApi proxy POST {Path} lançou exceção. Usando fallback demo.", path);
             return Ok(fallback);
         }
+    }
+
+    private static async Task<ContentResult> ReadJsonOrTextAsync(HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/json";
+        return new ContentResult { Content = content, ContentType = contentType, StatusCode = (int)response.StatusCode };
     }
 
     private string BuildApiUrl(string path)

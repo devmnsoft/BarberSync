@@ -4,5 +4,6 @@ builder.Services.AddHttpClient("BarberSyncApi", c => c.BaseAddress = new Uri(bui
 var app = builder.Build();
 if (!app.Environment.IsDevelopment()) { app.UseExceptionHandler("/Home/Error"); }
 app.UseStaticFiles(); app.UseRouting();
+app.MapControllers();
 app.MapControllerRoute(name:"default", pattern:"{controller=Home}/{action=Index}/{id?}");
 app.Run();

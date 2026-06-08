@@ -48,10 +48,14 @@
         headers: body === undefined || body === null ? {} : { 'Content-Type': 'application/json' },
         body: body === undefined || body === null ? undefined : JSON.stringify(body)
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const text = await response.text();
-      const payload = text ? JSON.parse(text) : { success: true, data: null };
-      return { data: normalizeResponse(payload), fallback: false, ok: true };
+      const payload = text ? JSON.parse(text) : { success: response.ok, data: null };
+      const normalized = normalizeResponse(payload);
+      if (!response.ok) {
+        window.AdminToast?.showError?.(normalized.message || `Erro HTTP ${response.status}`);
+        return { data: { ...normalized, success: false, httpStatus: response.status }, fallback: false, ok: false };
+      }
+      return { data: normalized, fallback: false, ok: true };
     } catch (error) {
       const safe = fallback ?? handleApiError(error, 'Modo demonstração ativo.');
       return { data: normalizeResponse(safe), fallback: true, ok: true };

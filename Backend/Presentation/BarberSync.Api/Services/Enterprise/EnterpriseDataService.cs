@@ -218,6 +218,10 @@ order by created_at desc";
         {
             ["protocol"] = protocol,
             ["origin"] = "PublicWeb",
+            ["clientName"] = ExtractString(payload, "clientName") ?? ExtractString(payload, "name") ?? ExtractString(payload, "client") ?? "Cliente público",
+            ["serviceName"] = ExtractString(payload, "serviceName") ?? ExtractString(payload, "service") ?? "Serviço público",
+            ["professionalName"] = ExtractString(payload, "professionalName") ?? ExtractString(payload, "professional") ?? "Primeiro disponível",
+            ["scheduledAt"] = ExtractString(payload, "scheduledAt") ?? BuildScheduledAt(payload) ?? DateTime.UtcNow.AddHours(1).ToString("O"),
             ["status"] = ExtractString(payload, "status") ?? "Scheduled"
         });
         var appointment = await CreateAsync("appointments", enrichedPayload, cancellationToken);
@@ -311,6 +315,118 @@ order by created_at desc";
     }
 
 
+    public async Task<Dictionary<string, object?>> CompleteFullServiceFlowAsync(JsonElement payload, CancellationToken cancellationToken = default)
+    {
+        var clientName = ExtractString(payload, "clientName") ?? ExtractString(payload, "client") ?? "Cliente BarberSync";
+        var clientPhone = ExtractString(payload, "phone") ?? ExtractString(payload, "whatsapp") ?? "(11) 99999-0000";
+        var serviceName = ExtractString(payload, "serviceName") ?? ExtractString(payload, "service") ?? "Serviço BarberSync";
+        var professionalName = ExtractString(payload, "professionalName") ?? ExtractString(payload, "professional") ?? "Profissional BarberSync";
+        var scheduledAt = ExtractString(payload, "scheduledAt") ?? DateTime.UtcNow.AddHours(1).ToString("O");
+        var amount = ExtractDecimal(payload, "amount") ?? ExtractDecimal(payload, "total") ?? ExtractDecimal(payload, "price") ?? 70m;
+        var productId = ExtractString(payload, "productId");
+        var productQuantity = ExtractDecimal(payload, "quantity") ?? 1m;
+
+        var client = await CreateAsync("clients", JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+        {
+            name = clientName,
+            phone = clientPhone,
+            whatsapp = clientPhone,
+            email = ExtractString(payload, "email"),
+            origin = "FullServiceFlow"
+        }, JsonOptions), JsonOptions), cancellationToken);
+
+        var appointment = await CreateAsync("appointments", JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+        {
+            clientId = client["id"],
+            clientName,
+            serviceName,
+            professionalName,
+            scheduledAt,
+            origin = "FullServiceFlow",
+            status = "Scheduled"
+        }, JsonOptions), JsonOptions), cancellationToken);
+
+        var appointmentId = Guid.Parse(appointment["id"]!.ToString()!);
+        await ChangeAppointmentStatusAsync(appointmentId, "Confirmed", cancellationToken);
+        await ChangeAppointmentStatusAsync(appointmentId, "CheckedIn", cancellationToken);
+        await ChangeAppointmentStatusAsync(appointmentId, "InService", cancellationToken);
+        await ChangeAppointmentStatusAsync(appointmentId, "Finished", cancellationToken);
+
+        var order = await CreateAsync("service-orders", JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+        {
+            clientId = client["id"],
+            clientName,
+            appointmentId = appointment["id"],
+            professionalName,
+            serviceName,
+            items = new[] { new { type = "service", name = serviceName, quantity = 1, price = amount } },
+            subtotal = amount,
+            total = amount,
+            status = "Open",
+            origin = "FullServiceFlow"
+        }, JsonOptions), JsonOptions), cancellationToken);
+
+        if (Guid.TryParse(productId, out var productGuid))
+        {
+            await StockMovementAsync("exit", JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+            {
+                productId = productGuid,
+                quantity = productQuantity,
+                reason = "Produto vendido no FullServiceFlow"
+            }, JsonOptions), JsonOptions), cancellationToken);
+        }
+
+        var payment = await PayServiceOrderAsync(Guid.Parse(order["id"]!.ToString()!), JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+        {
+            amount,
+            method = ExtractString(payload, "paymentMethod") ?? "PIX",
+            clientId = client["id"],
+            origin = "FullServiceFlow"
+        }, JsonOptions), JsonOptions), cancellationToken);
+
+        var review = await CreateAsync("reviews", JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(new
+        {
+            clientId = client["id"],
+            clientName,
+            professionalName,
+            serviceName,
+            rating = ExtractDecimal(payload, "rating") ?? 5m,
+            comment = ExtractString(payload, "reviewComment") ?? "Avaliação gerada pelo fluxo completo.",
+            origin = "FullServiceFlow"
+        }, JsonOptions), JsonOptions), cancellationToken);
+
+        await using var connection = await OpenAsync(cancellationToken);
+        await NotifyAsync(connection, "FullServiceFlow concluído com pagamento, recibo, cashback e avaliação.", "service_orders", Guid.Parse(order["id"]!.ToString()!), cancellationToken);
+
+        return new Dictionary<string, object?>
+        {
+            ["client"] = client,
+            ["appointment"] = appointment,
+            ["serviceOrder"] = order,
+            ["payment"] = payment,
+            ["review"] = review,
+            ["receiptNumber"] = payment.GetValueOrDefault("receiptNumber"),
+            ["cashbackGenerated"] = true,
+            ["dashboard"] = await DashboardAsync(cancellationToken),
+            ["isDemo"] = false
+        };
+    }
+
+
+    public async Task<Dictionary<string, object?>> ChangeServiceOrderStatusAsync(Guid id, string targetStatus, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand("update barber.service_orders set status = @status, payload = payload || @payload::jsonb, updated_at = now() where id = @id and deleted_at is null returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)", connection);
+        command.Parameters.AddWithValue("id", id);
+        command.Parameters.AddWithValue("status", targetStatus);
+        command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, JsonSerializer.Serialize(new { status = targetStatus, closedAt = DateTime.UtcNow }, JsonOptions));
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        if (result is null) throw new KeyNotFoundException("Comanda não encontrada.");
+        await AuditAsync(connection, "Comanda", "StatusChanged", "service_orders", id, $"Comanda alterada para {targetStatus}.", "{}", cancellationToken);
+        return Deserialize(result.ToString() ?? "{}");
+    }
+
+
     private async Task<Dictionary<string, object?>> InsertWithConnectionAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string resource, JsonElement payload, string status, CancellationToken cancellationToken)
     {
         var validation = Validate(resource, payload, null);
@@ -394,7 +510,7 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
             command.Parameters.AddWithValue("scheduledAt", scheduledAt);
             command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, id.HasValue ? (object)id.Value : DBNull.Value);
             var hasConflict = await command.ExecuteScalarAsync(cancellationToken);
-            if (hasConflict is bool true)
+            if (hasConflict is bool hasConflictValue && hasConflictValue)
             {
                 throw new EnterpriseValidationException([new("scheduledAt", "Já existe agendamento para este profissional neste horário.")]);
             }
@@ -414,7 +530,8 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
 )", connection);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("visibilityFlag", visibilityFlag);
-        return await command.ExecuteScalarAsync(cancellationToken) is bool true;
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return result is bool isSchedulable && isSchedulable;
     }
 
     private async Task GenerateCashbackAsync(NpgsqlConnection connection, Guid orderId, Dictionary<string, object?> payment, CancellationToken cancellationToken)
@@ -605,7 +722,7 @@ where id = @id and deleted_at is null", connection);
             case "professionals":
                 Required("name", "Nome é obrigatório.");
                 Required("specialty", "Especialidade é obrigatória.");
-                var commission = Number("commissionPercent");
+                var commission = Number("commissionPercent") ?? Number("commission");
                 if (commission is < 0 or > 100) errors.Add(new("commissionPercent", "Comissão deve ficar entre 0 e 100."));
                 break;
             case "services":
@@ -613,7 +730,8 @@ where id = @id and deleted_at is null", connection);
                 Required("category", "Categoria é obrigatória.");
                 if (Number("price") is null or <= 0) errors.Add(new("price", "Preço deve ser maior que zero."));
                 if (Number("durationMinutes") is null or <= 0) errors.Add(new("durationMinutes", "Duração deve ser maior que zero."));
-                if (Number("commissionPercent") is < 0 or > 100) errors.Add(new("commissionPercent", "Comissão deve ficar entre 0 e 100."));
+                var serviceCommission = Number("commissionPercent") ?? Number("commission");
+                if (serviceCommission is < 0 or > 100) errors.Add(new("commissionPercent", "Comissão deve ficar entre 0 e 100."));
                 break;
             case "products":
                 Required("name", "Nome é obrigatório.");
@@ -622,17 +740,26 @@ where id = @id and deleted_at is null", connection);
                 if (Number("minStock") is < 0) errors.Add(new("minStock", "Estoque mínimo não pode ser negativo."));
                 break;
             case "appointments":
-                if (string.IsNullOrWhiteSpace(ExtractString(payload, "clientName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "client")) && string.IsNullOrWhiteSpace(ExtractString(payload, "name"))) errors.Add(new("clientName", "Cliente é obrigatório."));
+                if (string.IsNullOrWhiteSpace(ExtractString(payload, "clientName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "client")) && string.IsNullOrWhiteSpace(ExtractString(payload, "clientId")) && string.IsNullOrWhiteSpace(ExtractString(payload, "name"))) errors.Add(new("clientName", "Cliente é obrigatório."));
                 if (string.IsNullOrWhiteSpace(ExtractString(payload, "serviceName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "service")) && string.IsNullOrWhiteSpace(ExtractString(payload, "serviceId"))) errors.Add(new("serviceName", "Serviço é obrigatório."));
                 if (string.IsNullOrWhiteSpace(ExtractString(payload, "professionalName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "professional")) && string.IsNullOrWhiteSpace(ExtractString(payload, "professionalId"))) errors.Add(new("professionalName", "Profissional é obrigatório."));
-                if (ExtractString(payload, "scheduledAt") is not { Length: > 0 }) errors.Add(new("scheduledAt", "Data/hora é obrigatória."));
-                if (ExtractString(payload, "scheduledAt") is { } scheduled && DateTime.TryParse(scheduled, out var when) && when < DateTime.Now) errors.Add(new("scheduledAt", "Não é permitido agendar em data/hora passada."));
+                var scheduledValue = ExtractString(payload, "scheduledAt") ?? BuildScheduledAt(payload);
+                if (scheduledValue is not { Length: > 0 }) errors.Add(new("scheduledAt", "Data/hora é obrigatória."));
+                if (scheduledValue is { } scheduled && DateTime.TryParse(scheduled, out var when) && when < DateTime.Now) errors.Add(new("scheduledAt", "Não é permitido agendar em data/hora passada."));
                 var status = ExtractString(payload, "status");
                 if (!string.IsNullOrWhiteSpace(status) && !AllowedAppointmentStatuses.Contains(status)) errors.Add(new("status", "Status de agendamento inválido."));
                 break;
             case "service-orders":
-                if (string.IsNullOrWhiteSpace(ExtractString(payload, "clientId")) && string.IsNullOrWhiteSpace(ExtractString(payload, "clientName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "walkInName"))) errors.Add(new("clientName", "Comanda deve ter cliente ou consumidor avulso."));
+                if (string.IsNullOrWhiteSpace(ExtractString(payload, "clientId")) && string.IsNullOrWhiteSpace(ExtractString(payload, "clientName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "client")) && string.IsNullOrWhiteSpace(ExtractString(payload, "walkInName"))) errors.Add(new("clientName", "Comanda deve ter cliente ou consumidor avulso."));
+                var orderTotal = Number("total");
+                if (!PayloadHasItems(payload) && (!orderTotal.HasValue || orderTotal.Value <= 0)) errors.Add(new("items", "Comanda precisa de ao menos 1 item para pagar."));
                 if (Number("discount") is < 0) errors.Add(new("discount", "Desconto não pode ser negativo."));
+                break;
+            case "payments":
+                if (Number("amount") is null or <= 0) errors.Add(new("amount", "Valor do pagamento deve ser maior que zero."));
+                break;
+            case "stock_movements":
+                if (Number("quantity") is null or <= 0) errors.Add(new("quantity", "Quantidade deve ser maior que zero."));
                 break;
             case "reviews":
                 if (Number("rating") is null or < 1 or > 5) errors.Add(new("rating", "Nota deve ficar entre 1 e 5."));
@@ -647,6 +774,24 @@ where id = @id and deleted_at is null", connection);
         }
 
         return errors;
+    }
+
+
+    private static string? BuildScheduledAt(JsonElement payload)
+    {
+        var date = ExtractString(payload, "date");
+        var time = ExtractString(payload, "time");
+        return string.IsNullOrWhiteSpace(date) || string.IsNullOrWhiteSpace(time) ? null : $"{date}T{time}:00";
+    }
+
+    private static bool PayloadHasItems(JsonElement payload)
+    {
+        if (payload.TryGetProperty("items", out var items))
+        {
+            if (items.ValueKind == JsonValueKind.Array) return items.GetArrayLength() > 0;
+            if (items.ValueKind == JsonValueKind.String) return !string.IsNullOrWhiteSpace(items.GetString());
+        }
+        return !string.IsNullOrWhiteSpace(ExtractString(payload, "serviceName")) || !string.IsNullOrWhiteSpace(ExtractString(payload, "service"));
     }
 
     private static readonly HashSet<string> AllowedAppointmentStatuses = new(StringComparer.OrdinalIgnoreCase)
