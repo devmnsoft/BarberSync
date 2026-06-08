@@ -15,7 +15,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     public Task<IActionResult> Professionals() => ProxyGet("/api/public/professionals", DemoProfessionals());
 
     [HttpGet("appointments")]
-    public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments());
+    public Task<IActionResult> Appointments() => ProxyGet("/api/public/appointments", DemoAppointments());
 
     [HttpPost("leads")]
     public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/public/leads", payload, new { success = true, message = "Operação simulada em modo demonstração. Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO", isDemo = true }, isDemo = true });
