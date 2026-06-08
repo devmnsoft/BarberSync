@@ -27,8 +27,12 @@ public sealed class FullServiceFlowController(EnterpriseDataService data, ILogge
     {
         try
         {
-            var order = await data.CreateAsync("service-orders", payload, cancellationToken);
-            return Ok(new { success = true, message = "FullServiceFlow registrado via API real.", data = new { order, receiptNumber = $"REC-{DateTime.UtcNow:yyyyMMddHHmmss}", cashbackGenerated = true, isDemo = false }, errors = Array.Empty<object>() });
+            var flow = await data.CompleteFullServiceFlowAsync(payload, cancellationToken);
+            return Ok(new { success = true, message = "FullServiceFlow real concluído via API/PostgreSQL.", data = flow, errors = Array.Empty<object>() });
+        }
+        catch (EnterpriseValidationException ex)
+        {
+            return BadRequest(new { success = false, message = "Existem campos inválidos no FullServiceFlow.", data = (object?)null, errors = ex.Errors });
         }
         catch (Exception ex)
         {
