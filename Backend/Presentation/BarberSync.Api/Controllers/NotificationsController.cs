@@ -61,6 +61,24 @@ public class NotificationsController(EnterpriseDataService data, ILogger<Notific
         }
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(new { success = true, message = "Notificação atualizada com sucesso.", data = await data.UpdateAsync("notifications", id, payload, cancellationToken), errors = Array.Empty<object>() });
+        }
+        catch (EnterpriseValidationException ex)
+        {
+            return BadRequest(new { success = false, message = "Existem campos inválidos.", data = (object?)null, errors = ex.Errors });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao atualizar notificação {NotificationId}.", id);
+            return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>() });
+        }
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
