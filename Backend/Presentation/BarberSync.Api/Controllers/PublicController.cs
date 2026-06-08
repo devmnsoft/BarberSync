@@ -9,7 +9,7 @@ namespace BarberSync.Api.Controllers;
 public sealed class PublicController(EnterpriseDataService data, ILogger<PublicController> logger) : ControllerBase
 {
     [HttpGet("services")] public Task<IActionResult> Services(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("services", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Serviços públicos carregados.")));
-    [HttpGet("professionals")] public Task<IActionResult> Professionals(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("professionals", cancellationToken)).Where(IsActive), "Profissionais públicos carregados.")));
+    [HttpGet("professionals")] public Task<IActionResult> Professionals(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("professionals", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Profissionais públicos carregados.")));
     [HttpPost("appointments")] public Task<IActionResult> Appointment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.PublicAppointmentAsync(payload, cancellationToken), "Agendamento público criado com sucesso.")));
     [HttpPost("leads")] public Task<IActionResult> Lead([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.CreateAsync("public_leads", payload, cancellationToken), "Lead público registrado com sucesso.")));
 
