@@ -8,6 +8,7 @@ namespace BarberSync.Api.Controllers;
 [Route("api/kiosk")]
 public sealed class KioskController(EnterpriseDataService data, ILogger<KioskController> logger) : ControllerBase
 {
+    [HttpGet("status")] public Task<IActionResult> Status(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.KioskStatusAsync(cancellationToken), "Status do totem carregado com dados reais.")));
     [HttpGet("services")] public Task<IActionResult> Services([FromQuery] string deviceCode, CancellationToken cancellationToken) => WithDevice(deviceCode, async () => Ok(Envelope((await data.ListAsync("services", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnKiosk", true)), "Serviços do totem carregados.")), cancellationToken);
     [HttpGet("professionals")] public Task<IActionResult> Professionals([FromQuery] string deviceCode, [FromQuery] string? serviceId, CancellationToken cancellationToken) => WithDevice(deviceCode, async () => Ok(Envelope((await data.ListAsync("professionals", cancellationToken)).Where(IsActive), "Profissionais do totem carregados.")), cancellationToken);
     [HttpPost("session")] public Task<IActionResult> Session([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.CreateAsync("kiosk_sessions", payload, cancellationToken), "Sessão do totem registrada.")));

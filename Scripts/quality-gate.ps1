@@ -10,7 +10,7 @@ $results = New-Object System.Collections.Generic.List[object]
 $failures = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $reportPath = Join-Path (Get-Location) 'Docs/quality-gate-last-run.md'
-$demoVersion = 'BarberSync Real Data + Business Rules 21.0'
+$demoVersion = 'BarberSync Real Data Platform 22.0'
 
 function Add-Result {
     param([string]$Name, [string]$Target, [string]$Status, [string]$Detail = '')

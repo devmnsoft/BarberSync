@@ -1,33 +1,34 @@
-using BarberSync.Application.DTOs;
+using System.Text.Json;
+using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
 [Route("api/loyalty")]
-public class LoyaltyController : ControllerBase
+public sealed class LoyaltyController(EnterpriseDataService data, ILogger<LoyaltyController> logger) : EnterpriseCrudController(data, logger, "loyalty")
 {
-    private static readonly List<LoyaltyAccountDto> Accounts = new();
-
-    [HttpPost("accrue")]
-    public ActionResult<LoyaltyAccountDto> Accrue([FromBody] LoyaltyAccountDto dto)
-    {
-        dto.UpdatedAtUtc = DateTime.UtcNow;
-        dto.PointsBalance += 20;
-        dto.CashbackBalance += 5m;
-        Accounts.Add(dto);
-        return Ok(dto);
-    }
+    [HttpGet]
+    public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
 
     [HttpGet("accounts")]
-    public ActionResult<IEnumerable<LoyaltyAccountDto>> GetAccounts()
-    {
-        IEnumerable<LoyaltyAccountDto> data = Accounts.Count == 0
-            ? [new LoyaltyAccountDto { ClientId = Guid.Parse("11111111-2222-3333-4444-555555555555"), PointsBalance = 1280, CashbackBalance = 38.50m, TierLevel = 3, UpdatedAtUtc = DateTime.UtcNow }]
-            : Accounts;
-        return Ok(data);
-    }
+    public Task<IActionResult> Accounts(CancellationToken cancellationToken) => List(cancellationToken);
 
     [HttpGet("summary")]
-    public IActionResult Summary() => Ok(new { success = true, message = "Fidelidade carregada com sucesso.", data = new { totalCashback = 18420m, activeMembers = 132, expiringCashback = 2140m, balance = 18420m, cashbackMonth = 2340m }, isDemo = true });
+    public Task<IActionResult> Summary(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.LoyaltySummaryAsync(cancellationToken), "Fidelidade carregada com dados reais.")));
+
+    [HttpGet("{id:guid}")]
+    public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
+
+    [HttpPost]
+    public Task<IActionResult> CreateAccount([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
+
+    [HttpPut("{id:guid}")]
+    public Task<IActionResult> UpdateAccount(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
+
+    [HttpDelete("{id:guid}")]
+    public Task<IActionResult> DeleteAccount(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
+
+    [HttpPost("accrue")]
+    public Task<IActionResult> Accrue([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.CreateAsync("loyalty_transactions", payload, cancellationToken), "Cashback/fidelidade registrado com sucesso.")));
 }

@@ -23,6 +23,8 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         ["campaigns"] = "campaigns",
         ["coupons"] = "coupons",
         ["loyalty"] = "loyalty_accounts",
+        ["loyalty_accounts"] = "loyalty_accounts",
+        ["loyalty_transactions"] = "loyalty_transactions",
         ["reviews"] = "reviews",
         ["public_leads"] = "public_leads",
         ["kiosk_devices"] = "kiosk_devices",
@@ -81,6 +83,10 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
             var result = await command.ExecuteScalarAsync(cancellationToken);
             await AuditAsync(connection, Module(resource), "Created", Table(resource), id, $"{Module(resource)} criado via API real.", json, cancellationToken);
             await NotifyOnCreateAsync(connection, resource, id, json, cancellationToken);
+            if (resource.Equals("reviews", StringComparison.OrdinalIgnoreCase))
+            {
+                await RecalculateProfessionalRatingAsync(connection, json, cancellationToken);
+            }
             return Deserialize(result?.ToString() ?? json);
         }
         catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
@@ -179,7 +185,7 @@ order by created_at desc";
         }
         async Task<decimal> AverageRating()
         {
-            await using var command = new NpgsqlCommand("select coalesce(round(avg((payload->>'rating')::numeric), 2), 0) from barber.reviews where deleted_at is null", connection);
+            await using var command = new NpgsqlCommand("select coalesce(round(avg((barber.reviews.payload->>'rating')::numeric), 2), 0) from barber.reviews where deleted_at is null", connection);
             return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
         }
 
@@ -220,6 +226,49 @@ order by created_at desc";
         return appointment;
     }
 
+    public async Task<Dictionary<string, object?>> LoyaltySummaryAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+
+        async Task<decimal> SumTransactions(string type)
+        {
+            await using var command = new NpgsqlCommand("select coalesce(sum((payload->>'amount')::numeric), 0) from barber.loyalty_transactions where deleted_at is null and coalesce(payload->>'type', '') = @type", connection);
+            command.Parameters.AddWithValue("type", type);
+            return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
+        }
+
+        await using var activeMembersCommand = new NpgsqlCommand("select count(*) from barber.loyalty_accounts where deleted_at is null and is_active", connection);
+        var activeMembers = Convert.ToInt32(await activeMembersCommand.ExecuteScalarAsync(cancellationToken));
+        var generated = await SumTransactions("CashbackGenerated");
+        var redeemed = await SumTransactions("CashbackRedeemed");
+
+        return new Dictionary<string, object?>
+        {
+            ["totalCashback"] = generated,
+            ["redeemedCashback"] = redeemed,
+            ["balance"] = Math.Max(generated - redeemed, 0),
+            ["activeMembers"] = activeMembers,
+            ["expiringCashback"] = 0m,
+            ["cashbackMonth"] = generated,
+            ["isDemo"] = false
+        };
+    }
+
+    public async Task<Dictionary<string, object?>> KioskStatusAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand("select count(*) from barber.kiosk_devices where deleted_at is null and is_active", connection);
+        var onlineDevices = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+
+        return new Dictionary<string, object?>
+        {
+            ["onlineDevices"] = onlineDevices,
+            ["status"] = onlineDevices > 0 ? "Online" : "Offline",
+            ["deviceCode"] = "KIOSK-DEMO-001",
+            ["isDemo"] = false
+        };
+    }
+
     public async Task<Dictionary<string, object?>> StockMovementAsync(string type, JsonElement payload, CancellationToken cancellationToken = default)
     {
         var enrichedPayload = EnrichPayload(payload, new Dictionary<string, object?> { ["type"] = type });
@@ -251,6 +300,7 @@ order by created_at desc";
             await using var auditConnection = await OpenAsync(cancellationToken);
             await AuditAsync(auditConnection, "Comanda", "Paid", "service_orders", orderId, "Comanda paga via API real.", JsonSerializer.Serialize(payment, JsonOptions), cancellationToken);
             await NotifyAsync(auditConnection, "Comanda paga.", "service_orders", orderId, cancellationToken);
+            await GenerateCashbackAsync(auditConnection, orderId, payment, cancellationToken);
             return payment;
         }
         catch
@@ -367,6 +417,49 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
         return await command.ExecuteScalarAsync(cancellationToken) is bool true;
     }
 
+    private async Task GenerateCashbackAsync(NpgsqlConnection connection, Guid orderId, Dictionary<string, object?> payment, CancellationToken cancellationToken)
+    {
+        await using var orderCommand = new NpgsqlCommand("select payload::text from barber.service_orders where id = @id and deleted_at is null", connection);
+        orderCommand.Parameters.AddWithValue("id", orderId);
+        var json = await orderCommand.ExecuteScalarAsync(cancellationToken) as string;
+        if (string.IsNullOrWhiteSpace(json)) return;
+
+        using var document = JsonDocument.Parse(json);
+        var clientId = ExtractString(document.RootElement, "clientId");
+        if (!Guid.TryParse(clientId, out var clientGuid)) return;
+
+        var amount = payment.TryGetValue("amount", out var value) && decimal.TryParse(value?.ToString(), out var parsed) ? parsed : 0m;
+        var cashback = Math.Round(amount * 0.05m, 2);
+        if (cashback <= 0) return;
+
+        var payloadJson = JsonSerializer.Serialize(new
+        {
+            clientId = clientGuid,
+            serviceOrderId = orderId,
+            paymentId = payment.GetValueOrDefault("id"),
+            type = "CashbackGenerated",
+            amount = cashback,
+            description = "Cashback gerado após pagamento confirmado.",
+            expiresAt = DateTime.UtcNow.AddMonths(6),
+            isDemo = false
+        }, JsonOptions);
+
+        await using var transactionCommand = new NpgsqlCommand("insert into barber.loyalty_transactions (tenant_id, branch_id, payload, status) values (@tenantId, @branchId, @payload::jsonb, 'Confirmed')", connection);
+        transactionCommand.Parameters.AddWithValue("tenantId", TenantId);
+        transactionCommand.Parameters.AddWithValue("branchId", BranchId);
+        transactionCommand.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, payloadJson);
+        await transactionCommand.ExecuteNonQueryAsync(cancellationToken);
+
+        await using var accountCommand = new NpgsqlCommand(@"insert into barber.loyalty_accounts (id, tenant_id, branch_id, payload, status)
+values (@clientId, @tenantId, @branchId, jsonb_build_object('clientId', @clientId::text, 'cashbackBalance', @cashback), 'Active')
+on conflict (id) do update set payload = jsonb_set(barber.loyalty_accounts.payload, '{cashbackBalance}', to_jsonb(coalesce((barber.loyalty_accounts.payload->>'cashbackBalance')::numeric, 0) + @cashback), true), updated_at = now()", connection);
+        accountCommand.Parameters.AddWithValue("clientId", clientGuid);
+        accountCommand.Parameters.AddWithValue("tenantId", TenantId);
+        accountCommand.Parameters.AddWithValue("branchId", BranchId);
+        accountCommand.Parameters.AddWithValue("cashback", cashback);
+        await accountCommand.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private async Task ValidateServiceOrderPaymentAsync(NpgsqlConnection connection, Guid orderId, JsonElement payload, CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand("select payload::text from barber.service_orders where id = @id and deleted_at is null", connection);
@@ -387,6 +480,24 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
         {
             throw new EnterpriseValidationException([new("changeAmount", "Pagamento maior que o total exige registro de troco.")]);
         }
+    }
+
+    private async Task RecalculateProfessionalRatingAsync(NpgsqlConnection connection, string reviewJson, CancellationToken cancellationToken)
+    {
+        using var document = JsonDocument.Parse(reviewJson);
+        var professionalId = ExtractString(document.RootElement, "professionalId");
+        if (!Guid.TryParse(professionalId, out var professionalGuid)) return;
+
+        await using var command = new NpgsqlCommand(@"update barber.professionals
+set payload = jsonb_set(payload, '{averageRating}', to_jsonb((
+    select coalesce(round(avg((barber.reviews.payload->>'rating')::numeric), 2), 0)
+    from barber.reviews
+    where barber.reviews.deleted_at is null and barber.reviews.payload->>'professionalId' = @professionalId
+)), true), updated_at = now()
+where id = @id and deleted_at is null", connection);
+        command.Parameters.AddWithValue("professionalId", professionalGuid.ToString());
+        command.Parameters.AddWithValue("id", professionalGuid);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private async Task NotifyOnCreateAsync(NpgsqlConnection connection, string resource, Guid id, string json, CancellationToken cancellationToken)
