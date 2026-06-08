@@ -178,7 +178,7 @@ FROM generate_series(1,10) i
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO barber.service_orders (id, tenant_id, branch_id, payload, status)
-SELECT ('00000000-0000-0000-0000-' || lpad((600 + i)::text, 12, '0'))::uuid, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', jsonb_build_object('number', 'SO-2026-' || (1000+i), 'clientName', (ARRAY['Marcos Vinícius','Thiago Almeida','Fernanda Costa','Eduardo Lima','Barber Prime Ltda'])[i], 'professionalName', 'Rafael Barber', 'total', 80 + i, 'paidAmount', case when i > 2 then 80 + i else 0 end), case when i > 2 then 'Paid' else 'Open' end
+SELECT ('00000000-0000-0000-0000-' || lpad((600 + i)::text, 12, '0'))::uuid, '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', jsonb_build_object('number', 'SO-2026-' || (1000+i), 'clientName', (ARRAY['Marcos Vinícius','Thiago Almeida','Fernanda Costa','Eduardo Lima','Barber Prime Ltda'])[i], 'professionalName', 'Rafael Barber', 'serviceName', (ARRAY['Corte Masculino','Barba Tradicional','Corte + Barba','Sobrancelha','Hidratação Capilar'])[i], 'items', jsonb_build_array(jsonb_build_object('type','service','name',(ARRAY['Corte Masculino','Barba Tradicional','Corte + Barba','Sobrancelha','Hidratação Capilar'])[i],'quantity',1,'price',80 + i)), 'total', 80 + i, 'paidAmount', case when i > 2 then 80 + i else 0 end), case when i > 2 then 'Paid' else 'Open' end
 FROM generate_series(1,5) i
 ON CONFLICT (id) DO NOTHING;
 
