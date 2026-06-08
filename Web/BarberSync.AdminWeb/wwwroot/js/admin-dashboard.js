@@ -35,8 +35,8 @@
     ['EventBus OK', null],
     ['Assets OK', '/css/admin-design-system.css'],
     ['Swagger OK', '/AdminApi/swagger.json'],
-    ['PublicWeb OK', 'http://localhost:8082/'],
-    ['Kiosk OK', 'http://localhost:8083/Kiosk/Services']
+    ['PublicWeb OK', '/Admin/PublicSite'],
+    ['Kiosk OK', '/Admin/Kiosk']
   ];
   const localStatus = (label) => {
     if (label === 'FullServiceFlow OK') return window.BarberSyncDemoStore?.getFullServiceFlow ? 'OK' : 'Atenção';

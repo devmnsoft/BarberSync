@@ -15,7 +15,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
     public Task<IActionResult> Professionals() => ProxyGet("/api/public/professionals", DemoProfessionals());
 
     [HttpGet("appointments")]
-    public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments());
+    public Task<IActionResult> Appointments() => ProxyGet("/api/public/appointments", DemoAppointments());
 
     [HttpPost("leads")]
     public Task<IActionResult> Leads([FromBody] JsonElement payload) => ProxyPost("/api/public/leads", payload, new { success = true, message = "Operação simulada em modo demonstração. Lead recebido em modo demonstração.", data = new { protocol = "LEAD-DEMO", isDemo = true }, isDemo = true });
@@ -31,12 +31,12 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
             if (!response.IsSuccessStatusCode)
             {
                 if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-                return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
+                return Ok(DemoEnvelope(Array.Empty<object>(), "Dados carregados em modo demonstração."));
             }
             var json = await response.Content.ReadAsStringAsync();
             return Content(json, "application/json", Encoding.UTF8);
         }
-        catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração.")); }
+        catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(DemoEnvelope(Array.Empty<object>(), "Dados carregados em modo demonstração.")); }
     }
     private async Task<IActionResult> ProxyPost(string path, JsonElement payload, object fallback)
     {

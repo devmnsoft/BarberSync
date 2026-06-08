@@ -42,16 +42,18 @@
   setText('[data-public-company]', branding.publicName);
   setText('[data-public-slogan]', branding.slogan);
   const toast = (message) => { const el = document.getElementById('publicToast'); if (!el) return; el.textContent = message; el.hidden = false; setTimeout(() => el.hidden = true, 4200); };
-  const render=(id,arr,fn)=>{const e=document.getElementById(id); if(e) { e.classList.remove('skeleton-grid'); e.innerHTML=(Array.isArray(arr)?arr:[]).map(fn).join(''); }};
+  const render=(id,arr,fn)=>{const e=document.getElementById(id); if(e) { const list=Array.isArray(arr)?arr:[]; e.classList.remove('skeleton-grid'); e.innerHTML=list.length?list.map(fn).join(''):`<article class='panel'><h3>Nenhum registro publicado</h3><p>API online retornou lista vazia. Cadastre pelo Admin para publicar neste canal.</p></article>`; }};
   const load = async (url, fallback) => {
     try {
       const r = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = await r.json(); const data = j.data || j.items || j;
-      return Array.isArray(data) && data.length ? data : fallback;
+      if (j?.isDemo) { toast('API indisponível. Dados carregados em modo demonstração.'); return Array.isArray(data) && data.length ? data : fallback; }
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.warn('[BarberSync PublicWeb] fallback demo', error?.message || error);
       window.BarberSyncEventBus.emit('public:fallbackUsed', { url, message: error?.message || String(error) });
+      toast('API indisponível. Dados carregados em modo demonstração.');
       return fallback;
     }
   };

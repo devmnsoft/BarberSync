@@ -10,7 +10,9 @@ public sealed class PublicController(EnterpriseDataService data, ILogger<PublicC
 {
     [HttpGet("services")] public Task<IActionResult> Services(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("services", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Serviços públicos carregados.")));
     [HttpGet("professionals")] public Task<IActionResult> Professionals(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("professionals", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Profissionais públicos carregados.")));
+    [HttpGet("appointments")] public Task<IActionResult> Appointments(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("appointments", cancellationToken)).Where(x => Text(x, "origin").Equals("PublicWeb", StringComparison.OrdinalIgnoreCase) || Text(x, "channel").Equals("PublicWeb", StringComparison.OrdinalIgnoreCase)), "Agendamentos públicos carregados.")));
     [HttpPost("appointments")] public Task<IActionResult> Appointment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.PublicAppointmentAsync(payload, cancellationToken), "Agendamento público criado com sucesso.")));
+    [HttpGet("leads")] public Task<IActionResult> Leads(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.ListAsync("public_leads", cancellationToken), "Leads públicos carregados.")));
     [HttpPost("leads")] public Task<IActionResult> Lead([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.CreateAsync("public_leads", payload, cancellationToken), "Lead público registrado com sucesso.")));
 
     private async Task<IActionResult> Safe(Func<Task<IActionResult>> action)
@@ -20,6 +22,7 @@ public sealed class PublicController(EnterpriseDataService data, ILogger<PublicC
         catch (Exception ex) { logger.LogError(ex, "Erro no PublicController."); return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>() }); }
     }
     private static object Envelope(object? data, string message) => new { success = true, message, data, errors = Array.Empty<object>() };
+    private static string Text(Dictionary<string, object?> item, string key) => item.TryGetValue(key, out var value) ? value?.ToString() ?? string.Empty : string.Empty;
     private static bool IsActive(Dictionary<string, object?> item)
     {
         var active = !item.TryGetValue("isActive", out var isActive) || isActive is true || isActive?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;

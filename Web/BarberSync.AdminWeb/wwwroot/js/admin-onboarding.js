@@ -8,7 +8,7 @@
     ['appointments','📅','Crie seu primeiro agendamento','Demonstre o status de agendado até finalizado.','/Admin/Appointments'],
     ['orders','🧾','Abra uma comanda','Mostre itens, pagamento e recibo visual.','/Admin/ServiceOrders'],
     ['kiosk','🖥️','Configure o Totem','Teste o fluxo guiado de autoatendimento.','/Admin/Kiosk'],
-    ['publicweb','🌐','Veja o PublicWeb','Apresente a landing vendável e o agendamento público.','http://localhost:8082/'],
+    ['publicweb','🌐','Veja o PublicWeb','Apresente a landing vendável e o agendamento público.','/Admin/PublicSite'],
     ['copilot','🤖','Use o Copilot','Faça uma pergunta e converta sugestão em ação.','/Admin/Copilot']
   ];
   const key = 'BarberSync:onboarding:v1';

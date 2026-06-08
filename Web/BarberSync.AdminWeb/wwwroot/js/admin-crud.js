@@ -211,17 +211,24 @@
 
     const load = async () => {
       const { data, fallback } = await adminApiClient.get(endpoint, demo);
-      if (fallback) document.getElementById(`${module}Fallback`)?.classList.remove('d-none');
-      const apiList = normalizeList(data).length ? normalizeList(data) : demo;
-      const demoList = window.BarberSyncDemoStore?.get(module) || [];
-      const list = [...demoList, ...apiList.filter(item => !demoList.some(demoItem => String(demoItem.id) === String(item.id)))];
+      const isDemoMode = fallback || adminApiClient.isDemoResponse(data);
+      if (isDemoMode) {
+        document.getElementById(`${module}Fallback`)?.classList.remove('d-none');
+        window.AdminToast?.showWarning?.('API indisponível. Dados carregados em modo demonstração.');
+      } else {
+        document.getElementById(`${module}Fallback`)?.classList.add('d-none');
+      }
+      const apiList = normalizeList(data);
+      const demoList = isDemoMode ? (window.BarberSyncDemoStore?.get(module) || []) : [];
+      const fallbackList = isDemoMode && apiList.length === 0 && demoList.length === 0 ? demo : apiList;
+      const list = isDemoMode ? [...demoList, ...fallbackList.filter(item => !demoList.some(demoItem => String(demoItem.id) === String(item.id)))] : apiList;
       currentList = list;
       const activeCount = list.filter(x => /ativo|dispon|confirm|ok/i.test(status(x))).length || list.length;
       const revenue = list.reduce((acc, x) => acc + Number(x.total || x.price || x.revenueMonth || 0), 0);
-      document.getElementById(`${module}Cards`).innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>registros</span></div></article><article class='kpi-card'><div class='kpi-icon'>✅</div><div><p class='kpi-label'>Ativos</p><strong class='kpi-value'>${activeCount}</strong><span class='kpi-variation'>em operação</span></div></article><article class='kpi-card'><div class='kpi-icon'>💰</div><div><p class='kpi-label'>Potencial</p><strong class='kpi-value'>${money(revenue)}</strong><span class='kpi-variation'>amostra</span></div></article><article class='kpi-card'><div class='kpi-icon'>🛡️</div><div><p class='kpi-label'>Origem</p><strong class='kpi-value'>${fallback ? 'Demo' : 'API'}</strong><span class='kpi-variation'>proxy MVC</span></div></article>`;
+      document.getElementById(`${module}Cards`).innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>registros</span></div></article><article class='kpi-card'><div class='kpi-icon'>✅</div><div><p class='kpi-label'>Ativos</p><strong class='kpi-value'>${activeCount}</strong><span class='kpi-variation'>em operação</span></div></article><article class='kpi-card'><div class='kpi-icon'>💰</div><div><p class='kpi-label'>Potencial</p><strong class='kpi-value'>${money(revenue)}</strong><span class='kpi-variation'>amostra</span></div></article><article class='kpi-card'><div class='kpi-icon'>🛡️</div><div><p class='kpi-label'>Origem</p><strong class='kpi-value'>${isDemoMode ? 'Demo' : 'API'}</strong><span class='kpi-variation'>proxy MVC</span></div></article>`;
       const term = (document.getElementById(`${module}Search`)?.value || '').toLowerCase();
       const filtered = list.filter(i => JSON.stringify(i).toLowerCase().includes(term));
-      document.getElementById(`${module}Rows`).innerHTML = filtered.slice(0, 16).map((i, idx) => `<tr><td><strong>${escapeHtml(name(i))}</strong><small>${escapeHtml(i.email || i.phone || i.time || i.code || '')}</small></td><td>${escapeHtml(detail(i))}</td><td><span class='badge badge-success'>${escapeHtml(status(i))}</span></td><td>${actionButtons(module, i, idx)}</td></tr>`).join('') || `<tr><td colspan="4"><div class="empty-state-mini">Nenhum registro encontrado. Use Novo ${copy.singular} para demonstrar o fluxo.</div></td></tr>`;
+      document.getElementById(`${module}Rows`).innerHTML = filtered.slice(0, 16).map((i, idx) => `<tr><td><strong>${escapeHtml(name(i))}</strong><small>${escapeHtml(i.email || i.phone || i.time || i.code || '')}</small></td><td>${escapeHtml(detail(i))}</td><td><span class='badge badge-success'>${escapeHtml(status(i))}</span></td><td>${actionButtons(module, i, idx)}</td></tr>`).join('') || `<tr><td colspan="4"><div class="empty-state-mini">Nenhum registro encontrado. Use Novo ${copy.singular} para cadastrar um registro real.</div></td></tr>`;
       document.getElementById(`${module}Kanban`)?.remove();
       decorateRows(module, filtered, document.getElementById(`${module}Rows`));
     };

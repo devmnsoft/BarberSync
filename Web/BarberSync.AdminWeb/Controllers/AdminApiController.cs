@@ -119,7 +119,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             logger.LogWarning(ex, "AdminApi GET {Path} lançou exceção. Usando fallback demo.", path);
         }
 
-        return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
+        return Ok(DemoFallbackEnvelope(path, fallbackMessage));
     }
 
 
@@ -206,6 +206,8 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
         return false;
     }
+    private static object DemoFallbackEnvelope(string path, string message) => new { success = true, message = "API indisponível. Dados carregados em modo demonstração.", data = Array.Empty<object>(), isDemo = true, sourcePath = path };
+
     private static object DemoMutation(string message, JsonElement payload, string? id = null) => new { success = true, message = $"Operação simulada em modo demonstração. {message}", data = new { id = id ?? $"demo-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", payload = JsonSerializer.Deserialize<object>(payload.GetRawText()), isDemo = true } };
     private static object DemoMutation(string message, string id) => new { success = true, message = $"Operação simulada em modo demonstração. {message}", data = new { id, isDemo = true } };
 
@@ -251,7 +253,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
                 },
                 ["/api/full-service-flow/snapshot"] = new Dictionary<string, object> { ["get"] = Operation("demo", "Snapshot do fluxo vertical completo", "Fluxo completo carregado") },
                 ["/api/full-service-flow/run"] = new Dictionary<string, object> { ["post"] = Operation("demo", "Executar fluxo vertical completo", "Fluxo completo atualizado") },
-                ["/api/kiosk/payment/mock"] = new Dictionary<string, object> { ["post"] = Operation("kiosk", "Pagamento mock", "Pagamento aprovado") }
+                ["/api/kiosk/payment"] = new Dictionary<string, object> { ["post"] = Operation("kiosk", "Pagamento mock", "Pagamento aprovado") }
             }
         };
     }

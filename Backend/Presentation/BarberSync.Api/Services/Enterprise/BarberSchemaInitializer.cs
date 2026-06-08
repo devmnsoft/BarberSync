@@ -104,7 +104,7 @@ public sealed class BarberSchemaInitializer(
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync(cancellationToken);
-            await using var command = new NpgsqlCommand("select count(*) = 4 from information_schema.tables where table_schema = @schema and table_name in ('clients','services','professionals','appointments')", connection);
+            await using var command = new NpgsqlCommand("select count(*) = 20 from information_schema.tables where table_schema = @schema and table_name in ('clients','professionals','services','products','appointments','service_orders','service_order_items','payments','stock_movements','campaigns','coupons','loyalty_accounts','loyalty_transactions','reviews','public_leads','kiosk_devices','kiosk_sessions','audit_logs','notifications','branches')", connection);
             command.Parameters.AddWithValue("schema", SchemaName);
             var schemaReady = Convert.ToBoolean(await command.ExecuteScalarAsync(cancellationToken));
 
@@ -282,6 +282,8 @@ CREATE TABLE IF NOT EXISTS barber.audit_logs (
   entity_id uuid null,
   description text not null,
   metadata jsonb not null default '{}'::jsonb,
+  payload jsonb not null default '{}'::jsonb,
+  status varchar(30) not null default 'Active',
   created_at timestamp not null default now(),
   updated_at timestamp null,
   deleted_at timestamp null,
@@ -289,6 +291,9 @@ CREATE TABLE IF NOT EXISTS barber.audit_logs (
   created_by uuid null,
   updated_by uuid null
 );
+
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS status varchar(30) not null default 'Active';
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS payload jsonb not null default '{}'::jsonb;
 
 CREATE TABLE IF NOT EXISTS barber.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -319,6 +324,7 @@ CREATE INDEX IF NOT EXISTS ix_notifications_status ON barber.notifications (stat
 CREATE INDEX IF NOT EXISTS ix_notifications_created_at ON barber.notifications (created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_clients_document_tenant_active ON barber.clients (tenant_id, (payload->>'document')) WHERE deleted_at IS NULL AND coalesce(payload->>'document','') <> '';
 CREATE INDEX IF NOT EXISTS ix_appointments_professional_scheduled ON barber.appointments (tenant_id, (payload->>'professionalId'), (payload->>'scheduledAt')) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_products_current_min_stock ON barber.products (((payload->>'currentStock')::numeric), ((payload->>'minStock')::numeric)) WHERE deleted_at IS NULL;
 """;
 
     private const string SeedSql = """
