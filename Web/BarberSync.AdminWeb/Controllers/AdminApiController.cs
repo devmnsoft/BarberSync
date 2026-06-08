@@ -25,6 +25,17 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("financial-summary")] public Task<IActionResult> FinancialSummary() => ProxyGet("/api/financial/summary", DemoFinancialSummary(), "Resumo financeiro carregado em modo demonstração.");
     [HttpGet("reports-summary")] public Task<IActionResult> ReportsSummary() => ProxyGet("/api/reports/summary", DemoReportsSummary(), "Resumo de relatórios carregado em modo demonstração.");
 
+
+    [HttpGet("clients/{id}")] public Task<IActionResult> ClientById(string id) => ProxyGet($"/api/clients/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Cliente carregado em modo demonstração.");
+    [HttpGet("professionals/{id}")] public Task<IActionResult> ProfessionalById(string id) => ProxyGet($"/api/professionals/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Profissional carregado em modo demonstração.");
+    [HttpGet("services/{id}")] public Task<IActionResult> ServiceById(string id) => ProxyGet($"/api/services/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Serviço carregado em modo demonstração.");
+    [HttpGet("products/{id}")] public Task<IActionResult> ProductById(string id) => ProxyGet($"/api/products/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Produto carregado em modo demonstração.");
+    [HttpGet("appointments/{id}")] public Task<IActionResult> AppointmentById(string id) => ProxyGet($"/api/appointments/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Agendamento carregado em modo demonstração.");
+    [HttpGet("service-orders/{id}")] public Task<IActionResult> ServiceOrderById(string id) => ProxyGet($"/api/service-orders/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Comanda carregada em modo demonstração.");
+    [HttpGet("campaigns/{id}")] public Task<IActionResult> CampaignById(string id) => ProxyGet($"/api/campaigns/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Campanha carregada em modo demonstração.");
+    [HttpGet("coupons/{id}")] public Task<IActionResult> CouponById(string id) => ProxyGet($"/api/coupons/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Cupom carregado em modo demonstração.");
+    [HttpGet("reviews/{id}")] public Task<IActionResult> ReviewById(string id) => ProxyGet($"/api/reviews/{Uri.EscapeDataString(id)}", new { id, isDemo = true }, "Avaliação carregada em modo demonstração.");
+
     [HttpGet("full-service-flow/snapshot")] public Task<IActionResult> FullServiceFlowSnapshot() => ProxyGet("/api/full-service-flow/snapshot", DemoFullServiceSnapshot(), "Fluxo completo carregado em modo demonstração.");
     [HttpPost("full-service-flow/run")] public Task<IActionResult> RunFullServiceFlow([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/full-service-flow/run", payload, DemoMutation("Fluxo FullServiceFlow executado em modo demonstração.", payload));
     [HttpGet("full-service-flow/loyalty/accounts")] public Task<IActionResult> FullServiceFlowLoyalty() => ProxyGet("/api/full-service-flow/loyalty/accounts", DemoLoyaltyAccounts(), "Cashback do fluxo carregado em modo demonstração.");

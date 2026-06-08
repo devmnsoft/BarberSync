@@ -31,7 +31,14 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         ["kiosk_sessions"] = "kiosk_sessions",
         ["notifications"] = "notifications",
         ["audit_logs"] = "audit_logs",
-        ["stock_movements"] = "stock_movements"
+        ["stock_movements"] = "stock_movements",
+        ["attendances"] = "attendances",
+        ["cash_registers"] = "cash_registers",
+        ["professional_services"] = "professional_services",
+        ["app_settings"] = "app_settings",
+        ["users"] = "users",
+        ["profiles"] = "profiles",
+        ["permissions"] = "permissions"
     };
 
     private Guid TenantId => Guid.Parse(configuration["BarberSync:DefaultTenantId"] ?? "11111111-1111-1111-1111-111111111111");
@@ -276,14 +283,32 @@ order by created_at desc";
     public async Task<Dictionary<string, object?>> StockMovementAsync(string type, JsonElement payload, CancellationToken cancellationToken = default)
     {
         var enrichedPayload = EnrichPayload(payload, new Dictionary<string, object?> { ["type"] = type });
-        var movement = await CreateAsync("stock_movements", enrichedPayload, cancellationToken);
-        if (ExtractString(payload, "productId") is { } productId && Guid.TryParse(productId, out var productGuid))
-        {
-            await ApplyStockToProductAsync(productGuid, type, payload, cancellationToken);
-        }
         await using var connection = await OpenAsync(cancellationToken);
-        await NotifyAsync(connection, type == "exit" ? "Saída de estoque registrada." : "Entrada de estoque registrada.", "stock_movements", Guid.Parse(movement["id"]!.ToString()!), cancellationToken);
-        return movement;
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var movement = await InsertWithConnectionAsync(connection, transaction, "stock_movements", enrichedPayload, "Confirmed", cancellationToken);
+            var productIsCritical = false;
+            if (ExtractString(payload, "productId") is { } productId && Guid.TryParse(productId, out var productGuid))
+            {
+                productIsCritical = await ApplyStockToProductAsync(connection, transaction, productGuid, type, payload, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            await AuditAsync(connection, "Estoque", type, "stock_movements", Guid.Parse(movement["id"]!.ToString()!), $"Movimento de estoque {type} registrado via API real.", payload.GetRawText(), cancellationToken);
+            await NotifyAsync(connection, type == "exit" ? "Saída de estoque registrada." : "Entrada de estoque registrada.", "stock_movements", Guid.Parse(movement["id"]!.ToString()!), cancellationToken);
+            if (productIsCritical && ExtractString(payload, "productId") is { } criticalProductId && Guid.TryParse(criticalProductId, out var criticalProductGuid))
+            {
+                await NotifyAsync(connection, "Produto abaixo do estoque mínimo.", "products", criticalProductGuid, cancellationToken);
+            }
+
+            return movement;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task<Dictionary<string, object?>> PayServiceOrderAsync(Guid orderId, JsonElement payload, CancellationToken cancellationToken = default)
@@ -444,29 +469,19 @@ order by created_at desc";
         return Deserialize(result?.ToString() ?? json);
     }
 
-    private async Task ApplyStockToProductAsync(Guid productId, string movementType, JsonElement payload, CancellationToken cancellationToken)
+    private static async Task<bool> ApplyStockToProductAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, Guid productId, string movementType, JsonElement payload, CancellationToken cancellationToken)
     {
         var quantity = ExtractDecimal(payload, "quantity") ?? 0;
         if (quantity <= 0) throw new EnterpriseValidationException([new("quantity", "Quantidade deve ser maior que zero.")]);
         var delta = movementType is "exit" ? -quantity : quantity;
-        await using var connection = await OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(@"update barber.products
 set payload = jsonb_set(payload, '{currentStock}', to_jsonb(greatest(coalesce((payload->>'currentStock')::numeric, 0) + @delta, 0)), true), updated_at = now()
 where id = @productId and deleted_at is null
-returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)", connection);
+returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)", connection, transaction);
         command.Parameters.AddWithValue("productId", productId);
         command.Parameters.AddWithValue("delta", delta);
         var critical = await command.ExecuteScalarAsync(cancellationToken);
-        await AuditAsync(connection, "Estoque", movementType, "products", productId, $"Movimento de estoque {movementType} aplicado.", payload.GetRawText(), cancellationToken);
-        if (critical is bool isCritical && isCritical)
-        {
-            await NotifyAsync(
-                connection,
-                "Produto abaixo do estoque mínimo.",
-                "products",
-                productId,
-                cancellationToken);
-        }
+        return critical is bool isCritical && isCritical;
     }
 
 
