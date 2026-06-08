@@ -63,6 +63,7 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
     {
         var validation = Validate(resource, payload, null);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
+        await ValidateBusinessRulesAsync(resource, payload, null, cancellationToken);
 
         var id = Guid.NewGuid();
         var json = MergeId(payload, id);
@@ -92,6 +93,7 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
     {
         var validation = Validate(resource, payload, id);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
+        await ValidateBusinessRulesAsync(resource, payload, id, cancellationToken);
 
         var json = MergeId(payload, id);
         await using var connection = await OpenAsync(cancellationToken);
@@ -141,6 +143,25 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
             await NotifyAsync(connection, targetStatus == "CheckedIn" ? "Cliente fez check-in." : $"Agendamento {targetStatus}.", "appointments", id, cancellationToken);
         }
         return Deserialize(result?.ToString() ?? json);
+    }
+
+    public async Task<IReadOnlyList<Dictionary<string, object?>>> CriticalStockAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        const string sql = @"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)
+from barber.products
+where deleted_at is null
+  and is_active
+  and coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)
+order by created_at desc";
+        await using var command = new NpgsqlCommand(sql, connection);
+        var items = new List<Dictionary<string, object?>>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            items.Add(Deserialize(reader.GetString(0)));
+        }
+        return items;
     }
 
     public async Task<Dictionary<string, object?>> DashboardAsync(CancellationToken cancellationToken = default)
@@ -215,6 +236,7 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
     public async Task<Dictionary<string, object?>> PayServiceOrderAsync(Guid orderId, JsonElement payload, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
+        await ValidateServiceOrderPaymentAsync(connection, orderId, payload, cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -278,6 +300,92 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
                 "products",
                 productId,
                 cancellationToken);
+        }
+    }
+
+
+    private async Task ValidateBusinessRulesAsync(string resource, JsonElement payload, Guid? id, CancellationToken cancellationToken)
+    {
+        if (resource != "appointments") return;
+
+        var scheduledAt = ExtractString(payload, "scheduledAt");
+        var professionalId = ExtractString(payload, "professionalId");
+        var serviceId = ExtractString(payload, "serviceId");
+
+        await using var connection = await OpenAsync(cancellationToken);
+        if (Guid.TryParse(professionalId, out var professionalGuid))
+        {
+            if (!await IsEntitySchedulableAsync(connection, "professionals", professionalGuid, "visibleOnAdmin", cancellationToken))
+            {
+                throw new EnterpriseValidationException([new("professionalId", "Profissional inativo não recebe novo agendamento.")]);
+            }
+        }
+
+        if (Guid.TryParse(serviceId, out var serviceGuid))
+        {
+            if (!await IsEntitySchedulableAsync(connection, "services", serviceGuid, "visibleOnAdmin", cancellationToken))
+            {
+                throw new EnterpriseValidationException([new("serviceId", "Serviço inativo não pode receber novo agendamento.")]);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(professionalId) && !string.IsNullOrWhiteSpace(scheduledAt))
+        {
+            await using var command = new NpgsqlCommand(@"select exists (
+  select 1
+  from barber.appointments
+  where deleted_at is null
+    and coalesce(status, payload->>'status', 'Scheduled') not in ('Cancelled','NoShow','Finished')
+    and payload->>'professionalId' = @professionalId
+    and payload->>'scheduledAt' = @scheduledAt
+    and (@id is null or id <> @id)
+)", connection);
+            command.Parameters.AddWithValue("professionalId", professionalId);
+            command.Parameters.AddWithValue("scheduledAt", scheduledAt);
+            command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, id.HasValue ? (object)id.Value : DBNull.Value);
+            var hasConflict = await command.ExecuteScalarAsync(cancellationToken);
+            if (hasConflict is bool true)
+            {
+                throw new EnterpriseValidationException([new("scheduledAt", "Já existe agendamento para este profissional neste horário.")]);
+            }
+        }
+    }
+
+    private static async Task<bool> IsEntitySchedulableAsync(NpgsqlConnection connection, string table, Guid id, string visibilityFlag, CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand($@"select exists (
+  select 1
+  from barber.{table}
+  where id = @id
+    and deleted_at is null
+    and is_active
+    and status not in ('Inactive','Cancelled')
+    and coalesce((payload->>@visibilityFlag)::boolean, true)
+)", connection);
+        command.Parameters.AddWithValue("id", id);
+        command.Parameters.AddWithValue("visibilityFlag", visibilityFlag);
+        return await command.ExecuteScalarAsync(cancellationToken) is bool true;
+    }
+
+    private async Task ValidateServiceOrderPaymentAsync(NpgsqlConnection connection, Guid orderId, JsonElement payload, CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand("select payload::text from barber.service_orders where id = @id and deleted_at is null", connection);
+        command.Parameters.AddWithValue("id", orderId);
+        var json = await command.ExecuteScalarAsync(cancellationToken) as string;
+        if (string.IsNullOrWhiteSpace(json)) throw new KeyNotFoundException("Comanda não encontrada.");
+
+        using var document = JsonDocument.Parse(json);
+        var order = document.RootElement;
+        var total = ExtractDecimal(order, "total") ?? 0;
+        var paidAmount = ExtractDecimal(order, "paidAmount") ?? 0;
+        var amount = ExtractDecimal(payload, "amount") ?? 0;
+        var changeAmount = ExtractDecimal(payload, "changeAmount") ?? 0;
+
+        if (amount <= 0) throw new EnterpriseValidationException([new("amount", "Valor do pagamento deve ser maior que zero.")]);
+        if (total <= 0) throw new EnterpriseValidationException([new("total", "Comanda precisa de ao menos 1 item para pagamento.")]);
+        if (amount > Math.Max(total - paidAmount, 0) && changeAmount <= 0)
+        {
+            throw new EnterpriseValidationException([new("changeAmount", "Pagamento maior que o total exige registro de troco.")]);
         }
     }
 
@@ -408,6 +516,12 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
                 if (string.IsNullOrWhiteSpace(ExtractString(payload, "professionalName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "professional")) && string.IsNullOrWhiteSpace(ExtractString(payload, "professionalId"))) errors.Add(new("professionalName", "Profissional é obrigatório."));
                 if (ExtractString(payload, "scheduledAt") is not { Length: > 0 }) errors.Add(new("scheduledAt", "Data/hora é obrigatória."));
                 if (ExtractString(payload, "scheduledAt") is { } scheduled && DateTime.TryParse(scheduled, out var when) && when < DateTime.Now) errors.Add(new("scheduledAt", "Não é permitido agendar em data/hora passada."));
+                var status = ExtractString(payload, "status");
+                if (!string.IsNullOrWhiteSpace(status) && !AllowedAppointmentStatuses.Contains(status)) errors.Add(new("status", "Status de agendamento inválido."));
+                break;
+            case "service-orders":
+                if (string.IsNullOrWhiteSpace(ExtractString(payload, "clientId")) && string.IsNullOrWhiteSpace(ExtractString(payload, "clientName")) && string.IsNullOrWhiteSpace(ExtractString(payload, "walkInName"))) errors.Add(new("clientName", "Comanda deve ter cliente ou consumidor avulso."));
+                if (Number("discount") is < 0) errors.Add(new("discount", "Desconto não pode ser negativo."));
                 break;
             case "reviews":
                 if (Number("rating") is null or < 1 or > 5) errors.Add(new("rating", "Nota deve ficar entre 1 e 5."));
@@ -423,6 +537,18 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
 
         return errors;
     }
+
+    private static readonly HashSet<string> AllowedAppointmentStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Scheduled",
+        "PendingApproval",
+        "Confirmed",
+        "CheckedIn",
+        "InService",
+        "Finished",
+        "Cancelled",
+        "NoShow"
+    };
 
     private static bool CanTransition(string current, string target) => (NormalizeStatus(current), target) switch
     {
