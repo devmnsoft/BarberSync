@@ -1,12 +1,32 @@
 @model BarberSync.AdminWeb.Controllers.AdminController.AdminModuleViewModel
-@{ ViewData["Title"] = "Products"; }
-<section class="admin-page-header"><h1>Products</h1><p>Painel operacional com dados e ações do módulo.</p></section>
-<div class="alert alert-warning d-none" id="ProductsFallback">Dados demonstrativos carregados porque a API não respondeu.</div>
-<div class="row g-3" id="ProductsCards"></div>
-<div class="card mt-3 p-3">
-  <div class="d-flex justify-content-between"><h5>Lista de Products</h5><button class="btn btn-primary">Novo</button></div>
-  <div class="table-responsive mt-2"><table class="table table-dark table-striped"><thead><tr><th>Nome</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ProductsRows"></tbody></table></div>
-</div>
+@{
+    ViewData["Title"] = "Produtos";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="page-header">
+    <div>
+        <h1 class="page-title">Produtos</h1>
+        <p class="page-subtitle">Catálogo de revenda e insumos com persistência em <strong>/AdminApi/products</strong> e fallback demo somente se a API falhar.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" data-admin-refresh="Products">Atualizar</button>
+        <button class="btn btn-primary" data-admin-new="Products">Novo Produto</button>
+    </div>
+</section>
+<div class="alert alert-warning d-none" id="ProductsFallback">API indisponível: modo demonstração seguro ativo.</div>
+<section class="admin-module-grid" id="ProductsCards">
+    <article class="kpi-card"><div class="kpi-icon">🧴</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
+</section>
+<section class="panel module-panel">
+    <div class="panel-header">
+        <div><h3>Produtos cadastrados</h3><p>CRUD real com validação, toast, edição, detalhes e soft delete.</p></div>
+        <span class="badge badge-info">/AdminApi/products</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ProductsRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
+    </div>
+</section>
 <script src="~/js/admin-api-client.js"></script>
+<script src="~/js/admin-forms.js"></script>
 <script src="~/js/admin-crud.js"></script>
 <script>window.renderAdminCrudPage && window.renderAdminCrudPage('Products')</script>

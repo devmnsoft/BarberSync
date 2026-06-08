@@ -20,6 +20,32 @@ public sealed class PublicController(EnterpriseDataService data, ILogger<PublicC
         catch (Exception ex) { logger.LogError(ex, "Erro no PublicController."); return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>() }); }
     }
     private static object Envelope(object? data, string message) => new { success = true, message, data, errors = Array.Empty<object>() };
-    private static bool IsActive(Dictionary<string, object?> item) => !item.TryGetValue("isActive", out var active) || active is true || active?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
-    private static bool Flag(Dictionary<string, object?> item, string key, bool defaultValue) => !item.TryGetValue(key, out var flag) ? defaultValue : flag is true || flag?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    private static bool IsActive(Dictionary<string, object?> item)
+    {
+        var active = !item.TryGetValue("isActive", out var isActive) || isActive is true || isActive?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        var status = item.TryGetValue("status", out var value) ? value?.ToString() : null;
+        return active && !new[] { "Inactive", "Inativo", "Pausado", "Expirado", "Cancelled", "Cancelado" }.Contains(status ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+    }
+    private static bool Flag(Dictionary<string, object?> item, string key, bool defaultValue)
+    {
+        var aliases = key switch
+        {
+            "visibleOnPublicWeb" => new[] { "visibleOnPublicWeb", "site", "publicWeb" },
+            "visibleOnKiosk" => new[] { "visibleOnKiosk", "kiosk", "totem" },
+            _ => new[] { key }
+        };
+
+        foreach (var alias in aliases)
+        {
+            if (!item.TryGetValue(alias, out var flag)) continue;
+            if (flag is bool boolValue) return boolValue;
+            var text = flag?.ToString();
+            if (string.IsNullOrWhiteSpace(text)) return defaultValue;
+            if (text.Equals("Sim", StringComparison.OrdinalIgnoreCase)) return true;
+            if (text.Equals("Não", StringComparison.OrdinalIgnoreCase) || text.Equals("Nao", StringComparison.OrdinalIgnoreCase)) return false;
+            if (bool.TryParse(text, out var parsed)) return parsed;
+        }
+
+        return defaultValue;
+    }
 }
