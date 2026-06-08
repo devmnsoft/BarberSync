@@ -76,6 +76,8 @@ CREATE TABLE IF NOT EXISTS barber.audit_logs (
   entity_id uuid null,
   description text not null,
   metadata jsonb not null default '{}'::jsonb,
+  payload jsonb not null default '{}'::jsonb,
+  status varchar(30) not null default 'Active',
   created_at timestamp not null default now(),
   updated_at timestamp null,
   deleted_at timestamp null,
@@ -83,6 +85,9 @@ CREATE TABLE IF NOT EXISTS barber.audit_logs (
   created_by uuid null,
   updated_by uuid null
 );
+
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS status varchar(30) not null default 'Active';
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS payload jsonb not null default '{}'::jsonb;
 
 CREATE TABLE IF NOT EXISTS barber.notifications (
   id uuid primary key default gen_random_uuid(),

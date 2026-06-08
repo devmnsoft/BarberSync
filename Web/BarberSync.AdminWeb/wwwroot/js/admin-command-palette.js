@@ -8,7 +8,7 @@
     { title: 'Criar campanha', hint: 'Ativa jornada de retorno', icon: '🎯', href: '/Admin/Campaigns', run: () => window.openCreateModal?.('Campaigns') },
     { title: 'Abrir Copilot', hint: 'Perguntas e sugestões acionáveis', icon: '🤖', href: '/Admin/Copilot' },
     { title: 'Tour Demo', hint: 'Inicia o roteiro guiado BarberSync Demo Experience 2.0', icon: '🧭', href: '/Admin/Dashboard', run: () => window.BarberSyncDemoTour?.start?.() },
-    { title: 'Abrir Totem', hint: 'Fluxo de autoatendimento', icon: '🖥️', href: 'http://localhost:8083/Kiosk/Services', external: true },
+    { title: 'Abrir Totem', hint: 'Fluxo de autoatendimento', icon: '🖥️', href: '/Admin/Kiosk', external: true },
     { title: 'Ver roteiro de demo', hint: 'Checklist e narrativa comercial', icon: '📋', href: '/Admin/Help' }
   ];
   let active = 0;

@@ -3,12 +3,12 @@
     { key: 'api', label: 'API', url: '/AdminApi/api-health' },
     { key: 'adminApi', label: 'AdminApi', urls: ['/AdminApi/dashboard', '/AdminApi/clients', '/AdminApi/services', '/AdminApi/service-orders'] },
     { key: 'databaseSchema', label: 'Database schema BarberSync', url: '/AdminApi/health/database' },
-    { key: 'publicApi', label: 'PublicApi', urls: ['http://localhost:8082/PublicApi/services', 'http://localhost:8082/PublicApi/professionals'] },
-    { key: 'kioskApi', label: 'KioskApi', urls: ['http://localhost:8083/KioskApi/services?deviceCode=KIOSK-DEMO-001', 'http://localhost:8083/KioskApi/professionals?serviceId=demo&deviceCode=KIOSK-DEMO-001'] },
+    { key: 'publicApi', label: 'PublicApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
+    { key: 'kioskApi', label: 'KioskApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
     { key: 'swagger', label: 'Swagger', urls: ['/AdminApi/swagger', '/AdminApi/swagger.json'] },
     { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/css/admin-diagnostics.css', '/css/admin-full-service-flow.css', '/js/admin-dashboard.js', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/js/admin-diagnostics.js', '/js/admin-full-service-flow.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
-    { key: 'publicWeb', label: 'PublicWeb', url: 'http://localhost:8082/', accept: 'text/html,*/*' },
-    { key: 'kiosk', label: 'Kiosk', url: 'http://localhost:8083/Kiosk/Services', accept: 'text/html,*/*' }
+    { key: 'publicWeb', label: 'PublicWeb', url: '/Admin/PublicSite', accept: 'text/html,*/*' },
+    { key: 'kiosk', label: 'Kiosk', url: '/Admin/Kiosk', accept: 'text/html,*/*' }
   ];
 
   const statusClass = (result) => (result.ok ? 'ok' : (result.status === 0 ? 'attention' : 'fail'));

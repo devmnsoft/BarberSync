@@ -26,7 +26,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
     public Task<IActionResult> QuickRegister([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/client/quick-register", payload, new { success = true, message = "Cadastro rápido realizado em modo demonstração.", data = new { protocol = "DEMO-001", isDemo = true } });
 
     [HttpPost("payment/mock")]
-    public Task<IActionResult> MockPayment([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/payment/mock", payload, new { success = true, message = "Pagamento simulado aprovado.", data = new { status = "APPROVED", isDemo = true } });
+    public Task<IActionResult> MockPayment([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/payment", payload, new { success = true, message = "Pagamento simulado aprovado.", data = new { status = "APPROVED", isDemo = true } });
 
     [HttpPost("review")]
     public Task<IActionResult> Review([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/review", payload, new { success = true, message = "Avaliação recebida em modo demonstração.", data = new { isDemo = true } });
@@ -41,7 +41,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
             {
                 if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
                 logger.LogWarning("KioskApi proxy GET {Path} falhou com status {StatusCode}", path, response.StatusCode);
-                return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
+                return Ok(new { success = true, message = "API indisponível. Dados carregados em modo demonstração.", data = Array.Empty<object>(), isDemo = true });
             }
 
             var json = await response.Content.ReadAsStringAsync();
@@ -50,7 +50,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         catch (Exception ex)
         {
             logger.LogWarning(ex, "KioskApi proxy GET {Path} lançou exceção. Usando fallback demo.", path);
-            return Ok(new { success = true, message = fallbackMessage, data = fallbackData, isDemo = true });
+            return Ok(new { success = true, message = "API indisponível. Dados carregados em modo demonstração.", data = Array.Empty<object>(), isDemo = true });
         }
     }
 
