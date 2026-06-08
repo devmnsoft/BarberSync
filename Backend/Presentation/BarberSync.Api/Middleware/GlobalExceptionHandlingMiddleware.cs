@@ -14,7 +14,7 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILog
         catch (ValidationException ex)
         {
             logger.LogWarning(ex, "Erro de validação. Path={Path}", context.Request.Path);
-            await WriteAsync(context, StatusCodes.Status400BadRequest, "Verifique os dados informados.", ex.Errors.Select(e => e.ErrorMessage));
+            await WriteAsync(context, StatusCodes.Status400BadRequest, "Verifique os dados informados.", ex.Errors.Select(e => (object)new ValidationErrorDto(e.PropertyName, e.ErrorMessage)));
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -43,7 +43,7 @@ public sealed class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILog
         }
     }
 
-    private static Task WriteAsync(HttpContext context, int statusCode, string message, IEnumerable<string>? errors = null)
+    private static Task WriteAsync(HttpContext context, int statusCode, string message, System.Collections.IEnumerable? errors = null)
     {
         context.Response.StatusCode = statusCode;
         var payload = ApiResponse<object>.Fail(message, errors, context.TraceIdentifier);

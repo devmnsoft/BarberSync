@@ -71,13 +71,15 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         var json = MergeId(payload, id);
         await using var connection = await OpenAsync(cancellationToken);
         var status = ExtractString(payload, "status") ?? "Active";
-        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status) values (@id, @tenantId, @branchId, @payload::jsonb, @status) returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at) || payload)";
+        var isActive = IsActiveStatus(status) && ExtractBoolean(payload, "isActive", true);
+        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at) || payload)";
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("tenantId", TenantId);
         command.Parameters.AddWithValue("branchId", BranchId);
         command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, json);
         command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("isActive", isActive);
         try
         {
             var result = await command.ExecuteScalarAsync(cancellationToken);
@@ -104,13 +106,15 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         var json = MergeId(payload, id);
         await using var connection = await OpenAsync(cancellationToken);
         var status = ExtractString(payload, "status") ?? "Active";
-        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status) values (@id, @tenantId, @branchId, @payload::jsonb, @status) on conflict (id) do update set payload = excluded.payload, status = excluded.status, updated_at = now() returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)";
+        var isActive = IsActiveStatus(status) && ExtractBoolean(payload, "isActive", true);
+        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) on conflict (id) do update set payload = excluded.payload, status = excluded.status, is_active = excluded.is_active, updated_at = now() returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)";
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("tenantId", TenantId);
         command.Parameters.AddWithValue("branchId", BranchId);
         command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, json);
         command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("isActive", isActive);
         var result = await command.ExecuteScalarAsync(cancellationToken);
         await AuditAsync(connection, Module(resource), "Updated", Table(resource), id, $"{Module(resource)} atualizado via API real.", json, cancellationToken);
         return Deserialize(result?.ToString() ?? json);
@@ -289,11 +293,12 @@ order by created_at desc";
     public async Task<Dictionary<string, object?>> PayServiceOrderAsync(Guid orderId, JsonElement payload, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        await ValidateServiceOrderPaymentAsync(connection, orderId, payload, cancellationToken);
+        var orderPayload = await ValidateServiceOrderPaymentAsync(connection, orderId, payload, cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         try
         {
             var payment = await InsertWithConnectionAsync(connection, transaction, "payments", EnrichPayload(payload, new Dictionary<string, object?> { ["serviceOrderId"] = orderId, ["receiptNumber"] = $"REC-{DateTime.UtcNow:yyyyMMddHHmmss}" }), "Paid", cancellationToken);
+            await ApplySoldProductsAsync(connection, transaction, orderPayload, cancellationToken);
             await using (var command = new NpgsqlCommand("update barber.service_orders set status = 'Paid', payload = payload || @payment::jsonb, updated_at = now() where id = @id", connection, transaction))
             {
                 command.Parameters.AddWithValue("id", orderId);
@@ -433,13 +438,15 @@ order by created_at desc";
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
         var id = Guid.NewGuid();
         var json = MergeId(payload, id);
-        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status) values (@id, @tenantId, @branchId, @payload::jsonb, @status) returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at) || payload)";
+        var isActive = IsActiveStatus(status) && ExtractBoolean(payload, "isActive", true);
+        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at) || payload)";
         await using var command = new NpgsqlCommand(sql, connection, transaction);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("tenantId", TenantId);
         command.Parameters.AddWithValue("branchId", BranchId);
         command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, json);
         command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("isActive", isActive);
         var result = await command.ExecuteScalarAsync(cancellationToken);
         return Deserialize(result?.ToString() ?? json);
     }
@@ -451,12 +458,16 @@ order by created_at desc";
         var delta = movementType is "exit" ? -quantity : quantity;
         await using var connection = await OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(@"update barber.products
-set payload = jsonb_set(payload, '{currentStock}', to_jsonb(greatest(coalesce((payload->>'currentStock')::numeric, 0) + @delta, 0)), true), updated_at = now()
-where id = @productId and deleted_at is null
+set payload = jsonb_set(payload, '{currentStock}', to_jsonb(coalesce((payload->>'currentStock')::numeric, 0) + @delta), true), updated_at = now()
+where id = @productId
+  and deleted_at is null
+  and (@delta >= 0 or coalesce((payload->>'currentStock')::numeric, 0) >= @quantity)
 returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)", connection);
         command.Parameters.AddWithValue("productId", productId);
         command.Parameters.AddWithValue("delta", delta);
+        command.Parameters.AddWithValue("quantity", quantity);
         var critical = await command.ExecuteScalarAsync(cancellationToken);
+        if (critical is null) throw new EnterpriseValidationException([new("quantity", "Estoque insuficiente para saída solicitada.")]);
         await AuditAsync(connection, "Estoque", movementType, "products", productId, $"Movimento de estoque {movementType} aplicado.", payload.GetRawText(), cancellationToken);
         if (critical is bool isCritical && isCritical)
         {
@@ -472,7 +483,13 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
 
     private async Task ValidateBusinessRulesAsync(string resource, JsonElement payload, Guid? id, CancellationToken cancellationToken)
     {
-        if (resource != "appointments") return;
+        if (resource.Equals("clients", StringComparison.OrdinalIgnoreCase))
+        {
+            await ValidateUniqueClientDocumentAsync(payload, id, cancellationToken);
+            return;
+        }
+
+        if (!resource.Equals("appointments", StringComparison.OrdinalIgnoreCase)) return;
 
         var scheduledAt = ExtractString(payload, "scheduledAt");
         var professionalId = ExtractString(payload, "professionalId");
@@ -514,6 +531,32 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
             {
                 throw new EnterpriseValidationException([new("scheduledAt", "Já existe agendamento para este profissional neste horário.")]);
             }
+        }
+    }
+
+    private async Task ValidateUniqueClientDocumentAsync(JsonElement payload, Guid? id, CancellationToken cancellationToken)
+    {
+        var document = ExtractString(payload, "document") ?? ExtractString(payload, "cpfCnpj") ?? ExtractString(payload, "cpf") ?? ExtractString(payload, "cnpj");
+        if (string.IsNullOrWhiteSpace(document)) return;
+        var normalizedDocument = DigitsOnly(document);
+        if (string.IsNullOrWhiteSpace(normalizedDocument)) return;
+
+        await using var connection = await OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(@"select exists (
+  select 1
+  from barber.clients
+  where tenant_id = @tenantId
+    and deleted_at is null
+    and regexp_replace(coalesce(payload->>'document', payload->>'cpfCnpj', payload->>'cpf', payload->>'cnpj', ''), '\D', '', 'g') = @document
+    and (@id is null or id <> @id)
+)", connection);
+        command.Parameters.AddWithValue("tenantId", TenantId);
+        command.Parameters.AddWithValue("document", normalizedDocument);
+        command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, id.HasValue ? (object)id.Value : DBNull.Value);
+        var exists = await command.ExecuteScalarAsync(cancellationToken);
+        if (exists is bool trueValue && trueValue)
+        {
+            throw new EnterpriseValidationException([new("document", "CPF/CNPJ já cadastrado para este tenant.")]);
         }
     }
 
@@ -577,7 +620,7 @@ on conflict (id) do update set payload = jsonb_set(barber.loyalty_accounts.paylo
         await accountCommand.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private async Task ValidateServiceOrderPaymentAsync(NpgsqlConnection connection, Guid orderId, JsonElement payload, CancellationToken cancellationToken)
+    private async Task<string> ValidateServiceOrderPaymentAsync(NpgsqlConnection connection, Guid orderId, JsonElement payload, CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand("select payload::text from barber.service_orders where id = @id and deleted_at is null", connection);
         command.Parameters.AddWithValue("id", orderId);
@@ -596,6 +639,56 @@ on conflict (id) do update set payload = jsonb_set(barber.loyalty_accounts.paylo
         if (amount > Math.Max(total - paidAmount, 0) && changeAmount <= 0)
         {
             throw new EnterpriseValidationException([new("changeAmount", "Pagamento maior que o total exige registro de troco.")]);
+        }
+
+        if (!PayloadHasItems(order))
+        {
+            throw new EnterpriseValidationException([new("items", "Comanda precisa de ao menos 1 item para pagamento.")]);
+        }
+
+        return json;
+    }
+
+    private async Task ApplySoldProductsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string orderPayloadJson, CancellationToken cancellationToken)
+    {
+        using var document = JsonDocument.Parse(orderPayloadJson);
+        if (!document.RootElement.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array) return;
+
+        foreach (var item in items.EnumerateArray())
+        {
+            var type = ExtractString(item, "type");
+            var productId = ExtractString(item, "productId") ?? ExtractString(item, "id");
+            if (!Guid.TryParse(productId, out var productGuid)) continue;
+            if (!string.IsNullOrWhiteSpace(type) && !type.Equals("product", StringComparison.OrdinalIgnoreCase) && !type.Equals("produto", StringComparison.OrdinalIgnoreCase)) continue;
+
+            var quantity = ExtractDecimal(item, "quantity") ?? 1m;
+            if (quantity <= 0) throw new EnterpriseValidationException([new("items", "Quantidade de produto vendido deve ser maior que zero.")]);
+
+            await using var productCommand = new NpgsqlCommand(@"update barber.products
+set payload = jsonb_set(payload, '{currentStock}', to_jsonb(coalesce((payload->>'currentStock')::numeric, 0) - @quantity), true), updated_at = now()
+where id = @productId
+  and deleted_at is null
+  and is_active
+  and coalesce((payload->>'currentStock')::numeric, 0) >= @quantity
+returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)", connection, transaction);
+            productCommand.Parameters.AddWithValue("productId", productGuid);
+            productCommand.Parameters.AddWithValue("quantity", quantity);
+            var critical = await productCommand.ExecuteScalarAsync(cancellationToken);
+            if (critical is null) throw new EnterpriseValidationException([new("items", "Produto sem estoque suficiente para fechar a comanda.")]);
+
+            var movementPayload = JsonSerializer.Serialize(new
+            {
+                productId = productGuid,
+                quantity,
+                type = "exit",
+                reason = "Baixa automática por pagamento de comanda",
+                isDemo = false
+            }, JsonOptions);
+            await using var movementCommand = new NpgsqlCommand("insert into barber.stock_movements (tenant_id, branch_id, payload, status) values (@tenantId, @branchId, @payload::jsonb, 'Confirmed')", connection, transaction);
+            movementCommand.Parameters.AddWithValue("tenantId", TenantId);
+            movementCommand.Parameters.AddWithValue("branchId", BranchId);
+            movementCommand.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, movementPayload);
+            await movementCommand.ExecuteNonQueryAsync(cancellationToken);
         }
     }
 
@@ -690,6 +783,30 @@ where id = @id and deleted_at is null", connection);
         if (!payload.TryGetProperty(name, out var value)) return null;
         return value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
     }
+
+    private static bool ExtractBoolean(JsonElement payload, string name, bool defaultValue = false)
+    {
+        if (!payload.TryGetProperty(name, out var value)) return defaultValue;
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.String when bool.TryParse(value.GetString(), out var parsed) => parsed,
+            JsonValueKind.String when value.GetString()?.Equals("sim", StringComparison.OrdinalIgnoreCase) == true => true,
+            JsonValueKind.String when value.GetString()?.Equals("não", StringComparison.OrdinalIgnoreCase) == true => false,
+            JsonValueKind.String when value.GetString()?.Equals("nao", StringComparison.OrdinalIgnoreCase) == true => false,
+            _ => defaultValue
+        };
+    }
+
+    private static bool IsActiveStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return true;
+        return !new[] { "Inactive", "Inativo", "Pausado", "Expirado", "Cancelled", "Cancelado", "Deleted", "Excluído" }
+            .Contains(status, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string DigitsOnly(string value) => new(value.Where(char.IsDigit).ToArray());
 
     private static decimal? ExtractDecimal(JsonElement payload, string name)
     {

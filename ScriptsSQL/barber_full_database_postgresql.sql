@@ -204,3 +204,18 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO barber.audit_logs (tenant_id, branch_id, module, action, entity_name, description, metadata)
 SELECT '11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','Seed','DatabaseSeeded','barber_full_database_postgresql','Seeds mínimos de desenvolvimento aplicados.','{"source":"ScriptsSQL/barber_full_database_postgresql.sql"}'::jsonb
 WHERE NOT EXISTS (select 1 from barber.audit_logs where module = 'Seed' and action = 'DatabaseSeeded' and entity_name = 'barber_full_database_postgresql');
+
+-- Regras operacionais consolidadas para CRUD real BarberSync.
+CREATE UNIQUE INDEX IF NOT EXISTS ux_clients_document_alias_tenant_active
+ON barber.clients (tenant_id, lower(coalesce(payload->>'document', payload->>'cpfCnpj', payload->>'cpf', payload->>'cnpj', '')))
+WHERE deleted_at IS NULL AND coalesce(payload->>'document', payload->>'cpfCnpj', payload->>'cpf', payload->>'cnpj', '') <> '';
+
+INSERT INTO barber.public_leads (id, tenant_id, branch_id, payload, status)
+VALUES ('00000000-0000-0000-0000-000000001201','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','{"name":"Lead PublicWeb Demo","phone":"(11) 97777-0000","serviceName":"Corte + Barba","origin":"PublicWeb"}'::jsonb,'New')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO barber.notifications (id, tenant_id, branch_id, title, message, entity_name, payload, status)
+VALUES
+('00000000-0000-0000-0000-000000001301','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','Estoque crítico','Pomada Modeladora está abaixo do mínimo.','products','{"source":"seed","severity":"warning"}'::jsonb,'Unread'),
+('00000000-0000-0000-0000-000000001302','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','Novo agendamento público','Lead PublicWeb pronto para confirmação.','appointments','{"source":"seed","severity":"info"}'::jsonb,'Unread')
+ON CONFLICT (id) DO NOTHING;

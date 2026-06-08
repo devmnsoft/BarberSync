@@ -7,7 +7,7 @@ public class ApiResponse
     public bool Success { get; init; }
     public string Message { get; init; } = string.Empty;
     public object? Data { get; init; }
-    public List<string> Errors { get; init; } = [];
+    public List<object> Errors { get; init; } = [];
     public string? TraceId { get; init; }
 
     public static ApiResponse Ok(string message, object? data = null, string? traceId = null) => new()
@@ -18,11 +18,11 @@ public class ApiResponse
         TraceId = traceId
     };
 
-    public static ApiResponse Fail(string message, IEnumerable<string>? errors = null, string? traceId = null) => new()
+    public static ApiResponse Fail(string message, System.Collections.IEnumerable? errors = null, string? traceId = null) => new()
     {
         Success = false,
         Message = message,
-        Errors = errors?.ToList() ?? [],
+        Errors = errors?.Cast<object>().ToList() ?? [],
         TraceId = traceId
     };
 }
@@ -32,7 +32,7 @@ public class ApiResponse<T>
     public bool Success { get; init; }
     public string Message { get; init; } = string.Empty;
     public T? Data { get; init; }
-    public List<string> Errors { get; init; } = [];
+    public List<object> Errors { get; init; } = [];
     public string? TraceId { get; init; }
 
     public static ApiResponse<T> Ok(T? data, string message, string? traceId = null) => new()
@@ -43,11 +43,11 @@ public class ApiResponse<T>
         TraceId = traceId
     };
 
-    public static ApiResponse<T> Fail(string message, IEnumerable<string>? errors = null, string? traceId = null) => new()
+    public static ApiResponse<T> Fail(string message, System.Collections.IEnumerable? errors = null, string? traceId = null) => new()
     {
         Success = false,
         Message = message,
-        Errors = errors?.ToList() ?? [],
+        Errors = errors?.Cast<object>().ToList() ?? [],
         TraceId = traceId
     };
 }
@@ -59,7 +59,7 @@ public class ServiceResult<T>
     public bool Success { get; init; }
     public string Message { get; init; } = string.Empty;
     public T? Data { get; init; }
-    public List<string> Errors { get; init; } = [];
+    public List<object> Errors { get; init; } = [];
 
     public static ServiceResult<T> Ok(T? data, string message) => new()
     {
@@ -68,11 +68,11 @@ public class ServiceResult<T>
         Data = data
     };
 
-    public static ServiceResult<T> Fail(string message, IEnumerable<string>? errors = null) => new()
+    public static ServiceResult<T> Fail(string message, System.Collections.IEnumerable? errors = null) => new()
     {
         Success = false,
         Message = message,
-        Errors = errors?.ToList() ?? []
+        Errors = errors?.Cast<object>().ToList() ?? []
     };
 }
 

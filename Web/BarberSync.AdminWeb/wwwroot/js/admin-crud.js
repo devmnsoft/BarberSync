@@ -1,7 +1,7 @@
 (() => {
   const endpointMap = {
     Clients: '/AdminApi/clients', Professionals: '/AdminApi/professionals', Services: '/AdminApi/services',
-    Appointments: '/AdminApi/appointments', ServiceOrders: '/AdminApi/service-orders', Stock: '/AdminApi/products',
+    Appointments: '/AdminApi/appointments', ServiceOrders: '/AdminApi/service-orders', Stock: '/AdminApi/products', Products: '/AdminApi/products',
     Campaigns: '/AdminApi/campaigns', Coupons: '/AdminApi/coupons', Loyalty: '/AdminApi/loyalty',
     Reviews: '/AdminApi/reviews', Copilot: '/AdminApi/copilot-suggestions'
   };
@@ -13,6 +13,7 @@
     Appointments: { icon: '📅', singular: 'Agendamento', detail: 'Agenda do dia com status operacional.' },
     ServiceOrders: { icon: '🧾', singular: 'Comanda', detail: 'Kanban de abertura, pagamento e fechamento.' },
     Stock: { icon: '📦', singular: 'Movimento de estoque', detail: 'Produtos, mínimos e reposição crítica.' },
+    Products: { icon: '🧴', singular: 'Produto', detail: 'Catálogo de produtos com venda e estoque.' },
     Campaigns: { icon: '🎯', singular: 'Campanha', detail: 'CRM com período, público e resultado.' },
     Coupons: { icon: '🏷️', singular: 'Cupom', detail: 'Cupons promocionais para recorrência.' },
     Loyalty: { icon: '💎', singular: 'Fidelidade', detail: 'Cashback, pontos e clube de benefícios.' },
@@ -49,6 +50,10 @@
     Stock: [
       ['product', 'Produto', 'text', true], ['movement', 'Tipo', 'select:Entrada|Saída|Ajuste', true], ['quantity', 'Quantidade', 'number', true],
       ['cost', 'Custo unitário', 'number', false], ['supplier', 'Fornecedor', 'text', false], ['notes', 'Observação', 'textarea', false]
+    ],
+    Products: [
+      ['name', 'Nome', 'text', true], ['category', 'Categoria', 'text', true], ['sku', 'SKU', 'text', false],
+      ['salePrice', 'Preço de venda', 'number', true], ['costPrice', 'Custo', 'number', false], ['currentStock', 'Estoque atual', 'number', true], ['minStock', 'Estoque mínimo', 'number', true], ['status', 'Status', 'select:Ativo|Inativo', true]
     ],
     Campaigns: [['name', 'Nome', 'text', true], ['period', 'Período', 'text', true], ['audience', 'Público', 'text', true], ['channel', 'Canal', 'select:WhatsApp|SMS|Instagram|E-mail', true], ['goal', 'Meta', 'text', false]],
     Coupons: [['code', 'Código', 'text', true], ['discount', 'Valor/desconto', 'text', true], ['validUntil', 'Validade', 'date', true], ['status', 'Status', 'select:Ativo|Pausado|Expirado', true]],
@@ -122,6 +127,32 @@
     return base;
   }
 
+  function clearApiErrors(form) {
+    form?.querySelectorAll('.admin-field-error').forEach(el => el.textContent = '');
+    form?.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+  }
+
+  function applyApiErrors(form, errors = []) {
+    clearApiErrors(form);
+    const messages = [];
+    errors.forEach(error => {
+      const field = error?.field || error?.Field || error?.propertyName || error?.PropertyName;
+      const message = error?.message || error?.Message || String(error || 'Campo inválido.');
+      messages.push(message);
+      if (!field) return;
+      const input = form?.elements?.[field];
+      if (!input) return;
+      input.classList.add('is-invalid');
+      let target = input.closest('.form-group, .field, label')?.querySelector('.admin-field-error');
+      if (!target) {
+        target = document.createElement('small');
+        target.className = 'admin-field-error';
+        input.insertAdjacentElement('afterend', target);
+      }
+      target.textContent = message;
+    });
+    return messages;
+  }
 
   function richDetail(module, item) {
     if (module === 'Clients') return `<div class="detail-grid"><div><span>Nome</span><strong>${escapeHtml(name(item))}</strong></div><div><span>Telefone</span><strong>${escapeHtml(item.phone || '(11) 98888-0000')}</strong></div><div><span>E-mail</span><strong>${escapeHtml(item.email || 'cliente@demo.com')}</strong></div><div><span>VIP</span><strong>${item.vip || 'Sim'}</strong></div><div><span>Cashback</span><strong>R$ 48,00</strong></div><div><span>Total gasto</span><strong>R$ 1.860,00</strong></div><div><span>Ticket médio</span><strong>R$ 124,00</strong></div><div><span>Último atendimento</span><strong>24/05/2026</strong></div><div><span>Próximo agendamento</span><strong>06/06/2026 10:30</strong></div><div><span>Serviços preferidos</span><strong>Corte + Barba</strong></div><div><span>Profissional preferido</span><strong>Rafael Barber</strong></div><div><span>Pagamentos</span><strong>PIX, Cartão</strong></div><div><span>Histórico</span><strong>15 atendimentos concluídos</strong></div><div><span>Observações</span><strong>Prefere pomada matte</strong></div></div><p class="next-step"><strong>Próxima melhor ação:</strong> Enviar campanha de retorno.</p>`;
@@ -150,9 +181,16 @@
     }
     if (module === 'Stock') {
       normalized.name ||= normalized.product;
+      normalized.productId ||= normalized.productId || normalized.id;
       normalized.salePrice ||= Number(normalized.cost || 1);
       normalized.currentStock ||= Number(normalized.quantity || 0);
       normalized.minStock ||= 0;
+    }
+    if (module === 'Products') {
+      normalized.salePrice = Number(normalized.salePrice || 0);
+      normalized.costPrice = Number(normalized.costPrice || 0);
+      normalized.currentStock = Number(normalized.currentStock || 0);
+      normalized.minStock = Number(normalized.minStock || 0);
     }
     return normalized;
   }
@@ -191,23 +229,25 @@
     await load();
     document.getElementById(`${module}Search`)?.addEventListener('input', load);
     document.querySelector(`[data-admin-export='${module}']`)?.addEventListener('click', () => writeToast('Visão exportada em modo demonstração.', 'info'));
-    document.querySelector(`[data-admin-new='${module}']`)?.addEventListener('click', () => { editingId = null; const form = document.querySelector(`[data-admin-form='${module}']`); form?.reset(); document.getElementById(`${module}ModalTitle`).textContent = `Novo ${copy.singular}`; window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false); });
+    document.querySelector(`[data-admin-new='${module}']`)?.addEventListener('click', () => { editingId = null; const form = document.querySelector(`[data-admin-form='${module}']`); form?.reset(); clearApiErrors(form); document.getElementById(`${module}ModalTitle`).textContent = `Novo ${copy.singular}`; window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false); });
     document.querySelector(`[data-admin-refresh='${module}']`)?.addEventListener('click', load);
     document.querySelectorAll(`[data-admin-close='${module}']`).forEach(b => b.addEventListener('click', () => window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true)));
     document.querySelector(`[data-admin-form='${module}']`)?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!e.target.checkValidity()) { document.querySelector(`[data-form-error='${module}']`).hidden = false; return; }
+      if (!e.target.checkValidity()) { document.querySelector(`[data-form-error='${module}']`).hidden = false; applyApiErrors(e.target, [...e.target.querySelectorAll(':invalid')].map(input => ({ field: input.name, message: input.validationMessage || 'Campo obrigatório.' }))); return; }
       const body = normalizePayload(module, Object.fromEntries(new FormData(e.target).entries()));
+      clearApiErrors(e.target);
       const submitButton = e.target.querySelector('button[type="submit"]');
       const mutationEndpoint = module === 'ServiceOrders' ? '/AdminApi/service-orders/open' : module === 'Stock' ? (body.movement === 'Saída' ? '/AdminApi/stock/exit' : '/AdminApi/stock/entry') : endpoint;
       adminApiClient.setLoading(submitButton, true);
       try {
-        const result = editingId && ['Clients','Professionals','Services'].includes(module)
+        const canUpdate = !['Stock'].includes(module);
+        const result = editingId && canUpdate
           ? await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' })
           : await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
         if (result?.success === false) {
           document.querySelector(`[data-form-error='${module}']`).hidden = false;
-          showFormErrors((result.errors || []).map(error => error.message || error.Message || error));
+          showFormErrors(applyApiErrors(e.target, result.errors || []));
           return;
         }
         if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, editingId ? 'update' : 'create', { id: editingId || `${module.toLowerCase()}-${Date.now()}`, ...body, status: body.status || 'Ativo' });
@@ -241,6 +281,7 @@
         const item = currentList.find(x => String(x.id) === String(editingId)) || currentList[Number(edit.dataset.index)] || {};
         const form = document.querySelector(`[data-admin-form='${module}']`);
         form?.reset();
+        clearApiErrors(form);
         Object.entries(item).forEach(([key, value]) => { const field = form?.elements?.[key] || form?.elements?.[key === 'type' ? 'personType' : key]; if (field && typeof value !== 'object') field.value = value; });
         document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`;
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
@@ -309,7 +350,7 @@
     form?.reset?.();
   }
 
-  Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, updateLocalDemoStore, showFormErrors, clearForm });
+  Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, updateLocalDemoStore, showFormErrors, clearForm, applyApiErrors, clearApiErrors });
 
 })();
 // BarberSync Demo Experience 1.0 required global aliases
