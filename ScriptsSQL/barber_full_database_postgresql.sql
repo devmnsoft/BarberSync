@@ -1,3 +1,6 @@
+-- BarberSync PostgreSQL schema operacional consolidado.
+-- Fonte principal para API/PostgreSQL real. DemoStore/localStorage deve ser usado apenas como fallback de front-end.
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE SCHEMA IF NOT EXISTS barber;
 
@@ -108,6 +111,7 @@ CREATE INDEX IF NOT EXISTS ix_notifications_status ON barber.notifications (stat
 CREATE INDEX IF NOT EXISTS ix_notifications_created_at ON barber.notifications (created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_clients_document_tenant_active ON barber.clients (tenant_id, (payload->>'document')) WHERE deleted_at IS NULL AND coalesce(payload->>'document','') <> '';
 CREATE INDEX IF NOT EXISTS ix_appointments_professional_scheduled ON barber.appointments (tenant_id, (payload->>'professionalId'), (payload->>'scheduledAt')) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_products_current_min_stock ON barber.products (((payload->>'currentStock')::numeric), ((payload->>'minStock')::numeric)) WHERE deleted_at IS NULL;
 
 INSERT INTO barber.tenants (id, slug, name, document, status, is_active)
 VALUES ('11111111-1111-1111-1111-111111111111', 'barbersync-demo', 'BarberSync Demo', '00.000.000/0001-00', 'Active', true)

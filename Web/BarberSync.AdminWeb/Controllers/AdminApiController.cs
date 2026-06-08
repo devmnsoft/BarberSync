@@ -10,15 +10,24 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
 {
     [HttpGet("dashboard")] public Task<IActionResult> Dashboard() => ProxyGet("/api/dashboard/summary", DemoDashboard(), "Dashboard carregado em modo demonstração.");
     [HttpGet("clients")] public Task<IActionResult> Clients() => ProxyGet("/api/clients", DemoClients(), "Clientes carregados em modo demonstração.");
+    [HttpGet("clients/{id}")] public Task<IActionResult> ClientById(string id) => ProxyGet($"/api/clients/{Uri.EscapeDataString(id)}", DemoEntity(DemoClients(), id), "Cliente carregado em modo demonstração.");
     [HttpGet("professionals")] public Task<IActionResult> Professionals() => ProxyGet("/api/professionals", DemoProfessionals(), "Profissionais carregados em modo demonstração.");
+    [HttpGet("professionals/{id}")] public Task<IActionResult> ProfessionalById(string id) => ProxyGet($"/api/professionals/{Uri.EscapeDataString(id)}", DemoEntity(DemoProfessionals(), id), "Profissional carregado em modo demonstração.");
     [HttpGet("services")] public Task<IActionResult> Services() => ProxyGet("/api/services", DemoServices(), "Serviços carregados em modo demonstração.");
+    [HttpGet("services/{id}")] public Task<IActionResult> ServiceById(string id) => ProxyGet($"/api/services/{Uri.EscapeDataString(id)}", DemoEntity(DemoServices(), id), "Serviço carregado em modo demonstração.");
     [HttpGet("appointments")] public Task<IActionResult> Appointments() => ProxyGet("/api/appointments", DemoAppointments(), "Agenda carregada em modo demonstração.");
+    [HttpGet("appointments/{id}")] public Task<IActionResult> AppointmentById(string id) => ProxyGet($"/api/appointments/{Uri.EscapeDataString(id)}", DemoEntity(DemoAppointments(), id), "Agendamento carregado em modo demonstração.");
     [HttpGet("service-orders")] public Task<IActionResult> ServiceOrders() => ProxyGet("/api/service-orders", DemoServiceOrders(), "Comandas carregadas em modo demonstração.");
+    [HttpGet("service-orders/{id}")] public Task<IActionResult> ServiceOrderById(string id) => ProxyGet($"/api/service-orders/{Uri.EscapeDataString(id)}", DemoEntity(DemoServiceOrders(), id), "Comanda carregada em modo demonstração.");
     [HttpGet("products")] public Task<IActionResult> Products() => ProxyGet("/api/products", DemoProducts(), "Produtos carregados em modo demonstração.");
+    [HttpGet("products/{id}")] public Task<IActionResult> ProductById(string id) => ProxyGet($"/api/products/{Uri.EscapeDataString(id)}", DemoEntity(DemoProducts(), id), "Produto carregado em modo demonstração.");
     [HttpGet("stock-critical")] public Task<IActionResult> StockCritical() => ProxyGet("/api/stock/critical", DemoStockCritical(), "Estoque crítico carregado em modo demonstração.");
     [HttpGet("campaigns")] public Task<IActionResult> Campaigns() => ProxyGet("/api/campaigns", DemoCampaigns(), "Campanhas carregadas em modo demonstração.");
+    [HttpGet("campaigns/{id}")] public Task<IActionResult> CampaignById(string id) => ProxyGet($"/api/campaigns/{Uri.EscapeDataString(id)}", DemoEntity(DemoCampaigns(), id), "Campanha carregada em modo demonstração.");
     [HttpGet("coupons")] public Task<IActionResult> Coupons() => ProxyGet("/api/coupons", DemoCoupons(), "Cupons carregados em modo demonstração.");
+    [HttpGet("coupons/{id}")] public Task<IActionResult> CouponById(string id) => ProxyGet($"/api/coupons/{Uri.EscapeDataString(id)}", DemoEntity(DemoCoupons(), id), "Cupom carregado em modo demonstração.");
     [HttpGet("reviews")] public Task<IActionResult> Reviews() => ProxyGet("/api/reviews", DemoReviews(), "Avaliações carregadas em modo demonstração.");
+    [HttpGet("reviews/{id}")] public Task<IActionResult> ReviewById(string id) => ProxyGet($"/api/reviews/{Uri.EscapeDataString(id)}", DemoEntity(DemoReviews(), id), "Avaliação carregada em modo demonstração.");
     [HttpGet("loyalty")] public Task<IActionResult> Loyalty() => ProxyGet("/api/loyalty/summary", DemoLoyalty(), "Fidelidade carregada em modo demonstração.");
     [HttpGet("copilot-suggestions")] public Task<IActionResult> CopilotSuggestions() => ProxyGet("/api/copilot/suggestions", DemoCopilotSuggestions(), "Sugestões Copilot carregadas em modo demonstração.");
     [HttpGet("kiosk-status")] public Task<IActionResult> KioskStatus() => ProxyGet("/api/kiosk/status", DemoKioskStatus(), "Status do totem carregado em modo demonstração.");
@@ -48,6 +57,8 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpDelete("services/{id}")] public Task<IActionResult> DeleteService(string id) => ProxyDelete($"/api/services/{Uri.EscapeDataString(id)}", DemoMutation("Serviço removido em modo demonstração.", id));
 
     [HttpPost("appointments")] public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/appointments", payload, DemoMutation("Agendamento criado em modo demonstração.", payload));
+    [HttpPut("appointments/{id}")] public Task<IActionResult> UpdateAppointment(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Put, $"/api/appointments/{Uri.EscapeDataString(id)}", payload, DemoMutation("Agendamento atualizado em modo demonstração.", payload, id));
+    [HttpDelete("appointments/{id}")] public Task<IActionResult> DeleteAppointment(string id) => ProxyDelete($"/api/appointments/{Uri.EscapeDataString(id)}", DemoMutation("Agendamento removido em modo demonstração.", id));
     [HttpPost("appointments/{id}/confirm")] public Task<IActionResult> ConfirmAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/confirm", null, DemoMutation("Agendamento confirmado em modo demonstração.", id));
     [HttpPost("appointments/{id}/check-in")] public Task<IActionResult> CheckInAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/check-in", null, DemoMutation("Check-in realizado em modo demonstração.", id));
     [HttpPost("appointments/{id}/start")] public Task<IActionResult> StartAppointment(string id) => ProxySend(HttpMethod.Post, $"/api/appointments/{Uri.EscapeDataString(id)}/start", null, DemoMutation("Atendimento iniciado em modo demonstração.", id));
@@ -59,6 +70,9 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpPut("products/{id}")] public Task<IActionResult> UpdateProduct(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Put, $"/api/products/{Uri.EscapeDataString(id)}", payload, DemoMutation("Produto atualizado em modo demonstração.", payload, id));
     [HttpDelete("products/{id}")] public Task<IActionResult> DeleteProduct(string id) => ProxyDelete($"/api/products/{Uri.EscapeDataString(id)}", DemoMutation("Produto removido em modo demonstração.", id));
 
+    [HttpPost("service-orders")] public Task<IActionResult> CreateServiceOrder([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/service-orders", payload, DemoMutation("Comanda criada em modo demonstração.", payload));
+    [HttpPut("service-orders/{id}")] public Task<IActionResult> UpdateServiceOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Put, $"/api/service-orders/{Uri.EscapeDataString(id)}", payload, DemoMutation("Comanda atualizada em modo demonstração.", payload, id));
+    [HttpDelete("service-orders/{id}")] public Task<IActionResult> DeleteServiceOrder(string id) => ProxyDelete($"/api/service-orders/{Uri.EscapeDataString(id)}", DemoMutation("Comanda removida em modo demonstração.", id));
     [HttpPost("service-orders/open")] public Task<IActionResult> OpenServiceOrder([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/service-orders/open", payload, DemoMutation("Comanda aberta em modo demonstração.", payload));
     [HttpPost("service-orders/{id}/add-service")] public Task<IActionResult> AddServiceToOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/add-service", payload, DemoMutation("Serviço adicionado à comanda em modo demonstração.", payload, id));
     [HttpPost("service-orders/{id}/add-product")] public Task<IActionResult> AddProductToOrder(string id, [FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, $"/api/service-orders/{Uri.EscapeDataString(id)}/add-product", payload, DemoMutation("Produto adicionado à comanda em modo demonstração.", payload, id));
@@ -436,6 +450,12 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         new { title="Reputação", description="Solicitar avaliações após pagamentos PIX para ampliar prova social.", priority="Baixa", actionLabel="Ver avaliações", impact="+0,2 rating" },
         new { title="Cashback inteligente", description="Dobrar cashback para clientes Black sem visita desde maio.", priority="Média", actionLabel="Ativar cashback", impact="+22 retornos" }
     };
+
+    private static object DemoEntity(IEnumerable<object> items, string id)
+    {
+        var item = items.FirstOrDefault(x => string.Equals(ReadProp(x, "id"), id, StringComparison.OrdinalIgnoreCase));
+        return item ?? new { id, isDemo = true };
+    }
 
     private static string ReadProp(object value, string property)
         => value.GetType().GetProperty(property)?.GetValue(value)?.ToString() ?? string.Empty;
