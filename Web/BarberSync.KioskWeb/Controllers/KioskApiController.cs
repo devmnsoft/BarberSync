@@ -9,11 +9,18 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
 {
     [HttpGet("services")]
     public Task<IActionResult> Services([FromQuery] string? deviceCode = "KIOSK-DEMO-001")
-        => ProxyGet($"/api/kiosk/services?deviceCode={Uri.EscapeDataString(string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim())}", DemoServices(), "Serviços carregados em modo demonstração.");
+    {
+        var code = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
+        return ProxyGet($"/api/kiosk/services?deviceCode={Uri.EscapeDataString(code)}", DemoServices(), "Serviços carregados em modo demonstração.");
+    }
 
     [HttpGet("professionals")]
     public Task<IActionResult> Professionals([FromQuery] string? serviceId, [FromQuery] string? deviceCode)
-        => ProxyGet($"/api/kiosk/professionals?serviceId={Uri.EscapeDataString(serviceId ?? string.Empty)}&deviceCode={Uri.EscapeDataString(deviceCode ?? "KIOSK-DEMO-001")}", DemoProfessionals(), "Profissionais carregados em modo demonstração.");
+    {
+        var service = serviceId ?? string.Empty;
+        var code = string.IsNullOrWhiteSpace(deviceCode) ? "KIOSK-DEMO-001" : deviceCode.Trim();
+        return ProxyGet($"/api/kiosk/professionals?serviceId={Uri.EscapeDataString(service)}&deviceCode={Uri.EscapeDataString(code)}", DemoProfessionals(), "Profissionais carregados em modo demonstração.");
+    }
 
     [HttpGet("operations-snapshot")]
     public Task<IActionResult> OperationsSnapshot()
@@ -37,20 +44,23 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         {
             var client = httpClientFactory.CreateClient("BarberSyncApi");
             var response = await client.GetAsync(BuildApiUrl(path));
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
-                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-                logger.LogWarning("KioskApi proxy GET {Path} falhou com status {StatusCode}", path, response.StatusCode);
-                return Ok(new { success = true, message = "API indisponível. Dados carregados em modo demonstração.", data = Array.Empty<object>(), isDemo = true });
+                return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            return Content(json, "application/json", Encoding.UTF8);
+            if ((int)response.StatusCode < 500)
+            {
+                return await ReadJsonOrTextAsync(response);
+            }
+
+            logger.LogWarning("KioskApi proxy GET {Path} falhou com status {StatusCode}. Usando fallback demo com dados.", path, response.StatusCode);
+            return Ok(DemoEnvelope(fallbackData, fallbackMessage));
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "KioskApi proxy GET {Path} lançou exceção. Usando fallback demo.", path);
-            return Ok(new { success = true, message = "API indisponível. Dados carregados em modo demonstração.", data = Array.Empty<object>(), isDemo = true });
+            logger.LogWarning(ex, "KioskApi proxy GET {Path} lançou exceção. Usando fallback demo com dados.", path);
+            return Ok(DemoEnvelope(fallbackData, fallbackMessage));
         }
     }
 
@@ -60,14 +70,18 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         {
             var client = httpClientFactory.CreateClient("BarberSyncApi");
             var response = await client.PostAsync(BuildApiUrl(path), new StringContent(payload.GetRawText(), Encoding.UTF8, "application/json"));
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
-                if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-                logger.LogWarning("KioskApi proxy POST {Path} falhou com status {StatusCode}", path, response.StatusCode);
-                return Ok(fallback);
+                return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             }
 
-            return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
+            if ((int)response.StatusCode < 500)
+            {
+                return await ReadJsonOrTextAsync(response);
+            }
+
+            logger.LogWarning("KioskApi proxy POST {Path} falhou com status {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+            return Ok(fallback);
         }
         catch (Exception ex)
         {
@@ -89,29 +103,7 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
         return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 
-    private static bool ResponseLooksEmpty(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json)) return true;
-        try
-        {
-            using var document = JsonDocument.Parse(json);
-            return ElementLooksEmpty(document.RootElement);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool ElementLooksEmpty(JsonElement element)
-    {
-        if (element.ValueKind == JsonValueKind.Array) return element.GetArrayLength() == 0;
-        if (element.ValueKind != JsonValueKind.Object) return false;
-        if (element.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() == 0) return true;
-        if (element.TryGetProperty("data", out var data)) return ElementLooksEmpty(data);
-        return false;
-    }
-
+    private static object DemoEnvelope(object data, string message) => new { success = true, message = $"API indisponível. {message}", data, isDemo = true };
 
     private static object DemoOperationsSnapshot() => new
     {
@@ -134,12 +126,12 @@ public class KioskApiController(IHttpClientFactory httpClientFactory, IConfigura
 
     private static object[] DemoServices() => new object[]
     {
-        new { id = "demo-corte", name = "Corte Masculino", category = "Barbearia", description = "Corte moderno com acabamento profissional.", price = 45.00, durationMinutes = 40, icon = "✂️", isAvailable = true, isDemo = true },
-        new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", description = "Barba alinhada com toalha quente e navalha.", price = 35.00, durationMinutes = 30, icon = "🪒", isAvailable = true, isDemo = true },
-        new { id = "demo-combo", name = "Corte + Barba", category = "Combo", description = "Atendimento completo com preço especial.", price = 70.00, durationMinutes = 60, icon = "💈", isAvailable = true, isDemo = true },
-        new { id = "demo-sobrancelha", name = "Sobrancelha", category = "Estética", description = "Design rápido para completar o visual.", price = 25.00, durationMinutes = 20, icon = "✨", isAvailable = true, isDemo = true },
-        new { id = "demo-hidratacao", name = "Hidratação Capilar", category = "Estética", description = "Tratamento capilar profissional para brilho e recuperação.", price = 60.00, durationMinutes = 45, icon = "💧", isAvailable = true, isDemo = true },
-        new { id = "demo-manicure", name = "Manicure", category = "Beleza", description = "Cuidado completo para unhas em atendimento rápido.", price = 40.00, durationMinutes = 50, icon = "💅", isAvailable = true, isDemo = true }
+        new { id = "demo-corte", name = "Corte Masculino", category = "Barbearia", description = "Corte moderno com acabamento profissional.", price = 45.00, durationMinutes = 40, isAvailable = true, isDemo = true },
+        new { id = "demo-barba", name = "Barba Tradicional", category = "Barbearia", description = "Barba alinhada com toalha quente e navalha.", price = 35.00, durationMinutes = 30, isAvailable = true, isDemo = true },
+        new { id = "demo-combo", name = "Corte + Barba", category = "Combo", description = "Atendimento completo com preço especial.", price = 70.00, durationMinutes = 60, isAvailable = true, isDemo = true },
+        new { id = "demo-sobrancelha", name = "Sobrancelha", category = "Estética", description = "Design rápido para completar o visual.", price = 25.00, durationMinutes = 20, isAvailable = true, isDemo = true },
+        new { id = "demo-hidratacao", name = "Hidratação Capilar", category = "Estética", description = "Tratamento capilar profissional para brilho e recuperação.", price = 60.00, durationMinutes = 45, isAvailable = true, isDemo = true },
+        new { id = "demo-manicure", name = "Manicure", category = "Beleza", description = "Cuidado completo para unhas em atendimento rápido.", price = 40.00, durationMinutes = 50, isAvailable = true, isDemo = true }
     };
 
     private static object[] DemoProfessionals() => new object[]
