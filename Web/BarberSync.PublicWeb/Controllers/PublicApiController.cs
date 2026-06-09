@@ -31,13 +31,21 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
             if (!response.IsSuccessStatusCode)
             {
                 if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-                return Ok(DemoEnvelope(Array.Empty<object>(), "Dados carregados em modo demonstração."));
+
+                logger.LogWarning("PublicApi GET {Path} retornou {StatusCode}. Usando fallback demo com dados.", path, response.StatusCode);
+                return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
             }
+
             var json = await response.Content.ReadAsStringAsync();
             return Content(json, "application/json", Encoding.UTF8);
         }
-        catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(DemoEnvelope(Array.Empty<object>(), "Dados carregados em modo demonstração.")); }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha PublicApi {Path}. Usando fallback demo com dados.", path);
+            return Ok(DemoEnvelope(fallback, "Dados carregados em modo demonstração."));
+        }
     }
+
     private async Task<IActionResult> ProxyPost(string path, JsonElement payload, object fallback)
     {
         try
@@ -52,6 +60,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         }
         catch (Exception ex) { logger.LogWarning(ex, "Falha PublicApi {Path}", path); return Ok(fallback); }
     }
+
     private static async Task<ContentResult> ReadJsonOrTextAsync(HttpResponseMessage response)
     {
         var content = await response.Content.ReadAsStringAsync();
@@ -61,6 +70,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
 
     private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
     private static object DemoEnvelope(object data, string message) => new { success = true, message = $"API indisponível. {message}", data, isDemo = true };
+
     private static bool ResponseLooksEmpty(string json)
     {
         if (string.IsNullOrWhiteSpace(json)) return true;
@@ -71,6 +81,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         }
         catch { return false; }
     }
+
     private static bool ElementLooksEmpty(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.Array) return element.GetArrayLength() == 0;
