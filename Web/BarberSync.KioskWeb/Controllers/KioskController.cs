@@ -4,7 +4,7 @@ namespace BarberSync.KioskWeb.Controllers;
 
 public class KioskController(IConfiguration configuration) : Controller
 {
-    private const string DefaultDeviceCode = "KIOSK-DEMO-001";
+    private const string DefaultDeviceCode = "KIOSK-001";
 
     public IActionResult Index(string? deviceCode)
     {

@@ -1,51 +1,68 @@
 (() => {
-  const params = new URLSearchParams(location.search);
-  const settings = (() => { try { return JSON.parse(localStorage.getItem('barbersync.demo.state.v8') || '{}').settings || {}; } catch { return {}; } })();
-  const kioskDemoConfig = { message:'Bem-vindo ao Totem BarberSync. Escolha seu serviço para começar.', highContrast:false, largeFont:false, timeout:90, payments:{pix:true,card:true,cash:false,reception:true,mock:true}, ...(settings.kiosk || {}), message: params.get('message') || settings.kiosk?.message || 'Bem-vindo ao Totem BarberSync. Escolha seu serviço para começar.', highContrast: params.get('highContrast') === 'true' || settings.kiosk?.highContrast || false, largeFont: params.get('largeFont') === 'true' || settings.kiosk?.largeFont || false };
-  const branding = { ...(settings.branding || {}), kioskName: params.get('title') || settings.branding?.kioskName, primary: params.get('primary') || settings.branding?.primary, secondary: params.get('secondary') || settings.branding?.secondary };
-  if (branding.primary) document.documentElement.style.setProperty('--kiosk-primary', branding.primary);
-  if (branding.secondary) document.documentElement.style.setProperty('--kiosk-gold', branding.secondary);
-  const fallbackServices = [
-    { id:'demo-corte', name:'Corte Masculino', category:'Barbearia', description:'Corte moderno com acabamento profissional.', price:45, durationMinutes:40, icon:'✂️' },
-    { id:'demo-barba', name:'Barba Tradicional', category:'Barbearia', description:'Toalha quente e navalha.', price:35, durationMinutes:30, icon:'🪒' },
-    { id:'demo-combo', name:'Corte + Barba', category:'Combo', description:'Experiência completa.', price:70, durationMinutes:60, icon:'💈' },
-    { id:'demo-sobrancelha', name:'Sobrancelha', category:'Estética', description:'Design e alinhamento para finalizar o atendimento.', price:25, durationMinutes:20, icon:'✨' },
-    { id:'demo-hidratacao', name:'Hidratação Capilar', category:'Estética', description:'Tratamento capilar profissional.', price:60, durationMinutes:45, icon:'💧' },
-    { id:'demo-manicure', name:'Manicure', category:'Beleza', description:'Cuidado completo para unhas.', price:40, durationMinutes:50, icon:'💅' }
-  ];
-  const fallbackPros = [{id:'rafael',name:'Rafael Barber',specialty:'Fade e barba',estimatedWaitMinutes:10},{id:'lucas',name:'Lucas Navalha',specialty:'Corte clássico',estimatedWaitMinutes:15},{id:'bruno',name:'Bruno Estilo',specialty:'Corte social',estimatedWaitMinutes:18},{id:'camila',name:'Camila Beauty',specialty:'Visagismo',estimatedWaitMinutes:20},{id:'amanda',name:'Amanda Nails',specialty:'Manicure premium',estimatedWaitMinutes:12}];
-  const safeJson = (value, fallback = {}) => { try { return JSON.parse(value || ''); } catch { return fallback; } };
-  const unwrap=(payload,fallback)=> payload?.isDemo ? (Array.isArray(payload?.data) && payload.data.length ? payload.data : fallback) : (Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []));
-  const loadJson=async(url,fallback)=>{ try{ const r=await fetch(url); if(!r.ok) throw new Error('http'); const payload=await r.json(); if(payload?.isDemo) document.getElementById('kioskDemoNotice')?.removeAttribute('hidden'); return payload; }catch{ document.getElementById('kioskDemoNotice')?.removeAttribute('hidden'); return {data:fallback,message:'API indisponível. Dados carregados em modo demonstração.',isDemo:true}; } };
-  document.addEventListener('DOMContentLoaded', async () => {
-    document.querySelector('[data-kiosk-title]') && branding.kioskName && (document.querySelector('[data-kiosk-title]').textContent = branding.kioskName);
-    document.querySelector('[data-kiosk-message]') && (document.querySelector('[data-kiosk-message]').textContent = kioskDemoConfig.message);
-    if (kioskDemoConfig.highContrast) document.body.classList.add('kiosk-high-contrast');
-    if (kioskDemoConfig.largeFont) document.body.classList.add('kiosk-accessible');
-    const renderSideSummary = () => {
-      const s = KioskFlow.state;
-      const side = document.querySelector('[data-kiosk-summary-lateral]');
-      if (side) side.innerHTML = `<p><strong>Serviço:</strong> ${s.serviceName || 'A escolher'}</p><p><strong>Cliente:</strong> ${s.client?.name || 'A identificar'}</p><p><strong>Profissional:</strong> ${s.professionalName || 'A escolher'}</p><p><strong>Pagamento:</strong> ${s.paymentMethod || 'A selecionar'}</p>`;
-    };
-    renderSideSummary();
-    document.querySelectorAll('[data-kiosk-help]').forEach(button => button.addEventListener('click',()=> { KioskFlow.setState({ helpRequestedAt: new Date().toISOString() }); location.href='/Kiosk/Help'; }));
-    document.querySelector('[data-kiosk-back]')?.addEventListener('click',()=> history.length > 1 ? history.back() : location.href='/Kiosk/Services');
-    document.querySelectorAll('[data-kiosk-accessibility]').forEach(button => button.addEventListener('click',()=> { document.body.classList.toggle('kiosk-accessible'); document.body.classList.toggle('kiosk-high-contrast'); button.textContent = document.body.classList.contains('kiosk-high-contrast') ? 'Contraste normal' : 'Alto contraste'; }));
-    document.querySelector('[data-kiosk-cancel]')?.addEventListener('click',()=> sessionStorage.removeItem('kiosk-flow'));
-    if (document.querySelector('.kiosk-step.success') && !document.getElementById('kioskFinalSummary')) setTimeout(()=>{ location.href='/Kiosk/Services'; }, 15000);
+  const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+  const money = value => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const showError = (host, message) => { host.innerHTML = `<article class="k-card kiosk-error" role="alert"><h3>Não foi possível carregar</h3><p>${escapeHtml(message)}</p><button class="k-btn" type="button" onclick="location.reload()">Tentar novamente</button></article>`; };
+  const setBusy = (button, busy) => { button.disabled = busy; button.setAttribute('aria-busy', String(busy)); };
 
-    const servicesEl=document.getElementById('kioskServices');
-    if(servicesEl){ const payload=await loadJson(`/KioskApi/services?deviceCode=${encodeURIComponent(KioskFlow.deviceCode)}`,fallbackServices); const list=unwrap(payload, (kioskDemoConfig.services || fallbackServices)).filter(service => service.kiosk !== false); document.getElementById('kioskDemoNotice')?.toggleAttribute('hidden', !(payload.message||'').toLowerCase().includes('demonstra')); servicesEl.innerHTML=list.length ? list.map(s=>`<article class='k-card'><div class='k-icon'>${s.icon||'💈'}</div><h3>${s.name}</h3><p>${s.description||s.category}</p><strong>R$ ${Number(s.price??0).toFixed(2).replace('.',',')}</strong><span>${s.durationMinutes||30} min</span><a class='k-btn' data-service='${s.id||s.name}' data-price='${Number(s.price??0)}' href='/Kiosk/Client'>Selecionar</a></article>`).join('') : `<article class='k-card'><h3>Nenhum serviço disponível</h3><p>API online retornou lista vazia para este totem.</p></article>`; servicesEl.addEventListener('click',e=>{const a=e.target.closest('[data-service]'); if(a) { KioskFlow.setState({serviceId:a.dataset.service, serviceName:a.closest('.k-card').querySelector('h3').textContent, amount:Number(a.dataset.price||0)}); renderSideSummary(); }}); }
-    const prosEl=document.getElementById('kioskProfessionals');
-    if(prosEl){ const payload=await loadJson(`/KioskApi/professionals?serviceId=${encodeURIComponent(KioskFlow.state.serviceId||'demo-corte')}&deviceCode=${encodeURIComponent(KioskFlow.deviceCode)}`,fallbackPros); const list=unwrap(payload,fallbackPros); prosEl.innerHTML=list.length ? list.map(p=>`<article class='k-card'><div class='k-icon'>👤</div><h3>${p.name}</h3><p>${p.specialty||'Especialista'}</p><span>Espera ${p.estimatedWaitMinutes||10} min</span><a class='k-btn' data-pro='${p.id||p.name}' href='/Kiosk/Confirm'>Escolher</a></article>`).join('') : `<article class='k-card'><h3>Nenhum profissional disponível</h3><p>API online retornou lista vazia para este totem.</p></article>`; prosEl.addEventListener('click',e=>{const a=e.target.closest('[data-pro]'); if(a) { KioskFlow.setState({professionalId:a.dataset.pro, professionalName:a.closest('.k-card').querySelector('h3').textContent}); renderSideSummary(); }}); }
-    document.getElementById('kioskClientForm')?.addEventListener('submit',async(e)=>{e.preventDefault(); const body=Object.fromEntries(new FormData(e.target).entries()); KioskFlow.setState({client:body}); renderSideSummary(); await KioskFlow.post('/KioskApi/client/quick-register',body,{success:true}); location.href='/Kiosk/Professional';});
-    const summary=document.getElementById('kioskSummary'); if(summary){ const s=KioskFlow.state; summary.innerHTML=`<strong>${s.serviceName||'Corte Masculino'}</strong><span>${s.professionalName||'Primeiro disponível'}</span><span>${s.client?.name||'Cliente demo'}</span>`; }
-    document.querySelectorAll('.payment-options button').forEach(b=>{ const key = b.dataset.payment; if (key && kioskDemoConfig.payments && kioskDemoConfig.payments[key] === false) b.hidden = true; b.addEventListener('click',()=>{ KioskFlow.setState({paymentMethod:b.textContent.trim()}); renderSideSummary(); document.querySelectorAll('.payment-options button').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); }); });
-    document.getElementById('kioskPay')?.addEventListener('click',async()=>{ const summary=KioskFlow.finish(KioskFlow.state.paymentMethod||'PIX'); await KioskFlow.post('/KioskApi/payment/mock',summary,{success:true,data:summary}); location.href='/Kiosk/Success';});
-    document.querySelectorAll('.kiosk-stars button').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('.kiosk-stars button').forEach(x=>x.classList.toggle('selected', Number(x.dataset.rating)<=Number(b.dataset.rating))); const ratingInput = document.querySelector('input[name=rating]'); if (ratingInput) ratingInput.value=b.dataset.rating; }));
-    document.getElementById('kioskReviewForm')?.addEventListener('submit',async(e)=>{e.preventDefault(); const review=Object.fromEntries(new FormData(e.target).entries()); const summary=KioskFlow.saveReview(review); await KioskFlow.post('/KioskApi/review',{...review, summary},{success:true,data:summary}); location.href='/Kiosk/Summary';});
-    const finalSummary=document.getElementById('kioskFinalSummary'); if(finalSummary){ const s=safeJson(sessionStorage.getItem('kiosk-summary')||sessionStorage.getItem('kiosk-flow'), {}); finalSummary.innerHTML=`<p><strong>Serviço:</strong> ${s.serviceName||'Corte Masculino'}</p><p><strong>Cliente:</strong> ${s.client?.name||'Cliente demo'}</p><p><strong>Profissional:</strong> ${s.professionalName||'Primeiro disponível'}</p><p><strong>Pagamento:</strong> ${s.paymentMethod||'PIX'}</p><p><strong>Número da comanda:</strong> ${s.commandNumber||'K-204'}</p><p><strong>Avaliação:</strong> ${s.review?.rating||'Pendente'} ⭐</p><p><strong>Comprovante mock:</strong> REC-${s.commandNumber||'K-204'} • QR seguro demonstrativo</p>`; }
+  document.addEventListener('DOMContentLoaded', async () => {
+    const flow = window.KioskFlow;
+    const renderSummary = () => {
+      const state = flow.state;
+      const host = document.querySelector('[data-kiosk-summary-lateral]');
+      if (host) host.innerHTML = `<p><strong>Serviço:</strong> ${escapeHtml(state.serviceName || 'A escolher')}</p><p><strong>Cliente:</strong> ${escapeHtml(state.client?.name || 'A identificar')}</p><p><strong>Profissional:</strong> ${escapeHtml(state.professionalName || 'A escolher')}</p><p><strong>Destino:</strong> ${escapeHtml(state.paymentMethod || 'Caixa')}</p>`;
+    };
+    renderSummary();
+
+    document.querySelectorAll('[data-kiosk-help]').forEach(button => button.addEventListener('click', () => location.href = '/Kiosk/Help'));
+    document.querySelector('[data-kiosk-back]')?.addEventListener('click', () => history.length > 1 ? history.back() : location.href = '/Kiosk/Services');
+    document.querySelector('[data-kiosk-cancel]')?.addEventListener('click', () => flow.reset());
+    document.querySelectorAll('[data-kiosk-accessibility]').forEach(button => button.addEventListener('click', () => {
+      document.body.classList.toggle('kiosk-accessible');
+      document.body.classList.toggle('kiosk-high-contrast');
+    }));
+
+    const servicesHost = document.getElementById('kioskServices');
+    if (servicesHost) {
+      try {
+        const payload = await flow.request(`/KioskApi/services?deviceCode=${encodeURIComponent(flow.deviceCode)}`);
+        const services = Array.isArray(payload.data) ? payload.data : [];
+        servicesHost.innerHTML = services.length ? services.map(service => `<article class="k-card"><h3>${escapeHtml(service.name)}</h3><p>${escapeHtml(service.description || service.category || '')}</p><strong>${money(service.price)}</strong><span>${Number(service.durationMinutes || 30)} min</span><a class="k-btn" data-service="${escapeHtml(service.id)}" data-name="${escapeHtml(service.name)}" data-price="${Number(service.price || 0)}" href="/Kiosk/Client">Selecionar</a></article>`).join('') : '<article class="k-card"><h3>Nenhum serviço disponível</h3><p>Peça ajuda a um atendente.</p></article>';
+        servicesHost.addEventListener('click', event => { const target = event.target.closest('[data-service]'); if (target) flow.setState({ serviceId: target.dataset.service, serviceName: target.dataset.name, amount: Number(target.dataset.price) }); });
+      } catch (error) { showError(servicesHost, error.message); }
+    }
+
+    const professionalsHost = document.getElementById('kioskProfessionals');
+    if (professionalsHost) {
+      try {
+        const payload = await flow.request(`/KioskApi/professionals?serviceId=${encodeURIComponent(flow.state.serviceId || '')}&deviceCode=${encodeURIComponent(flow.deviceCode)}`);
+        const professionals = Array.isArray(payload.data) ? payload.data : [];
+        professionalsHost.innerHTML = professionals.length ? professionals.map(item => `<article class="k-card"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.specialty || 'Profissional')}</p><span>${item.estimatedWaitMinutes ? `Espera estimada: ${Number(item.estimatedWaitMinutes)} min` : 'Disponibilidade no caixa'}</span><a class="k-btn" data-professional="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" href="/Kiosk/Confirm">Escolher</a></article>`).join('') : '<article class="k-card"><h3>Nenhum profissional disponível</h3><p>Peça ajuda a um atendente.</p></article>';
+        professionalsHost.addEventListener('click', event => { const target = event.target.closest('[data-professional]'); if (target) flow.setState({ professionalId: target.dataset.professional, professionalName: target.dataset.name }); });
+      } catch (error) { showError(professionalsHost, error.message); }
+    }
+
+    document.getElementById('kioskClientForm')?.addEventListener('submit', async event => {
+      event.preventDefault(); const button = event.submitter; setBusy(button, true);
+      try { const client = Object.fromEntries(new FormData(event.currentTarget)); const result = await flow.post('/KioskApi/client/quick-register', client); flow.setState({ client: result.data || client, clientId: result.data?.id }); location.href = '/Kiosk/Professional'; }
+      catch (error) { alert(error.message); setBusy(button, false); }
+    });
+
+    const summary = document.getElementById('kioskSummary');
+    if (summary) { const state = flow.state; summary.innerHTML = `<strong>${escapeHtml(state.serviceName)}</strong><span>${escapeHtml(state.professionalName)}</span><span>${escapeHtml(state.client?.name)}</span><strong>${money(state.amount)}</strong>`; }
+
+    document.querySelectorAll('.payment-options button').forEach(button => button.addEventListener('click', () => { flow.setState({ paymentMethod: button.dataset.payment || button.textContent.trim() }); renderSummary(); document.querySelectorAll('.payment-options button').forEach(item => item.classList.toggle('selected', item === button)); }));
+    document.getElementById('kioskPay')?.addEventListener('click', async event => {
+      const button = event.currentTarget; setBusy(button, true);
+      try {
+        const state = flow.state;
+        const result = await flow.post('/KioskApi/session', { ...state, channel: 'Kiosk', status: 'WaitingPayment', createdAt: new Date().toISOString() });
+        flow.saveSummary({ ...state, session: result.data, status: 'Enviado ao caixa', paymentMethod: state.paymentMethod || 'Caixa' });
+        location.href = '/Kiosk/Success';
+      } catch (error) { alert(error.message); setBusy(button, false); }
+    });
+
+    document.getElementById('kioskReviewForm')?.addEventListener('submit', async event => { event.preventDefault(); const button = event.submitter; setBusy(button, true); try { const review = Object.fromEntries(new FormData(event.currentTarget)); await flow.post('/KioskApi/review', { ...review, kioskSessionId: flow.state.session?.id }); location.href = '/Kiosk/Summary'; } catch (error) { alert(error.message); setBusy(button, false); } });
+    const final = document.getElementById('kioskFinalSummary');
+    if (final) { const state = { ...flow.state, ...flow.summary }; final.innerHTML = `<p><strong>Serviço:</strong> ${escapeHtml(state.serviceName)}</p><p><strong>Cliente:</strong> ${escapeHtml(state.client?.name)}</p><p><strong>Profissional:</strong> ${escapeHtml(state.professionalName)}</p><p><strong>Status:</strong> ${escapeHtml(state.status || 'Enviado ao caixa')}</p><p><strong>Protocolo:</strong> ${escapeHtml(state.session?.id || 'Aguardando')}</p>`; }
   });
 })();
-
-(() => { const out=document.getElementById('kiosk7Output'); if(!out)return; const msg={lang:'Idioma demo alterado',font:'Fonte grande aplicada',contrast:'Alto contraste aplicado',phone:'Cliente recorrente reconhecido: último serviço Corte + Barba, cashback R$ 38,50',upsell:'Upsell sugerido na comanda',pay:'Pagamento mock selecionado com QR/recibo fake',print:'Impressão mock enviada',review:'Avaliação registrada',attendant:'Atendente chamado',reset:'Reset automático simulado em 30 segundos'}; document.addEventListener('click',e=>{const b=e.target.closest('[data-lang],[data-font],[data-contrast],[data-phone],[data-upsell],[data-pay],[data-print],[data-review],[data-attendant],[data-reset]'); if(!b)return; const k=Object.keys(msg).find(x=>b.dataset[x]!==undefined); if(k==='font') document.body.classList.toggle('kiosk-large-font'); if(k==='contrast') document.body.classList.toggle('kiosk-high-contrast'); out.textContent=`${new Date().toLocaleTimeString()} • ${msg[k]} • ${b.textContent}`;}); })();
