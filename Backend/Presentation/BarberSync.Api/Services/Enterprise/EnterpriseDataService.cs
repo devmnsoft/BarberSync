@@ -8,7 +8,7 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=localhost;Port=5432;Database=barber;Username=barbersync;Password=barbersync_demo_10";
+        ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection não foi configurada.");
 
     private static readonly IReadOnlyDictionary<string, string> Tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {

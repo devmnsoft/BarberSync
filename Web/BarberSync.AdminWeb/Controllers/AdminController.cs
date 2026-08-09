@@ -57,7 +57,7 @@ public class AdminController : Controller
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
     private static AdminModuleViewModel BuildViewModel(string module)
-        => new(module, $"BarberSync Demo Ready Guided Release 19.0 • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
+        => new(module, $"BarberSync • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
 }
