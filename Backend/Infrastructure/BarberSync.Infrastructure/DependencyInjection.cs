@@ -7,6 +7,7 @@ using BarberSync.Infrastructure.Persistence;
 using BarberSync.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
 
 namespace BarberSync.Infrastructure;
 
@@ -18,6 +19,14 @@ public static class DependencyInjection
         services.Configure<MessagingOptions>(configuration.GetSection("Messaging"));
 
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IAuthService, PostgresAuthService>();
+        services.AddScoped<IPasswordHasher<AuthUser>, PasswordHasher<AuthUser>>();
+        services.AddOptions<JwtOptions>().Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer), "Jwt:Issuer é obrigatório.")
+            .Validate(o => !string.IsNullOrWhiteSpace(o.Audience), "Jwt:Audience é obrigatório.")
+            .Validate(o => o.SigningKey.Length >= 32, "Jwt:SigningKey deve possuir pelo menos 32 caracteres.")
+            .Validate(o => o.AccessTokenMinutes > 0 && o.RefreshTokenDays > 0, "Expiração JWT inválida.")
+            .ValidateOnStart();
         services.AddScoped<IDbConnectionFactory, PostgresConnectionFactory>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 

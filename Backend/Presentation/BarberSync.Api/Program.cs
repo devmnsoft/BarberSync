@@ -3,11 +3,18 @@ using BarberSync.Api.Swagger;
 using BarberSync.Api.Services.Configuration;
 using BarberSync.Api.Services.Enterprise;
 using BarberSync.Api.Validators;
+using BarberSync.Api.Security;
+using BarberSync.Application.Abstractions;
+using BarberSync.Infrastructure.Security;
 using BarberSync.Application.DTOs;
 using BarberSync.Application;
 using BarberSync.Infrastructure;
 using FluentValidation;
 using Serilog;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +35,8 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
     options.OperationFilter<FileUploadOperationFilter>();
     options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { Name = "Authorization", Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT", In = ParameterLocation.Header });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement { [new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }] = Array.Empty<string>() });
 });
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -39,8 +48,21 @@ builder.Services.AddCors(options => options.AddPolicy("DefaultCors", policy =>
         .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 }));
 
-builder.Services.AddAuthentication();
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true, ValidIssuer = jwt.Issuer,
+        ValidateAudience = true, ValidAudience = jwt.Audience,
+        ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
+        ValidateLifetime = true, ClockSkew = TimeSpan.FromSeconds(30),
+        NameClaimType = "email", RoleClaimType = "roles"
+    };
+});
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
