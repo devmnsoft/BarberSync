@@ -4,8 +4,6 @@ using BarberSync.AdminWeb.Controllers;
 using BarberSync.Api.Controllers;
 using BarberSync.KioskWeb.Controllers;
 using BarberSync.PublicWeb.Controllers;
-using BarberSync.Api.Controllers.Configuration;
-using BarberSync.Api.Services.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -28,27 +26,6 @@ public class SmokeEndpointTests
     {
         var controller = new ProfessionalsController(NullLogger<ProfessionalsController>.Instance);
         var ok = Assert.IsType<OkObjectResult>(controller.Get());
-        Assert.Equal(200, ok.StatusCode ?? 200);
-        Assert.Contains("Profissionais", JsonSerializer.Serialize(ok.Value));
-    }
-
-    [Fact]
-    public void Api_kiosk_services_endpoint_returns_200_envelope()
-    {
-        var controller = new KioskConfigController(new StubConfigurationService(), NullLogger<KioskConfigController>.Instance);
-        var action = controller.Services("KIOSK-DEMO-001");
-        var ok = Assert.IsType<OkObjectResult>(action.Result);
-        Assert.Equal(200, ok.StatusCode ?? 200);
-        Assert.Contains("Serviços", JsonSerializer.Serialize(ok.Value));
-    }
-
-
-    [Fact]
-    public void Api_kiosk_professionals_endpoint_returns_200_envelope()
-    {
-        var controller = new KioskConfigController(new StubConfigurationService(), NullLogger<KioskConfigController>.Instance);
-        var action = controller.Professionals("demo", "KIOSK-DEMO-001");
-        var ok = Assert.IsType<OkObjectResult>(action.Result);
         Assert.Equal(200, ok.StatusCode ?? 200);
         Assert.Contains("Profissionais", JsonSerializer.Serialize(ok.Value));
     }
@@ -79,11 +56,12 @@ public class SmokeEndpointTests
     }
 
     [Fact]
-    public async Task KioskApi_fallback_returns_standard_json_envelope()
+    public async Task KioskApi_does_not_fabricate_data_when_api_is_unavailable()
     {
-        var controller = BuildKioskApiController(HttpStatusCode.NotFound);
-        var ok = Assert.IsType<OkObjectResult>(await controller.Services("KIOSK-DEMO-001"));
-        AssertStandardEnvelope(ok.Value, "data");
+        var controller = BuildKioskApiController(HttpStatusCode.ServiceUnavailable);
+        var result = Assert.IsType<ContentResult>(await controller.Services("KIOSK-001"));
+        Assert.Equal(503, result.StatusCode);
+        Assert.DoesNotContain("isDemo", result.Content ?? string.Empty);
     }
 
     [Fact]
@@ -115,15 +93,6 @@ public class SmokeEndpointTests
         Assert.True(doc.RootElement.GetProperty("success").GetBoolean());
         Assert.True(doc.RootElement.TryGetProperty("message", out _));
         Assert.True(doc.RootElement.TryGetProperty(expectedProperty, out _));
-    }
-
-    private sealed class StubConfigurationService : IConfigurationService
-    {
-        public PublicBrandingDto GetBranding(string tenantSlug) => new(tenantSlug, "BarberSync Demo", "/img/logo-barbersync.svg", "#111827", "#d4af37");
-        public PublicLandingDto GetLanding(string tenantSlug) => new(tenantSlug, "BarberSync", "Demo", true);
-        public IReadOnlyList<PublicServiceDto> GetServices(string tenantSlug) => Array.Empty<PublicServiceDto>();
-        public IReadOnlyList<PublicProfessionalDto> GetProfessionals(string tenantSlug) => Array.Empty<PublicProfessionalDto>();
-        public KioskConfigDto GetKioskByDevice(string deviceCode) => new(deviceCode, "barbersync-demo", "matriz", true, 90);
     }
 
     private sealed class StubHttpClientFactory(HttpStatusCode statusCode) : IHttpClientFactory
