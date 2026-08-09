@@ -1,11 +1,61 @@
-@{ var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty; Func<string, string> active = href => path.StartsWith(href.ToLowerInvariant()) ? "active" : string.Empty; }
-<aside class="admin-sidebar">
-  <div class="brand"><img src="~/img/logo-barbersync.svg" alt="BarberSync"/><div><strong>BarberSync</strong><small>Gestão premium</small></div></div>
-  <div class="sidebar-status"><span class="status-dot"></span><div><strong>Ambiente seguro</strong><small>Browser usa somente /AdminApi, /PublicApi e /KioskApi</small></div></div>
-  <div class="menu-section"><h6>OPERAÇÃO</h6><a class="menu-link @active("/admin/dashboard")" href="/Admin/Dashboard">📊 Dashboard</a><a class="menu-link @active("/admin/operations")" href="/Admin/Operations">🧭 Operação ao Vivo</a><a class="menu-link @active("/admin/commercialflow")" href="/Admin/CommercialFlow">💎 Fluxo Comercial</a><a class="menu-link @active("/admin/fullserviceflow")" href="/Admin/FullServiceFlow">🧾 Atendimento Completo</a><a class="menu-link @active("/admin/leadtocash")" href="/Admin/LeadToCash">🔁 Lead to Cash</a><a class="menu-link @active("/admin/appointments")" href="/Admin/Appointments">📅 Agenda</a><a class="menu-link @active("/admin/attendance")" href="/Admin/Attendance">🙋 Atendimentos</a><a class="menu-link @active("/admin/serviceorders")" href="/Admin/ServiceOrders">🧾 Comandas</a><a class="menu-link @active("/admin/cash")" href="/Admin/Cash">💰 Caixa</a></div>
-  <div class="menu-section"><h6>CADASTROS</h6><a class="menu-link @active("/admin/clients")" href="/Admin/Clients">👥 Clientes</a><a class="menu-link @active("/admin/professionals")" href="/Admin/Professionals">💈 Profissionais</a><a class="menu-link @active("/admin/services")" href="/Admin/Services">✂️ Serviços</a><a class="menu-link @active("/admin/products")" href="/Admin/Products">📦 Produtos</a></div>
-  <div class="menu-section"><h6>RELACIONAMENTO</h6><a class="menu-link @active("/admin/customerjourney")" href="/Admin/CustomerJourney">🧬 Jornada do Cliente</a><a class="menu-link @active("/admin/loyalty")" href="/Admin/Loyalty">💎 Fidelidade</a><a class="menu-link @active("/admin/campaigns")" href="/Admin/Campaigns">🎯 Campanhas</a><a class="menu-link @active("/admin/coupons")" href="/Admin/Coupons">🏷️ Cupons</a><a class="menu-link @active("/admin/reviews")" href="/Admin/Reviews">⭐ Avaliações</a><a class="menu-link @active("/admin/reviews")" href="/Admin/Reviews#quality">🏆 Qualidade e Satisfação</a></div>
-  <div class="menu-section"><h6>GESTÃO</h6><a class="menu-link @active("/admin/saascontrolcenter")" href="/Admin/SaasControlCenter">🧩 SaaS Control Center</a><a class="menu-link @active("/admin/channelmanager")" href="/Admin/ChannelManager">🌐 Channel Manager</a><a class="menu-link @active("/admin/financial")" href="/Admin/Financial">📈 Financeiro</a><a class="menu-link @active("/admin/stock")" href="/Admin/Stock">📦 Estoque</a><a class="menu-link @active("/admin/reports")" href="/Admin/Reports">📑 Relatórios</a><a class="menu-link @active("/admin/copilot")" href="/Admin/Copilot">🤖 Copilot IA</a><a class="menu-link @active("/admin/automations")" href="/Admin/Automations">⚡ Automações</a></div>
-  <div class="menu-section"><h6>CANAIS</h6><a class="menu-link @active("/admin/publicsite")" href="/Admin/PublicSite">🛬 Site Público</a><a class="menu-link @active("/admin/kiosk")" href="/Admin/Kiosk">🖥️ Totem</a><a class="menu-link @active("/admin/mobile")" href="/Admin/Mobile">📱 Mobile</a><a class="menu-link @active("/admin/integrations")" href="/Admin/Integrations">🔌 Integrações</a></div>
-  <div class="menu-section"><h6>SISTEMA</h6><a class="menu-link @active("/admin/diagnostics")" href="/Admin/Diagnostics">🩺 Diagnóstico</a><a class="menu-link @active("/admin/demowizard")" href="/Admin/DemoWizard">🧭 Demo Wizard</a><a class="menu-link @active("/admin/demoexperience")" href="/Admin/DemoExperience">✨ Demo Experience</a><a class="menu-link @active("/admin/democenter")" href="/Admin/DemoCenter">🎛️ Central da Demo</a><a class="menu-link @active("/admin/platformsettings")" href="/Admin/PlatformSettings">⚙️ Configurações da Plataforma</a><a class="menu-link @active("/admin/clientonboarding")" href="/Admin/ClientOnboarding">🚀 Onboarding do Cliente</a><a class="menu-link @active("/admin/subscription")" href="/Admin/Subscription">💳 Assinatura SaaS</a><a class="menu-link @active("/admin/addons")" href="/Admin/AddOns">🧱 Add-ons</a><a class="menu-link @active("/admin/users")" href="/Admin/Users">🔐 Usuários e Perfis</a><a class="menu-link @active("/admin/branches")" href="/Admin/Branches">🏢 Unidades</a><a class="menu-link @active("/admin/audit")" href="/Admin/Audit">🧾 Auditoria</a><a class="menu-link @active("/admin/notifications")" href="/Admin/Notifications">🔔 Notificações</a><a class="menu-link @active("/admin/knowledgebase")" href="/Admin/KnowledgeBase">🎓 Base de Conhecimento</a><a class="menu-link @active("/admin/manual")" href="/Admin/Manual">📘 Manual</a></div>
+@{
+    var path = Context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+    Func<string, string> active = href => path.StartsWith(href.ToLowerInvariant()) ? "active" : string.Empty;
+}
+<aside class="admin-sidebar" aria-label="Navegação principal">
+    <a class="brand" href="/Admin/Dashboard" aria-label="BarberSync — Visão geral">
+        <img src="~/img/logo-barbersync-white.svg" alt="" />
+        <div><strong>BarberSync</strong><small>Gestão premium</small></div>
+    </a>
+
+    <nav class="journey-nav">
+        <div class="menu-section">
+            <h6>INÍCIO</h6>
+            <a class="menu-link @active("/admin/dashboard")" href="/Admin/Dashboard"><span class="nav-icon">VG</span>Visão Geral</a>
+        </div>
+        <div class="menu-section">
+            <h6>OPERAÇÃO</h6>
+            <a class="menu-link @active("/admin/appointments")" href="/Admin/Appointments"><span class="nav-icon">AG</span>Agenda</a>
+            <a class="menu-link @active("/admin/operations")" href="/Admin/Operations"><span class="nav-icon">AT</span>Atendimento</a>
+            <a class="menu-link @active("/admin/serviceorders")" href="/Admin/ServiceOrders"><span class="nav-icon">PD</span>Comandas</a>
+            <a class="menu-link @active("/admin/cash")" href="/Admin/Cash"><span class="nav-icon">CX</span>Caixa</a>
+        </div>
+        <div class="menu-section">
+            <h6>CLIENTES</h6>
+            <a class="menu-link @active("/admin/clients")" href="/Admin/Clients"><span class="nav-icon">CL</span>Clientes</a>
+            <a class="menu-link @active("/admin/loyalty")" href="/Admin/Loyalty"><span class="nav-icon">FI</span>Fidelidade</a>
+            <a class="menu-link @active("/admin/campaigns")" href="/Admin/Campaigns"><span class="nav-icon">CA</span>Campanhas</a>
+            <a class="menu-link @active("/admin/reviews")" href="/Admin/Reviews"><span class="nav-icon">AV</span>Avaliações</a>
+        </div>
+        <div class="menu-section">
+            <h6>EQUIPE</h6>
+            <a class="menu-link @active("/admin/professionals")" href="/Admin/Professionals"><span class="nav-icon">PR</span>Profissionais</a>
+            <a class="menu-link @active("/admin/financial")" href="/Admin/Financial"><span class="nav-icon">CO</span>Comissões</a>
+        </div>
+        <div class="menu-section">
+            <h6>CATÁLOGO</h6>
+            <a class="menu-link @active("/admin/services")" href="/Admin/Services"><span class="nav-icon">SV</span>Serviços</a>
+            <a class="menu-link @active("/admin/products")" href="/Admin/Products"><span class="nav-icon">PD</span>Produtos</a>
+            <a class="menu-link @active("/admin/stock")" href="/Admin/Stock"><span class="nav-icon">ES</span>Estoque</a>
+        </div>
+        <div class="menu-section">
+            <h6>GESTÃO</h6>
+            <a class="menu-link @active("/admin/financial")" href="/Admin/Financial"><span class="nav-icon">FN</span>Financeiro</a>
+            <a class="menu-link @active("/admin/reports")" href="/Admin/Reports"><span class="nav-icon">RE</span>Relatórios</a>
+        </div>
+        <div class="menu-section">
+            <h6>CANAIS</h6>
+            <a class="menu-link @active("/admin/publicsite")" href="/Admin/PublicSite"><span class="nav-icon">SI</span>Site</a>
+            <a class="menu-link @active("/admin/kiosk")" href="/Admin/Kiosk"><span class="nav-icon">TO</span>Totem</a>
+            <a class="menu-link @active("/admin/mobile")" href="/Admin/Mobile"><span class="nav-icon">MO</span>Mobile</a>
+        </div>
+        <div class="menu-section">
+            <h6>CONFIGURAÇÕES</h6>
+            <a class="menu-link @active("/admin/branches")" href="/Admin/Branches"><span class="nav-icon">UN</span>Unidade</a>
+            <a class="menu-link @active("/admin/users")" href="/Admin/Users"><span class="nav-icon">US</span>Usuários e Perfis</a>
+            <a class="menu-link @active("/admin/integrations")" href="/Admin/Integrations"><span class="nav-icon">IN</span>Integrações</a>
+            <a class="menu-link @active("/admin/audit")" href="/Admin/Audit"><span class="nav-icon">AU</span>Auditoria</a>
+            <a class="menu-link @active("/admin/settings")" href="/Admin/Settings"><span class="nav-icon">CF</span>Configurações</a>
+        </div>
+    </nav>
 </aside>

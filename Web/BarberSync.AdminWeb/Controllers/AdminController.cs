@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BarberSync.AdminWeb.Controllers;
 
 [Route("Admin")]
-public class AdminController : Controller
+public class AdminController(IWebHostEnvironment environment) : Controller
 {
     [HttpGet("")] public IActionResult Index() => Render("Dashboard");
     [HttpGet("Dashboard")] public IActionResult Dashboard() => Render("Dashboard");
@@ -13,9 +13,9 @@ public class AdminController : Controller
     [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
     [HttpGet("FullServiceFlow")] public IActionResult FullServiceFlow() => Render("FullServiceFlow");
     [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => Render("CommercialFlow");
-    [HttpGet("DemoCenter")] public IActionResult DemoCenter() => Render("DemoCenter");
-    [HttpGet("DemoExperience")] public IActionResult DemoExperience() => Render("DemoExperience");
-    [HttpGet("DemoWizard")] public IActionResult DemoWizard() => Render("DemoWizard");
+    [HttpGet("DemoCenter")] public IActionResult DemoCenter() => DevelopmentOnly("DemoCenter");
+    [HttpGet("DemoExperience")] public IActionResult DemoExperience() => DevelopmentOnly("DemoExperience");
+    [HttpGet("DemoWizard")] public IActionResult DemoWizard() => DevelopmentOnly("DemoWizard");
     [HttpGet("CustomerJourney")] public IActionResult CustomerJourney() => Render("CustomerJourney");
     [HttpGet("Clients")] public IActionResult Clients() => Render("Clients");
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
@@ -52,7 +52,9 @@ public class AdminController : Controller
     [HttpGet("Automations")] public IActionResult Automations() => Render("Automations");
     [HttpGet("Integrations")] public IActionResult Integrations() => Render("Integrations");
     [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
-    [HttpGet("Diagnostics")] public IActionResult Diagnostics() => Render("Diagnostics");
+    [HttpGet("Diagnostics")] public IActionResult Diagnostics() => DevelopmentOnly("Diagnostics");
+
+    private IActionResult DevelopmentOnly(string module) => environment.IsDevelopment() ? Render(module) : NotFound();
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 

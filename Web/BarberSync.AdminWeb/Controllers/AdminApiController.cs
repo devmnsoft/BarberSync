@@ -33,6 +33,7 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
     [HttpGet("kiosk-status")] public Task<IActionResult> KioskStatus() => ProxyGet("/api/kiosk/status", DemoKioskStatus(), "Status do totem carregado em modo demonstração.");
     [HttpGet("financial-summary")] public Task<IActionResult> FinancialSummary() => ProxyGet("/api/financial/summary", DemoFinancialSummary(), "Resumo financeiro carregado em modo demonstração.");
     [HttpGet("reports-summary")] public Task<IActionResult> ReportsSummary() => ProxyGet("/api/reports/summary", DemoReportsSummary(), "Resumo de relatórios carregado em modo demonstração.");
+    [HttpGet("search")] public Task<IActionResult> Search([FromQuery] string q) => ProxyGet($"/api/search?q={Uri.EscapeDataString(q ?? string.Empty)}", new { }, "Busca indisponível.");
 
     [HttpGet("full-service-flow/snapshot")] public Task<IActionResult> FullServiceFlowSnapshot() => ProxyGet("/api/full-service-flow/snapshot", DemoFullServiceSnapshot(), "Fluxo completo carregado em modo demonstração.");
     [HttpPost("full-service-flow/run")] public Task<IActionResult> RunFullServiceFlow([FromBody] JsonElement payload) => ProxySend(HttpMethod.Post, "/api/full-service-flow/run", payload, DemoMutation("Fluxo FullServiceFlow executado em modo demonstração.", payload));
@@ -116,7 +117,10 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             logger.LogWarning(ex, "AdminApi GET {Path} lançou exceção. Usando fallback demo.", path);
         }
 
-        return Ok(DemoFallbackEnvelope(path, fallbackMessage));
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Serviço temporariamente indisponível",
+            detail: "Não foi possível consultar os dados reais. Nenhum dado de demonstração foi utilizado.");
     }
 
 
@@ -152,7 +156,10 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             logger.LogWarning(ex, "AdminApi {Method} {Path} lançou exceção. Usando fallback demo.", method, path);
         }
 
-        return Ok(fallback);
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Operação indisponível",
+            detail: "A API de negócio não respondeu. A operação não foi simulada nem persistida localmente.");
     }
 
     private async Task<IActionResult> ProxyDelete(string path, object fallback)
@@ -169,7 +176,10 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             logger.LogWarning(ex, "AdminApi DELETE {Path} lançou exceção. Usando fallback demo.", path);
         }
 
-        return Ok(fallback);
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Operação indisponível",
+            detail: "A API de negócio não respondeu. A remoção não foi simulada.");
     }
 
     private static async Task<ContentResult> ReadJsonOrTextAsync(HttpResponseMessage response)

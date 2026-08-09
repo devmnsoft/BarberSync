@@ -1,25 +1,39 @@
 (() => {
-  const actions = [
-    { title: 'Novo cliente', hint: 'Abre o CRUD de Clientes', icon: '👥', href: '/Admin/Clients', run: () => window.openCreateModal?.('Clients') },
-    { title: 'Novo agendamento', hint: 'Cria um horário na agenda', icon: '📅', href: '/Admin/Appointments', run: () => window.openCreateModal?.('Appointments') },
-    { title: 'Abrir comanda', hint: 'Inicia uma comanda demo', icon: '🧾', href: '/Admin/ServiceOrders', run: () => window.openCreateModal?.('ServiceOrders') },
-    { title: 'Cadastrar serviço', hint: 'Configura preço e canais', icon: '✂️', href: '/Admin/Services', run: () => window.openCreateModal?.('Services') },
-    { title: 'Entrada de estoque', hint: 'Simula reposição de produto', icon: '📦', href: '/Admin/Stock', run: () => window.openCreateModal?.('Stock') },
-    { title: 'Criar campanha', hint: 'Ativa jornada de retorno', icon: '🎯', href: '/Admin/Campaigns', run: () => window.openCreateModal?.('Campaigns') },
-    { title: 'Abrir Copilot', hint: 'Perguntas e sugestões acionáveis', icon: '🤖', href: '/Admin/Copilot' },
-    { title: 'Tour Demo', hint: 'Inicia o roteiro guiado BarberSync Demo Experience 2.0', icon: '🧭', href: '/Admin/Dashboard', run: () => window.BarberSyncDemoTour?.start?.() },
-    { title: 'Abrir Totem', hint: 'Fluxo de autoatendimento', icon: '🖥️', href: '/Admin/Kiosk', external: true },
-    { title: 'Ver roteiro de demo', hint: 'Checklist e narrativa comercial', icon: '📋', href: '/Admin/Help' }
+  'use strict';
+  const quickActions = [
+    { title: 'Novo cliente', hint: 'Cadastrar cliente', group: 'Ações', href: '/Admin/Clients?new=true' },
+    { title: 'Novo agendamento', hint: 'Reservar um horário', group: 'Ações', href: '/Admin/Appointments?new=true' },
+    { title: 'Nova comanda', hint: 'Iniciar uma venda', group: 'Ações', href: '/Admin/ServiceOrders?new=true' },
+    { title: 'Abrir caixa', hint: 'Iniciar operação financeira', group: 'Ações', href: '/Admin/Cash?action=open' },
+    { title: 'Movimentar estoque', hint: 'Entrada, saída ou ajuste', group: 'Ações', href: '/Admin/Stock?action=movement' }
   ];
-  let active = 0;
-  const els = () => ({ modal: document.getElementById('AdminCommandPalette'), scrim: document.querySelector('.admin-command-scrim'), input: document.getElementById('AdminCommandSearch'), list: document.querySelector('[data-command-list]') });
-  const filtered = () => { const q = (els().input?.value || '').toLowerCase(); return actions.filter(a => `${a.title} ${a.hint}`.toLowerCase().includes(q)); };
-  function render() { const { list } = els(); if (!list) return; const items = filtered(); active = Math.min(active, Math.max(items.length - 1, 0)); list.innerHTML = items.map((a, i) => `<button type="button" class="command-item ${i === active ? 'is-active' : ''}" data-command-index="${i}"><span>${a.icon}</span><strong>${a.title}</strong><small>${a.hint}</small></button>`).join('') || '<div class="empty-state-mini">Nenhuma ação encontrada.</div>'; }
-  function open() { const { modal, scrim, input } = els(); if (!modal) return; modal.hidden = false; scrim.hidden = false; modal.setAttribute('aria-hidden','false'); active = 0; render(); setTimeout(() => input?.focus(), 30); }
-  function close() { const { modal, scrim } = els(); if (!modal) return; modal.hidden = true; scrim.hidden = true; modal.setAttribute('aria-hidden','true'); }
-  function execute(index = active) { const item = filtered()[index]; if (!item) return; close(); if (item.run && location.pathname.toLowerCase() === new URL(item.href, location.origin).pathname.toLowerCase()) { item.run(); window.AdminToast?.showInfo?.(`Ação aberta: ${item.title}.`); return; } if (item.external) window.open(item.href, '_blank', 'noopener'); else location.href = item.href; }
-  document.addEventListener('DOMContentLoaded', () => { render(); document.querySelectorAll('[data-command-open], [data-open-command-palette]').forEach(b => b.addEventListener('click', open)); els().input?.addEventListener('input', () => { active = 0; render(); }); });
-  document.addEventListener('click', e => { if (e.target.closest('[data-command-close]')) close(); const item = e.target.closest('[data-command-index]'); if (item) execute(Number(item.dataset.commandIndex)); });
-  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open(); } if (els().modal?.hidden === false) { if (e.key === 'Escape') close(); if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, filtered().length - 1); render(); } if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); render(); } if (e.key === 'Enter') { e.preventDefault(); execute(); } } });
-  window.AdminCommandPalette = { open, close, execute };
+  let results = quickActions, active = 0, timer;
+  const elements = () => ({ modal: document.getElementById('AdminCommandPalette'), scrim: document.querySelector('.admin-command-scrim'), input: document.getElementById('AdminCommandSearch'), list: document.querySelector('[data-command-list]') });
+  const escape = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  function render() {
+    const host = elements().list; if (!host) return;
+    active = Math.min(active, Math.max(results.length - 1, 0));
+    let group = '';
+    host.innerHTML = results.map((item, index) => {
+      const heading = item.group !== group ? `<p class="command-group">${escape(item.group)}</p>` : ''; group = item.group;
+      return `${heading}<button type="button" class="command-item ${index === active ? 'is-active' : ''}" data-command-index="${index}"><span class="nav-icon">${escape(item.icon || item.group?.slice(0,2).toUpperCase())}</span><strong>${escape(item.title)}</strong><small>${escape(item.hint)}</small></button>`;
+    }).join('') || '<div class="empty-state-mini">Nenhum resultado encontrado.</div>';
+  }
+  async function search(query) {
+    if (query.length < 2) { results = quickActions; render(); return; }
+    try {
+      const response = await fetch(`/AdminApi/search?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error();
+      const payload = await response.json();
+      const groups = payload.data || payload;
+      results = Object.entries(groups).flatMap(([group, items]) => (Array.isArray(items) ? items : []).map(item => ({ group, title: item.title || item.name || item.code, hint: item.subtitle || item.phone || item.description, href: item.url || item.href })));
+    } catch { results = []; }
+    active = 0; render();
+  }
+  function open() { const { modal, scrim, input } = elements(); if (!modal) return; modal.hidden = false; scrim.hidden = false; modal.setAttribute('aria-hidden', 'false'); results = quickActions; active = 0; render(); setTimeout(() => input.focus(), 30); }
+  function close() { const { modal, scrim } = elements(); if (!modal) return; modal.hidden = true; scrim.hidden = true; modal.setAttribute('aria-hidden', 'true'); }
+  function execute(index = active) { const item = results[index]; if (item?.href) location.assign(item.href); }
+  document.addEventListener('DOMContentLoaded', () => { render(); document.querySelectorAll('[data-command-open]').forEach(button => button.addEventListener('click', open)); elements().input?.addEventListener('input', event => { clearTimeout(timer); timer = setTimeout(() => search(event.target.value.trim()), 250); }); });
+  document.addEventListener('click', event => { if (event.target.closest('[data-command-close]')) close(); const item = event.target.closest('[data-command-index]'); if (item) execute(Number(item.dataset.commandIndex)); });
+  document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); open(); } if (!elements().modal?.hidden) { if (event.key === 'Escape') close(); if (event.key === 'ArrowDown') { event.preventDefault(); active = Math.min(active + 1, results.length - 1); render(); } if (event.key === 'ArrowUp') { event.preventDefault(); active = Math.max(active - 1, 0); render(); } if (event.key === 'Enter') { event.preventDefault(); execute(); } } });
 })();
