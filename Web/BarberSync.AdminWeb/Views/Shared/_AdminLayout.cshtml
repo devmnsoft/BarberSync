@@ -8,28 +8,15 @@
     <link rel="stylesheet" href="~/css/admin-brand.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-components.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-forms.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-tables.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin-responsive.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-onboarding.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-demo.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-demo-experience.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-tour.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-saas-control-center.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-platform-settings.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-subscription.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-client-onboarding.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-full-service-flow.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-commercial-flow.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-diagnostics.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin-demo-wizard.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="admin-body">
     <div class="admin-shell">
         <partial name="_AdminSidebar" />
         <div class="admin-main">
-            <partial name="_AdminDemoBanner" />
             <partial name="_AdminTopbar" />
             <main class="admin-content">@RenderBody()</main>
         </div>
@@ -38,55 +25,12 @@
     <partial name="_AdminConfirmModal" />
     <partial name="_AdminHelpDrawer" />
     <partial name="_AdminCommandPalette" />
-    <partial name="_AdminTourOverlay" />
     <script src="~/js/admin-api-client.js" asp-append-version="true"></script>
     <script src="~/js/admin-event-bus.js" asp-append-version="true"></script>
-    <script src="~/js/admin-demo-store.js" asp-append-version="true"></script>
-    <script src="~/js/admin-demo-mode.js" asp-append-version="true"></script>
-    <script src="~/js/admin-operation-flow.js" asp-append-version="true"></script>
-    <script src="~/js/admin-demo-tour.js" asp-append-version="true"></script>
-    <script src="~/js/admin-demo-experience.js" asp-append-version="true"></script>
     <script src="~/js/admin-toast.js" asp-append-version="true"></script>
     <script src="~/js/admin-modal.js" asp-append-version="true"></script>
-    <script src="~/js/admin-forms.js" asp-append-version="true"></script>
-    <script src="~/js/admin-tables.js" asp-append-version="true"></script>
     <script src="~/js/admin-shell.js" asp-append-version="true"></script>
     <script src="~/js/admin-command-palette.js" asp-append-version="true"></script>
-    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
-    <script src="~/js/admin-operations.js" asp-append-version="true"></script>
-    <script src="~/js/admin-clients.js" asp-append-version="true"></script>
-    <script src="~/js/admin-appointments.js" asp-append-version="true"></script>
-    <script src="~/js/admin-full-service-flow.js" asp-append-version="true"></script>
-    <script src="~/js/admin-commercial-flow.js" asp-append-version="true"></script>
-    <script src="~/js/admin-service-orders.js" asp-append-version="true"></script>
-    <script src="~/js/admin-loyalty.js" asp-append-version="true"></script>
-    <script src="~/js/admin-coupons.js" asp-append-version="true"></script>
-    <script src="~/js/admin-cash.js" asp-append-version="true"></script>
-    <script src="~/js/admin-stock.js" asp-append-version="true"></script>
-    <script src="~/js/admin-reviews.js" asp-append-version="true"></script>
-    <script src="~/js/admin-campaigns.js" asp-append-version="true"></script>
-    <script src="~/js/admin-reports.js" asp-append-version="true"></script>
-    <script src="~/js/admin-customer-journey.js" asp-append-version="true"></script>
-    <script src="~/js/admin-copilot.js" asp-append-version="true"></script>
-    <script src="~/js/admin-channel-manager.js" asp-append-version="true"></script>
-    <script src="~/js/admin-lead-to-cash.js" asp-append-version="true"></script>
-    <script src="~/js/admin-saas-control-center.js" asp-append-version="true"></script>
-    <script src="~/js/admin-crud.js" asp-append-version="true"></script>
-    <script src="~/js/admin-filters.js" asp-append-version="true"></script>
-    <script src="~/js/admin-help.js" asp-append-version="true"></script>
-    <script src="~/js/admin-saas7.js" asp-append-version="true"></script>
-    <script src="~/js/admin-onboarding.js" asp-append-version="true"></script>
-    <script src="~/js/admin-financial.js" asp-append-version="true"></script>
-    <script src="~/js/admin-payments.js" asp-append-version="true"></script>
-    <script src="~/js/admin-quality.js" asp-append-version="true"></script>
-    <script src="~/js/admin-subscription.js" asp-append-version="true"></script>
-    <script src="~/js/admin-client-onboarding.js" asp-append-version="true"></script>
-    <script src="~/js/admin-addons.js" asp-append-version="true"></script>
-    <script src="~/js/admin-automations.js" asp-append-version="true"></script>
-    <script src="~/js/admin-integrations.js" asp-append-version="true"></script>
-    <script src="~/js/admin-knowledge-base.js" asp-append-version="true"></script>
-    <script src="~/js/admin-diagnostics.js" asp-append-version="true"></script>
-    <script src="~/js/admin-demo-wizard.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

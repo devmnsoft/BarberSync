@@ -39,7 +39,7 @@
         <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Appointments">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
     </form>
 </div>
-@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Appointments')</script>}
+@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-appointments.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('Appointments')</script>}
 
 <section class="panel"><div class="panel-header"><div><h3>Agenda integrada à operação</h3><p>Status Scheduled, Confirmed, CheckedIn, InService, Finished, Cancelled e NoShow refletem em Operação, Dashboard e Cliente 360.</p></div></div><div class="module-feature-grid" data-appointments-demo></div></section>
 

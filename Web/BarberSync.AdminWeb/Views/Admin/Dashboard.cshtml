@@ -1,30 +1,55 @@
-@{ ViewData["Title"] = "Dashboard Executivo 18.0"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
-<section class="saas7-hero" data-dashboard-7><div><span class="badge">Dashboard Executivo 18.0</span><h1>Dashboard omnichannel BarberSync</h1><p>Visão geral, operação hoje, financeiro, canais, clientes, estoque, equipe, Copilot, alertas e relatórios favoritos com filtros globais reativos.</p></div><div class="saas7-actions"><a class="btn btn-gold" href="/Admin/FullServiceFlow">Executar fluxo completo</a><a class="btn btn-light" href="/Admin/Operations">Operação ao Vivo</a><a class="btn btn-light" href="/Admin/PublicSite">Site Público</a><a class="btn btn-light" href="/Admin/Kiosk">Totem</a><a class="btn btn-gold" href="/Admin/Copilot">Copilot</a></div></section>
-<section class="saas7-card full"><div class="saas7-toolbar"><select data-period><option value="today">Hoje</option><option value="7">7 dias</option><option value="month">Mês</option></select><select data-unit><option>Todas unidades</option><option>Barbearia Elite Matriz</option><option>BarberSync Studio Umarizal</option><option>BarberSync Estética Premium</option><option>BarberSync Shopping Demo</option></select><select data-channel><option>Todos canais</option><option>Admin</option><option>PublicWeb</option><option>Totem</option><option>Mobile</option></select><button class="btn btn-light" data-dashboard-save-layout>Salvar widgets</button><button class="btn btn-light" data-dashboard-toggle-widgets>Mostrar/ocultar mock</button><button class="btn btn-light" data-dashboard-reorder>Reordenar mock</button></div><div class="saas7-metrics" style="margin-top:14px" data-dashboard-7-kpis></div></section>
-<section class="saas7-grid" data-dashboard-widgets>
-@foreach (var block in new[]{"Visão Geral","Operação Hoje","Financeiro","Canais","Clientes","Estoque","Equipe","Copilot","Alertas","Relatórios favoritos"}) { <article class="saas7-card saas7-collapsible"><div class="saas7-toolbar" style="justify-content:space-between"><h2>@block</h2><button class="btn btn-light" data-collapse>Colapsar</button></div><div data-saas7-body><p>Métricas demo reativas para @block integradas ao DemoStore 8.0, canais e fluxo operacional.</p><div class="saas7-chart"><div class="saas7-bar" style="height:40%"></div><div class="saas7-bar" style="height:68%"></div><div class="saas7-bar" style="height:52%"></div><div class="saas7-bar" style="height:84%"></div></div><div class="saas7-actions"><a class="btn btn-light" href="/Admin/Reports">Ver relatório</a><button class="btn btn-secondary" onclick="window.AdminToast?.showInfo('Ação demo executada em @block')">Executar ação</button></div></div></article> }
+@{
+    ViewData["Title"] = "Visão Geral";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+}
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">OPERAÇÃO DE HOJE</p>
+        <h1>@greeting, <span data-user-name>Administrador</span></h1>
+        <p>Unidade: <strong data-dashboard-unit>Principal</strong> <span class="separator">•</span> Hoje, @DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("pt-BR"))</p>
+    </div>
+    <div class="quick-actions" aria-label="Ações rápidas">
+        <a class="btn btn-primary" href="/Admin/Appointments?new=true">Novo agendamento</a>
+        <a class="btn btn-light" href="/Admin/Operations?new=true">Novo atendimento</a>
+        <a class="btn btn-light" href="/Admin/Cash?action=open">Abrir caixa</a>
+        <a class="btn btn-dark" href="/Admin/ServiceOrders?new=true">Nova comanda</a>
+    </div>
 </section>
 
-<section class="saas7-card full"><div class="saas7-toolbar"><div><h2>Impacto do Atendimento Completo 18.0</h2><p>KPIs reativos alimentados pelo DemoStore/localStorage.</p></div><a class="btn btn-gold" href="/Admin/FullServiceFlow">Executar fluxo completo</a></div><div class="saas7-metrics"><article class="kpi-card"><p class="kpi-label">Receita hoje</p><strong class="kpi-value" data-dashboard-kpi="revenue">R$ 0,00</strong></article><article class="kpi-card"><p class="kpi-label">Agendamentos hoje</p><strong class="kpi-value" data-dashboard-kpi="appointments">0</strong></article><article class="kpi-card"><p class="kpi-label">Cashback gerado</p><strong class="kpi-value" data-dashboard-kpi="cashback">R$ 0,00</strong></article><article class="kpi-card"><p class="kpi-label">Avaliações</p><strong class="kpi-value" data-dashboard-kpi="reviews">0</strong></article></div><div data-dashboard-events></div></section>
-
-<section class="saas7-card full"><div class="saas7-toolbar"><div><h2>Último fluxo comercial executado</h2><p>Receita, origem, cashback, avaliação e próximos passos gerados pelo CommercialFlow 15.0.</p></div><a class="btn btn-gold" href="/Admin/CommercialFlow">Ver resumo</a></div><div data-dashboard-commercial-flow></div></section>
-
-<section class="saas7-card full" data-demo-status-panel>
-  <div class="saas7-toolbar">
-    <div><h2>Status da Demonstração</h2><p>Checklist executivo para apresentação comercial BarberSync Quality Gate + Demo Ready Guided Release 19.0.</p></div>
-    <div class="saas7-actions"><a class="btn btn-gold" href="/Admin/Diagnostics">Rodar diagnóstico</a><a class="btn btn-light" href="/Admin/DemoWizard">Abrir Demo Wizard</a><a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir FullServiceFlow</a><a class="btn btn-light" href="/Admin/PublicSite" target="_blank" rel="noopener">Abrir PublicWeb</a><a class="btn btn-light" href="/Admin/Kiosk" target="_blank" rel="noopener">Abrir Kiosk</a><a class="btn btn-light" href="/AdminApi/swagger" target="_blank" rel="noopener">Abrir Swagger</a><a class="btn btn-light" href="/Admin/Diagnostics">Abrir Quality Gate</a><button class="btn btn-light" type="button" data-dashboard-reset-store>Resetar DemoStore</button></div>
-  </div>
-  <div class="saas7-metrics" data-demo-status-items>
-    <article class="kpi-card"><p class="kpi-label">API OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">AdminApi OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">PublicApi OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">KioskApi OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">FullServiceFlow OK</p><strong class="kpi-value">DemoStore</strong></article>
-    <article class="kpi-card"><p class="kpi-label">DemoStore OK</p><strong class="kpi-value">Local</strong></article>
-    <article class="kpi-card"><p class="kpi-label">EventBus OK</p><strong class="kpi-value">Eventos</strong></article>
-    <article class="kpi-card"><p class="kpi-label">Assets OK</p><strong class="kpi-value">CSS/JS</strong></article>
-    <article class="kpi-card"><p class="kpi-label">Swagger OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">PublicWeb OK</p><strong class="kpi-value">Validando</strong></article>
-    <article class="kpi-card"><p class="kpi-label">Kiosk OK</p><strong class="kpi-value">Validando</strong></article>
-  </div>
+<div class="dashboard-loading" data-dashboard-loading role="status"><span class="loading-pulse"></span>Carregando indicadores da operação...</div>
+<section class="dashboard-error" data-dashboard-error hidden>
+    <div><strong>Não foi possível carregar a visão operacional.</strong><p>Verifique a conexão com a API e tente novamente.</p></div>
+    <button class="btn btn-light" type="button" data-dashboard-retry>Tentar novamente</button>
 </section>
+
+<section class="premium-kpi-grid" data-dashboard-kpis aria-label="Indicadores principais" hidden></section>
+
+<div class="dashboard-columns" data-dashboard-content hidden>
+    <section class="premium-panel operation-now">
+        <header><div><p class="eyebrow">TEMPO REAL</p><h2>Operação agora</h2></div><a href="/Admin/Operations">Ver atendimento</a></header>
+        <div class="operation-tabs" role="tablist">
+            <button class="active" data-operation-filter="waiting">Aguardando <span data-count="waiting">0</span></button>
+            <button data-operation-filter="inService">Em atendimento <span data-count="inService">0</span></button>
+            <button data-operation-filter="payment">Pagamento <span data-count="payment">0</span></button>
+            <button data-operation-filter="late">Atrasados <span data-count="late">0</span></button>
+            <button data-operation-filter="next">Próximos <span data-count="next">0</span></button>
+        </div>
+        <div class="operation-list" data-operation-list></div>
+    </section>
+
+    <aside class="dashboard-side">
+        <section class="premium-panel">
+            <header><div><p class="eyebrow">ASSISTENTE BARBERSYNC</p><h2>O que merece atenção hoje</h2></div></header>
+            <div class="insight-list" data-dashboard-insights></div>
+        </section>
+        <section class="premium-panel">
+            <header><div><p class="eyebrow">PRIORIDADES</p><h2>Alertas acionáveis</h2></div><a href="/Admin/Notifications">Ver todos</a></header>
+            <div class="alert-list" data-dashboard-alerts></div>
+        </section>
+    </aside>
+</div>
+
+@section Styles { <link rel="stylesheet" href="~/css/admin-dashboard-premium.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/admin-dashboard-premium.js" asp-append-version="true"></script> }

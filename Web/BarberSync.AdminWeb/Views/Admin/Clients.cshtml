@@ -39,7 +39,7 @@
         <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Clients">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
     </form>
 </div>
-@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Clients')</script>}
+@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-clients.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('Clients')</script>}
 
 <section class="panel"><div class="panel-header"><div><h3>Cliente 360 integrado</h3><p>Relacionamentos reais do DemoStore: agenda, comandas, pagamentos, cashback, avaliações, campanhas e timeline.</p></div></div><div class="enterprise-demo-grid" data-client360></div></section>
 <section class="saas-grid" data-client360>
