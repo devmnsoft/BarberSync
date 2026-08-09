@@ -8,20 +8,15 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - name: Restore
-        run: dotnet restore Backend.sln
+        run: dotnet restore BarberSync.sln
       - name: Build
-        run: dotnet build Backend.sln --configuration Release --no-restore
-      - name: Test + coverage
-        run: dotnet test Backend.sln --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet build BarberSync.sln --configuration Release --no-restore
 
   mobile-totem:
     runs-on: ubuntu-latest

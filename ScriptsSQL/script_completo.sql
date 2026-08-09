@@ -126,6 +126,69 @@ CREATE INDEX IF NOT EXISTS ix_products_low_stock ON barber.products(tenant_id,br
 CREATE INDEX IF NOT EXISTS ix_audit_entity ON barber.audit_logs(tenant_id,entity_name,entity_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS ix_soft_delete_clients ON barber.clients(tenant_id,deleted_at);
 
+-- Estruturas operacionais da fase 2. Todas são relacionais, auditáveis e idempotentes.
+CREATE TABLE IF NOT EXISTS barber.professional_schedule_blocks (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ professional_id uuid NOT NULL REFERENCES barber.professionals(id), start_at timestamptz NOT NULL, end_at timestamptz NOT NULL,
+ reason varchar(30) NOT NULL, description text, created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(),
+ CONSTRAINT ck_schedule_block_period CHECK (end_at > start_at)
+);
+CREATE INDEX IF NOT EXISTS ix_schedule_blocks_overlap ON barber.professional_schedule_blocks(tenant_id,branch_id,professional_id,start_at,end_at);
+CREATE TABLE IF NOT EXISTS barber.appointment_status_history (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ appointment_id uuid NOT NULL REFERENCES barber.appointments(id), previous_status varchar(30), new_status varchar(30) NOT NULL,
+ reason text, changed_by uuid REFERENCES barber.users(id), changed_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_appointment_status_history ON barber.appointment_status_history(appointment_id,changed_at);
+CREATE TABLE IF NOT EXISTS barber.commission_rules (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ professional_id uuid REFERENCES barber.professionals(id), service_id uuid REFERENCES barber.services(id), percentage numeric(5,2) NOT NULL,
+ valid_from date NOT NULL, valid_until date, is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(),
+ CONSTRAINT ck_commission_rule_percentage CHECK (percentage BETWEEN 0 AND 100),
+ CONSTRAINT ck_commission_rule_period CHECK (valid_until IS NULL OR valid_until >= valid_from)
+);
+CREATE INDEX IF NOT EXISTS ix_commission_rules_resolution ON barber.commission_rules(tenant_id,branch_id,professional_id,service_id,valid_from DESC) WHERE is_active;
+CREATE TABLE IF NOT EXISTS barber.payment_refunds (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ payment_id uuid NOT NULL REFERENCES barber.payments(id), amount numeric(14,2) NOT NULL, reason text NOT NULL,
+ status varchar(30) NOT NULL DEFAULT 'Confirmed', refunded_by uuid REFERENCES barber.users(id), refunded_at timestamptz NOT NULL DEFAULT now(),
+ correlation_id varchar(100), CONSTRAINT ck_payment_refund_amount CHECK (amount > 0)
+);
+CREATE INDEX IF NOT EXISTS ix_payment_refunds_payment ON barber.payment_refunds(tenant_id,payment_id,refunded_at);
+
+-- Backfill não destrutivo: valores relacionais existentes sempre prevalecem sobre payload legado.
+UPDATE barber.appointments SET
+ client_id = CASE WHEN client_id IS NULL AND payload->>'clientId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (payload->>'clientId')::uuid ELSE client_id END,
+ professional_id = CASE WHEN professional_id IS NULL AND payload->>'professionalId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (payload->>'professionalId')::uuid ELSE professional_id END,
+ service_id = CASE WHEN service_id IS NULL AND payload->>'serviceId' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' THEN (payload->>'serviceId')::uuid ELSE service_id END,
+ scheduled_start = COALESCE(scheduled_start, CASE WHEN payload->>'scheduledAt' ~ '^\d{4}-\d{2}-\d{2}' THEN (payload->>'scheduledAt')::timestamptz END),
+ scheduled_end = COALESCE(scheduled_end, CASE WHEN payload->>'scheduledEnd' ~ '^\d{4}-\d{2}-\d{2}' THEN (payload->>'scheduledEnd')::timestamptz END);
+UPDATE barber.products SET current_stock=CASE WHEN payload->>'currentStock' ~ '^-?[0-9]+(\.[0-9]+)?$' THEN (payload->>'currentStock')::numeric ELSE current_stock END, minimum_stock=CASE WHEN payload->>'minimumStock' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'minimumStock')::numeric ELSE minimum_stock END WHERE payload ? 'currentStock' OR payload ? 'minimumStock';
+UPDATE barber.services SET price=CASE WHEN payload->>'price' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'price')::numeric ELSE price END, duration_minutes=CASE WHEN payload->>'durationMinutes' ~ '^[0-9]+$' THEN (payload->>'durationMinutes')::integer ELSE duration_minutes END WHERE payload ? 'price' OR payload ? 'durationMinutes';
+UPDATE barber.payments SET amount=CASE WHEN payload->>'amount' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'amount')::numeric ELSE amount END WHERE amount=0 AND payload ? 'amount';
+UPDATE barber.service_orders SET subtotal=CASE WHEN payload->>'subtotal' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'subtotal')::numeric ELSE subtotal END, discount=CASE WHEN payload->>'discount' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'discount')::numeric ELSE discount END, total=CASE WHEN payload->>'total' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'total')::numeric ELSE total END WHERE payload ? 'total';
+UPDATE barber.professionals SET default_commission=CASE WHEN payload->>'defaultCommission' ~ '^[0-9]+(\.[0-9]+)?$' THEN (payload->>'defaultCommission')::numeric ELSE default_commission END WHERE default_commission=0 AND payload ? 'defaultCommission';
+
+INSERT INTO barber.permissions(id,code,description) VALUES
+('10000000-0000-4000-8000-000000000001','Appointment.View','Visualizar agenda'),('10000000-0000-4000-8000-000000000002','Appointment.Create','Criar agendamento'),
+('10000000-0000-4000-8000-000000000003','Appointment.Reschedule','Reagendar'),('10000000-0000-4000-8000-000000000004','Appointment.Cancel','Cancelar agendamento'),
+('10000000-0000-4000-8000-000000000005','Appointment.OverrideConflict','Sobrescrever conflito'),('10000000-0000-4000-8000-000000000006','Attendance.Start','Iniciar atendimento'),
+('10000000-0000-4000-8000-000000000007','Attendance.Finish','Finalizar atendimento'),('10000000-0000-4000-8000-000000000008','ServiceOrder.View','Visualizar comandas'),
+('10000000-0000-4000-8000-000000000009','ServiceOrder.Create','Criar comanda'),('10000000-0000-4000-8000-000000000010','ServiceOrder.Discount','Aplicar desconto'),
+('10000000-0000-4000-8000-000000000011','ServiceOrder.HighDiscount','Autorizar desconto elevado'),('10000000-0000-4000-8000-000000000012','Payment.Create','Registrar pagamento'),
+('10000000-0000-4000-8000-000000000013','Payment.Refund','Estornar pagamento'),('10000000-0000-4000-8000-000000000014','Cash.View','Visualizar caixa'),
+('10000000-0000-4000-8000-000000000015','Cash.Open','Abrir caixa'),('10000000-0000-4000-8000-000000000016','Cash.Supply','Registrar suprimento'),
+('10000000-0000-4000-8000-000000000017','Cash.Withdraw','Registrar sangria'),('10000000-0000-4000-8000-000000000018','Cash.Close','Fechar caixa'),
+('10000000-0000-4000-8000-000000000019','Stock.View','Visualizar estoque'),('10000000-0000-4000-8000-000000000020','Stock.Entry','Registrar entrada'),
+('10000000-0000-4000-8000-000000000021','Stock.Adjust','Ajustar estoque'),('10000000-0000-4000-8000-000000000022','Commission.ViewOwn','Visualizar comissão própria'),
+('10000000-0000-4000-8000-000000000023','Commission.ViewAll','Visualizar todas as comissões'),('10000000-0000-4000-8000-000000000024','User.Manage','Gerenciar usuários'),
+('10000000-0000-4000-8000-000000000025','Branch.Manage','Gerenciar unidades') ON CONFLICT(id) DO UPDATE SET code=excluded.code,description=excluded.description;
+INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
+('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
+('20000000-0000-4000-8000-000000000003',NULL,'Reception','Reception',true),('20000000-0000-4000-8000-000000000004',NULL,'Professional','Professional',true),
+('20000000-0000-4000-8000-000000000005',NULL,'Cashier','Cashier',true),('20000000-0000-4000-8000-000000000006',NULL,'Stock','Stock',true)
+ON CONFLICT(id) DO UPDATE SET name=excluded.name,code=excluded.code,is_system=true;
+
 CREATE OR REPLACE FUNCTION barber.set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
 DO $$ DECLARE t text; BEGIN FOREACH t IN ARRAY ARRAY['tenants','branches','users','clients','professionals','services','appointments','service_orders','products','payments'] LOOP
  IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='trg_'||t||'_updated_at' AND tgrelid=('barber.'||t)::regclass) THEN EXECUTE format('CREATE TRIGGER %I BEFORE UPDATE ON barber.%I FOR EACH ROW EXECUTE FUNCTION barber.set_updated_at()','trg_'||t||'_updated_at',t); END IF;

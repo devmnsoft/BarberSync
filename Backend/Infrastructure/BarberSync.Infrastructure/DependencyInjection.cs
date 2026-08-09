@@ -3,6 +3,7 @@ using BarberSync.Application.Abstractions.Innovation;
 using BarberSync.Infrastructure.Cache;
 using BarberSync.Infrastructure.Innovation;
 using BarberSync.Infrastructure.Messaging;
+using BarberSync.Infrastructure.Persistence;
 using BarberSync.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.Configure<MessagingOptions>(configuration.GetSection("Messaging"));
 
         services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IDbConnectionFactory, PostgresConnectionFactory>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
         return services;

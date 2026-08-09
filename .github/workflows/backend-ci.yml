@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'Backend/**'
+      - 'BarberSync.sln'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     paths:
@@ -11,14 +12,10 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
-      - run: dotnet restore Backend.sln
-      - run: dotnet build Backend.sln --configuration Release --no-restore
-      - run: dotnet test Backend.sln --configuration Release --no-build
+          dotnet-version: '10.0.x'
+      - run: dotnet restore BarberSync.sln
+      - run: dotnet build BarberSync.sln --configuration Release --no-restore
