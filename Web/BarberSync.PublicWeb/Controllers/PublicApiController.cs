@@ -68,7 +68,7 @@ public class PublicApiController(IHttpClientFactory httpClientFactory, IConfigur
         return new ContentResult { Content = content, ContentType = contentType, StatusCode = (int)response.StatusCode };
     }
 
-    private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:8080").TrimEnd('/')}/{path.TrimStart('/')}";
+    private string BuildUrl(string path) => $"{(configuration["ApiSettings:BaseUrl"] ?? configuration["ApiBaseUrl"] ?? "http://localhost:5080").TrimEnd('/')}/{path.TrimStart('/')}";
     private static object DemoEnvelope(object data, string message) => new { success = true, message = $"API indisponível. {message}", data, isDemo = true };
 
     private static bool ResponseLooksEmpty(string json)

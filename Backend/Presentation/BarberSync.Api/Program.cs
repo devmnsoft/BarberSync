@@ -30,16 +30,14 @@ builder.Services.AddSwaggerGen(options =>
     options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 });
 
-builder.Services.AddCors(options =>
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddPolicy("DefaultCors", policy =>
 {
-    options.AddPolicy("DefaultCors", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+    if (allowedOrigins.Length == 0 && !builder.Environment.IsDevelopment())
+        throw new InvalidOperationException("Cors:AllowedOrigins deve ser configurado em produção.");
+    policy.WithOrigins(allowedOrigins.Length == 0 ? ["http://localhost:5081", "http://localhost:5082", "http://localhost:5083"] : allowedOrigins)
+        .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+}));
 
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
