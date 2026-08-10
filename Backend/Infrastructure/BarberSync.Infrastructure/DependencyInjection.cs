@@ -8,6 +8,8 @@ using BarberSync.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
+using BarberSync.Application.Operations;
+using BarberSync.Infrastructure.Repositories;
 
 namespace BarberSync.Infrastructure;
 
@@ -28,6 +30,7 @@ public static class DependencyInjection
             .Validate(o => o.AccessTokenMinutes > 0 && o.RefreshTokenDays > 0, "Expiração JWT inválida.")
             .ValidateOnStart();
         services.AddScoped<IDbConnectionFactory, PostgresConnectionFactory>();
+        services.AddScoped<IAppointmentRepository, PostgresAppointmentRepository>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
         return services;

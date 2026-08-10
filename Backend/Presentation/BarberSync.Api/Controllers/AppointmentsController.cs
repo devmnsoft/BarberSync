@@ -1,23 +1,34 @@
-using System.Text.Json;
-using BarberSync.Api.Services.Enterprise;
+using BarberSync.Api.Security;
+using BarberSync.Application.Operations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
-[Route("api/appointments")]
-public sealed class AppointmentsController(EnterpriseDataService data, ILogger<AppointmentsController> logger) : EnterpriseCrudController(data, logger, "appointments")
+[ApiController, Authorize, Route("api/appointments")]
+public sealed class AppointmentsController(IAppointmentService appointments) : ControllerBase
 {
-    [HttpGet] public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
-    [HttpGet("{id:guid}")] public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
-    [HttpPost] public Task<IActionResult> CreateAppointment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
-    [HttpPut("{id:guid}")] public Task<IActionResult> UpdateAppointment(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
-    [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteAppointment(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
-    [HttpPost("{id:guid}/confirm")] public Task<IActionResult> Confirm(Guid id, CancellationToken cancellationToken) => Change(id, "Confirmed", cancellationToken);
-    [HttpPost("{id:guid}/check-in")] public Task<IActionResult> CheckIn(Guid id, CancellationToken cancellationToken) => Change(id, "CheckedIn", cancellationToken);
-    [HttpPost("{id:guid}/start")] public Task<IActionResult> Start(Guid id, CancellationToken cancellationToken) => Change(id, "InService", cancellationToken);
-    [HttpPost("{id:guid}/finish")] public Task<IActionResult> Finish(Guid id, CancellationToken cancellationToken) => Change(id, "Finished", cancellationToken);
-    [HttpPost("{id:guid}/cancel")] public Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken) => Change(id, "Cancelled", cancellationToken);
-    [HttpPost("{id:guid}/no-show")] public Task<IActionResult> NoShow(Guid id, CancellationToken cancellationToken) => Change(id, "NoShow", cancellationToken);
-    private Task<IActionResult> Change(Guid id, string status, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.ChangeAppointmentStatusAsync(id, status, cancellationToken), "Status alterado com sucesso.")));
+    [HttpGet, RequirePermission("Appointment.Read")]
+    public async Task<IActionResult> List([FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to, [FromQuery] Guid? professionalId, [FromQuery] Guid? serviceId, [FromQuery] string? status, [FromQuery] string? origin, CancellationToken ct)
+        => Ok(await appointments.ListAsync(new(from,to,professionalId,serviceId,status,origin),ct));
+
+    [HttpGet("{id:guid}"), RequirePermission("Appointment.Read")]
+    public async Task<IActionResult> Get(Guid id,CancellationToken ct) => await appointments.GetAsync(id,ct) is { } item ? Ok(item) : NotFound();
+
+    [HttpPost, RequirePermission("Appointment.Create")]
+    public async Task<IActionResult> Create(CreateAppointmentRequest request,CancellationToken ct)
+    { var result=await appointments.CreateAsync(request,ct); return CreatedAtAction(nameof(Get),new{id=result.Id},result); }
+
+    [HttpPut("{id:guid}"), RequirePermission("Appointment.Update")]
+    public Task<AppointmentResponse> Update(Guid id,UpdateAppointmentRequest request,CancellationToken ct) => appointments.UpdateAsync(id,request,ct);
+
+    [HttpPost("{id:guid}/confirm"), RequirePermission("Appointment.Update")] public Task<AppointmentResponse> Confirm(Guid id,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"Confirmed",null,ct);
+    [HttpPost("{id:guid}/check-in"), RequirePermission("Attendance.CheckIn")] public Task<AppointmentResponse> CheckIn(Guid id,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"CheckedIn",null,ct);
+    [HttpPost("{id:guid}/start"), RequirePermission("Attendance.Start")] public Task<AppointmentResponse> Start(Guid id,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"InService",null,ct);
+    [HttpPost("{id:guid}/finish"), RequirePermission("Attendance.Finish")] public Task<AppointmentResponse> Finish(Guid id,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"Finished",null,ct);
+    [HttpPost("{id:guid}/cancel"), RequirePermission("Appointment.Cancel")] public Task<AppointmentResponse> Cancel(Guid id,CancelAppointmentRequest request,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"Cancelled",request,ct);
+    [HttpPost("{id:guid}/no-show"), RequirePermission("Appointment.Update")] public Task<AppointmentResponse> NoShow(Guid id,CancellationToken ct)=>appointments.ChangeStatusAsync(id,"NoShow",null,ct);
+    [HttpPost("{id:guid}/reschedule"), RequirePermission("Appointment.Update")] public Task<AppointmentResponse> Reschedule(Guid id,RescheduleAppointmentRequest request,CancellationToken ct)=>appointments.RescheduleAsync(id,request,ct);
+    [HttpGet("availability"), RequirePermission("Appointment.Read")] public Task<bool> Availability([FromQuery] Guid professionalId,[FromQuery] Guid serviceId,[FromQuery] DateTimeOffset start,CancellationToken ct)=>appointments.IsAvailableAsync(new(professionalId,serviceId,start),ct);
+    [HttpGet("smart-slots"), RequirePermission("Appointment.Read")] public Task<IReadOnlyList<DateTimeOffset>> SmartSlots([FromQuery] Guid professionalId,[FromQuery] Guid serviceId,[FromQuery] DateOnly date,CancellationToken ct)=>appointments.SmartSlotsAsync(professionalId,serviceId,date,ct);
 }
