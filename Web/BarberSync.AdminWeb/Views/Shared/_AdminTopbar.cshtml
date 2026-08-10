@@ -1,14 +1,18 @@
 @{ var pageTitle = ViewData["Title"]?.ToString() ?? "Visão Geral"; }
 <header class="admin-topbar">
-    <button class="icon-button" type="button" data-sidebar-toggle aria-label="Alternar menu"><span aria-hidden="true">Menu</span></button>
+    <button class="icon-button" type="button" data-sidebar-toggle aria-label="Alternar menu"><svg><use href="#i-menu" /></svg></button>
     <div class="topbar-context">
         <nav class="breadcrumb" aria-label="Navegação estrutural"><a href="/Admin/Dashboard">BarberSync</a><span>/</span><strong>@pageTitle</strong></nav>
         <span class="active-unit">Unidade <strong data-active-unit>Principal</strong></span>
     </div>
-    <button class="global-search-trigger" type="button" data-command-open>
-        <span>Buscar clientes, agenda, comandas...</span><kbd>Ctrl K</kbd>
+    <button class="global-search-trigger" type="button" data-command-open aria-label="Abrir busca global">
+        <svg><use href="#i-search" /></svg><span>Buscar clientes, agenda, comandas...</span><kbd>Ctrl K</kbd>
     </button>
-    <a class="icon-button notification-button" href="/Admin/Notifications" aria-label="Notificações">Notificações<span class="notification-dot" data-topbar-notification-count>0</span></a>
-    <a class="icon-button" href="/Admin/Help">Ajuda</a>
-    <button class="user-menu" type="button" aria-label="Abrir menu do usuário"><span class="avatar">BS</span><span><strong>Minha conta</strong><small>Administrador</small></span></button>
+    <span class="cash-indicator" data-cash-status><i></i> Caixa <strong>consultando</strong></span>
+    <a class="icon-button notification-button" href="/Admin/Notifications" aria-label="Notificações"><svg><use href="#i-bell" /></svg><span class="notification-dot" data-topbar-notification-count>0</span></a>
+    <a class="icon-button" href="/Admin/Help" aria-label="Central de ajuda"><svg><use href="#i-help" /></svg></a>
+    <div class="user-menu-wrap">
+        <button class="user-menu" type="button" data-user-menu aria-haspopup="menu" aria-expanded="false"><span class="avatar">BS</span><span><strong>Minha conta</strong><small>Administrador</small></span><svg><use href="#i-chevron" /></svg></button>
+        <div class="user-dropdown" role="menu" hidden><a href="/Admin/Settings" role="menuitem"><svg><use href="#i-settings" /></svg>Preferências</a><form method="post" action="/Account/Logout"><button type="submit" role="menuitem"><svg><use href="#i-log-out" /></svg>Sair com segurança</button></form></div>
+    </div>
 </header>

@@ -39,5 +39,13 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
     [HttpGet]
     public IActionResult ForgotPassword() => Content("Solicite ao administrador da sua unidade a redefinição segura da senha.", "text/plain", Encoding.UTF8);
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("BarberSync.AccessToken");
+        return RedirectToAction(nameof(Login));
+    }
+
     public sealed record LoginRequest(string Email, string Password);
 }
