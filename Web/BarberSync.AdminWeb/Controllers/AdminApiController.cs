@@ -110,11 +110,11 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
                 return await ReadJsonOrTextAsync(response);
             }
 
-            logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+            logger.LogWarning("AdminApi GET {Path} retornou {StatusCode}.", path, response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "AdminApi GET {Path} lançou exceção. Usando fallback demo.", path);
+            logger.LogWarning(ex, "AdminApi GET {Path} lançou exceção.", path);
         }
 
         return Problem(
@@ -130,14 +130,17 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").GetAsync(BuildUrl("/swagger/v1/swagger.json"));
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
-            logger.LogWarning("AdminApi Swagger proxy retornou {StatusCode}. Usando contrato OpenAPI demo.", response.StatusCode);
+            logger.LogWarning("AdminApi Swagger proxy retornou {StatusCode}.", response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "AdminApi Swagger proxy lançou exceção. Usando contrato OpenAPI demo.");
+            logger.LogWarning(ex, "AdminApi Swagger proxy lançou exceção.");
         }
 
-        return Ok(DemoOpenApi());
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Documentação indisponível",
+            detail: "Não foi possível consultar o contrato OpenAPI da API.");
     }
 
     private async Task<IActionResult> ProxySend(HttpMethod method, string path, JsonElement? payload, object fallback)
@@ -149,11 +152,11 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             var response = await httpClientFactory.CreateClient("BarberSyncApi").SendAsync(request);
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-            logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}. Usando fallback demo.", method, path, response.StatusCode);
+            logger.LogWarning("AdminApi {Method} {Path} retornou {StatusCode}.", method, path, response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "AdminApi {Method} {Path} lançou exceção. Usando fallback demo.", method, path);
+            logger.LogWarning(ex, "AdminApi {Method} {Path} lançou exceção.", method, path);
         }
 
         return Problem(
@@ -169,11 +172,11 @@ public class AdminApiController(IHttpClientFactory httpClientFactory, IConfigura
             var response = await httpClientFactory.CreateClient("BarberSyncApi").DeleteAsync(BuildUrl(path));
             if (response.IsSuccessStatusCode) return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             if ((int)response.StatusCode < 500) return await ReadJsonOrTextAsync(response);
-            logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}. Usando fallback demo.", path, response.StatusCode);
+            logger.LogWarning("AdminApi DELETE {Path} retornou {StatusCode}.", path, response.StatusCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "AdminApi DELETE {Path} lançou exceção. Usando fallback demo.", path);
+            logger.LogWarning(ex, "AdminApi DELETE {Path} lançou exceção.", path);
         }
 
         return Problem(

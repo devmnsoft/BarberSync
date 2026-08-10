@@ -32,10 +32,10 @@
     return Boolean(normalized?.isDemo || normalized?.demo || normalized?.source === 'demo' || /demonstração|demo/i.test(normalized?.message || ''));
   }
 
-  function handleApiError(error, fallbackMessage = 'Modo demonstração ativo.') {
-    console.warn('[BarberSync AdminApiClient] fallback ativado', error?.message || error);
-    window.AdminToast?.showWarning?.(fallbackMessage);
-    return { success: true, message: fallbackMessage, data: null, isDemo: true };
+  function handleApiError(error, message = 'Não foi possível conectar à API.') {
+    console.error('[BarberSync AdminApiClient] API indisponível', error?.message || error);
+    window.AdminToast?.showError?.(message);
+    return { success: false, message, data: null, errors: [], connectionError: true };
   }
 
   async function request(method, url, body, fallback, timeoutMs = DEFAULT_TIMEOUT_MS) {
@@ -52,13 +52,24 @@
       const payload = text ? JSON.parse(text) : { success: response.ok, data: null };
       const normalized = normalizeResponse(payload);
       if (!response.ok) {
-        window.AdminToast?.showError?.(normalized.message || `Erro HTTP ${response.status}`);
+        const statusMessages = {
+          401: 'A sessão expirou. Faça login novamente.',
+          403: 'Você não tem permissão para executar esta ação.',
+          422: 'Não foi possível salvar. Revise os campos destacados.'
+        };
+        const traceSuffix = normalized.traceId ? ` Código: ${normalized.traceId}.` : '';
+        window.AdminToast?.showError?.(`${statusMessages[response.status] || normalized.message || `Erro HTTP ${response.status}`}${traceSuffix}`);
         return { data: { ...normalized, success: false, httpStatus: response.status }, fallback: false, ok: false };
       }
       return { data: normalized, fallback: false, ok: true };
     } catch (error) {
-      const safe = fallback ?? handleApiError(error, 'Modo demonstração ativo.');
-      return { data: normalizeResponse(safe), fallback: true, ok: true };
+      const failure = handleApiError(
+        error,
+        error?.name === 'AbortError'
+          ? 'A API demorou para responder. Tente novamente.'
+          : 'Não foi possível conectar à API.'
+      );
+      return { data: failure, fallback: false, ok: false };
     } finally {
       clearTimeout(timeout);
     }
