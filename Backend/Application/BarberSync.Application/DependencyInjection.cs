@@ -10,6 +10,7 @@ using BarberSync.Application.Services.Hr;
 using BarberSync.Application.Services.Saas;
 using BarberSync.Application.Services.Strategy;
 using Microsoft.Extensions.DependencyInjection;
+using BarberSync.Application.Operations;
 
 namespace BarberSync.Application;
 
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IHrProfessionalService, HrProfessionalService>();
         services.AddScoped<IAutonomousGrowthService, AutonomousGrowthService>();
         services.AddScoped<IStrategicGrowthService, StrategicGrowthService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
 
         return services;
     }
