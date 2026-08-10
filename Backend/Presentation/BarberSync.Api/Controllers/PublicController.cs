@@ -1,4 +1,5 @@
 using System.Text.Json;
+using BarberSync.Api.Models.Public;
 using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +12,21 @@ public sealed class PublicController(EnterpriseDataService data, ILogger<PublicC
     [HttpGet("services")] public Task<IActionResult> Services(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("services", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Serviços públicos carregados.")));
     [HttpGet("professionals")] public Task<IActionResult> Professionals(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("professionals", cancellationToken)).Where(x => IsActive(x) && Flag(x, "visibleOnPublicWeb", true)), "Profissionais públicos carregados.")));
     [HttpGet("appointments")] public Task<IActionResult> Appointments(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope((await data.ListAsync("appointments", cancellationToken)).Where(x => Text(x, "origin").Equals("PublicWeb", StringComparison.OrdinalIgnoreCase) || Text(x, "channel").Equals("PublicWeb", StringComparison.OrdinalIgnoreCase)), "Agendamentos públicos carregados.")));
-    [HttpPost("appointments")] public Task<IActionResult> Appointment([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.PublicAppointmentAsync(payload, cancellationToken), "Agendamento público criado com sucesso.")));
+    [HttpPost("appointments")] public Task<IActionResult> Appointment([FromBody] PublicAppointmentRequest request, CancellationToken cancellationToken) => Safe(async () =>
+    {
+        var payload = JsonSerializer.SerializeToElement(new
+        {
+            request.ClientName,
+            request.Phone,
+            request.Email,
+            request.ServiceId,
+            request.ProfessionalId,
+            request.ScheduledAt,
+            request.Notes,
+            professionalName = request.ProfessionalId.HasValue ? null : "Primeiro disponível"
+        });
+        return Ok(Envelope(await data.PublicAppointmentAsync(payload, cancellationToken), "Agendamento criado com sucesso."));
+    });
     [HttpGet("leads")] public Task<IActionResult> Leads(CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.ListAsync("public_leads", cancellationToken), "Leads públicos carregados.")));
     [HttpPost("leads")] public Task<IActionResult> Lead([FromBody] JsonElement payload, CancellationToken cancellationToken) => Safe(async () => Ok(Envelope(await data.CreateAsync("public_leads", payload, cancellationToken), "Lead público registrado com sucesso.")));
 

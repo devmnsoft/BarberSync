@@ -1,5 +1,5 @@
 param(
-    [string]$DotNetVersion = "8.0",
+    [string]$DotNetVersion = "10.0",
     [string]$RegistryHost = "mcr.microsoft.com"
 )
 
