@@ -6,6 +6,8 @@ DO $$ BEGIN
   END IF;
 END $$;
 CREATE SCHEMA IF NOT EXISTS barber;
+-- Required by set-based runtime inserts; idempotent across database replays.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS barber.schema_versions (
  version varchar(10) PRIMARY KEY, description varchar(200) NOT NULL,
  applied_at timestamptz NOT NULL DEFAULT now(), checksum varchar(64) NOT NULL
