@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<IAutonomousGrowthService, AutonomousGrowthService>();
         services.AddScoped<IStrategicGrowthService, StrategicGrowthService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IServiceOrderService, ServiceOrderService>();
+        services.AddScoped<IPaymentService, PaymentService>();
 
         return services;
     }

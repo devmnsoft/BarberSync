@@ -54,7 +54,8 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
     [HttpGet("Diagnostics")] public IActionResult Diagnostics() => DevelopmentOnly("Diagnostics");
 
-    private IActionResult DevelopmentOnly(string module) => environment.IsDevelopment() ? Render(module) : NotFound();
+    private IActionResult DevelopmentOnly(string module)
+        => environment.IsDevelopment() && User.IsInRole("SuperAdmin") ? Render(module) : NotFound();
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
