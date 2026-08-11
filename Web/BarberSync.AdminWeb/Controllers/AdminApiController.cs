@@ -2,12 +2,14 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberSync.AdminWeb.Controllers;
 
 /// <summary>Same-origin gateway for the Admin. It never manufactures business data or success responses.</summary>
 [ApiController]
 [Route("AdminApi")]
+[Authorize]
 public sealed class AdminApiController(IHttpClientFactory clients, IConfiguration configuration, ILogger<AdminApiController> logger) : ControllerBase
 {
     [HttpGet("{**path}")]

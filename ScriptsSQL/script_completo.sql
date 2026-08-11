@@ -199,7 +199,13 @@ INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
 ('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
 ('20000000-0000-4000-8000-000000000003',NULL,'Reception','Reception',true),('20000000-0000-4000-8000-000000000004',NULL,'Professional','Professional',true),
 ('20000000-0000-4000-8000-000000000005',NULL,'Cashier','Cashier',true),('20000000-0000-4000-8000-000000000006',NULL,'Stock','Stock',true)
+ ,('20000000-0000-4000-8000-000000000007',NULL,'SuperAdmin','SuperAdmin',true)
 ON CONFLICT(id) DO UPDATE SET name=excluded.name,code=excluded.code,is_system=true;
+
+-- SuperAdmin é uma role global e recebe automaticamente o catálogo completo, inclusive permissões adicionadas em replays futuros.
+INSERT INTO barber.role_permissions(role_id,permission_id)
+SELECT '20000000-0000-4000-8000-000000000007'::uuid,id FROM barber.permissions
+ON CONFLICT(role_id,permission_id) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION barber.set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
 DO $$ DECLARE t text; BEGIN FOREACH t IN ARRAY ARRAY['tenants','branches','users','clients','professionals','services','appointments','service_orders','products','payments'] LOOP
@@ -285,6 +291,6 @@ CREATE INDEX IF NOT EXISTS ix_clients_server_search ON barber.clients(tenant_id,
 CREATE INDEX IF NOT EXISTS ix_reviews_reputation ON barber.reviews(tenant_id,branch_id,created_at DESC) WHERE deleted_at IS NULL;
 
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES
-('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811')
+('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811')
 ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;

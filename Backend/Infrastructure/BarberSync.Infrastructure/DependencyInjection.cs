@@ -22,6 +22,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, PostgresAuthService>();
+        services.AddScoped<IFirstAdminSetupService, PostgresFirstAdminSetupService>();
         services.AddScoped<IPasswordHasher<AuthUser>, PasswordHasher<AuthUser>>();
         services.AddOptions<JwtOptions>().Bind(configuration.GetSection(JwtOptions.SectionName))
             .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer), "Jwt:Issuer é obrigatório.")

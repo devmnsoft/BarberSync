@@ -17,6 +17,39 @@ jobs:
         run: dotnet restore BarberSync.sln
       - name: Build
         run: dotnet build BarberSync.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test BarberSync.sln --configuration Release --no-build
+      - name: Check JavaScript syntax
+        run: find Web -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+  database-replay:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: barber
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d barber"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replay canonical database script three times
+        run: |
+          for replay in 1 2 3; do
+            echo "SQL replay ${replay}/3"
+            psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d barber -f ScriptsSQL/script_completo.sql
+          done
+      - name: Verify schema version ledger
+        run: psql -h localhost -U postgres -d barber -Atc "SELECT count(*) FROM barber.schema_versions" | grep -qx '10'
 
   mobile-totem:
     runs-on: ubuntu-latest
