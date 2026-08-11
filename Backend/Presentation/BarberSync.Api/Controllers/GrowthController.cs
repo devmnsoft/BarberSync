@@ -21,6 +21,9 @@ public sealed class GrowthController(GrowthService growth, ICurrentUserContext c
     [HttpGet("assistant/dashboard")]
     public async Task<IActionResult> DashboardInsights(CancellationToken ct) => Ok(await growth.GetDashboardAsync(currentUser.TenantId, currentUser.BranchId, ct));
 
+    [HttpGet("assistant/operational")]
+    public async Task<IActionResult> OperationalInsights(CancellationToken ct) => Ok(await growth.GetOperationalInsightsAsync(currentUser.TenantId, currentUser.BranchId, ct));
+
     [HttpGet("assistant/clients/{clientId:guid}")]
     public async Task<IActionResult> ClientInsights(Guid clientId, CancellationToken ct) => Ok(await growth.GetClientAsync(currentUser.TenantId, clientId, ct));
 }

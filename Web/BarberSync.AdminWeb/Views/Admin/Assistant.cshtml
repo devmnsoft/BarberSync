@@ -1,0 +1,4 @@
+@{ ViewData["Title"]="Assistente operacional"; Layout="~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header"><div><span class="eyebrow">Inteligência determinística</span><h1 class="page-title">Assistente operacional</h1><p class="page-subtitle">Prioridades calculadas a partir dos dados reais desta unidade — sem IA externa e sem conteúdo simulado.</p></div><button id="refreshInsights" class="btn btn-primary">Atualizar insights</button></section>
+<section id="assistantState" class="panel"><p>Carregando dados operacionais…</p></section><section id="assistantInsights" class="card-grid"></section>
+@section Scripts { <script src="~/js/admin-assistant.js" asp-append-version="true"></script> }

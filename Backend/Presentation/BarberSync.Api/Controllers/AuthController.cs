@@ -4,6 +4,7 @@ using BarberSync.Application.DTOs;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BarberSync.Api.Controllers;
 
@@ -13,6 +14,7 @@ public sealed class AuthController(IAuthService authService, IValidator<LoginReq
 {
     [AllowAnonymous]
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginRequestDto request, CancellationToken cancellationToken)
     {
         var validation = await validator.ValidateAsync(request, cancellationToken);

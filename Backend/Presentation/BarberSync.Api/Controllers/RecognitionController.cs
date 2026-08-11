@@ -1,42 +1,26 @@
-using BarberSync.Api.Models;
-using BarberSync.Api.Models.Recognition;
+using BarberSync.Api.Security;
+using BarberSync.Api.Services.Recognition;
+using BarberSync.Application.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
-[Route("api/recognition")]
-public class RecognitionController : ControllerBase
+[ApiController, Authorize(Roles="Owner,Manager,Reception"), Route("api/service-recognition")]
+public sealed class RecognitionController(IServiceRecognitionService service, ICurrentUserContext user) : ControllerBase
 {
-    private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
+    public sealed record SuggestRequest(Guid? CameraDeviceId, Guid? AppointmentId, string[] Signals, bool HasCameraConsent);
 
-    [HttpPost("detect")]
-    [Consumes("multipart/form-data")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Detect([FromForm] ServiceRecognitionUploadRequest request, CancellationToken cancellationToken)
+    [HttpPost("suggestions")]
+    public async Task<IActionResult> Suggest([FromBody] SuggestRequest request, CancellationToken ct)
     {
-        if (request.Image is null || request.Image.Length == 0)
-            return BadRequest(ApiResponse<object>.Fail("Envie uma imagem válida.", ["A imagem é obrigatória."], HttpContext.TraceIdentifier));
-
-        if (!AllowedContentTypes.Contains(request.Image.ContentType, StringComparer.OrdinalIgnoreCase))
-            return BadRequest(ApiResponse<object>.Fail("Formato de imagem inválido.", ["Use JPG, PNG ou WEBP."], HttpContext.TraceIdentifier));
-
-        var result = new
-        {
-            serviceDetected = "Corte Masculino",
-            confidence = 0.87,
-            imageFileName = request.Image.FileName,
-            imageSize = request.Image.Length,
-            appointmentId = request.AppointmentId,
-            clientId = request.ClientId,
-            professionalId = request.ProfessionalId,
-            tenantId = request.TenantId,
-            branchId = request.BranchId,
-        };
-
-        await Task.CompletedTask;
-
-        return Ok(ApiResponse<object>.Ok(result, "Serviço reconhecido com sucesso.", HttpContext.TraceIdentifier));
+        if (!request.HasCameraConsent) return Problem("Consentimento/configuração de câmera é obrigatório.",statusCode:422);
+        if (request.Signals.Length is 0) return BadRequest(new { message="Ao menos um sinal operacional é obrigatório." });
+        var evt = new ServiceRecognitionEvent(Guid.NewGuid(),user.TenantId,user.BranchId,request.CameraDeviceId,request.AppointmentId,DateTimeOffset.UtcNow,request.Signals.ToHashSet(StringComparer.OrdinalIgnoreCase));
+        var suggestion = await service.SuggestAsync(evt,ct);
+        return suggestion is null ? Ok(new { eventId=evt.Id, suggestion=(object?)null, requiresHumanConfirmation=true }) : Ok(new { eventId=evt.Id, suggestion, requiresHumanConfirmation=true, automaticCharge=false });
     }
+
+    [HttpPost("detect"), Consumes("multipart/form-data")]
+    public IActionResult DetectImage() => StatusCode(StatusCodes.Status501NotImplemented,new { message="Provider de reconhecimento de imagem não configurado. Nenhuma imagem foi armazenada." });
 }

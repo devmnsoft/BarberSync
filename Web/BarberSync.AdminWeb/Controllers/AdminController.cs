@@ -50,6 +50,8 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("ClientOnboarding")] public IActionResult ClientOnboarding() => Render("ClientOnboarding");
     [HttpGet("AddOns")] public IActionResult AddOns() => Render("AddOns");
     [HttpGet("Automations")] public IActionResult Automations() => Render("Automations");
+    [HttpGet("Assistant")] public IActionResult Assistant() => Render("Assistant");
+    [HttpGet("Reputation")] public IActionResult Reputation() => RedirectToAction(nameof(Reviews));
     [HttpGet("Integrations")] public IActionResult Integrations() => Render("Integrations");
     [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
     [HttpGet("Diagnostics")] public IActionResult Diagnostics() => DevelopmentOnly("Diagnostics");
