@@ -62,3 +62,30 @@ body { font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; }
 .bs-kanban { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .bs-chart-bar { background: var(--bs-blue-soft); border-radius: 999px; height: .75rem; overflow: hidden; }
 .bs-chart-bar::before { background: var(--bs-blue); content: ''; display: block; height: 100%; width: var(--value, 65%); }
+
+/* Daily operation surfaces */
+.bs-filter-bar { align-items: end; display: grid; gap: 1rem; grid-template-columns: repeat(5, minmax(140px, 1fr)); margin-bottom: 1rem; padding: 1rem; }
+.bs-filter-bar label, .bs-form-field { display: grid; font-size: .82rem; font-weight: 700; gap: .4rem; }
+.bs-filter-bar input, .bs-filter-bar select, .bs-drawer input, .bs-drawer select, .bs-drawer textarea { background: var(--bs-white); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-sm); min-height: 42px; padding: .65rem .75rem; width: 100%; }
+.agenda-modes { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.agenda-grid { display: grid; gap: .75rem; }
+.bs-calendar-card { align-items: center; display: grid; gap: 1rem; grid-template-columns: 80px 1fr auto; padding: 1rem 1.25rem; }
+.calendar-time { border-right: 1px solid var(--bs-border); display: grid; gap: .15rem; }
+.calendar-time strong { color: var(--bs-blue); font-size: 1.3rem; }
+.bs-status-badge { background: var(--bs-blue-soft); border-radius: 999px; color: var(--bs-blue); display: inline-flex; font-size: .72rem; font-weight: 800; padding: .25rem .55rem; }
+.bs-drawer-backdrop { background: rgb(15 23 42 / 45%); inset: 0; position: fixed; z-index: 1000; }
+.bs-drawer { background: var(--bs-white); box-shadow: -20px 0 50px rgb(15 23 42 / 18%); height: 100%; margin-left: auto; max-width: 520px; overflow: auto; padding: 1.5rem; width: min(100%, 520px); }
+.bs-drawer header { align-items: center; display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+.bs-drawer form { display: grid; gap: 1rem; }
+.form-row, .bs-form-actions { display: flex; gap: 1rem; }
+.form-row > * { flex: 1; }
+.bs-form-actions { justify-content: flex-end; }
+.operation-board { align-items: start; display: grid; gap: 1rem; grid-template-columns: repeat(5, minmax(230px, 1fr)); overflow-x: auto; }
+.bs-kanban-column { display: grid; gap: .75rem; min-width: 230px; padding: .75rem; }
+.bs-kanban-column > header { align-items: center; display: flex; justify-content: space-between; }
+.bs-client-card { background: var(--bs-white); border: 1px solid var(--bs-border); border-radius: var(--bs-radius-md); box-shadow: var(--bs-shadow-sm); padding: .9rem; }
+.bs-client-card h3 { margin: .6rem 0 .25rem; }
+.bs-client-card p { margin: .2rem 0; }
+.bs-client-card .page-actions { margin-top: .75rem; }
+.bs-error-state, .bs-empty-state { padding: 2rem; text-align: center; }
+@media (max-width: 900px) { .bs-filter-bar { grid-template-columns: 1fr 1fr; } .bs-calendar-card { grid-template-columns: 65px 1fr; } .bs-calendar-card > .page-actions { grid-column: 1 / -1; } }

@@ -1,48 +1,26 @@
-@{
-    ViewData["Title"] = "Agendamentos";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<section class="page-header">
-    <div>
-        <h1 class="page-title">Agendamentos</h1>
-        <p class="page-subtitle">Timeline operacional do dia. Dados carregados por proxy MVC <strong>/AdminApi/appointments</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="Appointments">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="Appointments">Novo Agendamento</button>
-    </div>
+@{ ViewData["Title"] = "Agenda"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="bs-page-header page-header"><div><h1>Agenda</h1><p>Organize horários, acompanhe chegadas e conduza cada atendimento.</p></div><div class="page-actions"><button class="btn btn-light" data-agenda-refresh>Atualizar</button><button class="btn btn-primary" data-agenda-new>Novo agendamento</button></div></section>
+<section class="bs-filter-bar panel" aria-label="Filtros da agenda">
+  <label>Período<input class="bs-date-input" type="date" data-filter-date></label>
+  <label>Profissional<select class="bs-select" data-filter-professional><option value="">Todos</option></select></label>
+  <label>Serviço<select class="bs-select" data-filter-service><option value="">Todos</option></select></label>
+  <label>Status<select class="bs-select" data-filter-status><option value="">Todos</option><option>Scheduled</option><option>Confirmed</option><option>CheckedIn</option><option>InService</option><option>Finished</option><option>Cancelled</option><option>NoShow</option></select></label>
+  <label>Origem<select class="bs-select" data-filter-origin><option value="">Todas</option><option>Admin</option><option>PublicWeb</option><option>Totem</option><option>Mobile</option></select></label>
 </section>
-<div class="alert alert-warning d-none" id="AppointmentsFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="AppointmentsCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
-</section>
-<section class="enterprise-demo-grid"><article class="enterprise-card wide"><h3>Timeline por horário</h3><div class="kanban-demo"><div class="kanban-col"><strong>Rafael</strong><div class="kanban-card">10:30 Lucas • Confirmado</div><div class="kanban-card">18:30 André • Agendado</div></div><div class="kanban-col"><strong>Camila</strong><div class="kanban-card">14:00 Marina • Check-in</div></div><div class="kanban-col"><strong>Lista de espera</strong><div class="kanban-card">João • Corte rápido</div></div></div><small>Arraste disponível na versão Pro.</small></article><article class="enterprise-card"><h3>Status guiado</h3><div class="tag-list"><span class="tag">Confirmar</span><span class="tag">Check-in</span><span class="tag">Iniciar</span><span class="tag">Finalizar</span><span class="tag">Cancelar</span></div></article></section>
-<!-- Demo Experience 3.0 injected -->
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>Novo agendamento rápido</h3><p>Busca cliente, serviço, profissional e horários sugeridos. O fluxo Confirmar → Check-in → Iniciar → Finalizar → Abrir comanda atualiza Operations e Dashboard.</p><div class="quick-actions-grid"><button class="btn btn-primary" data-flow-quick-appointment>Novo agendamento rápido</button><a class="btn btn-light" href="/Admin/Operations">Ver status na Operação</a></div><div class="tag-list"><span class="tag">10:30</span><span class="tag">14:00</span><span class="tag">15:30</span><span class="tag">18:30</span></div></article>
-</section>
-<section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/appointments</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="AppointmentsRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
-</section>
-<div class="admin-modal-backdrop" id="AppointmentsModal" hidden>
-    <form class="admin-modal" data-admin-form="Appointments">
-        <div class="modal-header"><h3>Novo/editar Agendamento</h3><button type="button" class="modal-close" data-admin-close="Appointments">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Appointments">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
-    </form>
-</div>
-@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-appointments.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('Appointments')</script>}
-
-<section class="panel"><div class="panel-header"><div><h3>Agenda integrada à operação</h3><p>Status Scheduled, Confirmed, CheckedIn, InService, Finished, Cancelled e NoShow refletem em Operação, Dashboard e Cliente 360.</p></div></div><div class="module-feature-grid" data-appointments-demo></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Appointments 2.0 integrado</h3><p>Ações conectadas ao DemoStore, EventBus, Dashboard, Operação e Cliente 360.</p></div></div><div data-appointments-v2></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Agenda — Fluxo Comercial 15.0</h3><p>Status Scheduled, CheckedIn, InService e Finished atualizados pelo fluxo.</p></div></div><div data-commercial-flow-appointment></div></section>
+<nav class="agenda-modes" aria-label="Visualização"><button class="btn btn-primary" data-mode="today">Hoje</button><button class="btn btn-light" data-mode="day">Dia</button><button class="btn btn-light" data-mode="week">Semana</button><button class="btn btn-light" data-mode="list">Lista</button></nav>
+<section class="bs-skeleton panel" data-agenda-loading>Carregando agenda…</section>
+<section class="bs-error-state panel" data-agenda-error hidden><h2>Não foi possível carregar a agenda</h2><p data-error-detail></p><button class="btn btn-primary" data-agenda-refresh>Tentar novamente</button></section>
+<section class="bs-empty-state panel" data-agenda-empty hidden><h2>Nenhum agendamento no período</h2><p>Ajuste os filtros ou crie um novo horário.</p><button class="btn btn-primary" data-agenda-new>Novo agendamento</button></section>
+<section class="agenda-grid" data-agenda-list aria-live="polite"></section>
+<div class="bs-drawer-backdrop" data-agenda-drawer hidden><aside class="bs-drawer" aria-labelledby="agenda-drawer-title">
+ <form data-agenda-form><header><h2 id="agenda-drawer-title">Novo agendamento</h2><button type="button" class="modal-close" data-drawer-close>×</button></header>
+ <div class="bs-form-field"><label>Cliente</label><select name="clientId" required><option value="">Selecione o cliente</option></select><small class="bs-field-error"></small></div>
+ <div class="bs-form-field"><label>Telefone</label><input class="bs-phone-input" name="phone" inputmode="tel" placeholder="(11) 99999-9999"></div>
+ <div class="bs-form-field"><label>Serviço</label><select name="serviceId" required><option value="">Selecione o serviço</option></select></div>
+ <div class="bs-form-field"><label>Profissional</label><select name="professionalId" required><option value="">Selecione o profissional</option></select></div>
+ <div class="form-row"><div class="bs-form-field"><label>Data</label><input type="date" name="date" required></div><div class="bs-form-field"><label>Hora</label><input type="time" name="time" required></div></div>
+ <div class="bs-form-field"><label>Origem</label><select name="origin"><option>Admin</option><option>PublicWeb</option><option>Totem</option><option>Mobile</option></select></div>
+ <div class="bs-form-field"><label>Observação</label><textarea name="notes" placeholder="Preferências e informações relevantes"></textarea></div>
+ <div class="bs-form-actions"><button type="button" class="btn btn-light" data-drawer-close>Cancelar</button><button class="btn btn-primary" type="submit">Criar agendamento</button></div>
+ </form></aside></div>
+@section Scripts { <script src="~/js/admin-appointments.js" asp-append-version="true"></script> }
