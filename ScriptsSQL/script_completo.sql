@@ -61,6 +61,13 @@ CREATE TABLE IF NOT EXISTS barber.kiosk_sessions (id uuid PRIMARY KEY, tenant_id
 CREATE TABLE IF NOT EXISTS barber.service_recognitions (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid REFERENCES barber.professionals(id), appointment_id uuid REFERENCES barber.appointments(id), started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz, predicted_service_id uuid REFERENCES barber.services(id), confidence numeric(5,4), confirmed_service_id uuid REFERENCES barber.services(id), confirmed_by uuid REFERENCES barber.users(id), confirmed_at timestamptz, status varchar(30) NOT NULL DEFAULT 'Pending', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
 CREATE TABLE IF NOT EXISTS barber.recognition_evidences (id uuid PRIMARY KEY, recognition_id uuid NOT NULL REFERENCES barber.service_recognitions(id), storage_uri text NOT NULL, media_type varchar(80), metadata jsonb NOT NULL DEFAULT '{}'::jsonb, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS barber.audit_logs (id uuid PRIMARY KEY, tenant_id uuid REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), user_id uuid REFERENCES barber.users(id), operation varchar(80) NOT NULL DEFAULT 'Unknown', entity_name varchar(120) NOT NULL, entity_id uuid, before_data jsonb, after_data jsonb, correlation_id varchar(100), created_at timestamptz NOT NULL DEFAULT now(), metadata jsonb NOT NULL DEFAULT '{}'::jsonb, module varchar(80), action varchar(80), description text, status varchar(30) NOT NULL DEFAULT 'Active', is_active boolean NOT NULL DEFAULT true, updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
+CREATE TABLE IF NOT EXISTS barber.branch_onboarding (
+ tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ current_step smallint NOT NULL DEFAULT 1 CHECK(current_step BETWEEN 1 AND 10), steps jsonb NOT NULL DEFAULT '{}'::jsonb,
+ is_completed boolean NOT NULL DEFAULT false, completed_at timestamptz, updated_by uuid REFERENCES barber.users(id),
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(tenant_id,branch_id)
+);
+CREATE INDEX IF NOT EXISTS ix_branch_onboarding_pending ON barber.branch_onboarding(tenant_id,is_completed,updated_at) WHERE NOT is_completed;
 
 -- Evolução não destrutiva das tabelas genéricas das versões anteriores.
 ALTER TABLE barber.clients ADD COLUMN IF NOT EXISTS email varchar(254);

@@ -73,6 +73,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 builder.Services.AddSingleton<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
+builder.Services.AddScoped<BarberSync.Api.Services.Onboarding.BranchOnboardingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.GrowthService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.IAssistantInsightService>(sp => sp.GetRequiredService<BarberSync.Api.Services.Growth.GrowthService>());
 builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IWhatsAppChannel, BarberSync.Api.Services.Growth.UnconfiguredWhatsAppChannel>();

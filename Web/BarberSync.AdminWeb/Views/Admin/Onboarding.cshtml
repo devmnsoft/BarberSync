@@ -1,25 +1,22 @@
-@{ ViewData["Title"] = "Primeiros passos"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@{ ViewData["Title"] = "Primeira configuração"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@section Styles { <link rel="stylesheet" href="~/css/admin-onboarding.css" asp-append-version="true" /> }
 <section class="page-header onboarding-hero">
-    <div>
-        <span class="eyebrow">Demonstração comercial guiada</span>
-        <h1 class="page-title">Bem-vindo ao BarberSync</h1>
-        <p class="page-subtitle">Configure uma operação demo completa: empresa, serviços, profissionais, clientes, agenda, comanda, totem, PublicWeb e Copilot.</p>
-    </div>
-    <div class="page-actions"><a class="btn btn-light" href="/Admin/Dashboard">Ir ao dashboard</a><button class="btn btn-primary" data-onboarding-reset>Reiniciar progresso</button></div>
+  <div><span class="eyebrow">Implantação da unidade</span><h1 class="page-title">Prepare sua operação</h1><p class="page-subtitle">Um fluxo seguro para configurar a unidade com dados reais. O progresso fica salvo e pode ser retomado.</p></div>
+  <div class="onboarding-progress-copy"><strong data-progress-label>Etapa 1 de 10</strong><span data-progress-percent>10%</span></div>
 </section>
-<section class="onboarding-summary">
-    <article class="kpi-card"><div class="kpi-icon">🚀</div><div><p class="kpi-label">Progresso</p><strong class="kpi-value" data-onboarding-percent>0%</strong><span class="kpi-variation">localStorage</span></div></article>
-    <article class="kpi-card"><div class="kpi-icon">✅</div><div><p class="kpi-label">Concluídos</p><strong class="kpi-value" data-onboarding-done>0</strong><span class="kpi-variation">passos</span></div></article>
-    <article class="kpi-card"><div class="kpi-icon">🎬</div><div><p class="kpi-label">Modo</p><strong class="kpi-value">Demo</strong><span class="kpi-variation">seguro para venda</span></div></article>
+<div class="onboarding-progress" role="progressbar" aria-label="Progresso da configuração" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><span data-progress-bar></span></div>
+<section class="onboarding-workspace" aria-live="polite">
+  <nav class="onboarding-nav" aria-label="Etapas da primeira configuração" data-step-nav></nav>
+  <div class="panel onboarding-form-panel">
+    <div data-loading class="onboarding-loading"><span class="loading-spinner"></span><p>Carregando sua configuração…</p></div>
+    <div data-error hidden class="empty-state"><h3>Não foi possível carregar</h3><p>Confira sua conexão e tente novamente.</p><button type="button" class="btn btn-primary" data-retry>Tentar novamente</button></div>
+    <form data-onboarding-form novalidate hidden>
+      <header class="onboarding-step-header"><span class="eyebrow" data-step-eyebrow></span><h2 data-step-title></h2><p data-step-description></p></header>
+      <div class="onboarding-fields" data-step-fields></div>
+      <p class="form-error" data-form-error role="alert" hidden></p>
+      <footer class="onboarding-footer"><button class="btn btn-light" type="button" data-back>Voltar</button><button class="btn btn-primary" type="submit" data-next><span data-button-label>Salvar e continuar</span></button></footer>
+    </form>
+    <div data-complete hidden class="onboarding-complete"><span class="complete-mark">✓</span><h2>Unidade pronta para operar</h2><p>As configurações foram persistidas e a conclusão registrada na auditoria.</p><a class="btn btn-primary" href="/Admin/Dashboard">Ir para o dashboard</a></div>
+  </div>
 </section>
-<section class="onboarding-actions">
-    <a class="quick-card" href="/Admin/Clients" data-onboarding-complete="clients">👥<strong>Cadastrar primeiro cliente</strong><span>Abre o CRM e marca o passo como concluído.</span></a>
-    <a class="quick-card" href="/Admin/Services" data-onboarding-complete="services">✂️<strong>Criar primeiro serviço</strong><span>Configure preço, duração e canais.</span></a>
-    <a class="quick-card" href="/Admin/Kiosk" data-onboarding-complete="kiosk">🖥️<strong>Configurar Totem</strong><span>Mostre o autoatendimento guiado.</span></a>
-    <a class="quick-card" href="/Admin/PublicSite" target="_blank" rel="noopener" data-onboarding-complete="publicweb">🌐<strong>Abrir painel público</strong><span>Veja landing, CTA e agendamento.</span></a>
-    <a class="quick-card" href="/Admin/Help" data-onboarding-complete="script">📋<strong>Ver roteiro de demonstração</strong><span>Use a sequência de venda do cliente.</span></a>
-</section>
-<section class="panel onboarding-panel">
-    <div class="panel-header"><div><h3>Checklist de implantação demo</h3><p>Cada passo possui status: pendente, concluído ou em demonstração.</p></div><span class="badge badge-info">localStorage</span></div>
-    <div class="onboarding-steps" data-onboarding-steps></div>
-</section>
+@section Scripts { <script src="~/js/admin-onboarding.js" asp-append-version="true"></script> }
