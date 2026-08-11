@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +65,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
+    RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 builder.Services.AddScoped<RequirePermissionFilter>();
@@ -76,7 +81,14 @@ builder.Services.AddScoped<EnterpriseDataService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Onboarding.BranchOnboardingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.GrowthService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.IAssistantInsightService>(sp => sp.GetRequiredService<BarberSync.Api.Services.Growth.GrowthService>());
-builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IWhatsAppChannel, BarberSync.Api.Services.Growth.UnconfiguredWhatsAppChannel>();
+builder.Services.AddScoped<BarberSync.Api.Services.Growth.IAssistantRepository>(sp => sp.GetRequiredService<BarberSync.Api.Services.Growth.GrowthService>());
+builder.Services.AddScoped<BarberSync.Api.Services.Growth.IAssistantService>(sp => sp.GetRequiredService<BarberSync.Api.Services.Growth.GrowthService>());
+builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IWhatsAppProvider, BarberSync.Api.Services.Growth.UnconfiguredWhatsAppProvider>();
+builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IEmailProvider, BarberSync.Api.Services.Growth.UnconfiguredEmailProvider>();
+builder.Services.AddSingleton<BarberSync.Api.Services.Growth.ISmsProvider, BarberSync.Api.Services.Growth.UnconfiguredSmsProvider>();
+builder.Services.AddScoped<BarberSync.Api.Services.Growth.INotificationDispatcher, BarberSync.Api.Services.Growth.NotificationDispatcher>();
+builder.Services.AddSingleton<BarberSync.Api.Services.Recognition.IDevRuleBasedRecognitionProvider, BarberSync.Api.Services.Recognition.DevRuleBasedRecognitionProvider>();
+builder.Services.AddScoped<BarberSync.Api.Services.Recognition.IServiceRecognitionService, BarberSync.Api.Services.Recognition.ServiceRecognitionService>();
 
 builder.Services.AddHealthChecks();
 
@@ -91,6 +103,16 @@ app.UseSwaggerUI();
 
 app.UseCors("DefaultCors");
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    await next();
+});
+
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

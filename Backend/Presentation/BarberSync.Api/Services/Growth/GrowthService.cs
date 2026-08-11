@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace BarberSync.Api.Services.Growth;
 
-public sealed class GrowthService(IConfiguration configuration) : IAssistantInsightService
+public sealed class GrowthService(IConfiguration configuration) : IAssistantInsightService, IAssistantRepository, IAssistantService
 {
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection não foi configurada.");
@@ -59,6 +59,23 @@ group by c.id order by historical_spend desc limit 500) x";
         var days = Convert.ToInt32(client.GetValueOrDefault("daysWithoutVisit")?.ToString() ?? "0");
         if (days >= 30) result.Add(new("Retention", days >= 60 ? "High" : "Medium", $"Cliente está há {days} dias sem retornar.", $"/Admin/Appointments?clientId={clientId}"));
         if (client.GetValueOrDefault("recommendedReturnAt") is { } date) result.Add(new("Return","Medium",$"Retorno recomendado para {date}.", $"/Admin/Appointments?clientId={clientId}"));
+        return result;
+    }
+
+    public Task<IReadOnlyList<AssistantInsightResponse>> GetInsightsAsync(Guid tenantId, Guid branchId, CancellationToken ct)
+        => GetOperationalInsightsAsync(tenantId, branchId, ct);
+
+    public async Task<IReadOnlyList<AssistantInsightResponse>> GetOperationalInsightsAsync(Guid tenantId, Guid branchId, CancellationToken ct)
+    {
+        await using var connection = await OpenAsync(ct);
+        const string sql = "select title,description,priority,reason,related_module,action_label,action_url from barber.assistant_operational_insights(@tenant,@branch)";
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("tenant", tenantId); command.Parameters.AddWithValue("branch", branchId);
+        var result = new List<AssistantInsightResponse>();
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct)) result.Add(new(
+            reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4),
+            new(reader.GetString(5), reader.GetString(6))));
         return result;
     }
 
