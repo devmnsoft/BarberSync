@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberSync.AdminWeb.Controllers;
 
 [Route("Admin")]
+[Authorize]
 public class AdminController(IWebHostEnvironment environment) : Controller
 {
     [HttpGet("")] public IActionResult Index() => Render("Dashboard");

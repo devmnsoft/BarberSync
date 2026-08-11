@@ -1,46 +1,55 @@
-# Setup Local — BarberSync
+# Instalação local — BarberSync 2.0
 
-## 1) Banco de dados
+## Pré-requisitos
+
+- .NET SDK 10
+- PostgreSQL 14 ou superior (ou Docker)
+- PowerShell 7 para os scripts operacionais
+- Node.js 20 para os clientes JavaScript
+
+## Banco canônico
+
+`ScriptsSQL/script_completo.sql` é o único script oficial. Com o PostgreSQL disponível em `localhost:5432`:
+
 ```bash
-docker compose up -d postgres
-psql -h localhost -U postgres -d barber -f ScriptsSQL/barber_full_database_postgresql.sql
-psql -h localhost -U postgres -d barber -f ScriptsSQL/validate_barber_database.sql
+createdb -h localhost -U postgres barber
+for replay in 1 2 3; do
+  psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d barber -f ScriptsSQL/script_completo.sql
+done
 ```
 
-## 2) Backend API
-```bash
-dotnet restore
-dotnet build
-dotnet test
+O script usa transação, advisory lock e mantém o histórico em `barber.schema_versions`.
+
+## Inicialização e primeiro administrador
+
+Configure `ConnectionStrings__DefaultConnection` e `Jwt__SigningKey` (mínimo de 32 caracteres), inicie a API e execute:
+
+```powershell
+$password = Read-Host 'Senha forte' -AsSecureString
+./Scripts/create-superadmin.ps1 -Email 'voce@empresa.com.br' -Password $password `
+  -FullName 'Administrador da Empresa' -TenantSlug 'minha-empresa' -BranchCode 'MATRIZ'
 ```
 
-## 3) Admin Web
+O script envia a senha somente ao endpoint local protegido `POST /api/setup/first-admin`. A API gera um hash ASP.NET Identity, cria ou reutiliza empresa/unidade, atribui `SuperAdmin` e `Owner` e registra auditoria. Depois que existe um usuário ativo, novas chamadas recebem `409 Conflict`.
+
+## Build e testes
+
 ```bash
-# ajuste para o diretório real do front admin
-npm install
-npm run build
+dotnet restore BarberSync.sln
+dotnet build BarberSync.sln --configuration Release --no-restore
+dotnet test BarberSync.sln --configuration Release --no-build
+find Web -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 ```
 
-## 4) Mobile
-```bash
-cd MobileApp
-npm install
-npm test
-```
+## Execução
 
-## 5) Totem
-```bash
-cd Totem
-npm install
-npm run build
-npm test
-```
+Use `./Scripts/start-local.ps1` ou `docker compose up --build`. Portas padrão:
 
-## Usuários demo
-- `admin@barbersync.com` / `Admin@123`
-- `gerente@barbeariaelite.com` / `Admin@123`
-- `recepcao@barbeariaelite.com` / `Admin@123`
-- `financeiro@barbeariaelite.com` / `Admin@123`
-- `profissional@barbeariaelite.com` / `Admin@123`
-- `cliente@demo.com` / `Admin@123`
-- `totem@barbeariaelite.com` / `Admin@123`
+| Aplicação | URL |
+|---|---|
+| API / Swagger | `http://localhost:5080/swagger` |
+| Admin | `http://localhost:5081/Account/Login` |
+| Site público | `http://localhost:5082/` |
+| Totem | `http://localhost:5083/` |
+
+Não existe senha padrão. Entre no Admin com o e-mail e a senha fornecidos de forma segura ao script de criação.

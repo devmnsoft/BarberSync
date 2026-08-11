@@ -13,7 +13,10 @@ public sealed class RequirePermissionFilter(BarberSync.Application.Abstractions.
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        if (!currentUser.Permissions.Contains(permission) && !currentUser.Roles.Contains("Admin"))
+        if (!currentUser.Permissions.Contains(permission) &&
+            !currentUser.Roles.Contains("Admin") &&
+            !currentUser.Roles.Contains("Owner") &&
+            !currentUser.Roles.Contains("SuperAdmin"))
             context.Result = new ObjectResult(new { message = "Permissão necessária.", permission }) { StatusCode = StatusCodes.Status403Forbidden };
     }
 }

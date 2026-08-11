@@ -1,7 +1,7 @@
 
 # Demo Script BarberSync 2.0
 
-1. Login com `admin@barbersync.com`.
+1. Login com `administrador definido na instalação`.
 2. Abrir Dashboard Principal e explicar KPIs do dia.
 3. Navegar para Agenda e criar agendamento.
 4. Cadastrar/abrir Cliente.
