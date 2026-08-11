@@ -31,6 +31,8 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddScoped<IDbConnectionFactory, PostgresConnectionFactory>();
         services.AddScoped<IAppointmentRepository, PostgresAppointmentRepository>();
+        services.AddScoped<IServiceOrderRepository, PostgresServiceOrderRepository>();
+        services.AddScoped<IPaymentRepository, PostgresServiceOrderRepository>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
         return services;

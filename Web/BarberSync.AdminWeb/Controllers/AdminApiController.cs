@@ -48,7 +48,14 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
             };
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-        catch (Exception exception)
+        catch (OperationCanceledException exception)
+        {
+            logger.LogWarning(exception, "Timeout ao acessar {Method} /api/{Path}.", method, path);
+            return Problem(statusCode: StatusCodes.Status504GatewayTimeout,
+                title: "A API demorou para responder",
+                detail: "A operação excedeu o tempo limite. Confirme o resultado antes de tentar novamente.");
+        }
+        catch (HttpRequestException exception)
         {
             logger.LogWarning(exception, "A API não respondeu a {Method} /api/{Path}.", method, path);
             return Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
