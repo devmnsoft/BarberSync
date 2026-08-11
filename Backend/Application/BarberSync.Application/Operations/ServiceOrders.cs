@@ -14,6 +14,27 @@ public sealed record ServiceOrderItemResponse(Guid Id, string Type, Guid? Servic
 public sealed record ServiceOrderResponse(Guid Id, string Number, Guid ClientId, Guid? AppointmentId, string Status, decimal Subtotal, decimal Discount, decimal Surcharge, decimal Total, decimal Paid, decimal Balance, IReadOnlyList<ServiceOrderItemResponse> Items);
 public sealed record PaymentResponse(Guid Id, Guid ServiceOrderId, string Status, decimal Amount, decimal Change, IReadOnlyList<PaymentSplitRequest> Splits, bool Replayed = false);
 
+public static class PaymentRules
+{
+    public static decimal ValidateAndTotal(IReadOnlyList<PaymentSplitRequest> splits, decimal balance)
+    {
+        if (splits.Count == 0)
+            throw new InvalidOperationException("Informe ao menos uma forma de pagamento.");
+
+        if (splits.Any(split => split.Amount <= 0))
+            throw new InvalidOperationException("Os valores de pagamento devem ser positivos.");
+
+        var amount = splits.Sum(split => split.Amount);
+        if (amount > balance)
+            throw new InvalidOperationException("A soma dos pagamentos não pode superar o saldo da comanda.");
+
+        return amount;
+    }
+
+    public static string OrderStatus(decimal amount, decimal balance) =>
+        amount == balance ? "Paid" : "PartiallyPaid";
+}
+
 public interface IServiceOrderRepository
 {
     Task<IReadOnlyList<ServiceOrderResponse>> ListAsync(Guid tenant, Guid branch, CancellationToken ct);
