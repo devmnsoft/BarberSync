@@ -1,52 +1,57 @@
-@{
-    ViewData["Title"] = "Comandas";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<section class="page-header">
-    <div>
-        <h1 class="page-title">Comandas</h1>
-        <p class="page-subtitle">Kanban de atendimento e pagamentos mock. Dados carregados por proxy MVC <strong>/AdminApi/service-orders</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="ServiceOrders">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="ServiceOrders">Novo Comanda</button>
-    </div>
+@{ ViewData["Title"] = "PDV"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<link rel="stylesheet" href="~/css/admin-pos.css" asp-append-version="true" />
+
+<section class="page-header bs-mobile-stack">
+    <div><span class="pos-eyebrow">Operação comercial</span><h1 class="page-title">PDV &amp; comandas</h1><p class="page-subtitle">Venda, recebimento e conferência em uma única experiência.</p></div>
+    <div class="page-actions"><button class="btn btn-light bs-touch-target" type="button" id="posRefresh">Atualizar</button><button class="btn btn-primary bs-touch-target" type="button" id="posOpenOrder">Abrir comanda</button></div>
 </section>
-<div class="alert alert-warning d-none" id="ServiceOrdersFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="ServiceOrdersCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
-</section>
-<section class="enterprise-demo-grid"><article class="enterprise-card wide"><h3>Kanban de comandas</h3><div class="kanban-demo"><div class="kanban-col"><strong>Abertas</strong><div class="kanban-card">#1001 Lucas • R$ 115</div></div><div class="kanban-col"><strong>Em pagamento</strong><div class="kanban-card">#1002 Marina • R$ 55</div></div><div class="kanban-col"><strong>Fechadas</strong><div class="kanban-card">#0999 André • R$ 95</div></div></div></article><article class="enterprise-card"><h3>Recibo visual</h3><div class="receipt-demo"><strong>BarberSync</strong><p>Corte + Barba R$ 95<br/>Pomada R$ 35<br/>Desconto R$ 10</p><strong>Total R$ 120</strong></div><button class="btn btn-primary" onclick="window.print()">Imprimir recibo</button></article><article class="enterprise-card full"><h3>Pagamento mock</h3><div class="quick-actions-grid"><button class="btn btn-light" data-demo-action="PIX aprovado">PIX</button><button class="btn btn-light" data-demo-action="Cartão aprovado">Cartão</button><button class="btn btn-light" data-demo-action="Dinheiro registrado">Dinheiro</button></div></article></section>
-<!-- Demo Experience 3.0 injected -->
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>PDV 3.0 visual</h3><p>Busca cliente, adiciona serviço/produto, aplica desconto/cupom/cashback e fecha com PIX, cartão, dinheiro ou misto.</p><div class="quick-actions-grid"><button class="btn btn-primary" onclick="const s=window.BarberSyncDemoStore; const o=s?.get('serviceOrders')?.find(x=>x.status!=='Paga'); if(o){s.addProductToOrder(o.id,'prd-001',1); s.payServiceOrder(o.id,{method:'PIX'}); window.AdminToast?.show('Produto adicionado, PIX aprovado, estoque baixado e cashback gerado.','success'); window.refreshModule?.('ServiceOrders');}">Pagar primeira comanda PIX</button><button class="btn btn-light" onclick="window.print()">Imprimir recibo</button><button class="btn btn-light" data-demo-action="Compartilhamento mock enviado pelo WhatsApp">Compartilhar mock</button></div></article>
-  <article class="enterprise-card demo-receipt"><h3>BarberSync</h3><p>Recibo premium demo</p><div class="receipt-total">PIX aprovado</div><small>Cashback e avaliação pendente gerados automaticamente.</small></article>
-</section>
-<section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/service-orders</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ServiceOrdersRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
-</section>
-<div class="admin-modal-backdrop" id="ServiceOrdersModal" hidden>
-    <form class="admin-modal" data-admin-form="ServiceOrders">
-        <div class="modal-header"><h3>Novo/editar Comanda</h3><button type="button" class="modal-close" data-admin-close="ServiceOrders">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="ServiceOrders">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
-    </form>
+
+<div class="pos-alert" id="posAlert" role="alert" hidden></div>
+<section class="pos-order-strip bs-safe-scroll" aria-label="Comandas" id="posOrders"><div class="bs-skeleton"></div></section>
+
+<main class="bs-pos-grid" id="posWorkspace" aria-busy="true">
+    <section class="pos-pane pos-catalog" aria-labelledby="catalogTitle">
+        <header><div><span class="pos-step">01</span><h2 id="catalogTitle">Catálogo</h2></div><div class="pos-tabs" role="tablist"><button class="active" data-catalog-kind="services" type="button">Serviços</button><button data-catalog-kind="products" type="button">Produtos</button></div></header>
+        <label class="pos-search"><span>⌕</span><input id="posCatalogSearch" type="search" placeholder="Buscar no catálogo" autocomplete="off" /></label>
+        <div class="pos-categories bs-safe-scroll" id="posCategories"></div>
+        <div class="pos-catalog-grid bs-drawer-scroll" id="posCatalog"><div class="pos-empty"><strong>Carregando catálogo</strong></div></div>
+    </section>
+
+    <section class="pos-pane pos-cart" aria-labelledby="cartTitle">
+        <header><div><span class="pos-step">02</span><h2 id="cartTitle">Itens da comanda</h2></div><span class="badge badge-info" id="posItemCount">0 itens</span></header>
+        <div class="pos-customer"><div><small>Cliente</small><strong id="posClient">Selecione uma comanda</strong></div><div><small>Atendimento</small><strong id="posAppointment">Não vinculado</strong></div></div>
+        <div class="pos-cart-list bs-drawer-scroll" id="posItems"><div class="pos-empty"><strong>Nenhuma comanda selecionada</strong><span>Abra ou escolha uma comanda para começar.</span></div></div>
+    </section>
+
+    <aside class="pos-pane pos-summary bs-sticky-summary" aria-labelledby="summaryTitle">
+        <header><div><span class="pos-step">03</span><h2 id="summaryTitle">Resumo</h2></div><span class="pos-status" id="posStatus">—</span></header>
+        <div class="pos-summary-lines">
+            <div><span>Subtotal</span><strong id="sumSubtotal">R$ 0,00</strong></div><div><span>Descontos</span><strong id="sumDiscount">R$ 0,00</strong></div><div><span>Acréscimo</span><strong id="sumSurcharge">R$ 0,00</strong></div><div class="total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div><div><span>Pago</span><strong id="sumPaid">R$ 0,00</strong></div><div class="balance"><span>Saldo</span><strong id="sumBalance">R$ 0,00</strong></div>
+        </div>
+        <form class="pos-inline-form" id="couponForm" novalidate><label for="couponCode">Cupom</label><div><input id="couponCode" maxlength="60" placeholder="Código do cupom" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="couponCode"></small></form>
+        <form class="pos-inline-form" id="cashbackForm" novalidate><label for="cashbackAmount">Cashback</label><div><input id="cashbackAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Usar</button></div><small class="field-error" data-error-for="cashbackAmount"></small></form>
+        <div class="pos-adjustments"><strong>Histórico de descontos</strong><div id="posAdjustments"><span>Nenhum desconto aplicado.</span></div></div>
+        <button class="btn btn-primary pos-pay bs-touch-target" id="posPay" type="button" disabled>Receber pagamento</button>
+        <p class="pos-readonly" id="posReadonly" hidden>Esta comanda está em modo somente leitura.</p>
+    </aside>
+</main>
+
+<div class="pos-drawer-backdrop" id="paymentDrawer" hidden>
+    <aside class="pos-drawer bs-drawer-scroll" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+        <header><div><span class="pos-eyebrow">Recebimento seguro</span><h2 id="paymentTitle">Pagamento</h2></div><button class="pos-close bs-touch-target" type="button" data-close-drawer aria-label="Fechar">×</button></header>
+        <form id="paymentForm" novalidate>
+            <div class="pos-payment-balance"><span>Saldo da comanda</span><strong id="paymentBalance">R$ 0,00</strong></div>
+            <div id="paymentSplits" class="pos-splits"></div>
+            <button class="btn btn-light" id="addSplit" type="button">+ Adicionar forma</button>
+            <small class="field-error" data-error-for="splits"></small>
+            <label>Chave de idempotência<input id="idempotencyKey" readonly /></label>
+            <div class="pos-drawer-actions"><button class="btn btn-light" type="button" data-close-drawer>Cancelar</button><button class="btn btn-primary" id="confirmPayment" type="submit">Confirmar recebimento</button></div>
+        </form>
+    </aside>
 </div>
-@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-service-orders.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('ServiceOrders')</script>}
 
-<section class="panel"><div class="panel-header"><div><h3>Comanda/PDV integrado</h3><p>Abra comanda, adicione serviços/produtos, pague, gere recibo, baixe estoque e gere cashback.</p></div></div><div class="module-feature-grid" data-service-orders-demo></div></section>
+<div class="pos-drawer-backdrop" id="openOrderDrawer" hidden>
+    <aside class="pos-drawer bs-drawer-scroll" role="dialog" aria-modal="true" aria-labelledby="openOrderTitle"><header><div><span class="pos-eyebrow">Nova venda</span><h2 id="openOrderTitle">Abrir comanda</h2></div><button class="pos-close" type="button" data-close-drawer>×</button></header><form id="openOrderForm" novalidate><label>Cliente<select id="openClient" required></select><small class="field-error" data-error-for="openClient"></small></label><label>Agendamento (opcional)<select id="openAppointment"><option value="">Sem vínculo</option></select></label><label>Observações<textarea id="openNotes" rows="3" maxlength="500"></textarea></label><div class="pos-drawer-actions"><button class="btn btn-light" type="button" data-close-drawer>Cancelar</button><button class="btn btn-primary" type="submit">Abrir comanda</button></div></form></aside>
+</div>
 
-<section class="panel"><div class="panel-header"><div><h3>ServiceOrders 2.0 integrado</h3><p>Ações conectadas ao DemoStore, EventBus, Dashboard, Operação e Cliente 360.</p></div></div><div data-service-orders-v2></div></section>
-<section class="saas-grid" data-pdv-30><article class="saas-card wide"><h3>PDV 3.0 • Carrinho integrado</h3><div class="saas-actions"><button class="btn btn-primary" data-pdv-demo>Abrir comanda demo</button><button class="btn btn-light" data-pdv-product>Adicionar produto</button><button class="btn btn-light" data-pdv-coupon>Aplicar cupom</button><button class="btn btn-gold" data-pdv-pay>Pagar, recibo e cashback</button></div><div class="saas-list" data-pdv-cart></div></article><article class="saas-card"><h3>Recibo</h3><div data-pdv-receipt>Recibo será gerado após pagamento.</div></article></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Comanda do Atendimento Completo 14.0</h3><p>Status Open/Paid/Closed, itens, pagamento e recibo acessível.</p></div><a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir fluxo</a></div><div data-flow-service-order></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Comanda do Fluxo Comercial 15.0</h3><p>Kanban, lista de itens, recibo e pagamentos gerados no fluxo central.</p></div></div><div data-commercial-flow-order></div></section>
+@section Scripts { <script src="~/js/admin-service-orders.js" asp-append-version="true"></script> }

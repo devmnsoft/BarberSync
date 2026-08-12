@@ -12,7 +12,7 @@ public sealed record RegisterPaymentRequest(string IdempotencyKey, IReadOnlyList
 public sealed record RefundPaymentRequest(string Reason);
 public sealed record ServiceOrderItemResponse(Guid Id, string Type, Guid? ServiceId, Guid? ProductId, Guid? ProfessionalId, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Total);
 public sealed record ServiceOrderResponse(Guid Id, string Number, Guid ClientId, Guid? AppointmentId, string Status, decimal Subtotal, decimal Discount, decimal Surcharge, decimal Total, decimal Paid, decimal Balance, IReadOnlyList<ServiceOrderItemResponse> Items);
-public sealed record PaymentResponse(Guid Id, Guid ServiceOrderId, string Status, decimal Amount, decimal Change, IReadOnlyList<PaymentSplitRequest> Splits, bool Replayed = false);
+public sealed record PaymentResponse(Guid Id, Guid ServiceOrderId, string Status, decimal Amount, decimal Change, IReadOnlyList<PaymentSplitRequest> Splits, bool Replayed = false, string? OrderStatus = null, decimal? OrderBalance = null);
 
 public static class PaymentRules
 {
