@@ -1,5 +1,6 @@
 using BarberSync.Domain.Common;
 using BarberSync.Domain.Enums;
+using System;
 
 namespace BarberSync.Domain.Entities;
 
