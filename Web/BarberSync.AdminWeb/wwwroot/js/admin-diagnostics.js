@@ -3,6 +3,7 @@
     { key: 'api', label: 'API', url: '/AdminApi/api-health' },
     { key: 'adminApi', label: 'AdminApi', urls: ['/AdminApi/dashboard', '/AdminApi/clients', '/AdminApi/services', '/AdminApi/service-orders'] },
     { key: 'databaseSchema', label: 'Database schema BarberSync', url: '/AdminApi/health/database' },
+    { key: 'realData', label: 'Dados reais PostgreSQL', url: '/AdminApi/health/real-data', semantic: 'realData' },
     { key: 'publicApi', label: 'PublicApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
     { key: 'kioskApi', label: 'KioskApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
     { key: 'swagger', label: 'Swagger', urls: ['/AdminApi/swagger', '/AdminApi/swagger.json'] },
@@ -25,7 +26,12 @@
   const safeFetch = async (url, accept = 'application/json,text/css,*/*') => {
     try {
       const response = await fetch(url, { headers: { Accept: accept }, cache: 'no-store' });
-      return { ok: response.ok, status: response.status };
+      const contentType = response.headers.get('content-type') || '';
+      let payload = null;
+      if (contentType.includes('application/json')) {
+        try { payload = await response.json(); } catch { payload = null; }
+      }
+      return { ok: response.ok, status: response.status, payload };
     } catch (error) {
       return { ok: false, status: 0, error: error?.message || String(error) };
     }
@@ -76,11 +82,26 @@
     setCard('docker', 'attention', 'Status Docker é validado pelo Scripts/quality-gate.ps1 e registrado no relatório Docs/quality-gate-last-run.md.');
   };
 
+  const applySemanticResult = (check, result) => {
+    if (check.semantic !== 'realData') return false;
+    const payload = result.payload;
+    if (!payload) {
+      setCard(check.key, statusClass(result), `Dados reais requerem atenção: ${result.error || `HTTP ${result.status}`}`);
+      return true;
+    }
+    const ready = payload.realDataReady === true;
+    const status = ready ? 'ok' : (payload.schemaReady ? 'attention' : 'fail');
+    const detail = payload.message || (ready ? 'Dados reais prontos.' : 'Dados reais ainda incompletos.');
+    setCard(check.key, status, detail);
+    return true;
+  };
+
   async function runDiagnostics() {
     runLocalChecks();
     for (const check of checks) {
       const targets = check.urls || [check.url];
       const results = await Promise.all(targets.map(url => safeFetch(url, check.accept)));
+      if (targets.length === 1 && applySemanticResult(check, results[0])) continue;
       const failures = results.filter(result => !result.ok);
       const result = failures[0] || results[0];
       const detail = failures.length === 0
@@ -103,7 +124,7 @@
       await runDiagnostics();
     }
     if (event.target.closest('[data-export-diagnostics]')) {
-      const payload = { generatedAt: new Date().toISOString(), events: window.BarberSyncEventBus?.last?.(20) || [], state: window.BarberSyncDemoStore?.dashboardSummary?.() || null, qualityGate: 'Scripts/quality-gate.ps1', targetVersion: 'BarberSync Demo Ready Fix & Validate 20.0' };
+      const payload = { generatedAt: new Date().toISOString(), events: window.BarberSyncEventBus?.last?.(20) || [], state: window.BarberSyncDemoStore?.dashboardSummary?.() || null, qualityGate: 'Scripts/quality-gate.ps1', targetVersion: 'BarberSync Real Data Platform 22.0' };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
