@@ -6,20 +6,42 @@ namespace BarberSync.Infrastructure.Repositories;
 
 public sealed class PostgresAppointmentRepository(IDbConnectionFactory connections) : IAppointmentRepository
 {
-    private const string Projection = """
-        SELECT a.id,a.client_id,c.name,a.professional_id,p.name,a.service_id,s.name,
-               a.scheduled_start,a.scheduled_end,s.duration_minutes,a.status,a.origin,a.notes,a.cancellation_reason
+    private const string AppointmentProjectionSql = """
+        SELECT a.id,a.client_id,COALESCE(c.name, ''),a.professional_id,COALESCE(p.name, ''),a.service_id,COALESCE(s.name, ''),
+               a.scheduled_start,a.scheduled_end,COALESCE(s.duration_minutes, 30),a.status,a.origin,a.notes,a.cancellation_reason
           FROM barber.appointments a
-          JOIN barber.clients c ON c.id=a.client_id
-          JOIN barber.professionals p ON p.id=a.professional_id
-          JOIN barber.services s ON s.id=a.service_id
+          LEFT JOIN barber.clients c ON c.id=a.client_id
+          LEFT JOIN barber.professionals p ON p.id=a.professional_id
+          LEFT JOIN barber.services s ON s.id=a.service_id
+        """;
+
+    private const string CreateAppointmentSql = """
+        INSERT INTO barber.appointments
+            (id,tenant_id,branch_id,client_id,professional_id,service_id,scheduled_start,scheduled_end,status,origin,notes)
+        VALUES (@id,@tenant,@branch,@client,@professional,@service,@start,@finish,@status,@origin,@notes)
+        """;
+
+    private const string UpdateAppointmentSql = """
+        UPDATE barber.appointments
+        SET client_id=@client,professional_id=@professional,service_id=@service,
+            scheduled_start=@start,scheduled_end=@finish,origin=@origin,notes=@notes,updated_at=now()
+        WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL
+        """;
+
+    private const string ChangeStatusSql = """
+        UPDATE barber.appointments
+        SET status=@status,cancellation_reason=CASE WHEN @status='Cancelled' THEN @reason ELSE cancellation_reason END,
+            checked_in_at=CASE WHEN @status='CheckedIn' THEN now() ELSE checked_in_at END,
+            started_at=CASE WHEN @status='InService' THEN now() ELSE started_at END,
+            completed_at=CASE WHEN @status='Finished' THEN now() ELSE completed_at END,updated_at=now()
+        WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND status=@expected AND deleted_at IS NULL
         """;
 
     public async Task<IReadOnlyList<AppointmentResponse>> ListAsync(Guid tenantId, Guid branchId, AppointmentFilter filter, CancellationToken ct)
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + """
+        command.CommandText = AppointmentProjectionSql + """
              WHERE a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL
                AND (@from IS NULL OR a.scheduled_end >= @from) AND (@to IS NULL OR a.scheduled_start < @to)
                AND (@professional IS NULL OR a.professional_id=@professional) AND (@service IS NULL OR a.service_id=@service)
@@ -38,7 +60,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + " WHERE a.id=@id AND a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL";
+        command.CommandText = AppointmentProjectionSql + " WHERE a.id=@id AND a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL";
         Add(command, "id", id); Add(command, "tenant", tenantId); Add(command, "branch", branchId);
         await using var reader = await command.ExecuteReaderAsync(ct);
         return await reader.ReadAsync(ct) ? Read(reader) : null;
@@ -71,8 +93,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = """INSERT INTO barber.appointments(id,tenant_id,branch_id,client_id,professional_id,service_id,scheduled_start,scheduled_end,status,origin,notes)
-            VALUES(@id,@tenant,@branch,@client,@professional,@service,@start,@finish,@status,@origin,@notes)""";
+        command.CommandText = CreateAppointmentSql;
         Bind(command, a); await command.ExecuteNonQueryAsync(ct);
         return (await GetAsync(a.TenantId, a.BranchId, a.Id, ct))!;
     }
@@ -81,8 +102,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = """UPDATE barber.appointments SET client_id=@client,professional_id=@professional,service_id=@service,scheduled_start=@start,scheduled_end=@finish,origin=@origin,notes=@notes,updated_at=now()
-            WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL""";
+        command.CommandText = UpdateAppointmentSql;
         Bind(command, a); if (await command.ExecuteNonQueryAsync(ct) != 1) throw new KeyNotFoundException("Agendamento não encontrado.");
         return (await GetAsync(a.TenantId, a.BranchId, a.Id, ct))!;
     }
@@ -91,10 +111,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct); await using var tx = await connection.BeginTransactionAsync(ct);
         await using var command = connection.CreateCommand(); command.Transaction = tx;
-        command.CommandText = """UPDATE barber.appointments SET status=@status,cancellation_reason=CASE WHEN @status='Cancelled' THEN @reason ELSE cancellation_reason END,
-            checked_in_at=CASE WHEN @status='CheckedIn' THEN now() ELSE checked_in_at END,started_at=CASE WHEN @status='InService' THEN now() ELSE started_at END,
-            completed_at=CASE WHEN @status='Finished' THEN now() ELSE completed_at END,updated_at=now()
-            WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND status=@expected AND deleted_at IS NULL""";
+        command.CommandText = ChangeStatusSql;
         Add(command,"status",status); Add(command,"reason",reason); Add(command,"id",id); Add(command,"tenant",tenantId); Add(command,"branch",branchId); Add(command,"expected",expectedStatus);
         if (await command.ExecuteNonQueryAsync(ct) != 1) throw new InvalidOperationException("O agendamento foi alterado por outra operação.");
         await History(connection, tx, tenantId, branchId, id, expectedStatus, status, null, null, reason, userId, ct); await tx.CommitAsync(ct);
