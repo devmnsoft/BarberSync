@@ -6,6 +6,57 @@ namespace BarberSync.Infrastructure.Repositories;
 
 public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connections) : IServiceOrderRepository, IPaymentRepository
 {
+    private const string OpenOrderSql = """
+        INSERT INTO barber.service_orders
+            (id, tenant_id, branch_id, appointment_id, client_id, number, notes)
+        SELECT
+            @id,
+            @tenant,
+            @branch,
+            @appointment,
+            @client,
+            concat('OS-', to_char(now(), 'YYYYMMDD-'), substr(@id::text, 1, 8)),
+            @notes
+        WHERE EXISTS (
+            SELECT 1
+            FROM barber.clients
+            WHERE id = @client
+              AND tenant_id = @tenant
+              AND deleted_at IS NULL
+        )
+        """;
+
+    private const string AddServiceItemSql = """
+        INSERT INTO barber.service_order_items
+            (id, tenant_id, branch_id, service_order_id, item_type, service_id,
+             product_id, professional_id, description, quantity, unit_price, total)
+        SELECT
+            @item, @tenant, @branch, @order, @type, @service,
+            @product, @professional, name, @quantity, price,
+            round(@quantity * price, 2)
+        FROM barber.services
+        WHERE id = @service
+          AND tenant_id = @tenant
+          AND deleted_at IS NULL
+          AND status = 'Active'
+        """;
+
+    private const string AddProductItemSql = """
+        INSERT INTO barber.service_order_items
+            (id, tenant_id, branch_id, service_order_id, item_type, service_id,
+             product_id, professional_id, description, quantity, unit_price, total)
+        SELECT
+            @item, @tenant, @branch, @order, @type, @service,
+            @product, @professional, name, @quantity, sale_price,
+            round(@quantity * sale_price, 2)
+        FROM barber.products
+        WHERE id = @product
+          AND tenant_id = @tenant
+          AND deleted_at IS NULL
+          AND status = 'Active'
+          AND (allow_negative_stock OR current_stock >= @quantity)
+        """;
+
     public async Task<IReadOnlyList<ServiceOrderResponse>> ListAsync(Guid tenant,Guid branch,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct); var ids=new List<Guid>(); await using(var cmd=Command(c,"SELECT id FROM barber.service_orders WHERE tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL ORDER BY created_at DESC")){Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);await using var r=await cmd.ExecuteReaderAsync(ct);while(await r.ReadAsync(ct))ids.Add(r.GetGuid(0));} var result=new List<ServiceOrderResponse>();foreach(var id in ids)result.Add((await GetAsync(tenant,branch,id,ct))!);return result; }
 
@@ -13,14 +64,13 @@ public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connecti
     { await using var c=await connections.OpenConnectionAsync(ct); return await ReadOrder(c,null,tenant,branch,id,ct); }
 
     public async Task<ServiceOrderResponse> OpenAsync(Guid tenant,Guid branch,OpenServiceOrderRequest request,CancellationToken ct)
-    { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);var id=Guid.NewGuid();await using(var cmd=Command(c,"""INSERT INTO barber.service_orders(id,tenant_id,branch_id,appointment_id,client_id,number,notes) SELECT @id,@tenant,@branch,@appointment,@client,concat('OS-',to_char(now(),'YYYYMMDD-'),substr(@id::text,1,8)),@notes WHERE EXISTS(SELECT 1 FROM barber.clients WHERE id=@client AND tenant_id=@tenant AND deleted_at IS NULL)""",tx)){Add(cmd,"id",id);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"appointment",request.AppointmentId);Add(cmd,"client",request.ClientId);Add(cmd,"notes",request.Notes);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new KeyNotFoundException("Cliente não encontrado.");}await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,id,ct))!; }
+    { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);var id=Guid.NewGuid();await using(var cmd=Command(c,OpenOrderSql,tx)){Add(cmd,"id",id);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"appointment",request.AppointmentId);Add(cmd,"client",request.ClientId);Add(cmd,"notes",request.Notes);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new KeyNotFoundException("Cliente não encontrado.");}await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,id,ct))!; }
 
     public Task<ServiceOrderResponse> AddServiceAsync(Guid tenant,Guid branch,Guid id,AddServiceItemRequest request,CancellationToken ct) => AddCatalogItem(tenant,branch,id,"Service",request.ServiceId,null,request.ProfessionalId,request.Quantity,ct);
     public Task<ServiceOrderResponse> AddProductAsync(Guid tenant,Guid branch,Guid id,AddProductItemRequest request,CancellationToken ct) => AddCatalogItem(tenant,branch,id,"Product",null,request.ProductId,request.ProfessionalId,request.Quantity,ct);
 
     private async Task<ServiceOrderResponse> AddCatalogItem(Guid tenant,Guid branch,Guid orderId,string type,Guid? service,Guid? product,Guid? professional,decimal quantity,CancellationToken ct)
-    { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);await EnsureOpen(c,tx,tenant,branch,orderId,ct);var table=type=="Service"?"barber.services":"barber.products";var price=type=="Service"?"price":"sale_price";var stock=type=="Service"?"TRUE":"(allow_negative_stock OR current_stock >= @quantity)";var item=Guid.NewGuid();await using(var cmd=Command(c,$"""INSERT INTO barber.service_order_items(id,tenant_id,branch_id,service_order_id,item_type,service_id,product_id,professional_id,description,quantity,unit_price,total)
-        SELECT @item,@tenant,@branch,@order,@type,@service,@product,@professional,name,@quantity,{price},round(@quantity*{price},2) FROM {table} WHERE id=COALESCE(@service,@product) AND tenant_id=@tenant AND deleted_at IS NULL AND status='Active' AND {stock}""",tx)){Add(cmd,"item",item);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"order",orderId);Add(cmd,"type",type);Add(cmd,"service",service);Add(cmd,"product",product);Add(cmd,"professional",professional);Add(cmd,"quantity",quantity);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException(type=="Product"?"Produto indisponível ou sem estoque suficiente.":"Serviço indisponível.");}await Recalculate(c,tx,tenant,branch,orderId,ct);await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,orderId,ct))!; }
+    { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);await EnsureOpen(c,tx,tenant,branch,orderId,ct);var sql=type=="Service"?AddServiceItemSql:AddProductItemSql;var item=Guid.NewGuid();await using(var cmd=Command(c,sql,tx)){Add(cmd,"item",item);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"order",orderId);Add(cmd,"type",type);Add(cmd,"service",service);Add(cmd,"product",product);Add(cmd,"professional",professional);Add(cmd,"quantity",quantity);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException(type=="Product"?"Produto indisponível ou sem estoque suficiente.":"Serviço indisponível.");}await Recalculate(c,tx,tenant,branch,orderId,ct);await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,orderId,ct))!; }
 
     public async Task<ServiceOrderResponse> UpdateItemAsync(Guid tenant,Guid branch,Guid id,Guid itemId,UpdateOrderItemRequest request,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);await EnsureOpen(c,tx,tenant,branch,id,ct);await using(var cmd=Command(c,"""UPDATE barber.service_order_items i SET quantity=@quantity,discount=@discount,professional_id=COALESCE(@professional,professional_id),total=round(@quantity*unit_price-@discount,2),updated_at=now() WHERE i.id=@item AND i.service_order_id=@order AND i.tenant_id=@tenant AND i.deleted_at IS NULL AND (i.product_id IS NULL OR EXISTS(SELECT 1 FROM barber.products p WHERE p.id=i.product_id AND (p.allow_negative_stock OR p.current_stock>=@quantity)))""",tx)){Add(cmd,"quantity",request.Quantity);Add(cmd,"discount",request.Discount);Add(cmd,"professional",request.ProfessionalId);Add(cmd,"item",itemId);Add(cmd,"order",id);Add(cmd,"tenant",tenant);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException("Item não encontrado ou estoque insuficiente.");}await Recalculate(c,tx,tenant,branch,id,ct);await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,id,ct))!; }

@@ -6,26 +6,71 @@ namespace BarberSync.Infrastructure.Repositories;
 
 public sealed class PostgresAppointmentRepository(IDbConnectionFactory connections) : IAppointmentRepository
 {
-    private const string Projection = """
-        SELECT a.id,a.client_id,c.name,a.professional_id,p.name,a.service_id,s.name,
-               a.scheduled_start,a.scheduled_end,s.duration_minutes,a.status,a.origin,a.notes,a.cancellation_reason
-          FROM barber.appointments a
-          JOIN barber.clients c ON c.id=a.client_id
-          JOIN barber.professionals p ON p.id=a.professional_id
-          JOIN barber.services s ON s.id=a.service_id
+    private const string ListAppointmentsSql = """
+        SELECT
+            a.id,
+            a.client_id,
+            COALESCE(c.name, ''),
+            a.professional_id,
+            COALESCE(p.name, ''),
+            a.service_id,
+            COALESCE(s.name, ''),
+            a.scheduled_start,
+            a.scheduled_end,
+            COALESCE(s.duration_minutes, 30),
+            a.status,
+            a.origin,
+            a.notes,
+            a.cancellation_reason
+        FROM barber.appointments a
+        LEFT JOIN barber.clients c ON c.id = a.client_id
+        LEFT JOIN barber.professionals p ON p.id = a.professional_id
+        LEFT JOIN barber.services s ON s.id = a.service_id
+        WHERE a.tenant_id = @tenant
+          AND a.branch_id = @branch
+          AND a.deleted_at IS NULL
+          AND (@from IS NULL OR a.scheduled_end >= @from)
+          AND (@to IS NULL OR a.scheduled_start < @to)
+          AND (@professional IS NULL OR a.professional_id = @professional)
+          AND (@service IS NULL OR a.service_id = @service)
+          AND (@status IS NULL OR a.status = @status)
+          AND (@origin IS NULL OR a.origin = @origin)
+        ORDER BY a.scheduled_start
+        """;
+
+    private const string GetAppointmentSql = """
+        SELECT
+            a.id, a.client_id, COALESCE(c.name, ''),
+            a.professional_id, COALESCE(p.name, ''),
+            a.service_id, COALESCE(s.name, ''),
+            a.scheduled_start, a.scheduled_end,
+            COALESCE(s.duration_minutes, 30), a.status, a.origin,
+            a.notes, a.cancellation_reason
+        FROM barber.appointments a
+        LEFT JOIN barber.clients c ON c.id = a.client_id
+        LEFT JOIN barber.professionals p ON p.id = a.professional_id
+        LEFT JOIN barber.services s ON s.id = a.service_id
+        WHERE a.id = @id
+          AND a.tenant_id = @tenant
+          AND a.branch_id = @branch
+          AND a.deleted_at IS NULL
+        """;
+
+    private const string GetServiceDurationSql = """
+        SELECT duration_minutes
+        FROM barber.services
+        WHERE id = @id
+          AND tenant_id = @tenant
+          AND (branch_id IS NULL OR branch_id = @branch)
+          AND status = 'Active'
+          AND deleted_at IS NULL
         """;
 
     public async Task<IReadOnlyList<AppointmentResponse>> ListAsync(Guid tenantId, Guid branchId, AppointmentFilter filter, CancellationToken ct)
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + """
-             WHERE a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL
-               AND (@from IS NULL OR a.scheduled_end >= @from) AND (@to IS NULL OR a.scheduled_start < @to)
-               AND (@professional IS NULL OR a.professional_id=@professional) AND (@service IS NULL OR a.service_id=@service)
-               AND (@status IS NULL OR a.status=@status) AND (@origin IS NULL OR a.origin=@origin)
-             ORDER BY a.scheduled_start
-            """;
+        command.CommandText = ListAppointmentsSql;
         Add(command, "tenant", tenantId); Add(command, "branch", branchId); Add(command, "from", filter.From); Add(command, "to", filter.To);
         Add(command, "professional", filter.ProfessionalId); Add(command, "service", filter.ServiceId); Add(command, "status", filter.Status); Add(command, "origin", filter.Origin);
         var rows = new List<AppointmentResponse>();
@@ -38,7 +83,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + " WHERE a.id=@id AND a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL";
+        command.CommandText = GetAppointmentSql;
         Add(command, "id", id); Add(command, "tenant", tenantId); Add(command, "branch", branchId);
         await using var reader = await command.ExecuteReaderAsync(ct);
         return await reader.ReadAsync(ct) ? Read(reader) : null;
@@ -48,7 +93,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT duration_minutes FROM barber.services WHERE id=@id AND tenant_id=@tenant AND (branch_id IS NULL OR branch_id=@branch) AND status='Active' AND deleted_at IS NULL";
+        command.CommandText = GetServiceDurationSql;
         Add(command, "id", serviceId); Add(command, "tenant", tenantId); Add(command, "branch", branchId);
         var value = await command.ExecuteScalarAsync(ct); return value is null ? null : Convert.ToInt32(value);
     }
