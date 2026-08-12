@@ -31,6 +31,65 @@ public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connecti
     public async Task<ServiceOrderResponse> ApplyDiscountAsync(Guid tenant,Guid branch,Guid user,Guid id,ApplyDiscountRequest request,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);await EnsureOpen(c,tx,tenant,branch,id,ct);await using(var cmd=Command(c,"UPDATE barber.service_orders SET discount=@amount,total=greatest(0,subtotal-@amount+surcharge),updated_at=now() WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND @amount<=subtotal",tx)){Add(cmd,"amount",request.Amount);Add(cmd,"id",id);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException("O desconto não pode superar o subtotal.");}await Audit(c,tx,tenant,branch,user,"ServiceOrder.Discount",id,request.Reason,ct);await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,id,ct))!; }
 
+    public async Task<ServiceOrderResponse> ApplyCouponAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCouponRequest request, CancellationToken ct)
+    {
+        await using var c = await connections.OpenConnectionAsync(ct);
+        await using var tx = await c.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+        await EnsureOpen(c, tx, tenant, branch, id, ct);
+        const string sql = """
+            WITH eligible AS (
+              SELECT c.id, o.client_id, LEAST(o.subtotal,round(o.subtotal*c.discount_percent/100,2)) amount
+              FROM barber.coupons c JOIN barber.service_orders o ON o.id=@order AND o.tenant_id=c.tenant_id
+              WHERE c.tenant_id=@tenant AND (c.branch_id IS NULL OR c.branch_id=@branch)
+                AND lower(c.code)=lower(@code) AND c.status='Active' AND c.is_active AND c.deleted_at IS NULL
+                AND c.discount_percent>0 AND (c.valid_from IS NULL OR c.valid_from<=now())
+                AND (c.valid_until IS NULL OR c.valid_until>=now())
+                AND (NOT(c.payload?'clientId') OR c.payload->>'clientId'=o.client_id::text)
+                AND (NOT(c.payload?'maxUses') OR (SELECT count(*) FROM barber.coupon_redemptions r WHERE r.coupon_id=c.id)<(c.payload->>'maxUses')::int)
+            ), redeemed AS (
+              INSERT INTO barber.coupon_redemptions(id,tenant_id,branch_id,coupon_id,service_order_id,client_id,discount_amount,redeemed_by)
+              SELECT @redemption,@tenant,@branch,id,@order,client_id,amount,@user FROM eligible RETURNING discount_amount
+            )
+            UPDATE barber.service_orders SET discount=discount+(SELECT discount_amount FROM redeemed),
+              total=greatest(0,total-(SELECT discount_amount FROM redeemed)),updated_at=now()
+            WHERE id=@order AND EXISTS(SELECT 1 FROM redeemed)
+            """;
+        await using var cmd = Command(c, sql, tx);
+        Add(cmd,"redemption",Guid.NewGuid()); Add(cmd,"tenant",tenant); Add(cmd,"branch",branch);
+        Add(cmd,"order",id); Add(cmd,"code",request.Code.Trim()); Add(cmd,"user",user);
+        if (await cmd.ExecuteNonQueryAsync(ct)!=1) throw new InvalidOperationException("Cupom inválido, expirado, inelegível ou esgotado.");
+        await Audit(c,tx,tenant,branch,user,"Coupon.Redeem",id,$"Cupom {request.Code.Trim()} aplicado",ct);
+        await tx.CommitAsync(ct); return (await GetAsync(tenant,branch,id,ct))!;
+    }
+
+    public async Task<ServiceOrderResponse> ApplyCashbackAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCashbackRequest request, CancellationToken ct)
+    {
+        await using var c = await connections.OpenConnectionAsync(ct);
+        await using var tx = await c.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+        await EnsureOpen(c,tx,tenant,branch,id,ct);
+        const string sql = """
+            WITH account AS (
+              SELECT la.id FROM barber.loyalty_accounts la JOIN barber.service_orders o ON o.client_id=la.client_id AND o.tenant_id=la.tenant_id
+              WHERE o.id=@order AND la.tenant_id=@tenant AND la.status='Active' AND la.deleted_at IS NULL
+                AND la.points>=@amount AND @amount<=o.total
+                AND NOT EXISTS(SELECT 1 FROM barber.loyalty_transactions lt WHERE lt.type='Redeem' AND lt.payload->>'serviceOrderId'=@order::text)
+              FOR UPDATE OF la
+            ), debit AS (
+              UPDATE barber.loyalty_accounts la SET points=points-@amount,updated_at=now() FROM account a WHERE la.id=a.id RETURNING la.id
+            ), movement AS (
+              INSERT INTO barber.loyalty_transactions(id,tenant_id,branch_id,loyalty_account_id,points,type,payload)
+              SELECT @movement,@tenant,@branch,id,-@amount,'Redeem',jsonb_build_object('serviceOrderId',@order) FROM debit RETURNING id
+            )
+            UPDATE barber.service_orders SET discount=discount+@amount,total=total-@amount,updated_at=now()
+            WHERE id=@order AND EXISTS(SELECT 1 FROM movement)
+            """;
+        await using var cmd=Command(c,sql,tx);
+        Add(cmd,"movement",Guid.NewGuid()); Add(cmd,"tenant",tenant); Add(cmd,"branch",branch); Add(cmd,"order",id); Add(cmd,"amount",request.Amount);
+        if(await cmd.ExecuteNonQueryAsync(ct)!=1) throw new InvalidOperationException("Saldo de cashback insuficiente ou valor acima do total da comanda.");
+        await Audit(c,tx,tenant,branch,user,"Loyalty.Redeem",id,$"Cashback resgatado: {request.Amount:0.00}",ct);
+        await tx.CommitAsync(ct); return (await GetAsync(tenant,branch,id,ct))!;
+    }
+
     public async Task<PaymentResponse> RegisterAsync(Guid tenant,Guid branch,Guid user,Guid orderId,RegisterPaymentRequest request,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,ct);
       await using(var existing=Command(c,"SELECT id,amount,status FROM barber.payments WHERE tenant_id=@tenant AND idempotency_key=@key FOR UPDATE",tx)){Add(existing,"tenant",tenant);Add(existing,"key",request.IdempotencyKey);await using var er=await existing.ExecuteReaderAsync(ct);if(await er.ReadAsync(ct)){var replay=new PaymentResponse(er.GetGuid(0),orderId,er.GetString(2),er.GetDecimal(1),0,request.Splits,true);await er.DisposeAsync();await tx.CommitAsync(ct);return replay;}}
@@ -41,7 +100,7 @@ public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connecti
     public async Task<PaymentResponse> RefundAsync(Guid tenant,Guid branch,Guid user,Guid paymentId,RefundPaymentRequest request,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);Guid order;decimal amount;await using(var cmd=Command(c,"UPDATE barber.payments SET status='Refunded',updated_at=now() WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND status='Paid' RETURNING service_order_id,amount",tx)){Add(cmd,"id",paymentId);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);await using var r=await cmd.ExecuteReaderAsync(ct);if(!await r.ReadAsync(ct))throw new InvalidOperationException("Pagamento não encontrado ou já estornado.");order=r.GetGuid(0);amount=r.GetDecimal(1);}
       await using(var cash=Command(c,"INSERT INTO barber.cash_transactions(id,tenant_id,branch_id,cash_register_id,payment_id,type,amount,description) SELECT gen_random_uuid(),tenant_id,branch_id,cash_register_id,id,'Refund',-amount,@reason FROM barber.payments WHERE id=@payment AND cash_register_id IS NOT NULL",tx)){Add(cash,"payment",paymentId);Add(cash,"reason",request.Reason);await cash.ExecuteNonQueryAsync(ct);}
-      await using(var stock=Command(c,"""WITH returned AS (SELECT i.product_id,sum(i.quantity) qty FROM barber.service_order_items i JOIN barber.service_orders o ON o.id=i.service_order_id AND o.status='Paid' WHERE i.service_order_id=@order AND i.product_id IS NOT NULL AND i.deleted_at IS NULL GROUP BY i.product_id), upd AS (UPDATE barber.products p SET current_stock=p.current_stock+r.qty,updated_at=now() FROM returned r WHERE p.id=r.product_id RETURNING p.id,p.current_stock,r.qty) INSERT INTO barber.stock_movements(id,tenant_id,branch_id,product_id,service_order_id,type,quantity,balance_after,reason,created_by) SELECT gen_random_uuid(),@tenant,@branch,id,@order,'Refund',qty,current_stock,@reason,@user FROM upd""",tx)){Add(stock,"order",order);Add(stock,"tenant",tenant);Add(stock,"branch",branch);Add(stock,"reason",request.Reason);Add(stock,"user",user);await stock.ExecuteNonQueryAsync(ct);}
+      await using(var stock=Command(c,"""WITH returned AS (SELECT i.product_id,sum(i.quantity) qty FROM barber.service_order_items i JOIN barber.service_orders o ON o.id=i.service_order_id AND o.status='Paid' WHERE i.service_order_id=@order AND i.product_id IS NOT NULL AND i.deleted_at IS NULL GROUP BY i.product_id), upd AS (UPDATE barber.products p SET current_stock=p.current_stock+r.qty,updated_at=now() FROM returned r WHERE p.id=r.product_id RETURNING p.id,p.current_stock AS balance_after,r.qty) INSERT INTO barber.stock_movements(id,tenant_id,branch_id,product_id,service_order_id,type,quantity,balance_after,reason,created_by) SELECT gen_random_uuid(),@tenant,@branch,id,@order,'Refund',qty,balance_after,@reason,@user FROM upd""",tx)){Add(stock,"order",order);Add(stock,"tenant",tenant);Add(stock,"branch",branch);Add(stock,"reason",request.Reason);Add(stock,"user",user);await stock.ExecuteNonQueryAsync(ct);}
       await using(var commission=Command(c,"UPDATE barber.commissions SET status='Reversed' WHERE payment_id=@payment AND status<>'Reversed'",tx)){Add(commission,"payment",paymentId);await commission.ExecuteNonQueryAsync(ct);}
       await using(var loyalty=Command(c,"""INSERT INTO barber.loyalty_transactions(id,tenant_id,branch_id,loyalty_account_id,payment_id,points,type) SELECT gen_random_uuid(),tenant_id,branch_id,loyalty_account_id,@payment,-points,'Refund' FROM barber.loyalty_transactions WHERE payment_id=@payment AND type='Earn'""",tx)){Add(loyalty,"payment",paymentId);await loyalty.ExecuteNonQueryAsync(ct);}
       await using(var cmd=Command(c,"UPDATE barber.service_orders SET status=CASE WHEN EXISTS(SELECT 1 FROM barber.payments WHERE service_order_id=@id AND status='Paid') THEN 'PartiallyPaid' ELSE 'Open' END,updated_at=now() WHERE id=@id",tx)){Add(cmd,"id",order);await cmd.ExecuteNonQueryAsync(ct);}await Audit(c,tx,tenant,branch,user,"Payment.Refund",paymentId,request.Reason,ct);await tx.CommitAsync(ct);return new(paymentId,order,"Refunded",amount,0,[]); }
