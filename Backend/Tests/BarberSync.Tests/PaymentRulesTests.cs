@@ -38,4 +38,18 @@ public sealed class PaymentRulesTests
         Assert.Throws<InvalidOperationException>(() =>
             PaymentRules.ValidateAndTotal([new("Cash", amount)], 100));
     }
+
+    [Fact]
+    public void Cash_can_report_received_amount_and_change()
+    {
+        var amount = PaymentRules.ValidateAndTotal([new("Cash", 100, 120)], 100);
+        Assert.Equal(100, amount);
+    }
+
+    [Fact]
+    public void Non_cash_payment_cannot_generate_change()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            PaymentRules.ValidateAndTotal([new("Pix", 100, 120)], 100));
+    }
 }

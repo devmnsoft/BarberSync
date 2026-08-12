@@ -24,6 +24,15 @@ public static class PaymentRules
         if (splits.Any(split => split.Amount <= 0))
             throw new InvalidOperationException("Os valores de pagamento devem ser positivos.");
 
+        foreach (var split in splits)
+        {
+            var isCash = split.Method.Equals("Cash", StringComparison.OrdinalIgnoreCase);
+            if (!isCash && split.ReceivedAmount is not null)
+                throw new InvalidOperationException("Valor recebido e troco são permitidos somente para dinheiro.");
+            if (isCash && split.ReceivedAmount is { } received && received < split.Amount)
+                throw new InvalidOperationException("O valor recebido em dinheiro não pode ser menor que o valor aplicado.");
+        }
+
         var amount = splits.Sum(split => split.Amount);
         if (amount > balance)
             throw new InvalidOperationException("A soma dos pagamentos não pode superar o saldo da comanda.");
@@ -45,6 +54,8 @@ public interface IServiceOrderRepository
     Task<ServiceOrderResponse> UpdateItemAsync(Guid tenant, Guid branch, Guid id, Guid itemId, UpdateOrderItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> RemoveItemAsync(Guid tenant, Guid branch, Guid id, Guid itemId, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyDiscountAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyDiscountRequest request, CancellationToken ct);
+    Task<ServiceOrderResponse> ApplyCouponAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCouponRequest request, CancellationToken ct);
+    Task<ServiceOrderResponse> ApplyCashbackAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCashbackRequest request, CancellationToken ct);
 }
 
 public interface IPaymentRepository
@@ -66,6 +77,8 @@ public interface IServiceOrderService
     Task<ServiceOrderResponse> UpdateItemAsync(Guid id, Guid itemId, UpdateOrderItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> RemoveItemAsync(Guid id, Guid itemId, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyDiscountAsync(Guid id, ApplyDiscountRequest request, CancellationToken ct);
+    Task<ServiceOrderResponse> ApplyCouponAsync(Guid id, ApplyCouponRequest request, CancellationToken ct);
+    Task<ServiceOrderResponse> ApplyCashbackAsync(Guid id, ApplyCashbackRequest request, CancellationToken ct);
 }
 public interface IPaymentService
 {
@@ -83,6 +96,8 @@ public sealed class ServiceOrderService(IServiceOrderRepository repository, Abst
     public Task<ServiceOrderResponse> UpdateItemAsync(Guid id,Guid itemId,UpdateOrderItemRequest request,CancellationToken ct) => repository.UpdateItemAsync(current.TenantId,current.BranchId,id,itemId,request,ct);
     public Task<ServiceOrderResponse> RemoveItemAsync(Guid id,Guid itemId,CancellationToken ct) => repository.RemoveItemAsync(current.TenantId,current.BranchId,id,itemId,ct);
     public Task<ServiceOrderResponse> ApplyDiscountAsync(Guid id,ApplyDiscountRequest request,CancellationToken ct) => repository.ApplyDiscountAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
+    public Task<ServiceOrderResponse> ApplyCouponAsync(Guid id,ApplyCouponRequest request,CancellationToken ct) => repository.ApplyCouponAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
+    public Task<ServiceOrderResponse> ApplyCashbackAsync(Guid id,ApplyCashbackRequest request,CancellationToken ct) => repository.ApplyCashbackAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
 }
 public sealed class PaymentService(IPaymentRepository repository, Abstractions.ICurrentUserContext current) : IPaymentService
 {

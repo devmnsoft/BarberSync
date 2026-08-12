@@ -16,6 +16,8 @@ public sealed class ServiceOrdersController(IServiceOrderService orders, IPaymen
     [HttpPut("{id:guid}/items/{itemId:guid}"), RequirePermission("ServiceOrder.Update")] public Task<ServiceOrderResponse> UpdateItem(Guid id,Guid itemId,UpdateOrderItemRequest request,CancellationToken ct) => orders.UpdateItemAsync(id,itemId,request,ct);
     [HttpDelete("{id:guid}/items/{itemId:guid}"), RequirePermission("ServiceOrder.Update")] public Task<ServiceOrderResponse> RemoveItem(Guid id,Guid itemId,CancellationToken ct) => orders.RemoveItemAsync(id,itemId,ct);
     [HttpPost("{id:guid}/discount"), RequirePermission("ServiceOrder.Discount")] public Task<ServiceOrderResponse> Discount(Guid id,ApplyDiscountRequest request,CancellationToken ct) => orders.ApplyDiscountAsync(id,request,ct);
+    [HttpPost("{id:guid}/coupon"), RequirePermission("Coupon.Redeem")] public Task<ServiceOrderResponse> Coupon(Guid id,ApplyCouponRequest request,CancellationToken ct) => orders.ApplyCouponAsync(id,request,ct);
+    [HttpPost("{id:guid}/cashback"), RequirePermission("Loyalty.Redeem")] public Task<ServiceOrderResponse> Cashback(Guid id,ApplyCashbackRequest request,CancellationToken ct) => orders.ApplyCashbackAsync(id,request,ct);
     [HttpPost("{id:guid}/payments"), RequirePermission("Payment.Create")] public Task<PaymentResponse> Pay(Guid id,RegisterPaymentRequest request,CancellationToken ct) => payments.RegisterAsync(id,request,ct);
     [HttpPost("payments/{paymentId:guid}/refund"), RequirePermission("Payment.Refund")] public Task<PaymentResponse> Refund(Guid paymentId,RefundPaymentRequest request,CancellationToken ct) => payments.RefundAsync(paymentId,request,ct);
 }
