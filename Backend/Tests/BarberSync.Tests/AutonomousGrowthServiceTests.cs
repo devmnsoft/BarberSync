@@ -1,4 +1,5 @@
 using BarberSync.Application.Services.AutonomousGrowth;
+using System.Linq;
 
 namespace BarberSync.Tests;
 

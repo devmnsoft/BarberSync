@@ -1,5 +1,6 @@
 using BarberSync.Application.DTOs.Ai;
 using BarberSync.Application.Services.Ai;
+using System;
 
 namespace BarberSync.Tests;
 

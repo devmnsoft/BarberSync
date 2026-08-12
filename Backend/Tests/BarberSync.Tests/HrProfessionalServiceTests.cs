@@ -1,5 +1,7 @@
 using BarberSync.Application.DTOs;
 using BarberSync.Application.Services.Hr;
+using System;
+using System.Linq;
 
 namespace BarberSync.Tests;
 

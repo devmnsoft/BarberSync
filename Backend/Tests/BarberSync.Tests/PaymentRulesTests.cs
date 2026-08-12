@@ -1,4 +1,5 @@
 using BarberSync.Application.Operations;
+using System;
 
 namespace BarberSync.Tests;
 

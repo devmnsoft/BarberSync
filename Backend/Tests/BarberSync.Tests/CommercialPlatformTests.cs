@@ -1,5 +1,6 @@
 using BarberSync.Application.DTOs;
 using BarberSync.Application.Services.Saas;
+using System;
 
 namespace BarberSync.Tests;
 
