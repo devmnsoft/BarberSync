@@ -1,52 +1,93 @@
 @{
-    ViewData["Title"] = "Comandas";
+    ViewData["Title"] = "Comandas e PDV";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<section class="page-header">
-    <div>
-        <h1 class="page-title">Comandas</h1>
-        <p class="page-subtitle">Kanban de atendimento e pagamentos mock. Dados carregados por proxy MVC <strong>/AdminApi/service-orders</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="ServiceOrders">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="ServiceOrders">Novo Comanda</button>
-    </div>
-</section>
-<div class="alert alert-warning d-none" id="ServiceOrdersFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="ServiceOrdersCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
-</section>
-<section class="enterprise-demo-grid"><article class="enterprise-card wide"><h3>Kanban de comandas</h3><div class="kanban-demo"><div class="kanban-col"><strong>Abertas</strong><div class="kanban-card">#1001 Lucas • R$ 115</div></div><div class="kanban-col"><strong>Em pagamento</strong><div class="kanban-card">#1002 Marina • R$ 55</div></div><div class="kanban-col"><strong>Fechadas</strong><div class="kanban-card">#0999 André • R$ 95</div></div></div></article><article class="enterprise-card"><h3>Recibo visual</h3><div class="receipt-demo"><strong>BarberSync</strong><p>Corte + Barba R$ 95<br/>Pomada R$ 35<br/>Desconto R$ 10</p><strong>Total R$ 120</strong></div><button class="btn btn-primary" onclick="window.print()">Imprimir recibo</button></article><article class="enterprise-card full"><h3>Pagamento mock</h3><div class="quick-actions-grid"><button class="btn btn-light" data-demo-action="PIX aprovado">PIX</button><button class="btn btn-light" data-demo-action="Cartão aprovado">Cartão</button><button class="btn btn-light" data-demo-action="Dinheiro registrado">Dinheiro</button></div></article></section>
-<!-- Demo Experience 3.0 injected -->
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>PDV 3.0 visual</h3><p>Busca cliente, adiciona serviço/produto, aplica desconto/cupom/cashback e fecha com PIX, cartão, dinheiro ou misto.</p><div class="quick-actions-grid"><button class="btn btn-primary" onclick="const s=window.BarberSyncDemoStore; const o=s?.get('serviceOrders')?.find(x=>x.status!=='Paga'); if(o){s.addProductToOrder(o.id,'prd-001',1); s.payServiceOrder(o.id,{method:'PIX'}); window.AdminToast?.show('Produto adicionado, PIX aprovado, estoque baixado e cashback gerado.','success'); window.refreshModule?.('ServiceOrders');}">Pagar primeira comanda PIX</button><button class="btn btn-light" onclick="window.print()">Imprimir recibo</button><button class="btn btn-light" data-demo-action="Compartilhamento mock enviado pelo WhatsApp">Compartilhar mock</button></div></article>
-  <article class="enterprise-card demo-receipt"><h3>BarberSync</h3><p>Recibo premium demo</p><div class="receipt-total">PIX aprovado</div><small>Cashback e avaliação pendente gerados automaticamente.</small></article>
-</section>
-<section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/service-orders</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ServiceOrdersRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
-</section>
-<div class="admin-modal-backdrop" id="ServiceOrdersModal" hidden>
-    <form class="admin-modal" data-admin-form="ServiceOrders">
-        <div class="modal-header"><h3>Novo/editar Comanda</h3><button type="button" class="modal-close" data-admin-close="ServiceOrders">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="ServiceOrders">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-service-orders.css" asp-append-version="true" />
+}
+
+<main class="bs-pos" data-pos-root aria-busy="true">
+    <header class="bs-pos-header">
+        <div>
+            <span class="bs-eyebrow">Operação de vendas</span>
+            <h1>Comandas e PDV</h1>
+            <p>Venda serviços e produtos, aplique benefícios e receba com segurança.</p>
+        </div>
+        <div class="bs-pos-header-actions">
+            <select class="bs-field" data-order-picker aria-label="Selecionar comanda"></select>
+            <button class="btn btn-light bs-touch-target" type="button" data-refresh>Atualizar</button>
+            <button class="btn btn-primary bs-touch-target" type="button" data-open-order>Abrir comanda</button>
+        </div>
+    </header>
+
+    <nav class="bs-pos-tabs" aria-label="Etapa do PDV">
+        <button class="is-active" type="button" data-pos-tab="catalog">Catálogo</button>
+        <button type="button" data-pos-tab="order">Comanda <span data-item-count>0</span></button>
+        <button type="button" data-pos-tab="payment">Pagamento</button>
+    </nav>
+
+    <div class="bs-pos-state" data-pos-state role="status">Carregando dados da operação…</div>
+
+    <section class="bs-pos-grid">
+        <article class="bs-pos-panel bs-safe-scroll" data-pos-panel="catalog">
+            <div class="bs-panel-heading"><div><span class="bs-step">01</span><h2>Catálogo</h2></div></div>
+            <label class="bs-search"><span>Buscar</span><input type="search" data-catalog-search placeholder="Serviço ou produto" autocomplete="off" /></label>
+            <div class="bs-filter-pills" role="group" aria-label="Filtrar catálogo">
+                <button class="is-active" type="button" data-catalog-filter="all">Todos</button>
+                <button type="button" data-catalog-filter="service">Serviços</button>
+                <button type="button" data-catalog-filter="product">Produtos</button>
+            </div>
+            <div class="bs-catalog" data-catalog></div>
+        </article>
+
+        <article class="bs-pos-panel bs-safe-scroll" data-pos-panel="order">
+            <div class="bs-panel-heading"><div><span class="bs-step">02</span><h2>Comanda</h2></div><span class="bs-status" data-order-status>—</span></div>
+            <div class="bs-order-meta" data-order-meta>Selecione ou abra uma comanda.</div>
+            <div class="bs-order-items" data-order-items></div>
+        </article>
+
+        <aside class="bs-pos-panel bs-sticky-summary" data-pos-panel="payment">
+            <div class="bs-panel-heading"><div><span class="bs-step">03</span><h2>Resumo</h2></div></div>
+            <dl class="bs-totals">
+                <div><dt>Subtotal</dt><dd data-subtotal>R$ 0,00</dd></div>
+                <div><dt>Descontos</dt><dd data-discount>R$ 0,00</dd></div>
+                <div class="bs-total"><dt>Total</dt><dd data-total>R$ 0,00</dd></div>
+                <div><dt>Pago</dt><dd data-paid>R$ 0,00</dd></div>
+                <div class="bs-balance"><dt>Saldo</dt><dd data-balance>R$ 0,00</dd></div>
+            </dl>
+            <form class="bs-benefit" data-coupon-form><label>Cupom<input name="code" required maxlength="40" placeholder="Código do cupom" /></label><button class="btn btn-light bs-touch-target" type="submit">Aplicar</button></form>
+            <form class="bs-benefit" data-cashback-form><label>Cashback<input name="amount" required min="0.01" step="0.01" type="number" placeholder="0,00" /></label><button class="btn btn-light bs-touch-target" type="submit">Usar</button></form>
+            <div class="bs-inline-feedback" data-benefit-feedback aria-live="polite"></div>
+            <button class="btn btn-primary bs-receive bs-touch-target" type="button" data-open-payment>Receber pagamento</button>
+        </aside>
+    </section>
+</main>
+
+<div class="bs-drawer-backdrop" data-drawer-backdrop hidden></div>
+<aside class="bs-payment-drawer bs-drawer-scroll" data-payment-drawer hidden aria-labelledby="payment-title" aria-modal="true" role="dialog">
+    <header><div><span class="bs-eyebrow">Recebimento seguro</span><h2 id="payment-title">Pagamento</h2></div><button type="button" data-close-payment aria-label="Fechar">×</button></header>
+    <form data-payment-form novalidate>
+        <div data-splits></div>
+        <button class="btn btn-light bs-touch-target" type="button" data-add-split>+ Adicionar forma</button>
+        <label>Observação <textarea name="notes" rows="3" maxlength="300" placeholder="Opcional"></textarea></label>
+        <div class="bs-payment-preview"><span>Total dos splits</span><strong data-split-total>R$ 0,00</strong><span>Troco</span><strong data-change>R$ 0,00</strong></div>
+        <div class="bs-form-error" data-payment-error role="alert"></div>
+        <button class="btn btn-primary bs-touch-target" type="submit" data-submit-payment>Confirmar recebimento</button>
     </form>
-</div>
-@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-service-orders.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('ServiceOrders')</script>}
+</aside>
 
-<section class="panel"><div class="panel-header"><div><h3>Comanda/PDV integrado</h3><p>Abra comanda, adicione serviços/produtos, pague, gere recibo, baixe estoque e gere cashback.</p></div></div><div class="module-feature-grid" data-service-orders-demo></div></section>
+<dialog class="bs-open-dialog" data-open-dialog>
+    <form method="dialog" data-open-form>
+        <header><h2>Abrir comanda</h2><button value="cancel" aria-label="Fechar">×</button></header>
+        <label>Cliente<select name="clientId" required></select></label>
+        <label>Atendimento (opcional)<input name="appointmentId" type="text" placeholder="ID do atendimento" /></label>
+        <label>Observação<textarea name="notes" rows="3" maxlength="300"></textarea></label>
+        <div class="bs-form-error" data-open-error role="alert"></div>
+        <footer><button class="btn btn-light" value="cancel">Cancelar</button><button class="btn btn-primary" value="default" type="submit">Abrir comanda</button></footer>
+    </form>
+</dialog>
 
-<section class="panel"><div class="panel-header"><div><h3>ServiceOrders 2.0 integrado</h3><p>Ações conectadas ao DemoStore, EventBus, Dashboard, Operação e Cliente 360.</p></div></div><div data-service-orders-v2></div></section>
-<section class="saas-grid" data-pdv-30><article class="saas-card wide"><h3>PDV 3.0 • Carrinho integrado</h3><div class="saas-actions"><button class="btn btn-primary" data-pdv-demo>Abrir comanda demo</button><button class="btn btn-light" data-pdv-product>Adicionar produto</button><button class="btn btn-light" data-pdv-coupon>Aplicar cupom</button><button class="btn btn-gold" data-pdv-pay>Pagar, recibo e cashback</button></div><div class="saas-list" data-pdv-cart></div></article><article class="saas-card"><h3>Recibo</h3><div data-pdv-receipt>Recibo será gerado após pagamento.</div></article></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Comanda do Atendimento Completo 14.0</h3><p>Status Open/Paid/Closed, itens, pagamento e recibo acessível.</p></div><a class="btn btn-light" href="/Admin/FullServiceFlow">Abrir fluxo</a></div><div data-flow-service-order></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Comanda do Fluxo Comercial 15.0</h3><p>Kanban, lista de itens, recibo e pagamentos gerados no fluxo central.</p></div></div><div data-commercial-flow-order></div></section>
+@section Scripts {
+    <script src="~/js/admin-service-orders.js" asp-append-version="true"></script>
+}

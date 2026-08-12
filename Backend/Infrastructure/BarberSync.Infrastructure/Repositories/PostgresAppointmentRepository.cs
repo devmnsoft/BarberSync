@@ -6,26 +6,59 @@ namespace BarberSync.Infrastructure.Repositories;
 
 public sealed class PostgresAppointmentRepository(IDbConnectionFactory connections) : IAppointmentRepository
 {
-    private const string Projection = """
+    private const string ListSql = """
         SELECT a.id,a.client_id,c.name,a.professional_id,p.name,a.service_id,s.name,
                a.scheduled_start,a.scheduled_end,s.duration_minutes,a.status,a.origin,a.notes,a.cancellation_reason
           FROM barber.appointments a
           JOIN barber.clients c ON c.id=a.client_id
           JOIN barber.professionals p ON p.id=a.professional_id
           JOIN barber.services s ON s.id=a.service_id
+         WHERE a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL
+           AND (@from IS NULL OR a.scheduled_end >= @from)
+           AND (@to IS NULL OR a.scheduled_start < @to)
+           AND (@professional IS NULL OR a.professional_id=@professional)
+           AND (@service IS NULL OR a.service_id=@service)
+           AND (@status IS NULL OR a.status=@status)
+           AND (@origin IS NULL OR a.origin=@origin)
+         ORDER BY a.scheduled_start
+        """;
+
+    private const string GetSql = """
+        SELECT a.id,a.client_id,c.name,a.professional_id,p.name,a.service_id,s.name,
+               a.scheduled_start,a.scheduled_end,s.duration_minutes,a.status,a.origin,a.notes,a.cancellation_reason
+          FROM barber.appointments a
+          JOIN barber.clients c ON c.id=a.client_id
+          JOIN barber.professionals p ON p.id=a.professional_id
+          JOIN barber.services s ON s.id=a.service_id
+         WHERE a.id=@id AND a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL
+        """;
+
+    private const string ServiceDurationSql = """
+        SELECT duration_minutes
+          FROM barber.services
+         WHERE id=@id AND tenant_id=@tenant AND (branch_id IS NULL OR branch_id=@branch)
+           AND status='Active' AND deleted_at IS NULL
+        """;
+
+    private const string CreateSql = """
+        INSERT INTO barber.appointments
+            (id,tenant_id,branch_id,client_id,professional_id,service_id,scheduled_start,scheduled_end,status,origin,notes)
+        VALUES
+            (@id,@tenant,@branch,@client,@professional,@service,@start,@finish,@status,@origin,@notes)
+        """;
+
+    private const string UpdateSql = """
+        UPDATE barber.appointments
+           SET client_id=@client, professional_id=@professional, service_id=@service,
+               scheduled_start=@start, scheduled_end=@finish, origin=@origin, notes=@notes, updated_at=now()
+         WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL
         """;
 
     public async Task<IReadOnlyList<AppointmentResponse>> ListAsync(Guid tenantId, Guid branchId, AppointmentFilter filter, CancellationToken ct)
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + """
-             WHERE a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL
-               AND (@from IS NULL OR a.scheduled_end >= @from) AND (@to IS NULL OR a.scheduled_start < @to)
-               AND (@professional IS NULL OR a.professional_id=@professional) AND (@service IS NULL OR a.service_id=@service)
-               AND (@status IS NULL OR a.status=@status) AND (@origin IS NULL OR a.origin=@origin)
-             ORDER BY a.scheduled_start
-            """;
+        command.CommandText = ListSql;
         Add(command, "tenant", tenantId); Add(command, "branch", branchId); Add(command, "from", filter.From); Add(command, "to", filter.To);
         Add(command, "professional", filter.ProfessionalId); Add(command, "service", filter.ServiceId); Add(command, "status", filter.Status); Add(command, "origin", filter.Origin);
         var rows = new List<AppointmentResponse>();
@@ -38,7 +71,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = Projection + " WHERE a.id=@id AND a.tenant_id=@tenant AND a.branch_id=@branch AND a.deleted_at IS NULL";
+        command.CommandText = GetSql;
         Add(command, "id", id); Add(command, "tenant", tenantId); Add(command, "branch", branchId);
         await using var reader = await command.ExecuteReaderAsync(ct);
         return await reader.ReadAsync(ct) ? Read(reader) : null;
@@ -48,7 +81,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT duration_minutes FROM barber.services WHERE id=@id AND tenant_id=@tenant AND (branch_id IS NULL OR branch_id=@branch) AND status='Active' AND deleted_at IS NULL";
+        command.CommandText = ServiceDurationSql;
         Add(command, "id", serviceId); Add(command, "tenant", tenantId); Add(command, "branch", branchId);
         var value = await command.ExecuteScalarAsync(ct); return value is null ? null : Convert.ToInt32(value);
     }
@@ -71,8 +104,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = """INSERT INTO barber.appointments(id,tenant_id,branch_id,client_id,professional_id,service_id,scheduled_start,scheduled_end,status,origin,notes)
-            VALUES(@id,@tenant,@branch,@client,@professional,@service,@start,@finish,@status,@origin,@notes)""";
+        command.CommandText = CreateSql;
         Bind(command, a); await command.ExecuteNonQueryAsync(ct);
         return (await GetAsync(a.TenantId, a.BranchId, a.Id, ct))!;
     }
@@ -81,8 +113,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
     {
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var command = connection.CreateCommand();
-        command.CommandText = """UPDATE barber.appointments SET client_id=@client,professional_id=@professional,service_id=@service,scheduled_start=@start,scheduled_end=@finish,origin=@origin,notes=@notes,updated_at=now()
-            WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL""";
+        command.CommandText = UpdateSql;
         Bind(command, a); if (await command.ExecuteNonQueryAsync(ct) != 1) throw new KeyNotFoundException("Agendamento não encontrado.");
         return (await GetAsync(a.TenantId, a.BranchId, a.Id, ct))!;
     }

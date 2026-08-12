@@ -6,14 +6,64 @@ namespace BarberSync.Infrastructure.Repositories;
 
 public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connections) : IServiceOrderRepository, IPaymentRepository
 {
-    public async Task<IReadOnlyList<ServiceOrderResponse>> ListAsync(Guid tenant,Guid branch,CancellationToken ct)
-    { await using var c=await connections.OpenConnectionAsync(ct); var ids=new List<Guid>(); await using(var cmd=Command(c,"SELECT id FROM barber.service_orders WHERE tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL ORDER BY created_at DESC")){Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);await using var r=await cmd.ExecuteReaderAsync(ct);while(await r.ReadAsync(ct))ids.Add(r.GetGuid(0));} var result=new List<ServiceOrderResponse>();foreach(var id in ids)result.Add((await GetAsync(tenant,branch,id,ct))!);return result; }
+    private const string ListOrderIdsSql = """
+        SELECT id
+          FROM barber.service_orders
+         WHERE tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL
+         ORDER BY created_at DESC
+        """;
+
+    private const string OpenOrderSql = """
+        INSERT INTO barber.service_orders
+            (id,tenant_id,branch_id,appointment_id,client_id,number,notes)
+        SELECT @id,@tenant,@branch,@appointment,@client,
+               concat('OS-',to_char(now(),'YYYYMMDD-'),substr(@id::text,1,8)),@notes
+         WHERE EXISTS (
+             SELECT 1 FROM barber.clients
+              WHERE id=@client AND tenant_id=@tenant AND deleted_at IS NULL
+         )
+        """;
+
+    public async Task<IReadOnlyList<ServiceOrderResponse>> ListAsync(Guid tenant, Guid branch, CancellationToken ct)
+    {
+        await using var connection = await connections.OpenConnectionAsync(ct);
+        var ids = new List<Guid>();
+        await using (var command = Command(connection, ListOrderIdsSql))
+        {
+            Add(command, "tenant", tenant);
+            Add(command, "branch", branch);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+                ids.Add(reader.GetGuid(0));
+        }
+
+        var result = new List<ServiceOrderResponse>();
+        foreach (var id in ids)
+            result.Add((await GetAsync(tenant, branch, id, ct))!);
+        return result;
+    }
 
     public async Task<ServiceOrderResponse?> GetAsync(Guid tenant,Guid branch,Guid id,CancellationToken ct)
     { await using var c=await connections.OpenConnectionAsync(ct); return await ReadOrder(c,null,tenant,branch,id,ct); }
 
-    public async Task<ServiceOrderResponse> OpenAsync(Guid tenant,Guid branch,OpenServiceOrderRequest request,CancellationToken ct)
-    { await using var c=await connections.OpenConnectionAsync(ct);await using var tx=await c.BeginTransactionAsync(ct);var id=Guid.NewGuid();await using(var cmd=Command(c,"""INSERT INTO barber.service_orders(id,tenant_id,branch_id,appointment_id,client_id,number,notes) SELECT @id,@tenant,@branch,@appointment,@client,concat('OS-',to_char(now(),'YYYYMMDD-'),substr(@id::text,1,8)),@notes WHERE EXISTS(SELECT 1 FROM barber.clients WHERE id=@client AND tenant_id=@tenant AND deleted_at IS NULL)""",tx)){Add(cmd,"id",id);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"appointment",request.AppointmentId);Add(cmd,"client",request.ClientId);Add(cmd,"notes",request.Notes);if(await cmd.ExecuteNonQueryAsync(ct)!=1)throw new KeyNotFoundException("Cliente não encontrado.");}await tx.CommitAsync(ct);return (await GetAsync(tenant,branch,id,ct))!; }
+    public async Task<ServiceOrderResponse> OpenAsync(Guid tenant, Guid branch, OpenServiceOrderRequest request, CancellationToken ct)
+    {
+        await using var connection = await connections.OpenConnectionAsync(ct);
+        await using var transaction = await connection.BeginTransactionAsync(ct);
+        var id = Guid.NewGuid();
+        await using var command = Command(connection, OpenOrderSql, transaction);
+        Add(command, "id", id);
+        Add(command, "tenant", tenant);
+        Add(command, "branch", branch);
+        Add(command, "appointment", request.AppointmentId);
+        Add(command, "client", request.ClientId);
+        Add(command, "notes", request.Notes);
+        if (await command.ExecuteNonQueryAsync(ct) != 1)
+            throw new KeyNotFoundException("Cliente não encontrado.");
+
+        await transaction.CommitAsync(ct);
+        return (await GetAsync(tenant, branch, id, ct))!;
+    }
 
     public Task<ServiceOrderResponse> AddServiceAsync(Guid tenant,Guid branch,Guid id,AddServiceItemRequest request,CancellationToken ct) => AddCatalogItem(tenant,branch,id,"Service",request.ServiceId,null,request.ProfessionalId,request.Quantity,ct);
     public Task<ServiceOrderResponse> AddProductAsync(Guid tenant,Guid branch,Guid id,AddProductItemRequest request,CancellationToken ct) => AddCatalogItem(tenant,branch,id,"Product",null,request.ProductId,request.ProfessionalId,request.Quantity,ct);
