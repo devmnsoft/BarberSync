@@ -1,5 +1,9 @@
 using BarberSync.Api.Services.Growth;
 using BarberSync.Api.Services.Recognition;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BarberSync.Tests;
 

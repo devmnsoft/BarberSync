@@ -1,5 +1,6 @@
 using System.Data.Common;
 using BarberSync.Application.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
