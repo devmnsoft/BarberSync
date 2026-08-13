@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentRepository, PostgresAppointmentRepository>();
         services.AddScoped<IServiceOrderRepository, PostgresServiceOrderRepository>();
         services.AddScoped<IPaymentRepository, PostgresServiceOrderRepository>();
+        services.AddScoped<ICashRegisterRepository, PostgresCashRegisterRepository>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
         return services;

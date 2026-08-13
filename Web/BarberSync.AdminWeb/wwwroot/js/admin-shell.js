@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   const cashIndicator = document.querySelector('[data-cash-status]');
-  if (cashIndicator) fetch('/AdminApi/cash/current', { headers: { Accept: 'application/json' } })
+  if (cashIndicator) fetch('/AdminApi/cash-registers/current', { headers: { Accept: 'application/json' } })
     .then(response => response.ok ? response.json() : Promise.reject())
     .then(payload => {
       const cash = payload?.data?.current ?? payload?.data ?? payload?.current ?? payload;

@@ -1,49 +1,22 @@
 (() => {
-  if (!location.pathname.toLowerCase().includes('/admin/cash')) return;
-
+  'use strict';
+  if (!document.querySelector('#cashKpis')) return;
+  const q = selector => document.querySelector(selector);
+  const qa = selector => [...document.querySelectorAll(selector)];
+  const state = { current: null, busy: false };
   const money = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
-  const buttons = [...document.querySelectorAll('[data-cash-action]')];
-  const feedback = document.querySelector('#cashFeedback');
-  const status = document.querySelector('#cashStatus');
-  const rows = document.querySelector('#cashRows');
-  const kpis = document.querySelector('#cashKpis');
-
-  const showUnavailable = message => {
-    status.textContent = 'Indisponível';
-    feedback.classList.add('bs-empty');
-    feedback.innerHTML = `<strong>Não foi possível consultar o caixa</strong><span>${message || 'Tente novamente em instantes.'}</span><button class="btn btn-secondary" type="button" data-cash-retry>Tentar novamente</button>`;
-    rows.innerHTML = '<tr><td colspan="4">Nenhuma movimentação disponível.</td></tr>';
-  };
-
-  const render = data => {
-    const current = data?.current || data;
-    if (!current) return showUnavailable('A API não retornou um caixa para a unidade ativa.');
-    const isOpen = String(current.status || '').toLowerCase() === 'open' || String(current.status || '').toLowerCase() === 'aberto';
-    status.textContent = isOpen ? 'Aberto' : 'Fechado';
-    status.className = `badge ${isOpen ? 'badge-success' : 'badge-info'}`;
-    buttons.forEach(button => { button.disabled = button.dataset.cashAction === 'open' ? isOpen : !isOpen; });
-    feedback.hidden = true;
-    const metrics = [
-      ['Saldo inicial', current.openingBalance], ['Entradas', current.inflows],
-      ['Saídas', current.outflows], ['Saldo esperado', current.expectedBalance]
-    ];
-    kpis.innerHTML = metrics.map(([label, value]) => `<article class="kpi-card"><span>${label}</span><strong class="kpi-value">${money(value)}</strong></article>`).join('');
-    rows.innerHTML = (current.movements || []).map(item => `<tr><td>${item.time || '—'}</td><td>${item.type || '—'}</td><td>${money(item.amount)}</td><td>${item.method || '—'}</td></tr>`).join('') || '<tr><td colspan="4">Nenhuma movimentação registrada.</td></tr>';
-  };
-
-  async function load() {
-    buttons.forEach(button => { button.disabled = true; });
-    status.textContent = 'Consultando';
-    try {
-      const response = await fetch('/AdminApi/cash/current', { headers: { Accept: 'application/json' } });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(payload?.message || 'Serviço de caixa indisponível.');
-      render(payload?.data ?? payload);
-    } catch (error) { showUnavailable(error.message); }
-  }
-
-  document.addEventListener('click', event => {
-    if (event.target.closest('[data-cash-retry]')) load();
-  });
+  const number = value => Number(String(value ?? '').replace(/\./g, '').replace(',', '.'));
+  const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[c]));
+  const unwrap = payload => payload?.data ?? payload;
+  async function api(path, options = {}) { const response = await fetch(`/AdminApi/cash-registers/${path}`, { ...options, headers: { Accept:'application/json', ...(options.body ? {'Content-Type':'application/json'} : {}) } }); const payload=await response.json().catch(()=>null); if(!response.ok) throw new Error(payload?.detail||payload?.message||'Não foi possível concluir a operação do caixa.'); return unwrap(payload); }
+  const post = (path, body) => api(path, { method:'POST', body:JSON.stringify(body) });
+  const toast = (method, message) => window.AdminToast?.[method]?.(message) ?? window.AdminToast?.show?.(message);
+  function render() { const current=state.current; const open=current?.status==='Open'; q('#cashStatus').textContent=open?'Aberto':'Fechado'; q('#cashStatus').className=`badge ${open?'badge-success':'badge-info'}`; q('#cashFeedback').hidden=!!current; qa('[data-cash-action]').forEach(button=>button.disabled=button.dataset.cashAction==='open'?open:!open); const metrics=[['Saldo inicial',current?.openingBalance],['Entradas',current?.inflows],['Saídas',current?.outflows],['Saldo esperado',current?.expectedBalance],['Conferido',current?.actualBalance],['Diferença',current?.difference]]; q('#cashKpis').innerHTML=metrics.map(([label,value])=>`<article class="kpi-card"><span>${label}</span><strong class="kpi-value">${money(value)}</strong></article>`).join(''); q('#cashRows').innerHTML=current?.movements?.length?current.movements.map(item=>`<tr><td>${new Date(item.createdAt).toLocaleString('pt-BR')}</td><td>${esc(item.type)}</td><td>${esc(item.description)}</td><td>${money(item.amount)}</td></tr>`).join(''):'<tr><td colspan="4">Nenhuma movimentação registrada.</td></tr>'; }
+  async function load() { q('#cashAlert').hidden=true; try { const [current,history]=await Promise.all([api('current'),api('history')]); state.current=current; render(); q('#cashHistory').innerHTML=history.length?history.map(item=>`<tr><td>${new Date(item.openedAt).toLocaleString('pt-BR')}</td><td>${esc(item.status)}</td><td>${money(item.expectedBalance)}</td><td>${item.actualBalance==null?'—':money(item.actualBalance)}</td><td>${money(item.difference)}</td></tr>`).join(''):'<tr><td colspan="5">Nenhum caixa no histórico.</td></tr>'; } catch(error) { q('#cashAlert').hidden=false; q('#cashAlert').textContent=error.message; toast('showError',error.message); } }
+  function openDrawer(action) { const titles={open:'Abrir caixa',supply:'Registrar suprimento',withdrawal:'Registrar sangria',expense:'Registrar despesa',close:'Fechar caixa'}; q('#cashAction').value=action;q('#cashDrawerTitle').textContent=titles[action];q('#cashAmount').value=action==='close'?Number(state.current.expectedBalance).toFixed(2).replace('.',','):'';q('#cashReason').value='';q('#cashCategory').value='';q('#cashCategoryField').hidden=action!=='expense';q('#cashReasonField').querySelector('span')?.remove();q('#cashCloseSummary').hidden=action!=='close';q('#cashExpected').textContent=money(state.current?.expectedBalance);q('#cashFormError').textContent='';q('#cashDrawer').hidden=false;q('#cashAmount').focus();updateDifference(); }
+  function updateDifference(){if(q('#cashAction').value==='close')q('#cashDifference').textContent=money(number(q('#cashAmount').value)-Number(state.current?.expectedBalance||0));}
+  function closeDrawer(){q('#cashDrawer').hidden=true;}
+  q('#cashRefresh').addEventListener('click',load); qa('[data-cash-action]').forEach(button=>button.addEventListener('click',()=>openDrawer(button.dataset.cashAction))); qa('[data-close-cash]').forEach(button=>button.addEventListener('click',closeDrawer)); q('#cashAmount').addEventListener('input',updateDifference);
+  q('#cashForm').addEventListener('submit',async event=>{event.preventDefault();if(state.busy)return;const action=q('#cashAction').value;const amount=number(q('#cashAmount').value);const reason=q('#cashReason').value.trim();const category=q('#cashCategory').value.trim();q('#cashFormError').textContent='';if(!Number.isFinite(amount)||amount<0||(action!=='open'&&action!=='close'&&amount===0))return q('#cashFormError').textContent='Informe um valor válido.';if(['supply','withdrawal','expense'].includes(action)&&!reason)return q('#cashFormError').textContent='Informe o motivo da movimentação.';if(action==='expense'&&!category)return q('#cashFormError').textContent='Informe a categoria da despesa.';if(action==='close'&&amount!==Number(state.current.expectedBalance)&&!reason)return q('#cashFormError').textContent='A observação é obrigatória quando houver divergência.';if(action==='close'){const accepted=await window.BarberSyncConfirm?.ask?.({title:'Confirmar fechamento?',message:`Saldo conferido: ${money(amount)}. O fechamento não poderá ser apagado.`,confirmText:'Fechar caixa'});if(accepted===false)return;}state.busy=true;q('#cashSubmit').disabled=true;try{const path=action==='open'?'open':`${state.current.id}/${action}`;const body=action==='open'?{openingBalance:amount,note:reason||null}:action==='close'?{actualBalance:amount,note:reason||null}:{amount,reason,category:category||null};state.current=await post(path,body);closeDrawer();await load();toast('created','Operação de caixa registrada.');}catch(error){q('#cashFormError').textContent=error.message;toast('showError',error.message);}finally{state.busy=false;q('#cashSubmit').disabled=false;}});
   load();
 })();
