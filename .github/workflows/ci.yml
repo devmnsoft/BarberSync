@@ -15,7 +15,9 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Restore
         run: dotnet restore BarberSync.sln
-      - name: Build
+      - name: Build Debug
+        run: dotnet build BarberSync.sln --configuration Debug --no-restore
+      - name: Build Release
         run: dotnet build BarberSync.sln --configuration Release --no-restore
       - name: Test
         run: dotnet test BarberSync.sln --configuration Release --no-build
@@ -48,8 +50,18 @@ jobs:
             echo "SQL replay ${replay}/3"
             psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d barber -f ScriptsSQL/script_completo.sql
           done
-      - name: Verify schema version ledger
-        run: psql -h localhost -U postgres -d barber -Atc "SELECT count(*) FROM barber.schema_versions" | grep -qx '10'
+      - name: Verify canonical schema and seed data
+        run: |
+          psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d barber <<'SQL'
+          DO $$ BEGIN
+            IF (SELECT count(*) FROM barber.schema_versions) <> 11 THEN RAISE EXCEPTION 'schema_versions inconsistente'; END IF;
+            IF (SELECT count(*) FROM barber.permissions) = 0 THEN RAISE EXCEPTION 'permissions não provisionadas'; END IF;
+            IF (SELECT count(*) FROM barber.roles) = 0 THEN RAISE EXCEPTION 'roles não provisionadas'; END IF;
+          END $$;
+          SELECT version, description FROM barber.schema_versions ORDER BY version;
+          SELECT count(*) AS cash_registers FROM barber.cash_registers;
+          SELECT count(*) AS service_orders FROM barber.service_orders;
+          SQL
 
   mobile-totem:
     runs-on: ubuntu-latest
@@ -76,6 +88,7 @@ jobs:
         run: npm test --if-present -- --ci
 
   e2e:
+    if: ${{ hashFiles('tests/e2e/package-lock.json') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

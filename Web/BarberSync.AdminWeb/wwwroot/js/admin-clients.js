@@ -1,41 +1,41 @@
-(() => { const store=()=>window.BarberSyncDemoStore; const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); function render(){ const host=document.querySelector('[data-client360]'); if(!host||!store()) return; const st=store().exportState(); host.innerHTML=st.clients.slice(0,6).map(c=>{ const orders=st.serviceOrders.filter(o=>o.clientId===c.id); const ap=st.appointments.filter(a=>a.clientId===c.id); const rev=st.reviews.filter(r=>r.clientId===c.id); return `<article class="enterprise-card"><span class="badge badge-success">${c.segment||'Cliente'}</span><h3>${c.name}</h3><p>Score ${c.recurrenceScore||70} • gasto ${money(c.totalSpent||orders.reduce((s,o)=>s+Number(o.total||0),0))} • cashback ${money(c.cashback)}</p><div class="tag-list"><span class="tag">${c.preferredService||'Serviço favorito'}</span><span class="tag">${c.preferredProfessional||'Profissional favorito'}</span><span class="tag">NPS ${rev[0]?.nps??'pendente'}</span></div><div class="timeline-demo"><div>Perfil e observações</div><div>${ap.length} agendamento(s)</div><div>${orders.length} comanda(s)</div><div>Próxima melhor ação: ${c.status==='Reativar'?'Enviar cupom':'Agendar retorno'}</div></div><div class="quick-actions-grid"><button class="btn btn-light" data-client-act="appointment" data-id="${c.id}">Criar agendamento</button><button class="btn btn-light" data-client-act="order" data-id="${c.id}">Abrir comanda</button><button class="btn btn-light" data-client-act="coupon" data-id="${c.id}">Enviar cupom</button><button class="btn btn-primary" data-client-act="note" data-id="${c.id}">Adicionar observação</button></div></article>`}).join(''); }
- document.addEventListener('click',e=>{const b=e.target.closest('[data-client-act]'); if(!b||!store()) return; const id=b.dataset.id; if(b.dataset.clientAct==='appointment') store().createAppointment({clientId:id,serviceId:'srv-001',professionalId:'pro-001'}); if(b.dataset.clientAct==='order') store().openServiceOrder({clientId:id,professionalId:'pro-001'}); if(b.dataset.clientAct==='coupon') store().createCoupon({code:'VIP20',clientId:id}); if(b.dataset.clientAct==='note'){ const c=store().find('clients',id); store().patch('clients',id,{notes:[...(c.notes||[]),'Observação comercial registrada']}); } store().refreshDashboard(); render();}); window.addEventListener('barbersync:store-changed',render); document.addEventListener('DOMContentLoaded',render); })();
-
-(() => { const store=()=>window.BarberSyncDemoStore; const bus=()=>window.BarberSyncEventBus; const row=(k,v)=>`<div class="saas-row"><strong>${k}</strong><span>${v}</span></div>`; function render(){ if(!document.querySelector('[data-client360]'))return; const s=store(); const c=s?.get('clients')[0]; if(!c)return; const orders=s.get('serviceOrders').filter(o=>o.clientId===c.id); const total=orders.reduce((a,o)=>a+(o.total||0),0); document.querySelector('[data-client-profile]').innerHTML=row('Perfil',c.name)+row('Score',c.recurrenceScore||88)+row('Lifetime value',`R$ ${(c.totalSpent||total).toFixed(2)}`)+row('Ticket médio',`R$ ${(orders.length?total/orders.length:95).toFixed(2)}`)+row('Frequência','21 dias')+row('Cashback',`R$ ${(c.cashback||0).toFixed(2)}`)+row('Origem',c.source||'Admin')+row('Próxima melhor ação','Campanha de retorno com cupom'); document.querySelector('[data-client-timeline]').innerHTML=(bus()?.last(10)||[]).map(e=>`<div class="saas-row"><strong>${e.title}</strong><span>${e.module}</span></div>`).join('')+row('Serviços',orders.flatMap(o=>o.items||[]).map(i=>i.name).join(', ')||'Corte + Barba')+row('Avaliações',s.get('reviews').filter(r=>r.clientId===c.id).length)+row('Cupons usados',s.get('coupons').length); } document.addEventListener('click',e=>{ if(e.target.closest('[data-client-copilot]')){ const c=store()?.get('clients')[0]; store()?.add('copilotSuggestions',{title:`Reativar ${c?.name} com cashback`,clientId:c?.id,priority:'Alta'}); bus()?.emit('copilot:actionExecuted',{title:'Recomendação Copilot gerada para Cliente 360',module:'Cliente 360'}); location.href='/Admin/Copilot?clientId='+(c?.id||''); }}); bus()?.on('*',render); document.addEventListener('DOMContentLoaded',render); })();
-
 (() => {
-  const store = () => window.BarberSyncDemoStore;
-  const bus = () => window.BarberSyncEventBus;
-  const money = v => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  function renderFlowClient360(){
-    const host = document.querySelector('[data-flow-client360]'); if(!host || !store()) return;
-    const s = store().exportState(); const f = s.fullServiceFlow || store().getFullServiceFlow?.();
-    const c = s.clients.find(x=>x.id===f?.clientId); if(!c){ host.innerHTML='<p class="text-muted">Execute o Atendimento Completo para preencher esta visão.</p>'; return; }
-    const appointments = s.appointments.filter(a=>a.clientId===c.id);
-    const orders = s.serviceOrders.filter(o=>o.clientId===c.id);
-    const payments = s.payments.filter(p=>orders.some(o=>o.id===p.orderId));
-    const receipts = s.receipts.filter(r=>orders.some(o=>o.id===r.orderId));
-    const loyalty = s.loyalty.find(l=>l.clientId===c.id);
-    const reviews = s.reviews.filter(r=>r.clientId===c.id);
-    const events = (bus()?.last(20) || []).filter(e=>e.eventName.startsWith('flow:'));
-    host.innerHTML = `<div class="enterprise-demo-grid"><article class="enterprise-card"><h3>${c.name}</h3><p>${c.phone || ''}<br>Cashback ${money(c.cashback || loyalty?.balance)}</p><span class="badge badge-success">${c.segment || 'Cliente fluxo'}</span></article><article class="enterprise-card"><h3>Agenda</h3>${appointments.map(a=>`<p>${a.date} ${a.time} • ${a.service} • ${a.status}</p>`).join('')}</article><article class="enterprise-card"><h3>Comandas e pagamentos</h3>${orders.map(o=>`<p>#${o.number} • ${o.status} • ${money(o.total)}</p>`).join('')}${payments.map(p=>`<p>Pagamento ${p.method} • ${money(p.amount)}</p>`).join('')}${receipts.map(r=>`<p>Recibo ${r.number}</p>`).join('')}</article><article class="enterprise-card"><h3>Cashback e avaliação</h3><p>Saldo ${money(loyalty?.balance)}</p>${reviews.map(r=>`<p>${r.rating}★ • ${r.comment || ''}</p>`).join('')}</article><article class="enterprise-card wide"><h3>Timeline do fluxo</h3><div class="timeline-demo">${events.map(e=>`<div>${e.title} • ${new Date(e.createdAt).toLocaleTimeString('pt-BR')}</div>`).join('')}</div></article></div>`;
+  'use strict';
+  const root = document.querySelector('[data-clients-page]'); if (!root) return;
+  const $ = selector => root.querySelector(selector);
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  const normalize = payload => Array.isArray(payload) ? payload : payload?.items || payload?.data || [];
+  let clients = [];
+  function render() {
+    const term = $('#ClientsSearch').value.trim().toLocaleLowerCase('pt-BR');
+    const rows = clients.filter(client => JSON.stringify(client).toLocaleLowerCase('pt-BR').includes(term));
+    $('[data-clients-rows]').innerHTML = rows.length ? rows.map(client => `<tr><td><strong>${escapeHtml(client.name || client.fullName || 'Sem nome')}</strong></td><td>${escapeHtml(client.phone || client.email || 'Não informado')}</td><td><span class="badge badge-success">${escapeHtml(client.status || 'Ativo')}</span></td><td><a class="btn btn-secondary bs-touch-target" href="/Admin/Clients/${encodeURIComponent(client.id)}">Ver Cliente 360</a></td></tr>`).join('') : '<tr><td colspan="4"><div class="bs-premium-empty">Nenhum cliente encontrado.</div></td></tr>';
   }
-  window.addEventListener('barbersync:store-changed', renderFlowClient360);
-  bus()?.on('*', renderFlowClient360);
-  document.addEventListener('DOMContentLoaded', renderFlowClient360);
-})();
-
-(() => {
-  const store=()=>window.BarberSyncDemoStore;
-  const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  function renderCommercialFlowClient360(){
-    const hosts=[document.querySelector('[data-client-commercial-flow]'), document.getElementById('client360CommercialFlow')].filter(Boolean);
-    if(!hosts.length || !store()) return;
-    const s=store(), f=s.exportState().commercialFlow || {}, c=f.clientId?s.find('clients',f.clientId):f.client;
-    const html=f.id?`<article class="enterprise-card wide"><h3>Fluxo comercial executado</h3><p><strong>${c?.name||'Cliente demo'}</strong> veio de ${f.origin||'Admin'} e concluiu ${f.status||'em andamento'}.</p><div class="summary-row"><span>Recibo</span><strong>${f.receipt?.number||'-'}</strong></div><div class="summary-row"><span>Cashback</span><strong>${money(f.cashback?.generated)}</strong></div><div class="summary-row"><span>Avaliação</span><strong>${f.review?.rating||'-'} ⭐</strong></div><div class="timeline-demo"><div>Origem: ${f.origin||'-'}</div><div>Próxima melhor ação: convidar retorno em 30 dias com cupom VIP.</div></div></article>`:'<p>Nenhum fluxo comercial executado ainda.</p>';
-    hosts.forEach(h=>h.innerHTML=html);
+  async function load() {
+    $('[data-clients-error]').hidden = true;
+    try {
+      const response = await fetch('/AdminApi/clients', { headers: { Accept: 'application/json' } });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw Object.assign(new Error(payload.detail || payload.title || 'A API recusou a consulta.'), { traceId: payload.traceId });
+      clients = normalize(payload); render();
+    } catch (error) {
+      $('[data-clients-rows]').innerHTML = '';
+      $('[data-clients-error-detail]').textContent = error.message || 'Verifique a API e o banco de dados.';
+      $('[data-clients-trace]').textContent = error.traceId || 'não informado'; $('[data-clients-error]').hidden = false;
+    }
   }
-  window.addEventListener('barbersync:store-changed', renderCommercialFlowClient360);
-  window.BarberSyncEventBus?.on('*', renderCommercialFlowClient360);
-  document.addEventListener('DOMContentLoaded', renderCommercialFlowClient360);
+  function modal(open) { $('[data-clients-modal]').hidden = !open; }
+  $('[data-clients-new]').addEventListener('click', () => modal(true));
+  root.querySelectorAll('[data-clients-close]').forEach(button => button.addEventListener('click', () => modal(false)));
+  $('[data-clients-form]').addEventListener('submit', async event => {
+    event.preventDefault(); const button = event.currentTarget.querySelector('[type=submit]'); button.disabled = true; button.textContent = 'Salvando…';
+    try {
+      const body = Object.fromEntries(new FormData(event.currentTarget));
+      const response = await fetch('/AdminApi/clients', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.detail || payload.title || payload.errors?.[0]?.message || 'Não foi possível salvar o cliente.');
+      event.currentTarget.reset(); modal(false); window.AdminToast?.show?.('Cliente cadastrado com sucesso.', 'success'); await load();
+    } catch (error) { $('[data-clients-form-error]').hidden = false; $('[data-clients-form-error]').textContent = error.message; }
+    finally { button.disabled = false; button.textContent = 'Salvar cliente'; }
+  });
+  $('#ClientsSearch').addEventListener('input', render); $('[data-clients-refresh]').addEventListener('click', load); $('[data-clients-retry]').addEventListener('click', load); load();
 })();

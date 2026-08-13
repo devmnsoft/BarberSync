@@ -20,6 +20,11 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("DemoWizard")] public IActionResult DemoWizard() => DevelopmentOnly("DemoWizard");
     [HttpGet("CustomerJourney")] public IActionResult CustomerJourney() => Render("CustomerJourney");
     [HttpGet("Clients")] public IActionResult Clients() => Render("Clients");
+    [HttpGet("Clients/{id:guid}")] public IActionResult Client360(Guid id)
+    {
+        ViewData["ClientId"] = id;
+        return Render("Client360");
+    }
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
     [HttpGet("Appointments")] public IActionResult Appointments() => Render("Appointments");
