@@ -10,6 +10,8 @@ public sealed class ClientsController(EnterpriseDataService data, ILogger<Client
 {
     [HttpGet] public Task<IActionResult> GetAll(CancellationToken cancellationToken) => List(cancellationToken);
     [HttpGet("{id:guid}")] public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => Get(id, cancellationToken);
+    [HttpGet("{id:guid}/commercial-benefits")]
+    public async Task<IActionResult> GetCommercialBenefits(Guid id, CancellationToken cancellationToken) => Ok(await data.ClientCommercialBenefitsAsync(id, cancellationToken));
     [HttpPost] public Task<IActionResult> CreateClient([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
     [HttpPut("{id:guid}")] public Task<IActionResult> UpdateClient(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
     [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteClient(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);

@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace BarberSync.Api.Services.Enterprise;
 
-public sealed class EnterpriseDataService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+public sealed partial class EnterpriseDataService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
