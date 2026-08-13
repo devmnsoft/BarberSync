@@ -1,4 +1,5 @@
 using BarberSync.Application.Operations;
+using FluentValidation;
 using System;
 
 namespace BarberSync.Tests;
@@ -53,4 +54,26 @@ public sealed class PaymentRulesTests
         Assert.Throws<InvalidOperationException>(() =>
             PaymentRules.ValidateAndTotal([new("Pix", 100, 120)], 100));
     }
+    [Theory]
+    [InlineData("Cash")]
+    [InlineData("Pix")]
+    [InlineData("DebitCard")]
+    [InlineData("CreditCard")]
+    public void Api_validator_accepts_domain_payment_methods(string method)
+    {
+        var validator = new BarberSync.Api.Validators.RegisterPaymentRequestValidator();
+        var result = validator.Validate(new RegisterPaymentRequest("checkout-1", [new(method, 10)]));
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Api_validator_rejects_legacy_payment_method()
+    {
+        var validator = new BarberSync.Api.Validators.RegisterPaymentRequestValidator();
+        var result = validator.Validate(new RegisterPaymentRequest("checkout-1", [new("Debit", 10)]));
+
+        Assert.Contains(result.Errors, error => error.PropertyName.Contains("Method"));
+    }
+
 }
