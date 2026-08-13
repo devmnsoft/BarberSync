@@ -303,7 +303,23 @@ $$;
 CREATE INDEX IF NOT EXISTS ix_clients_server_search ON barber.clients(tenant_id,branch_id,lower(name)) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS ix_reviews_reputation ON barber.reviews(tenant_id,branch_id,created_at DESC) WHERE deleted_at IS NULL;
 
+-- Módulos comerciais avançados: escopo e estado permanecem relacionais; os
+-- campos comerciais evoluem no payload JSONB sem depender de dados simulados.
+CREATE TABLE IF NOT EXISTS barber.commissions (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.packages (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.client_packages (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.memberships (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.client_memberships (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.suppliers (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.purchases (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE IF NOT EXISTS barber.financial_entries (LIKE barber.campaigns INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE INDEX IF NOT EXISTS ix_commissions_scope_status ON barber.commissions(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_client_packages_scope_status ON barber.client_packages(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_client_memberships_scope_status ON barber.client_memberships(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_purchases_scope_status ON barber.purchases(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_financial_entries_scope_status ON barber.financial_entries(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
+
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES
-('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813')
+('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813')
 ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;

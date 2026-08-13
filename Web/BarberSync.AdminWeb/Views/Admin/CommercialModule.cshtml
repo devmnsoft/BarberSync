@@ -1,0 +1,33 @@
+@model BarberSync.AdminWeb.Controllers.AdminController.CommercialModuleViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<section class="commercial-page" data-endpoint="@Model.Endpoint">
+    <header class="commercial-hero">
+        <div><span class="eyebrow">GESTÃO COMERCIAL</span><h1>@Model.Title</h1><p>Operação conectada à API, isolada por tenant e unidade.</p></div>
+        <button class="btn btn-primary" type="button" id="commercial-new">+ Novo registro</button>
+    </header>
+    <div class="commercial-kpis">
+        <article><span>Total</span><strong id="kpi-total">—</strong><small>registros da unidade</small></article>
+        <article><span>Ativos</span><strong id="kpi-active">—</strong><small>em operação</small></article>
+        <article><span>Atenção</span><strong id="kpi-attention">—</strong><small>pendentes ou vencidos</small></article>
+    </div>
+    <section class="commercial-panel">
+        <div class="commercial-toolbar"><input id="commercial-search" type="search" placeholder="Buscar em @Model.Title.ToLowerInvariant()" /><button class="btn btn-light" id="commercial-refresh">Atualizar</button></div>
+        <div class="commercial-state" id="commercial-state">Carregando dados operacionais…</div>
+        <div class="table-responsive"><table class="table admin-table" id="commercial-table" hidden><thead><tr><th>Registro</th><th>Detalhes</th><th>Status</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+    </section>
+</section>
+<div class="commercial-drawer" id="commercial-drawer" hidden>
+    <button class="drawer-scrim" type="button" aria-label="Fechar"></button>
+    <form class="drawer-sheet">
+        <header><div><span class="eyebrow">CADASTRO</span><h2>Novo registro</h2></div><button type="button" class="drawer-close">×</button></header>
+        <div class="drawer-body">
+            @foreach (var field in Model.Fields) { <label>@field.Label<input name="@field.Name" required /></label> }
+            <label>Status<select name="status"><option value="Active">Ativo</option><option value="Pending">Pendente</option><option value="Paused">Pausado</option></select></label>
+        </div>
+        <footer><button class="btn btn-light drawer-close" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></footer>
+    </form>
+</div>
+@section Styles { <link rel="stylesheet" href="~/css/admin-commercial-modules.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/admin-commercial-modules.js" asp-append-version="true"></script> }

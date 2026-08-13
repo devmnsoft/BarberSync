@@ -33,6 +33,14 @@ public sealed class EnterpriseDataService(IConfiguration configuration, IHttpCon
         ["notifications"] = "notifications",
         ["audit_logs"] = "audit_logs",
         ["stock_movements"] = "stock_movements"
+        ,["commissions"] = "commissions"
+        ,["packages"] = "packages"
+        ,["client-packages"] = "client_packages"
+        ,["memberships"] = "memberships"
+        ,["client-memberships"] = "client_memberships"
+        ,["suppliers"] = "suppliers"
+        ,["purchases"] = "purchases"
+        ,["financial-entries"] = "financial_entries"
     };
 
     // Authenticated back-office requests are always scoped from signed JWT claims.
@@ -925,6 +933,39 @@ where id = @id and deleted_at is null", connection);
                 break;
             case "coupons":
                 Required("code", "Código é obrigatório.");
+                break;
+            case "packages":
+                Required("name", "Nome do pacote é obrigatório.");
+                if (!payload.TryGetProperty("services", out var packageServices) || packageServices.ValueKind != JsonValueKind.Array || packageServices.GetArrayLength() == 0)
+                    errors.Add(new("services", "O pacote precisa conter ao menos um serviço."));
+                if (Number("price") is null or <= 0) errors.Add(new("price", "Preço deve ser maior que zero."));
+                break;
+            case "memberships":
+                Required("name", "Nome do plano é obrigatório.");
+                if (Number("monthlyPrice") is null or <= 0) errors.Add(new("monthlyPrice", "Mensalidade deve ser maior que zero."));
+                if (Number("usageLimit") is null or <= 0) errors.Add(new("usageLimit", "Limite de uso deve ser maior que zero."));
+                break;
+            case "suppliers":
+                Required("name", "Razão social ou nome é obrigatório.");
+                Required("document", "CPF/CNPJ é obrigatório.");
+                break;
+            case "purchases":
+                Required("supplierId", "Fornecedor é obrigatório.");
+                if (!payload.TryGetProperty("items", out var purchaseItems) || purchaseItems.ValueKind != JsonValueKind.Array || purchaseItems.GetArrayLength() == 0)
+                    errors.Add(new("items", "O pedido precisa conter ao menos um produto."));
+                break;
+            case "financial-entries":
+                Required("description", "Descrição é obrigatória.");
+                Required("type", "Tipo é obrigatório.");
+                if (Number("amount") is null or <= 0) errors.Add(new("amount", "Valor deve ser maior que zero."));
+                if (string.Equals(ExtractString(payload, "type"), "Expense", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(ExtractString(payload, "category")))
+                    errors.Add(new("category", "Despesa exige categoria."));
+                break;
+            case "commissions":
+                Required("professionalId", "Profissional é obrigatório.");
+                if (Number("amount") is null or <= 0) errors.Add(new("amount", "Valor da comissão deve ser maior que zero."));
+                if (!string.Equals(ExtractString(payload, "saleStatus"), "Paid", StringComparison.OrdinalIgnoreCase))
+                    errors.Add(new("saleStatus", "Comissão só pode ser gerada para venda paga."));
                 break;
         }
 

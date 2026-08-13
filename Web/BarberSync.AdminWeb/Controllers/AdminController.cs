@@ -26,6 +26,17 @@ public class AdminController(IWebHostEnvironment environment) : Controller
         return Render("Client360");
     }
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
+    [HttpGet("Team")] public IActionResult Team() => RedirectToAction(nameof(Professionals));
+    [HttpGet("Team/{id:guid}")] public IActionResult TeamProfile(Guid id) => Redirect($"/Admin/Professionals?profile={id}");
+    [HttpGet("Commissions")] public IActionResult Commissions() => Commercial("Comissões", "commissions", "professionalId", "Profissional", "amount", "Valor", "saleStatus", "Situação da venda");
+    [HttpGet("Packages")] public IActionResult Packages() => Commercial("Pacotes", "packages", "name", "Nome", "price", "Preço", "services", "Serviços (IDs separados por vírgula)");
+    [HttpGet("ClientPackages")] public IActionResult ClientPackages() => Commercial("Pacotes de clientes", "client-packages", "clientId", "Cliente", "packageId", "Pacote", "remainingSessions", "Sessões restantes");
+    [HttpGet("Memberships")] public IActionResult Memberships() => Commercial("Assinaturas", "memberships", "name", "Plano", "monthlyPrice", "Mensalidade", "usageLimit", "Limite mensal");
+    [HttpGet("ClientMemberships")] public IActionResult ClientMemberships() => Commercial("Assinaturas de clientes", "client-memberships", "clientId", "Cliente", "membershipId", "Plano", "billingDay", "Dia de cobrança");
+    [HttpGet("Suppliers")] public IActionResult Suppliers() => Commercial("Fornecedores", "suppliers", "name", "Nome / razão social", "document", "CPF / CNPJ", "phone", "Telefone");
+    [HttpGet("Purchases")] public IActionResult Purchases() => Commercial("Compras", "purchases", "supplierId", "Fornecedor", "invoiceNumber", "Nota fiscal", "items", "Itens (produto:quantidade:custo)");
+    [HttpGet("Finance")] public IActionResult Finance() => Commercial("Financeiro gerencial", "finance", "description", "Descrição", "amount", "Valor", "category", "Categoria");
+    [HttpGet("ServiceRecognition")] public IActionResult ServiceRecognition() => Commercial("Reconhecimento de serviço", "service-recognition", "cameraId", "Câmera", "chair", "Ambiente / cadeira", "signals", "Sinais detectados");
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
     [HttpGet("Appointments")] public IActionResult Appointments() => Render("Appointments");
     [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => Render("ServiceOrders");
@@ -71,8 +82,17 @@ public class AdminController(IWebHostEnvironment environment) : Controller
 
     private IActionResult Render(string module) => View(module, BuildViewModel(module));
 
+    private IActionResult Commercial(string title, string endpoint, string field1, string label1, string field2, string label2, string field3, string label3)
+    {
+        ViewData["Title"] = title;
+        return View("CommercialModule", new CommercialModuleViewModel(title, endpoint,
+            [new(field1, label1), new(field2, label2), new(field3, label3)]));
+    }
+
     private static AdminModuleViewModel BuildViewModel(string module)
         => new(module, $"BarberSync • {module}", "Agenda, caixa, estoque, totem e inteligência em um só lugar.");
 
     public sealed record AdminModuleViewModel(string Module, string Title, string Subtitle);
+    public sealed record CommercialField(string Name, string Label);
+    public sealed record CommercialModuleViewModel(string Title, string Endpoint, IReadOnlyList<CommercialField> Fields);
 }
