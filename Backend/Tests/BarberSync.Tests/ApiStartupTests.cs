@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace BarberSync.Tests;
 

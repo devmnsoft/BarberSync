@@ -52,13 +52,15 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
         catch (OperationCanceledException exception)
         {
-            logger.LogWarning(exception, "Timeout ao acessar {Method} /api/{Path}.", method, path);
+            logger.LogWarning(exception, "Timeout ao acessar {Method} /api/{Path}.",
+                method, path);
             return DependencyProblem(StatusCodes.Status504GatewayTimeout, "A API demorou para responder",
                 "A operação excedeu o tempo limite. Confirme o resultado antes de tentar novamente.");
         }
         catch (HttpRequestException exception)
         {
-            logger.LogWarning(exception, "A API não respondeu a {Method} /api/{Path}.", method, path);
+            logger.LogWarning(exception, "A API não respondeu a {Method} /api/{Path}.",
+                method, path);
             return DependencyProblem(StatusCodes.Status503ServiceUnavailable, "Não foi possível conectar à API.",
                 "Verifique se a API está em execução e se a connection string está configurada.");
         }
@@ -68,7 +70,7 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
     {
         var problem = new ProblemDetails { Status = statusCode, Title = title, Detail = detail };
         problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
-        problem.Extensions["actions"] = new[]
+        problem.Extensions["actions"] = new object[]
         {
             new { label = "Tentar novamente", action = "retry" },
             new { label = "Ver diagnóstico", href = "/Admin/Diagnostics" },

@@ -1,5 +1,6 @@
 using BarberSync.Api.Services.Configuration;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace BarberSync.Tests;
 
