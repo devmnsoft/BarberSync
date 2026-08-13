@@ -1,6 +1,10 @@
 using BarberSync.Api.Services.Enterprise;
+using BarberSync.Api.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace BarberSync.Api.Controllers;
 
@@ -11,6 +15,7 @@ public sealed class HealthController(
     IBarberSchemaInitializer schemaInitializer,
     IConfiguration configuration,
     IWebHostEnvironment environment,
+    IHttpClientFactory httpClientFactory,
     ILogger<HealthController> logger) : ControllerBase
 {
     private const string ConnectionStringName = "DefaultConnection";
@@ -44,6 +49,51 @@ public sealed class HealthController(
             step = result.Step,
             databaseStatus = result.DatabaseStatus,
             schemaVersions = result.SchemaVersions
+        });
+    }
+
+    [HttpGet("/api/system/version")]
+    [AllowAnonymous]
+    public IActionResult Version()
+    {
+        var assembly = typeof(HealthController).Assembly;
+        return Ok(new
+        {
+            service = "BarberSync.Api",
+            version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? assembly.GetName().Version?.ToString()
+                ?? "unknown",
+            environment = environment.EnvironmentName,
+            startedAtUtc = Process.GetCurrentProcess().StartTime.ToUniversalTime(),
+            serverTimeUtc = DateTimeOffset.UtcNow
+        });
+    }
+
+    [HttpGet("/api/system/dependencies")]
+    [Authorize]
+    [RequirePermission("SystemHealth.View")]
+    public async Task<IActionResult> Dependencies(CancellationToken cancellationToken)
+    {
+        var started = Stopwatch.GetTimestamp();
+        var database = await schemaInitializer.CheckHealthAsync(cancellationToken);
+        var checks = new List<object>
+        {
+            Dependency("database", database.DatabaseConnected, database.DatabaseStatus, true),
+            Dependency("schema:barber", database.SchemaReady, database.SchemaReady ? "Ready" : "Unavailable", true),
+            Provider("whatsapp", "Providers:WhatsApp:Enabled"),
+            Provider("email", "Providers:Email:Enabled")
+        };
+
+        foreach (var service in new[] { "AdminWeb", "PublicWeb", "Totem" })
+            checks.Add(await CheckHttpDependency(service, cancellationToken));
+
+        return Ok(new
+        {
+            status = database.DatabaseConnected && database.SchemaReady ? "Healthy" : "Degraded",
+            schemaVersions = database.SchemaVersions,
+            elapsedMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+            checkedAtUtc = DateTimeOffset.UtcNow,
+            dependencies = checks
         });
     }
 
@@ -134,4 +184,31 @@ public sealed class HealthController(
         var result = await command.ExecuteScalarAsync(cancellationToken);
         return Convert.ToInt64(result ?? 0);
     }
+
+    private object Provider(string name, string key)
+    {
+        var enabled = configuration.GetValue<bool>(key);
+        return Dependency(name, enabled, enabled ? "Configured" : "NotConfigured", false);
+    }
+
+    private async Task<object> CheckHttpDependency(string name, CancellationToken cancellationToken)
+    {
+        var url = configuration[$"SystemHealth:Dependencies:{name}"];
+        if (string.IsNullOrWhiteSpace(url)) return Dependency(name, false, "NotConfigured", false);
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Head, url);
+            using var response = await httpClientFactory.CreateClient().SendAsync(request, cancellationToken);
+            return Dependency(name, response.IsSuccessStatusCode, response.IsSuccessStatusCode ? "Reachable" : $"HTTP {(int)response.StatusCode}", false);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogWarning("Dependência {Dependency} indisponível. TraceId={TraceId}", name, HttpContext.TraceIdentifier);
+            return Dependency(name, false, "Unavailable", false);
+        }
+    }
+
+    private static object Dependency(string name, bool healthy, string status, bool required)
+        => new { name, healthy, status, required };
 }

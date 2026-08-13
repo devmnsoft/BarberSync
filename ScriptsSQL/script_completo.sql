@@ -206,6 +206,7 @@ INSERT INTO barber.permissions(id,code,description) VALUES
 ('10000000-0000-4000-8000-000000000027','ServiceOrder.Update','Alterar itens da comanda'),
 ('10000000-0000-4000-8000-000000000028','Coupon.Redeem','Aplicar cupom em comanda'),
 ('10000000-0000-4000-8000-000000000029','Loyalty.Redeem','Resgatar cashback em comanda')
+ ,('10000000-0000-4000-8000-000000000030','SystemHealth.View','Visualizar diagnóstico técnico sem dados sensíveis')
 ON CONFLICT(id) DO UPDATE SET code=excluded.code,description=excluded.description;
 INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
 ('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
