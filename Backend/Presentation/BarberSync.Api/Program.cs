@@ -72,7 +72,6 @@ builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
-builder.Services.AddScoped<RequirePermissionFilter>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
