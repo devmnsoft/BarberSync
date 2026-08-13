@@ -30,7 +30,7 @@
         <div class="pos-summary-lines">
             <div><span>Subtotal</span><strong id="sumSubtotal">R$ 0,00</strong></div><div><span>Descontos</span><strong id="sumDiscount">R$ 0,00</strong></div><div><span>Acréscimo</span><strong id="sumSurcharge">R$ 0,00</strong></div><div class="total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div><div><span>Pago</span><strong id="sumPaid">R$ 0,00</strong></div><div class="balance"><span>Saldo</span><strong id="sumBalance">R$ 0,00</strong></div>
         </div>
-        <form class="pos-inline-form" id="discountForm" novalidate><label for="discountAmount">Desconto manual</label><div><input id="discountAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="discountAmount"></small></form>
+        <form class="pos-inline-form" id="discountForm" novalidate><label for="discountAmount">Desconto manual</label><div><input id="discountAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Aplicar</button></div><input id="discountReason" maxlength="300" placeholder="Motivo obrigatório" /><small class="field-error" data-error-for="discountAmount"></small></form>
         <form class="pos-inline-form" id="couponForm" novalidate><label for="couponCode">Cupom</label><div><input id="couponCode" maxlength="60" placeholder="Código do cupom" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="couponCode"></small></form>
         <form class="pos-inline-form" id="cashbackForm" novalidate><label for="cashbackAmount">Cashback</label><div><input id="cashbackAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Usar</button></div><small class="field-error" data-error-for="cashbackAmount"></small></form>
         <div class="pos-adjustments"><strong>Histórico de descontos</strong><div id="posAdjustments"><span>Nenhum desconto aplicado.</span></div></div>
@@ -47,6 +47,7 @@
             <div id="paymentSplits" class="pos-splits"></div>
             <button class="btn btn-light" id="addSplit" type="button">+ Adicionar forma</button>
             <small class="field-error" data-error-for="splits"></small>
+            <label>Observação (opcional)<textarea id="paymentNote" rows="3" maxlength="500" placeholder="Informação para conciliação"></textarea></label>
             <label>Chave de idempotência<input id="idempotencyKey" readonly /></label>
             <div class="pos-drawer-actions"><button class="btn btn-light" type="button" data-close-drawer>Cancelar</button><button class="btn btn-primary" id="confirmPayment" type="submit">Confirmar recebimento</button></div>
         </form>
