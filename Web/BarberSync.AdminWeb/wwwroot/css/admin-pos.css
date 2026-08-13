@@ -8,3 +8,15 @@
 .pos-item-controls label{color:var(--pos-muted);font-size:.68rem;font-weight:700}
 .pos-item-controls input,.pos-item-controls select{background:#fff;border:1px solid var(--pos-line);border-radius:7px;display:block;font-size:.74rem;margin-top:2px;max-width:100%;padding:5px;width:100%}
 @media(max-width:760px){.pos-mobile-tabs{background:#eef0f2;border-radius:12px;display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:12px;padding:4px;position:sticky;top:64px;z-index:20}.pos-mobile-tabs button{background:transparent;border:0;border-radius:9px;color:var(--pos-muted);font-weight:700;min-height:42px}.pos-mobile-tabs button.active{background:#fff;box-shadow:0 2px 10px #17212b18;color:var(--pos-ink)}.bs-pos-grid .pos-pane{display:none}.bs-pos-grid .pos-pane.active{display:block}}
+
+/* Real payment history and printable receipt. */
+.pos-adjustments > div { display: grid; gap: .45rem; margin-top: .45rem; }
+.pos-adjustments > div > span { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.pos-refund { border: 0; background: transparent; color: var(--bs-danger, #b42318); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+@media print {
+  .admin-sidebar, .admin-topbar, .page-header, .pos-order-strip, .pos-mobile-tabs, .pos-catalog, .pos-summary form, .pos-summary button, .pos-readonly, .admin-toast-region { display: none !important; }
+  .admin-main, .admin-content, .bs-pos-grid { display: block !important; margin: 0 !important; padding: 0 !important; }
+  .pos-cart, .pos-summary { display: block !important; position: static !important; box-shadow: none !important; border: 1px solid #ddd !important; margin-bottom: 12px; }
+  .pos-cart::before { content: "BarberSync · Recibo da comanda"; display: block; font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+}
