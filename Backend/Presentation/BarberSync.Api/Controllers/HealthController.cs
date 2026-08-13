@@ -6,6 +6,7 @@ namespace BarberSync.Api.Controllers;
 
 [ApiController]
 [Route("api/health")]
+[Route("api/system/health")]
 public sealed class HealthController(
     IBarberSchemaInitializer schemaInitializer,
     IConfiguration configuration,
@@ -40,7 +41,9 @@ public sealed class HealthController(
             database = result.Database,
             schema = result.Schema,
             environment = result.Environment,
-            step = result.Step
+            step = result.Step,
+            databaseStatus = result.DatabaseStatus,
+            schemaVersions = result.SchemaVersions
         });
     }
 
@@ -122,8 +125,8 @@ public sealed class HealthController(
     }
 
     private string GetConnectionString()
-        => configuration.GetConnectionString(ConnectionStringName)
-           ?? "Host=localhost;Port=5432;Database=barber;Username=barbersync;Password=barbersync_demo_10";
+        => BarberSync.Api.Services.Configuration.DatabaseConnectionResolver.Resolve(configuration)
+           ?? throw new InvalidOperationException(BarberSync.Api.Services.Configuration.DatabaseConnectionResolver.MissingConfigurationMessage);
 
     private static async Task<long> CountRowsAsync(NpgsqlConnection connection, string commandText, CancellationToken cancellationToken)
     {

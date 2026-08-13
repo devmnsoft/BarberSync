@@ -34,7 +34,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-barber};Username=${POSTGRES_USER:-barbersync};Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em um arquivo .env não versionado}
+      BARBERSYNC_ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-barber};Username=${POSTGRES_USER:-barbersync};Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em um arquivo .env não versionado}
       Serilog__WriteTo__1__Args__serverUrl: http://seq:80
     ports: ["8080:8080"]
     depends_on:

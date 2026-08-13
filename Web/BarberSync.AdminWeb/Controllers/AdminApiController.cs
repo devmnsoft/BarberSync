@@ -53,17 +53,28 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
         catch (OperationCanceledException exception)
         {
             logger.LogWarning(exception, "Timeout ao acessar {Method} /api/{Path}.", method, path);
-            return Problem(statusCode: StatusCodes.Status504GatewayTimeout,
-                title: "A API demorou para responder",
-                detail: "A operação excedeu o tempo limite. Confirme o resultado antes de tentar novamente.");
+            return DependencyProblem(StatusCodes.Status504GatewayTimeout, "A API demorou para responder",
+                "A operação excedeu o tempo limite. Confirme o resultado antes de tentar novamente.");
         }
         catch (HttpRequestException exception)
         {
             logger.LogWarning(exception, "A API não respondeu a {Method} /api/{Path}.", method, path);
-            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable,
-                title: "Serviço temporariamente indisponível",
-                detail: "Não foi possível concluir a operação. Tente novamente em alguns instantes.");
+            return DependencyProblem(StatusCodes.Status503ServiceUnavailable, "Não foi possível conectar ao banco de dados",
+                "Verifique ConnectionStrings:DefaultConnection ou execute Scripts/check-api-config.ps1.");
         }
+    }
+
+    private ObjectResult DependencyProblem(int statusCode, string title, string detail)
+    {
+        var problem = new ProblemDetails { Status = statusCode, Title = title, Detail = detail };
+        problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
+        problem.Extensions["actions"] = new[]
+        {
+            new { label = "Tentar novamente", action = "retry" },
+            new { label = "Ver diagnóstico", href = "/Admin/Diagnostics" },
+            new { label = "Abrir instruções de configuração", href = "/Help/Setup" }
+        };
+        return new ObjectResult(problem) { StatusCode = statusCode };
     }
 
     private string BuildUrl(string path, string? query)
