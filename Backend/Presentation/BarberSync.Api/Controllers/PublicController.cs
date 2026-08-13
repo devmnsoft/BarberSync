@@ -2,10 +2,12 @@ using System.Text.Json;
 using BarberSync.Api.Models.Public;
 using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/public")]
 public sealed class PublicController(EnterpriseDataService data, ILogger<PublicController> logger) : ControllerBase
 {

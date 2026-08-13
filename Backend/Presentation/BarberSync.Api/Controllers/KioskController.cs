@@ -1,10 +1,12 @@
 using System.Text.Json;
 using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/kiosk")]
 public sealed class KioskController(EnterpriseDataService data, IConfiguration configuration, ILogger<KioskController> logger) : ControllerBase
 {

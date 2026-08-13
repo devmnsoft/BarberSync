@@ -17,6 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,7 +71,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         NameClaimType = "email", RoleClaimType = "roles"
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // API endpoints are private by default. Public entry points must opt out
+    // explicitly with [AllowAnonymous], preventing newly added controllers from
+    // accidentally exposing tenant data.
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
     RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -139,6 +148,6 @@ app.MapGet("/health", async (IBarberSchemaInitializer database, CancellationToke
         schemaVersions = result.SchemaVersions,
         message = result.Message
     });
-});
+}).AllowAnonymous();
 
 app.Run();
