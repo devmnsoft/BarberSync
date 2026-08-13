@@ -59,8 +59,8 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
         catch (HttpRequestException exception)
         {
             logger.LogWarning(exception, "A API não respondeu a {Method} /api/{Path}.", method, path);
-            return DependencyProblem(StatusCodes.Status503ServiceUnavailable, "Não foi possível conectar ao banco de dados",
-                "Verifique ConnectionStrings:DefaultConnection ou execute Scripts/check-api-config.ps1.");
+            return DependencyProblem(StatusCodes.Status503ServiceUnavailable, "Não foi possível conectar à API.",
+                "Verifique se a API está em execução e se a connection string está configurada.");
         }
     }
 
