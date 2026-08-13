@@ -11,7 +11,8 @@ public sealed record PaymentSplitRequest(string Method, decimal Amount, decimal?
 public sealed record RegisterPaymentRequest(string IdempotencyKey, IReadOnlyList<PaymentSplitRequest> Splits, string? Note = null);
 public sealed record RefundPaymentRequest(string Reason);
 public sealed record ServiceOrderItemResponse(Guid Id, string Type, Guid? ServiceId, Guid? ProductId, Guid? ProfessionalId, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Total);
-public sealed record ServiceOrderResponse(Guid Id, string Number, Guid ClientId, Guid? AppointmentId, string Status, decimal Subtotal, decimal Discount, decimal Surcharge, decimal Total, decimal Paid, decimal Balance, IReadOnlyList<ServiceOrderItemResponse> Items);
+public sealed record ServiceOrderPaymentResponse(Guid Id, string Method, decimal Amount, string Status, DateTimeOffset? PaidAt);
+public sealed record ServiceOrderResponse(Guid Id, string Number, Guid ClientId, Guid? AppointmentId, string Status, decimal Subtotal, decimal Discount, decimal Surcharge, decimal Total, decimal Paid, decimal Balance, IReadOnlyList<ServiceOrderItemResponse> Items, IReadOnlyList<ServiceOrderPaymentResponse>? Payments = null);
 public sealed record PaymentResponse(Guid Id, Guid ServiceOrderId, string Status, decimal Amount, decimal Change, IReadOnlyList<PaymentSplitRequest> Splits, bool Replayed = false, string? OrderStatus = null, decimal? OrderBalance = null);
 
 public static class PaymentRules

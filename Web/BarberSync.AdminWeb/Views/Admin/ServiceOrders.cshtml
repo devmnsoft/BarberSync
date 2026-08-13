@@ -34,7 +34,9 @@
         <form class="pos-inline-form" id="couponForm" novalidate><label for="couponCode">Cupom</label><div><input id="couponCode" maxlength="60" placeholder="Código do cupom" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="couponCode"></small></form>
         <form class="pos-inline-form" id="cashbackForm" novalidate><label for="cashbackAmount">Cashback</label><div><input id="cashbackAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Usar</button></div><small class="field-error" data-error-for="cashbackAmount"></small></form>
         <div class="pos-adjustments"><strong>Histórico de descontos</strong><div id="posAdjustments"><span>Nenhum desconto aplicado.</span></div></div>
+        <div class="pos-adjustments"><strong>Pagamentos</strong><div id="posPayments"><span>Nenhum pagamento registrado.</span></div></div>
         <button class="btn btn-primary pos-pay bs-touch-target" id="posPay" type="button" disabled>Receber pagamento</button>
+        <button class="btn btn-light bs-touch-target" id="posReceipt" type="button" disabled>Imprimir recibo</button>
         <p class="pos-readonly" id="posReadonly" hidden>Esta comanda está em modo somente leitura.</p>
     </aside>
 </main>
