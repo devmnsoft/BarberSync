@@ -17,6 +17,11 @@ public sealed record PaymentResponse(Guid Id, Guid ServiceOrderId, string Status
 
 public static class PaymentRules
 {
+    private static readonly HashSet<string> SupportedMethods = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Pix", "DebitCard", "CreditCard", "Cash"
+    };
+
     public static decimal ValidateAndTotal(IReadOnlyList<PaymentSplitRequest> splits, decimal balance)
     {
         if (splits.Count == 0)
@@ -27,6 +32,9 @@ public static class PaymentRules
 
         foreach (var split in splits)
         {
+            if (string.IsNullOrWhiteSpace(split.Method) || !SupportedMethods.Contains(split.Method))
+                throw new InvalidOperationException("Forma de pagamento inválida. Use PIX, débito, crédito ou dinheiro.");
+
             var isCash = split.Method.Equals("Cash", StringComparison.OrdinalIgnoreCase);
             if (!isCash && split.ReceivedAmount is not null)
                 throw new InvalidOperationException("Valor recebido e troco são permitidos somente para dinheiro.");
@@ -39,6 +47,14 @@ public static class PaymentRules
             throw new InvalidOperationException("A soma dos pagamentos não pode superar o saldo da comanda.");
 
         return amount;
+    }
+
+    public static string ValidateIdempotencyKey(string key)
+    {
+        var normalized = key?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 100)
+            throw new InvalidOperationException("Informe uma chave de idempotência válida com até 100 caracteres.");
+        return normalized;
     }
 
     public static string OrderStatus(decimal amount, decimal balance) =>
