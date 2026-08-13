@@ -22,6 +22,14 @@ O script usa transação, advisory lock e mantém o histórico em `barber.schema
 
 ## Inicialização e primeiro administrador
 
+Copie `Backend/Presentation/BarberSync.Api/appsettings.Development.example.json` para um arquivo local não versionado ou, preferencialmente, use User Secrets:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=barber;Username=postgres;Password=postgres" --project Backend/Presentation/BarberSync.Api
+```
+
+A configuração também aceita `ConnectionStrings__DefaultConnection` e `BARBERSYNC_ConnectionStrings__DefaultConnection`. Execute `pwsh Scripts/check-api-config.ps1` para verificar SDK, banco, configuração e portas sem exibir a senha. A API não executa migrações no startup; o script SQL canônico acima continua sendo a única fonte do schema.
+
 Configure `ConnectionStrings__DefaultConnection` e `Jwt__SigningKey` (mínimo de 32 caracteres), inicie a API e execute:
 
 ```powershell

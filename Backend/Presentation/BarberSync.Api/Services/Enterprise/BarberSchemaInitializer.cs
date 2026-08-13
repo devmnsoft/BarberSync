@@ -1,85 +1,107 @@
+using BarberSync.Api.Services.Configuration;
 using Npgsql;
 
 namespace BarberSync.Api.Services.Enterprise;
 
+/// <summary>
+/// Performs a lightweight readiness check. Database changes are deliberately owned by
+/// ScriptsSQL/script_completo.sql and are never applied during application startup.
+/// </summary>
 public sealed class BarberSchemaInitializer(
     IConfiguration configuration,
     IWebHostEnvironment environment,
     ILogger<BarberSchemaInitializer> logger) : IBarberSchemaInitializer
 {
     private const string SchemaName = "barber";
-    private static readonly SemaphoreSlim ProcessLock = new(1, 1);
-    private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException(
-            "ConnectionStrings:DefaultConnection não foi configurada. Use User Secrets ou BARBERSYNC_ConnectionStrings__DefaultConnection.");
-    private bool _initialized;
+    private const string ConfigurationHelp = """
+        ConnectionStrings:DefaultConnection não foi configurada.
 
-    public DatabaseHealthResult LastResult { get; private set; } = new(false, false, false,
-        "Schema BarberSync ainda não inicializado.", string.Empty, SchemaName, "Unknown");
+        Configure uma das opções:
+        - User Secrets: ConnectionStrings:DefaultConnection
+        - Variável de ambiente: ConnectionStrings__DefaultConnection
+        - Variável com prefixo: BARBERSYNC_ConnectionStrings__DefaultConnection
+        - appsettings.Development.json
+        - docker-compose.yml
+
+        Execute Scripts/check-api-config.ps1 para diagnosticar o ambiente local.
+        """;
+
+    public DatabaseHealthResult LastResult { get; private set; } = NotConfigured("Unknown");
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (_initialized) return;
-        await ProcessLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (_initialized) return;
-            var scriptPath = ResolveScriptPath();
-            var script = await File.ReadAllTextAsync(scriptPath, cancellationToken);
-            if (string.IsNullOrWhiteSpace(script))
-                throw new InvalidOperationException($"O script oficial está vazio: {scriptPath}");
+        logger.LogInformation("Validando configuração do PostgreSQL. Environment={Environment}", environment.EnvironmentName);
+        LastResult = await ProbeAsync(cancellationToken);
 
-            var info = ConnectionInfo.Create(_connectionString);
-            logger.LogInformation("Iniciando atualização do schema por {Script}. Database={Database}", scriptPath, info.Database);
-            await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync(cancellationToken);
-            await using var command = new NpgsqlCommand(script, connection) { CommandTimeout = 300 };
-            await command.ExecuteNonQueryAsync(cancellationToken);
-
-            _initialized = true;
-            LastResult = new(true, true, true, "Schema BarberSync atualizado pelo script oficial.",
-                info.Database, SchemaName, environment.EnvironmentName, "Completed");
-            logger.LogInformation("Schema BarberSync atualizado com sucesso. Database={Database}, Schema={Schema}", info.Database, SchemaName);
-        }
-        catch (Exception exception)
-        {
-            var info = ConnectionInfo.Create(_connectionString);
-            LastResult = new(false, false, false, $"Falha crítica ao atualizar o schema: {exception.Message}",
-                info.Database, SchemaName, environment.EnvironmentName, "script_completo.sql", exception.ToString());
-            logger.LogCritical(exception, "Startup abortado: não foi possível aplicar ScriptsSQL/script_completo.sql em {Database}.", info.Database);
-            throw new InvalidOperationException("Não foi possível inicializar o banco BarberSync. Consulte o log da atualização do schema.", exception);
-        }
-        finally
-        {
-            ProcessLock.Release();
-        }
+        if (LastResult.DatabaseStatus == "NotConfigured")
+            logger.LogError("{ConfigurationHelp} Environment={Environment}", ConfigurationHelp, environment.EnvironmentName);
+        else if (!LastResult.Success)
+            logger.LogError("PostgreSQL indisponível ou schema inválido. Environment={Environment}, Step={Step}, Message={Message}",
+                environment.EnvironmentName, LastResult.Step, LastResult.Message);
+        else
+            logger.LogInformation("PostgreSQL pronto. Database={Database}, Schema={Schema}, SchemaVersions={SchemaVersions}",
+                LastResult.Database, SchemaName, LastResult.SchemaVersions);
     }
 
     public async Task<DatabaseHealthResult> CheckHealthAsync(CancellationToken cancellationToken = default)
     {
-        if (!_initialized) await InitializeAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand(
-            "select exists(select 1 from barber.schema_versions where version = '007')", connection);
-        var ready = Convert.ToBoolean(await command.ExecuteScalarAsync(cancellationToken));
-        LastResult = LastResult with { Success = ready, DatabaseConnected = true, SchemaReady = ready, Step = "HealthCheck" };
+        LastResult = await ProbeAsync(cancellationToken);
         return LastResult;
     }
 
-    private static string ResolveScriptPath()
+    private async Task<DatabaseHealthResult> ProbeAsync(CancellationToken cancellationToken)
     {
-        var candidates = new[]
+        var connectionString = DatabaseConnectionResolver.Resolve(configuration);
+        if (string.IsNullOrWhiteSpace(connectionString)) return NotConfigured(environment.EnvironmentName);
+
+        string database;
+        try
         {
-            Path.Combine(AppContext.BaseDirectory, "ScriptsSQL", "script_completo.sql"),
-            Path.Combine(Directory.GetCurrentDirectory(), "ScriptsSQL", "script_completo.sql")
-        };
-        return candidates.FirstOrDefault(File.Exists)
-            ?? throw new FileNotFoundException("ScriptsSQL/script_completo.sql não foi copiado para o output da API.");
+            database = new NpgsqlConnectionStringBuilder(connectionString).Database ?? string.Empty;
+        }
+        catch (ArgumentException)
+        {
+            return new(false, false, false, "ConnectionStrings:DefaultConnection possui formato inválido.", string.Empty,
+                SchemaName, environment.EnvironmentName, "Configuration", null, 0, "InvalidConfiguration");
+        }
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+            await using var command = new NpgsqlCommand("""
+                select
+                    exists(select 1 from information_schema.schemata where schema_name = 'barber'),
+                    exists(select 1 from information_schema.tables where table_schema = 'barber' and table_name = 'schema_versions')
+                """, connection);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            await reader.ReadAsync(cancellationToken);
+            var schemaExists = reader.GetBoolean(0);
+            var versionsTableExists = reader.GetBoolean(1);
+            await reader.CloseAsync();
+
+            var versions = 0;
+            if (versionsTableExists)
+            {
+                await using var versionsCommand = new NpgsqlCommand("select count(*) from barber.schema_versions", connection);
+                versions = Convert.ToInt32(await versionsCommand.ExecuteScalarAsync(cancellationToken));
+            }
+
+            var ready = schemaExists && versionsTableExists && versions > 0;
+            return new(ready, true, ready,
+                ready ? "Banco de dados e schema BarberSync prontos." : "Execute ScriptsSQL/script_completo.sql para preparar o schema barber.",
+                database, SchemaName, environment.EnvironmentName, "Validation", null, versions,
+                ready ? "Healthy" : "SchemaNotReady");
+        }
+        catch (Exception exception) when (exception is NpgsqlException or TimeoutException)
+        {
+            logger.LogWarning("Falha ao conectar ao PostgreSQL. Environment={Environment}, Database={Database}", environment.EnvironmentName, database);
+            return new(false, false, false, "Não foi possível conectar ao banco de dados configurado.", database,
+                SchemaName, environment.EnvironmentName, "Connection", null, 0, "Unhealthy");
+        }
     }
 
-    private sealed record ConnectionInfo(string Database)
-    {
-        public static ConnectionInfo Create(string value) => new(new NpgsqlConnectionStringBuilder(value).Database ?? string.Empty);
-    }
+    private static DatabaseHealthResult NotConfigured(string environmentName) =>
+        new(false, false, false, DatabaseConnectionResolver.MissingConfigurationMessage, string.Empty,
+            SchemaName, environmentName, "Configuration", null, 0, "NotConfigured");
 }

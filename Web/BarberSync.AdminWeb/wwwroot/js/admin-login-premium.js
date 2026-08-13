@@ -18,10 +18,18 @@
     try {
       const response = await fetch('/Account/Login', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: password.value }) });
       const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(payload?.message || 'E-mail ou senha inválidos.');
+      if (!response.ok) {
+        const unavailable = response.status >= 500;
+        throw new Error(unavailable
+          ? 'O BarberSync está temporariamente indisponível. Verifique o diagnóstico local e tente novamente.'
+          : payload?.message || 'E-mail ou senha inválidos.');
+      }
       location.assign(payload?.redirectUrl || '/Admin/Dashboard');
     } catch (reason) {
-      error.textContent = reason.message || 'Não foi possível entrar. Tente novamente.'; error.hidden = false;
+      error.textContent = reason instanceof TypeError
+        ? 'Não foi possível acessar a API. Sua tela continua disponível; tente novamente em instantes.'
+        : reason.message || 'Não foi possível entrar. Tente novamente.';
+      error.hidden = false;
     } finally { button.disabled = false; button.querySelector('span').textContent = 'Entrar'; }
   });
 })();

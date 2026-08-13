@@ -16,4 +16,6 @@ public sealed record DatabaseHealthResult(
     string Schema,
     string Environment,
     string? Step = null,
-    string? Error = null);
+    string? Error = null,
+    int SchemaVersions = 0,
+    string DatabaseStatus = "Unknown");

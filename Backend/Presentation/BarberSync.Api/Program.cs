@@ -20,6 +20,11 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Accept standard .NET variables and BARBERSYNC_-prefixed variables. The prefixed
+// provider is added last so deployment-specific values have explicit precedence.
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddEnvironmentVariables(prefix: "BARBERSYNC_");
+
 builder.Host.UseSerilog((context, services, configuration) =>
 {
     configuration
@@ -76,7 +81,7 @@ builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
-builder.Services.AddSingleton<IBarberSchemaInitializer, BarberSchemaInitializer>();
+builder.Services.AddScoped<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Onboarding.BranchOnboardingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.GrowthService>();
@@ -94,7 +99,11 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-await app.Services.GetRequiredService<IBarberSchemaInitializer>().InitializeAsync(app.Lifetime.ApplicationStopping);
+using (var startupScope = app.Services.CreateScope())
+{
+    var schemaInitializer = startupScope.ServiceProvider.GetRequiredService<IBarberSchemaInitializer>();
+    await schemaInitializer.InitializeAsync(app.Lifetime.ApplicationStopping);
+}
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
@@ -117,6 +126,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapGet("/health", async (IBarberSchemaInitializer database, CancellationToken cancellationToken) =>
+{
+    var result = await database.CheckHealthAsync(cancellationToken);
+    return Results.Ok(new
+    {
+        api = "Healthy",
+        database = result.DatabaseStatus,
+        schema = result.SchemaReady ? result.Schema : null,
+        schemaVersions = result.SchemaVersions,
+        message = result.Message
+    });
+});
 
 app.Run();
