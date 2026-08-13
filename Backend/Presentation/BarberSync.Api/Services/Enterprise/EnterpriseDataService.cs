@@ -1,10 +1,11 @@
 using System.Text.Json;
 using Npgsql;
 using NpgsqlTypes;
+using System.Security.Claims;
 
 namespace BarberSync.Api.Services.Enterprise;
 
-public sealed class EnterpriseDataService(IConfiguration configuration)
+public sealed class EnterpriseDataService(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly string _connectionString = configuration.GetConnectionString("DefaultConnection")
@@ -34,14 +35,38 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         ["stock_movements"] = "stock_movements"
     };
 
-    private Guid TenantId => Guid.Parse(configuration["BarberSync:DefaultTenantId"] ?? "11111111-1111-1111-1111-111111111111");
-    private Guid BranchId => Guid.Parse(configuration["BarberSync:DefaultBranchId"] ?? "22222222-2222-2222-2222-222222222222");
+    // Authenticated back-office requests are always scoped from signed JWT claims.
+    // Defaults remain available only to the anonymous public/kiosk surfaces, whose
+    // deployment represents one configured branch.
+    private Guid TenantId => ScopeId("tenant_id", "BarberSync:DefaultTenantId", "11111111-1111-1111-1111-111111111111");
+    private Guid BranchId => ScopeId("branch_id", "BarberSync:DefaultBranchId", "22222222-2222-2222-2222-222222222222");
+
+    private Guid ScopeId(string claim, string configurationKey, string fallback)
+    {
+        var user = httpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var raw = user.FindFirstValue(claim);
+            return Guid.TryParse(raw, out var value)
+                ? value
+                : throw new UnauthorizedAccessException($"Claim obrigatória {claim} ausente ou inválida.");
+        }
+
+        return Guid.Parse(configuration[configurationKey] ?? fallback);
+    }
+
+    private void AddScope(NpgsqlCommand command)
+    {
+        command.Parameters.AddWithValue("tenantScope", TenantId);
+        command.Parameters.AddWithValue("branchScope", BranchId);
+    }
 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(string resource, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where deleted_at is null order by created_at desc";
+        var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
+        AddScope(command);
         var items = new List<Dictionary<string, object?>>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -54,9 +79,10 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
     public async Task<Dictionary<string, object?>?> GetAsync(string resource, Guid id, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where id = @id and deleted_at is null";
+        var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where id = @id and tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null";
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("id", id);
+        AddScope(command);
         var result = await command.ExecuteScalarAsync(cancellationToken);
         return result is string json ? Deserialize(json) : null;
     }
@@ -107,7 +133,7 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         await using var connection = await OpenAsync(cancellationToken);
         var status = ExtractString(payload, "status") ?? "Active";
         var isActive = IsActiveStatus(status) && ExtractBoolean(payload, "isActive", true);
-        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) on conflict (id) do update set payload = excluded.payload, status = excluded.status, is_active = excluded.is_active, updated_at = now() returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)";
+        var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) on conflict (id) do update set payload = excluded.payload, status = excluded.status, is_active = excluded.is_active, updated_at = now() where {Table(resource)}.tenant_id = @tenantId and {Table(resource)}.branch_id = @branchId returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)";
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("tenantId", TenantId);
@@ -116,17 +142,19 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         command.Parameters.AddWithValue("status", status);
         command.Parameters.AddWithValue("isActive", isActive);
         var result = await command.ExecuteScalarAsync(cancellationToken);
+        if (result is null) throw new KeyNotFoundException("Registro não encontrado nesta unidade.");
         await AuditAsync(connection, Module(resource), "Updated", Table(resource), id, $"{Module(resource)} atualizado via API real.", json, cancellationToken);
-        return Deserialize(result?.ToString() ?? json);
+        return Deserialize(result.ToString() ?? json);
     }
 
     public async Task SoftDeleteAsync(string resource, Guid id, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        var sql = $"update barber.{Table(resource)} set deleted_at = now(), is_active = false, status = 'Inactive', updated_at = now() where id = @id and deleted_at is null";
+        var sql = $"update barber.{Table(resource)} set deleted_at = now(), is_active = false, status = 'Inactive', updated_at = now() where id = @id and tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null";
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddWithValue("id", id);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        AddScope(command);
+        if (await command.ExecuteNonQueryAsync(cancellationToken) == 0) throw new KeyNotFoundException("Registro não encontrado nesta unidade.");
         await AuditAsync(connection, Module(resource), "SoftDeleted", Table(resource), id, $"{Module(resource)} inativado via soft delete.", "{}", cancellationToken);
     }
 
@@ -142,10 +170,11 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         appointment["status"] = targetStatus;
         var json = JsonSerializer.Serialize(appointment, JsonOptions);
         await using var connection = await OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand("update barber.appointments set payload = @payload::jsonb, status = @status, updated_at = now() where id = @id returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)", connection);
+        await using var command = new NpgsqlCommand("update barber.appointments set payload = @payload::jsonb, status = @status, updated_at = now() where id = @id and tenant_id = @tenantScope and branch_id = @branchScope returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)", connection);
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("status", targetStatus);
         command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, json);
+        AddScope(command);
         var result = await command.ExecuteScalarAsync(cancellationToken);
         await AuditAsync(connection, "Agenda", "StatusChanged", "appointments", id, $"Agendamento alterado para {targetStatus}.", json, cancellationToken);
         if (targetStatus is "CheckedIn" or "Cancelled" or "Finished")
@@ -161,10 +190,13 @@ public sealed class EnterpriseDataService(IConfiguration configuration)
         const string sql = @"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)
 from barber.products
 where deleted_at is null
+  and tenant_id = @tenantScope
+  and branch_id = @branchScope
   and is_active
   and coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)
 order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
+        AddScope(command);
         var items = new List<Dictionary<string, object?>>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -179,23 +211,27 @@ order by created_at desc";
         await using var connection = await OpenAsync(cancellationToken);
         async Task<int> Count(string table, string where = "deleted_at is null")
         {
-            await using var command = new NpgsqlCommand($"select count(*) from barber.{table} where {where}", connection);
+            await using var command = new NpgsqlCommand($"select count(*) from barber.{table} where tenant_id = @tenantScope and branch_id = @branchScope and {where}", connection);
+            AddScope(command);
             return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
         }
         async Task<decimal> SumPayments(string where)
         {
-            await using var command = new NpgsqlCommand($"select coalesce(sum((payload->>'amount')::numeric), 0) from barber.payments where deleted_at is null and {where}", connection);
+            await using var command = new NpgsqlCommand($"select coalesce(sum((payload->>'amount')::numeric), 0) from barber.payments where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null and {where}", connection);
+            AddScope(command);
             return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
         }
         async Task<decimal> AverageRating()
         {
-            await using var command = new NpgsqlCommand("select coalesce(round(avg((barber.reviews.payload->>'rating')::numeric), 2), 0) from barber.reviews where deleted_at is null", connection);
+            await using var command = new NpgsqlCommand("select coalesce(round(avg((barber.reviews.payload->>'rating')::numeric), 2), 0) from barber.reviews where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null", connection);
+            AddScope(command);
             return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
         }
 
         var today = DateTime.UtcNow.Date;
         var month = new DateTime(today.Year, today.Month, 1);
-        await using var todayCommand = new NpgsqlCommand("select count(*) from barber.appointments where deleted_at is null and coalesce((payload->>'scheduledAt')::timestamp, created_at)::date = current_date", connection);
+        await using var todayCommand = new NpgsqlCommand("select count(*) from barber.appointments where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null and coalesce((payload->>'scheduledAt')::timestamp, created_at)::date = current_date", connection);
+        AddScope(todayCommand);
         var appointmentsToday = Convert.ToInt32(await todayCommand.ExecuteScalarAsync(cancellationToken));
         return new Dictionary<string, object?>
         {
@@ -240,12 +276,14 @@ order by created_at desc";
 
         async Task<decimal> SumTransactions(string type)
         {
-            await using var command = new NpgsqlCommand("select coalesce(sum((payload->>'amount')::numeric), 0) from barber.loyalty_transactions where deleted_at is null and coalesce(payload->>'type', '') = @type", connection);
+            await using var command = new NpgsqlCommand("select coalesce(sum((payload->>'amount')::numeric), 0) from barber.loyalty_transactions where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null and coalesce(payload->>'type', '') = @type", connection);
             command.Parameters.AddWithValue("type", type);
+            AddScope(command);
             return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
         }
 
-        await using var activeMembersCommand = new NpgsqlCommand("select count(*) from barber.loyalty_accounts where deleted_at is null and is_active", connection);
+        await using var activeMembersCommand = new NpgsqlCommand("select count(*) from barber.loyalty_accounts where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null and is_active", connection);
+        AddScope(activeMembersCommand);
         var activeMembers = Convert.ToInt32(await activeMembersCommand.ExecuteScalarAsync(cancellationToken));
         var generated = await SumTransactions("CashbackGenerated");
         var redeemed = await SumTransactions("CashbackRedeemed");

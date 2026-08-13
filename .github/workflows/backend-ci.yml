@@ -18,4 +18,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - run: dotnet restore BarberSync.sln
+      - run: dotnet build BarberSync.sln --configuration Debug --no-restore
       - run: dotnet build BarberSync.sln --configuration Release --no-restore
+      - run: dotnet test BarberSync.sln --configuration Debug --no-build
