@@ -235,12 +235,21 @@ order by created_at desc";
             AddScope(command);
             return Convert.ToDecimal(await command.ExecuteScalarAsync(cancellationToken));
         }
+        async Task<(int Count, decimal Amount)> PendingCommissions()
+        {
+            await using var command = new NpgsqlCommand("select count(*),coalesce(sum(amount),0) from barber.commissions where tenant_id=@tenantScope and branch_id=@branchScope and status='Pending'", connection);
+            AddScope(command);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            await reader.ReadAsync(cancellationToken);
+            return (reader.GetInt32(0), reader.GetDecimal(1));
+        }
 
         var today = DateTime.UtcNow.Date;
         var month = new DateTime(today.Year, today.Month, 1);
         await using var todayCommand = new NpgsqlCommand("select count(*) from barber.appointments where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null and coalesce((payload->>'scheduledAt')::timestamp, created_at)::date = current_date", connection);
         AddScope(todayCommand);
         var appointmentsToday = Convert.ToInt32(await todayCommand.ExecuteScalarAsync(cancellationToken));
+        var pendingCommissions = await PendingCommissions();
         return new Dictionary<string, object?>
         {
             ["revenueToday"] = await SumPayments("created_at::date = current_date"),
@@ -255,6 +264,12 @@ order by created_at desc";
             ["kioskOnline"] = await Count("kiosk_devices", "deleted_at is null and is_active"),
             ["publicWebLeads"] = await Count("public_leads"),
             ["availableProfessionals"] = await Count("professionals", "deleted_at is null and is_active"),
+            ["commissionsPending"] = pendingCommissions.Count,
+            ["commissionsPendingAmount"] = pendingCommissions.Amount,
+            ["activeClientPackages"] = await Count("client_packages", "status = 'Active' and is_active"),
+            ["activeMemberships"] = await Count("client_memberships", "status = 'Active' and is_active"),
+            ["purchasesAwaitingReceipt"] = await Count("purchases", "status in ('Open','Approved','PartiallyReceived')"),
+            ["accountsPayableOverdue"] = await Count("financial_entries", "status = 'Pending' and payload->>'type' = 'Expense' and payload->>'dueAt' ~ '^\\d{4}-\\d{2}-\\d{2}' and (payload->>'dueAt')::timestamptz < now()"),
             ["isDemo"] = false
         };
     }

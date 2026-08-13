@@ -159,6 +159,7 @@ public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connecti
       // however, ask to refund an earlier partial payment. Reverse by order instead of
       // payment so stock, commissions and loyalty cannot be left posted in that case.
       await using(var commission=Command(c,"UPDATE barber.commissions c SET status='Reversed' FROM barber.service_order_items i WHERE c.service_order_item_id=i.id AND i.service_order_id=@order AND c.status<>'Reversed'",tx)){Add(commission,"order",order);await commission.ExecuteNonQueryAsync(ct);}
+      await using(var finance=Command(c,"UPDATE barber.financial_entries SET status='Reversed',is_active=false,payload=payload||jsonb_build_object('reversedAt',now(),'reversalReason',@reason) WHERE tenant_id=@tenant AND branch_id=@branch AND payload->>'paymentId'=@payment",tx)){Add(finance,"tenant",tenant);Add(finance,"branch",branch);Add(finance,"payment",paymentId.ToString());Add(finance,"reason",request.Reason);await finance.ExecuteNonQueryAsync(ct);}
       await using(var loyalty=Command(c,"""
         WITH earned AS (
           SELECT lt.id,lt.loyalty_account_id,lt.points
@@ -184,7 +185,33 @@ public sealed class PostgresServiceOrderRepository(IDbConnectionFactory connecti
       await using(var cmd=Command(c,"UPDATE barber.service_orders SET status=CASE WHEN EXISTS(SELECT 1 FROM barber.payments WHERE service_order_id=@id AND status='Paid') THEN 'PartiallyPaid' ELSE 'Open' END,updated_at=now() WHERE id=@id",tx)){Add(cmd,"id",order);await cmd.ExecuteNonQueryAsync(ct);}await Audit(c,tx,tenant,branch,user,"Payment.Refund",paymentId,request.Reason,ct);await tx.CommitAsync(ct);return new(paymentId,order,"Refunded",amount,0,[]); }
 
     private static async Task PostSale(DbConnection c,DbTransaction tx,Guid tenant,Guid branch,Guid user,Guid order,Guid payment,CancellationToken ct)
-    { await using(var stock=Command(c,"WITH sold AS (SELECT i.product_id,sum(i.quantity) qty FROM barber.service_order_items i WHERE i.service_order_id=@order AND i.product_id IS NOT NULL AND i.deleted_at IS NULL GROUP BY i.product_id), upd AS (UPDATE barber.products p SET current_stock=p.current_stock-s.qty,updated_at=now() FROM sold s WHERE p.id=s.product_id AND (p.allow_negative_stock OR p.current_stock>=s.qty) RETURNING p.id,p.current_stock AS balance_after,s.qty) INSERT INTO barber.stock_movements(id,tenant_id,branch_id,product_id,service_order_id,type,quantity,balance_after,reason,created_by) SELECT gen_random_uuid(),@tenant,@branch,id,@order,'Sale',qty,balance_after,'Venda em comanda',@user FROM upd",tx)){Add(stock,"order",order);Add(stock,"tenant",tenant);Add(stock,"branch",branch);Add(stock,"user",user);await stock.ExecuteNonQueryAsync(ct);}await using(var comm=Command(c,"INSERT INTO barber.commissions(id,tenant_id,branch_id,professional_id,payment_id,service_order_item_id,base_amount,percentage,amount) SELECT gen_random_uuid(),@tenant,@branch,i.professional_id,@payment,i.id,i.total,COALESCE(ps.commission_percent,s.commission_percent,p.default_commission,0),round(i.total*COALESCE(ps.commission_percent,s.commission_percent,p.default_commission,0)/100,2) FROM barber.service_order_items i JOIN barber.professionals p ON p.id=i.professional_id LEFT JOIN barber.services s ON s.id=i.service_id LEFT JOIN barber.professional_services ps ON ps.professional_id=i.professional_id AND ps.service_id=i.service_id WHERE i.service_order_id=@order AND i.deleted_at IS NULL",tx)){Add(comm,"tenant",tenant);Add(comm,"branch",branch);Add(comm,"payment",payment);Add(comm,"order",order);await comm.ExecuteNonQueryAsync(ct);}await using(var loyalty=Command(c,"""
+    { await using(var stock=Command(c,"WITH sold AS (SELECT i.product_id,sum(i.quantity) qty FROM barber.service_order_items i WHERE i.service_order_id=@order AND i.product_id IS NOT NULL AND i.deleted_at IS NULL GROUP BY i.product_id), upd AS (UPDATE barber.products p SET current_stock=p.current_stock-s.qty,updated_at=now() FROM sold s WHERE p.id=s.product_id AND (p.allow_negative_stock OR p.current_stock>=s.qty) RETURNING p.id,p.current_stock AS balance_after,s.qty) INSERT INTO barber.stock_movements(id,tenant_id,branch_id,product_id,service_order_id,type,quantity,balance_after,reason,created_by) SELECT gen_random_uuid(),@tenant,@branch,id,@order,'Sale',qty,balance_after,'Venda em comanda',@user FROM upd",tx)){Add(stock,"order",order);Add(stock,"tenant",tenant);Add(stock,"branch",branch);Add(stock,"user",user);await stock.ExecuteNonQueryAsync(ct);}await using(var comm=Command(c,"""
+      INSERT INTO barber.commissions(id,tenant_id,branch_id,professional_id,payment_id,service_order_item_id,base_amount,percentage,amount)
+      SELECT gen_random_uuid(),@tenant,@branch,i.professional_id,@payment,i.id,i.total,
+        COALESCE(rule.percentage,ps.commission_percent,s.commission_percent,p.default_commission,0),
+        round(i.total*COALESCE(rule.percentage,ps.commission_percent,s.commission_percent,p.default_commission,0)/100,2)
+      FROM barber.service_order_items i
+      JOIN barber.professionals p ON p.id=i.professional_id
+      LEFT JOIN barber.services s ON s.id=i.service_id
+      LEFT JOIN barber.professional_services ps ON ps.professional_id=i.professional_id AND ps.service_id=i.service_id
+      LEFT JOIN LATERAL (
+        SELECT cr.percentage FROM barber.commission_rules cr
+        WHERE cr.tenant_id=@tenant AND cr.branch_id=@branch AND cr.is_active
+          AND (cr.professional_id IS NULL OR cr.professional_id=i.professional_id)
+          AND (cr.service_id IS NULL OR cr.service_id=i.service_id)
+          AND cr.valid_from<=current_date AND (cr.valid_until IS NULL OR cr.valid_until>=current_date)
+        ORDER BY (cr.professional_id IS NOT NULL)::int+(cr.service_id IS NOT NULL)::int DESC,cr.valid_from DESC
+        LIMIT 1
+      ) rule ON true
+      WHERE i.service_order_id=@order AND i.deleted_at IS NULL AND i.professional_id IS NOT NULL
+        AND COALESCE(rule.percentage,ps.commission_percent,s.commission_percent,p.default_commission,0)>0
+      """,tx)){Add(comm,"tenant",tenant);Add(comm,"branch",branch);Add(comm,"payment",payment);Add(comm,"order",order);await comm.ExecuteNonQueryAsync(ct);}await using(var finance=Command(c,"""
+      INSERT INTO barber.financial_entries(id,tenant_id,branch_id,payload,status,is_active)
+      SELECT gen_random_uuid(),@tenant,@branch,
+        jsonb_build_object('type','Revenue','origin','POS','serviceOrderId',o.id,'paymentId',@payment,'description','Venda paga no PDV','amount',o.total,'occurredAt',now()),
+        'Confirmed',true
+      FROM barber.service_orders o WHERE o.id=@order AND o.tenant_id=@tenant AND o.branch_id=@branch
+      """,tx)){Add(finance,"tenant",tenant);Add(finance,"branch",branch);Add(finance,"payment",payment);Add(finance,"order",order);await finance.ExecuteNonQueryAsync(ct);}await using(var loyalty=Command(c,"""
       WITH reward AS (
         SELECT la.id loyalty_account_id,floor(o.total) points
         FROM barber.service_orders o
