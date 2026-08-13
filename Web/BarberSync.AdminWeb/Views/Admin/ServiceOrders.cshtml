@@ -9,25 +9,28 @@
 <div class="pos-alert" id="posAlert" role="alert" hidden></div>
 <section class="pos-order-strip bs-safe-scroll" aria-label="Comandas" id="posOrders"><div class="bs-skeleton"></div></section>
 
+<nav class="pos-mobile-tabs" aria-label="Etapas do PDV"><button class="active" type="button" data-pos-pane="catalog">Catálogo</button><button type="button" data-pos-pane="cart">Comanda</button><button type="button" data-pos-pane="summary">Pagamento</button></nav>
+
 <main class="bs-pos-grid" id="posWorkspace" aria-busy="true">
-    <section class="pos-pane pos-catalog" aria-labelledby="catalogTitle">
+    <section class="pos-pane pos-catalog active" data-pane="catalog" aria-labelledby="catalogTitle">
         <header><div><span class="pos-step">01</span><h2 id="catalogTitle">Catálogo</h2></div><div class="pos-tabs" role="tablist"><button class="active" data-catalog-kind="services" type="button">Serviços</button><button data-catalog-kind="products" type="button">Produtos</button></div></header>
         <label class="pos-search"><span>⌕</span><input id="posCatalogSearch" type="search" placeholder="Buscar no catálogo" autocomplete="off" /></label>
         <div class="pos-categories bs-safe-scroll" id="posCategories"></div>
         <div class="pos-catalog-grid bs-drawer-scroll" id="posCatalog"><div class="pos-empty"><strong>Carregando catálogo</strong></div></div>
     </section>
 
-    <section class="pos-pane pos-cart" aria-labelledby="cartTitle">
+    <section class="pos-pane pos-cart" data-pane="cart" aria-labelledby="cartTitle">
         <header><div><span class="pos-step">02</span><h2 id="cartTitle">Itens da comanda</h2></div><span class="badge badge-info" id="posItemCount">0 itens</span></header>
         <div class="pos-customer"><div><small>Cliente</small><strong id="posClient">Selecione uma comanda</strong></div><div><small>Atendimento</small><strong id="posAppointment">Não vinculado</strong></div></div>
         <div class="pos-cart-list bs-drawer-scroll" id="posItems"><div class="pos-empty"><strong>Nenhuma comanda selecionada</strong><span>Abra ou escolha uma comanda para começar.</span></div></div>
     </section>
 
-    <aside class="pos-pane pos-summary bs-sticky-summary" aria-labelledby="summaryTitle">
+    <aside class="pos-pane pos-summary bs-sticky-summary" data-pane="summary" aria-labelledby="summaryTitle">
         <header><div><span class="pos-step">03</span><h2 id="summaryTitle">Resumo</h2></div><span class="pos-status" id="posStatus">—</span></header>
         <div class="pos-summary-lines">
             <div><span>Subtotal</span><strong id="sumSubtotal">R$ 0,00</strong></div><div><span>Descontos</span><strong id="sumDiscount">R$ 0,00</strong></div><div><span>Acréscimo</span><strong id="sumSurcharge">R$ 0,00</strong></div><div class="total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div><div><span>Pago</span><strong id="sumPaid">R$ 0,00</strong></div><div class="balance"><span>Saldo</span><strong id="sumBalance">R$ 0,00</strong></div>
         </div>
+        <form class="pos-inline-form" id="discountForm" novalidate><label for="discountAmount">Desconto manual</label><div><input id="discountAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="discountAmount"></small></form>
         <form class="pos-inline-form" id="couponForm" novalidate><label for="couponCode">Cupom</label><div><input id="couponCode" maxlength="60" placeholder="Código do cupom" /><button class="btn btn-light" type="submit">Aplicar</button></div><small class="field-error" data-error-for="couponCode"></small></form>
         <form class="pos-inline-form" id="cashbackForm" novalidate><label for="cashbackAmount">Cashback</label><div><input id="cashbackAmount" inputmode="decimal" placeholder="0,00" /><button class="btn btn-light" type="submit">Usar</button></div><small class="field-error" data-error-for="cashbackAmount"></small></form>
         <div class="pos-adjustments"><strong>Histórico de descontos</strong><div id="posAdjustments"><span>Nenhum desconto aplicado.</span></div></div>
