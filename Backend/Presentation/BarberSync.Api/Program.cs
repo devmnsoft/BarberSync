@@ -76,6 +76,7 @@ builder.Services.AddRateLimiter(options => options.AddPolicy("login", context =>
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 
 builder.Services.AddApplication();
@@ -123,6 +124,7 @@ app.Use(async (context, next) =>
 
 app.UseRateLimiter();
 app.UseAuthentication();
+app.UseMiddleware<RequestObservabilityMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

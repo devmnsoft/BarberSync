@@ -54,6 +54,10 @@
             <a class="menu-link @active("/admin/users")" href="/Admin/Users" title="Usuários e Perfis"><svg class="nav-icon"><use href="#i-shield" /></svg><span>Usuários e Perfis</span></a>
             <a class="menu-link @active("/admin/integrations")" href="/Admin/Integrations" title="Integrações"><svg class="nav-icon"><use href="#i-plug" /></svg><span>Integrações</span></a>
             <a class="menu-link @active("/admin/audit")" href="/Admin/Audit" title="Auditoria"><svg class="nav-icon"><use href="#i-history" /></svg><span>Auditoria</span></a>
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Owner") || User.IsInRole("Admin"))
+            {
+                <a class="menu-link @active("/admin/systemhealth")" href="/Admin/SystemHealth" title="Saúde do sistema"><svg class="nav-icon"><use href="#i-monitor" /></svg><span>Saúde do sistema</span></a>
+            }
             <a class="menu-link @active("/admin/settings")" href="/Admin/Settings" title="Configurações"><svg class="nav-icon"><use href="#i-settings" /></svg><span>Configurações</span></a>
         </div>
     </nav>

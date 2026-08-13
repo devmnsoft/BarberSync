@@ -49,6 +49,9 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Branches")] public IActionResult Branches() => Render("Branches");
     [HttpGet("Audit")] public IActionResult Audit() => Render("Audit");
     [HttpGet("Notifications")] public IActionResult Notifications() => Render("Notifications");
+    [HttpGet("SystemHealth")]
+    [Authorize(Roles = "SuperAdmin,Owner,Admin")]
+    public IActionResult SystemHealth() => Render("SystemHealth");
     [HttpGet("Mobile")] public IActionResult Mobile() => RedirectToAction(nameof(PublicSite));
     [HttpGet("Manual")] public IActionResult Manual() => RedirectToAction(nameof(Help));
     [HttpGet("Help")] public IActionResult Help() => Render("Help");

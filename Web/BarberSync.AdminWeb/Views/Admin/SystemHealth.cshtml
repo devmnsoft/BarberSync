@@ -1,0 +1,20 @@
+@{ ViewData["Title"] = "Saúde do sistema"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<section class="page-header system-health-header">
+    <div><span class="badge">Observabilidade</span><h1>Saúde do sistema</h1><p>Diagnóstico operacional em tempo real, sem expor credenciais ou tokens.</p></div>
+    <button class="btn btn-primary" type="button" data-health-retry>Atualizar diagnóstico</button>
+</section>
+<section class="metrics-grid" data-health-summary aria-live="polite">
+    <article class="metric-card is-loading"><span>API</span><strong>Verificando…</strong></article>
+    <article class="metric-card is-loading"><span>Banco</span><strong>Verificando…</strong></article>
+    <article class="metric-card is-loading"><span>Schema barber</span><strong>Verificando…</strong></article>
+    <article class="metric-card is-loading"><span>Versão</span><strong>Verificando…</strong></article>
+</section>
+<section class="panel system-health-panel">
+    <header><div><h2>Dependências</h2><p>Serviços obrigatórios e integrações opcionais.</p></div><span class="badge" data-health-updated>Não verificado</span></header>
+    <div class="table-responsive"><table class="data-table"><thead><tr><th>Dependência</th><th>Status</th><th>Criticidade</th></tr></thead><tbody data-health-dependencies><tr><td colspan="3">Carregando…</td></tr></tbody></table></div>
+</section>
+<section class="error-state" data-health-error hidden>
+    <h2>Não foi possível concluir o diagnóstico</h2><p data-health-error-message>A API pode estar indisponível.</p><p><strong>TraceId:</strong> <code data-health-trace>não informado</code></p>
+    <button class="btn btn-primary" type="button" data-health-retry>Tentar novamente</button>
+</section>
+@section Scripts { <script src="~/js/admin-system-health.js" asp-append-version="true"></script> }
