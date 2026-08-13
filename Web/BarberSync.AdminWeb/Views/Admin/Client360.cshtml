@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Cliente 360";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var clientId = ViewData["ClientId"];
+}
+<main class="client360" data-client-id="@clientId" aria-live="polite">
+    <header class="page-header bs-page-toolbar bs-mobile-stack">
+        <div>
+            <a href="/Admin/Clients" class="client360-back">← Clientes</a>
+            <p class="pos-eyebrow">Relacionamento</p>
+            <h1 class="page-title" data-client-name>Cliente 360</h1>
+            <p class="page-subtitle" data-client-contact>Carregando dados reais do cliente…</p>
+        </div>
+        <button class="btn btn-light bs-touch-target" type="button" data-client-refresh>Atualizar</button>
+    </header>
+
+    <section class="client360-loading" data-client-loading>Carregando perfil, indicadores e histórico…</section>
+    <section class="bs-premium-error" data-client-error hidden>
+        <h2>Não foi possível carregar este cliente</h2><p data-client-error-detail></p>
+        <small>Identificador: <span data-client-trace>não informado</span></small>
+        <button class="btn btn-primary bs-touch-target" type="button" data-client-retry>Tentar novamente</button>
+    </section>
+
+    <div data-client-content hidden>
+        <section class="client360-kpis" data-client-kpis></section>
+        <section class="client360-grid">
+            <article class="panel"><h2>Dados básicos</h2><dl class="client360-facts" data-client-profile></dl></article>
+            <article class="panel"><h2>Fidelidade e retorno</h2><div class="client360-risk" data-client-risk></div><dl class="client360-facts" data-client-loyalty></dl></article>
+            <article class="panel client360-wide"><h2>Linha do tempo</h2><div class="bs-premium-empty" data-client-timeline>Nenhum evento registrado para este cliente.</div></article>
+            <article class="panel client360-wide"><h2>Ações rápidas</h2><nav class="client360-actions" aria-label="Ações do cliente">
+                <a class="btn btn-primary bs-touch-target" data-action-appointment>Novo agendamento</a>
+                <a class="btn btn-light bs-touch-target" data-action-order>Abrir comanda</a>
+                <a class="btn btn-light bs-touch-target" data-action-coupon>Criar cupom</a>
+                <a class="btn btn-light bs-touch-target" data-action-campaign>Incluir em campanha</a>
+            </nav></article>
+        </section>
+    </div>
+</main>
+@section Styles { <link rel="stylesheet" href="~/css/admin-client360.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/admin-client360.js" asp-append-version="true"></script> }
