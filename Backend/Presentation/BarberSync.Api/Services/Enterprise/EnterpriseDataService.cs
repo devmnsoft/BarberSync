@@ -97,6 +97,8 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
 
     public async Task<Dictionary<string, object?>> CreateAsync(string resource, JsonElement payload, CancellationToken cancellationToken = default)
     {
+        if (resource.Equals("purchases", StringComparison.OrdinalIgnoreCase))
+            return await CreatePurchaseAsync(payload, cancellationToken);
         var validation = Validate(resource, payload, null);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
         await ValidateBusinessRulesAsync(resource, payload, null, cancellationToken);
@@ -493,11 +495,11 @@ order by created_at desc";
     }
 
 
-    private async Task<Dictionary<string, object?>> InsertWithConnectionAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string resource, JsonElement payload, string status, CancellationToken cancellationToken)
+    private async Task<Dictionary<string, object?>> InsertWithConnectionAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string resource, JsonElement payload, string status, CancellationToken cancellationToken, Guid? requestedId = null)
     {
         var validation = Validate(resource, payload, null);
         if (validation.Count > 0) throw new EnterpriseValidationException(validation);
-        var id = Guid.NewGuid();
+        var id = requestedId ?? Guid.NewGuid();
         var json = MergeId(payload, id);
         var isActive = IsActiveStatus(status) && ExtractBoolean(payload, "isActive", true);
         var sql = $"insert into barber.{Table(resource)} (id, tenant_id, branch_id, payload, status, is_active) values (@id, @tenantId, @branchId, @payload::jsonb, @status, @isActive) returning jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at) || payload)";

@@ -6,6 +6,31 @@ namespace BarberSync.Api.Services.Enterprise;
 
 public sealed partial class EnterpriseDataService
 {
+    public async Task<Dictionary<string, object?>> CreatePurchaseAsync(JsonElement payload, CancellationToken ct)
+    {
+        if (!Guid.TryParse(Text(payload, "supplierId"), out var supplierId)) throw Rule("supplierId", "Fornecedor é obrigatório.");
+        if (!payload.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() == 0) throw Rule("items", "A compra precisa de ao menos um item.");
+        await using var connection = await OpenAsync(ct); await using var transaction = await connection.BeginTransactionAsync(ct);
+        await RequireScopedEntity(connection, transaction, "suppliers", supplierId, true, ct);
+        var purchaseId = Guid.NewGuid(); decimal total = 0; var normalizedItems = new List<(Guid ProductId, decimal Quantity, decimal Cost)>();
+        foreach (var item in items.EnumerateArray())
+        {
+            if (!Guid.TryParse(Text(item, "productId"), out var productId)) throw Rule("productId", "Produto inválido.");
+            var quantity = Decimal(item, "quantity"); var cost = Decimal(item, "unitCost");
+            if (quantity <= 0 || cost <= 0) throw Rule("items", "Quantidade e custo unitário devem ser positivos.");
+            await RequireScopedEntity(connection, transaction, "products", productId, true, ct); total += quantity * cost; normalizedItems.Add((productId, quantity, cost));
+        }
+        var purchasePayload = JsonSerializer.SerializeToElement(new { supplierId, number = Text(payload, "number"), expectedAt = Text(payload, "expectedAt"), notes = Text(payload, "notes"), total, itemCount = items.GetArrayLength(), items, status = "Open" });
+        var purchase = await InsertWithConnectionAsync(connection, transaction, "purchases", purchasePayload, "Open", ct, purchaseId);
+        foreach (var item in normalizedItems)
+        {
+            await using var insertItem = new NpgsqlCommand(@"insert into barber.purchase_items(id,tenant_id,branch_id,purchase_id,product_id,ordered_quantity,unit_cost)
+values(@id,@tenant,@branch,@purchase,@product,@quantity,@cost)", connection, transaction);
+            insertItem.Parameters.AddWithValue("id", Guid.NewGuid()); insertItem.Parameters.AddWithValue("tenant", TenantId); insertItem.Parameters.AddWithValue("branch", BranchId); insertItem.Parameters.AddWithValue("purchase", purchaseId); insertItem.Parameters.AddWithValue("product", item.ProductId); insertItem.Parameters.AddWithValue("quantity", item.Quantity); insertItem.Parameters.AddWithValue("cost", item.Cost); await insertItem.ExecuteNonQueryAsync(ct);
+        }
+        await transaction.CommitAsync(ct); await AuditAsync(connection, "Compras", "Created", "purchases", purchaseId, "Pedido de compra criado sem movimentar estoque.", purchasePayload.GetRawText(), ct); return purchase;
+    }
+
     public async Task<Dictionary<string, object?>> ClientCommercialBenefitsAsync(Guid clientId, CancellationToken ct)
     {
         await using var connection = await OpenAsync(ct);
@@ -110,7 +135,66 @@ public sealed partial class EnterpriseDataService
     public async Task<Dictionary<string, object?>> ChangePurchaseStatusAsync(Guid id, string target, string? reason, CancellationToken ct)
     {
         var allowed = target is "Approved" or "Cancelled"; if (!allowed || target == "Cancelled" && string.IsNullOrWhiteSpace(reason)) throw Rule("status", "Transição inválida ou motivo ausente.");
+        var purchase = await GetAsync("purchases", id, ct) ?? throw new KeyNotFoundException("Compra não encontrada nesta unidade.");
+        var current = purchase.TryGetValue("status", out var value) ? value?.ToString() : "Open";
+        if (target == "Approved" && current != "Open") throw Rule("status", "Somente compra aberta pode ser aprovada.");
+        if (target == "Cancelled" && current is "Cancelled" or "Received") throw Rule("status", "Compra cancelada ou totalmente recebida não pode ser cancelada.");
         return await ChangeCommercialStatus(id, "purchases", "Compras", target, reason, ct);
+    }
+
+    public async Task<Dictionary<string, object?>> ReceivePurchaseAsync(Guid purchaseId, string invoiceNumber, DateOnly dueDate, IReadOnlyList<BarberSync.Api.Controllers.PurchaseReceiptItemRequest> items, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(invoiceNumber)) throw Rule("invoiceNumber", "Número da nota é obrigatório.");
+        if (items.Count == 0 || items.Any(x => x.Quantity <= 0 || x.UnitCost <= 0)) throw Rule("items", "Informe itens, quantidades e custos positivos.");
+        if (items.GroupBy(x => x.PurchaseItemId).Any(x => x.Count() > 1)) throw Rule("items", "Um item não pode ser informado duas vezes no mesmo recebimento.");
+
+        await using var connection = await OpenAsync(ct); await using var transaction = await connection.BeginTransactionAsync(ct);
+        var purchase = await LockedPayload(connection, transaction, "purchases", purchaseId, ct);
+        var currentStatus = Text(purchase, "status") ?? "Open";
+        if (currentStatus is not ("Approved" or "PartiallyReceived")) throw Rule("status", "Somente compra aprovada ou parcialmente recebida pode ser recebida.");
+
+        var receiptId = Guid.NewGuid(); decimal receiptTotal = 0;
+        foreach (var received in items)
+        {
+            await using var itemCommand = new NpgsqlCommand(@"select product_id, ordered_quantity, received_quantity
+from barber.purchase_items where id=@item and purchase_id=@purchase and tenant_id=@tenant and branch_id=@branch for update", connection, transaction);
+            itemCommand.Parameters.AddWithValue("item", received.PurchaseItemId); itemCommand.Parameters.AddWithValue("purchase", purchaseId); itemCommand.Parameters.AddWithValue("tenant", TenantId); itemCommand.Parameters.AddWithValue("branch", BranchId);
+            await using var reader = await itemCommand.ExecuteReaderAsync(ct);
+            if (!await reader.ReadAsync(ct)) throw Rule("items", "Item da compra não encontrado nesta unidade.");
+            var productId = reader.GetGuid(0); var ordered = reader.GetDecimal(1); var previouslyReceived = reader.GetDecimal(2);
+            await reader.CloseAsync();
+            if (previouslyReceived + received.Quantity > ordered) throw Rule("quantity", "Quantidade recebida excede a quantidade pedida.");
+
+            await using var productCommand = new NpgsqlCommand(@"update barber.products set
+current_stock=current_stock+@quantity,
+cost_price=case when coalesce((payload->>'costMethod'),'Average')='Average' then round(((current_stock*cost_price)+(@quantity*@cost))/nullif(current_stock+@quantity,0),2) else @cost end,
+payload=payload||jsonb_build_object('lastPurchaseCost',@cost,'lastPurchaseAt',now()), updated_at=now()
+where id=@product and tenant_id=@tenant and branch_id=@branch and deleted_at is null and is_active
+returning current_stock", connection, transaction);
+            productCommand.Parameters.AddWithValue("quantity", received.Quantity); productCommand.Parameters.AddWithValue("cost", received.UnitCost); productCommand.Parameters.AddWithValue("product", productId); productCommand.Parameters.AddWithValue("tenant", TenantId); productCommand.Parameters.AddWithValue("branch", BranchId);
+            var balance = await productCommand.ExecuteScalarAsync(ct) ?? throw Rule("productId", "Produto inativo ou fora da unidade.");
+
+            await using var movement = new NpgsqlCommand(@"insert into barber.stock_movements(id,tenant_id,branch_id,product_id,type,quantity,balance_after,reason,payload)
+values(@id,@tenant,@branch,@product,'PurchaseReceipt',@quantity,@balance,'Recebimento de compra',jsonb_build_object('purchaseId',@purchase,'purchaseReceiptId',@receipt,'unitCost',@cost,'invoiceNumber',@invoice))", connection, transaction);
+            movement.Parameters.AddWithValue("id", Guid.NewGuid()); movement.Parameters.AddWithValue("tenant", TenantId); movement.Parameters.AddWithValue("branch", BranchId); movement.Parameters.AddWithValue("product", productId); movement.Parameters.AddWithValue("quantity", received.Quantity); movement.Parameters.AddWithValue("balance", Convert.ToDecimal(balance)); movement.Parameters.AddWithValue("purchase", purchaseId); movement.Parameters.AddWithValue("receipt", receiptId); movement.Parameters.AddWithValue("cost", received.UnitCost); movement.Parameters.AddWithValue("invoice", invoiceNumber.Trim());
+            await movement.ExecuteNonQueryAsync(ct);
+            await using var updateItem = new NpgsqlCommand("update barber.purchase_items set received_quantity=received_quantity+@quantity,unit_cost=@cost,updated_at=now() where id=@id", connection, transaction);
+            updateItem.Parameters.AddWithValue("quantity", received.Quantity); updateItem.Parameters.AddWithValue("cost", received.UnitCost); updateItem.Parameters.AddWithValue("id", received.PurchaseItemId); await updateItem.ExecuteNonQueryAsync(ct);
+            receiptTotal += received.Quantity * received.UnitCost;
+        }
+
+        await using (var receipt = new NpgsqlCommand(@"insert into barber.purchase_receipts(id,tenant_id,branch_id,purchase_id,invoice_number,amount,payload)
+values(@id,@tenant,@branch,@purchase,@invoice,@amount,@payload::jsonb)", connection, transaction))
+        { receipt.Parameters.AddWithValue("id", receiptId); receipt.Parameters.AddWithValue("tenant", TenantId); receipt.Parameters.AddWithValue("branch", BranchId); receipt.Parameters.AddWithValue("purchase", purchaseId); receipt.Parameters.AddWithValue("invoice", invoiceNumber.Trim()); receipt.Parameters.AddWithValue("amount", receiptTotal); receipt.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, JsonSerializer.Serialize(new { items, dueDate })); await receipt.ExecuteNonQueryAsync(ct); }
+
+        await using var remainingCommand = new NpgsqlCommand("select exists(select 1 from barber.purchase_items where purchase_id=@purchase and ordered_quantity>received_quantity)", connection, transaction);
+        remainingCommand.Parameters.AddWithValue("purchase", purchaseId); var partial = (bool)(await remainingCommand.ExecuteScalarAsync(ct) ?? false); var status = partial ? "PartiallyReceived" : "Received";
+        await using var purchaseUpdate = new NpgsqlCommand("update barber.purchases set status=@status,payload=payload||jsonb_build_object('status',@status,'lastReceiptAt',now(),'invoiceNumber',@invoice),updated_at=now() where id=@id returning jsonb_strip_nulls(jsonb_build_object('id',id::text,'status',status)||payload)", connection, transaction);
+        purchaseUpdate.Parameters.AddWithValue("status", status); purchaseUpdate.Parameters.AddWithValue("invoice", invoiceNumber.Trim()); purchaseUpdate.Parameters.AddWithValue("id", purchaseId); var result = await purchaseUpdate.ExecuteScalarAsync(ct);
+        await InsertWithConnectionAsync(connection, transaction, "financial-entries", JsonSerializer.SerializeToElement(new { description = $"Compra recebida - NF {invoiceNumber.Trim()}", type = "Expense", amount = receiptTotal, category = "Compras", origin = "Purchase", purchaseId, receiptId, dueDate, invoiceNumber = invoiceNumber.Trim() }), "Pending", ct);
+        await transaction.CommitAsync(ct);
+        await AuditAsync(connection, "Compras", "Received", "purchases", purchaseId, $"Recebimento {status} com entrada de estoque e conta a pagar.", JsonSerializer.Serialize(new { receiptId, invoiceNumber, receiptTotal, items }), ct);
+        return Deserialize(result?.ToString() ?? "{}");
     }
 
     private async Task<Dictionary<string, object?>> ChangeCommercialStatus(Guid id, string table, string module, string status, string? reason, CancellationToken ct)
