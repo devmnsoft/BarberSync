@@ -320,7 +320,25 @@ CREATE INDEX IF NOT EXISTS ix_purchases_scope_status ON barber.purchases(tenant_
 CREATE INDEX IF NOT EXISTS ix_financial_entries_scope_status ON barber.financial_entries(tenant_id,branch_id,status,created_at DESC) WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_financial_entries_pos_payment ON barber.financial_entries(tenant_id,branch_id,(payload->>'paymentId')) WHERE deleted_at IS NULL AND payload->>'origin'='POS';
 
+-- 014: recebimento de compras é relacional e transacional. A compra só movimenta
+-- estoque e cria a obrigação financeira quando uma nota é efetivamente recebida.
+CREATE TABLE IF NOT EXISTS barber.purchase_items (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ purchase_id uuid NOT NULL REFERENCES barber.purchases(id), product_id uuid NOT NULL REFERENCES barber.products(id),
+ ordered_quantity numeric(14,3) NOT NULL CHECK (ordered_quantity > 0), received_quantity numeric(14,3) NOT NULL DEFAULT 0 CHECK (received_quantity >= 0),
+ unit_cost numeric(14,2) NOT NULL CHECK (unit_cost > 0), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_purchase_item_received CHECK (received_quantity <= ordered_quantity)
+);
+CREATE INDEX IF NOT EXISTS ix_purchase_items_purchase ON barber.purchase_items(tenant_id,branch_id,purchase_id);
+CREATE INDEX IF NOT EXISTS ix_purchase_items_product ON barber.purchase_items(tenant_id,branch_id,product_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS barber.purchase_receipts (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ purchase_id uuid NOT NULL REFERENCES barber.purchases(id), invoice_number varchar(80) NOT NULL, amount numeric(14,2) NOT NULL CHECK(amount > 0),
+ received_at timestamptz NOT NULL DEFAULT now(), payload jsonb NOT NULL DEFAULT '{}'::jsonb
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_purchase_receipt_invoice ON barber.purchase_receipts(tenant_id,branch_id,invoice_number);
+
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES
-('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813'),('013','Integração transacional PDV, comissões e financeiro','pos-commercial-integration-20260813')
+('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813'),('013','Integração transacional PDV, comissões e financeiro','pos-commercial-integration-20260813'),('014','Compras, recebimentos, estoque e contas a pagar','purchase-receipts-20260814')
 ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;

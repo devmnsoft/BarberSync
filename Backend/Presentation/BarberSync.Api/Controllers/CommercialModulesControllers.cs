@@ -52,6 +52,9 @@ public sealed class PurchasesController(EnterpriseDataService data, ILogger<Purc
     public async Task<IActionResult> Approve(Guid id, CancellationToken ct) => Ok(await data.ChangePurchaseStatusAsync(id, "Approved", null, ct));
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] ReasonRequest request, CancellationToken ct) => Ok(await data.ChangePurchaseStatusAsync(id, "Cancelled", request.Reason, ct));
+    [HttpPost("{id:guid}/receive"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
+    public async Task<IActionResult> Receive(Guid id, [FromBody] PurchaseReceiptRequest request, CancellationToken ct)
+        => Ok(await data.ReceivePurchaseAsync(id, request.InvoiceNumber, request.DueDate, request.Items, ct));
 }
 [ApiController, Route("api/finance")]
 public sealed class FinanceController(EnterpriseDataService data, ILogger<FinanceController> log) : CommercialModuleController(data, log, "financial-entries");
@@ -60,3 +63,5 @@ public sealed record PackageSaleRequest(Guid PackageId, Guid ClientId, bool Paid
 public sealed record MembershipActivationRequest(Guid MembershipId, Guid ClientId, bool Paid);
 public sealed record BenefitUseRequest(Guid ServiceOrderId, Guid? ServiceId);
 public sealed record ReasonRequest(string Reason);
+public sealed record PurchaseReceiptRequest(string InvoiceNumber, DateOnly DueDate, IReadOnlyList<PurchaseReceiptItemRequest> Items);
+public sealed record PurchaseReceiptItemRequest(Guid PurchaseItemId, decimal Quantity, decimal UnitCost);
