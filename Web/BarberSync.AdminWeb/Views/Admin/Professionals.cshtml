@@ -1,38 +1,27 @@
-@{
-    ViewData["Title"] = "Profissionais";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-<section class="page-header">
-    <div>
-        <h1 class="page-title">Profissionais</h1>
-        <p class="page-subtitle">Escala, performance e disponibilidade. Dados carregados por proxy MVC <strong>/AdminApi/professionals</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="Professionals">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="Professionals">Novo Profissional</button>
-    </div>
+@{ ViewData["Title"] = "Equipe"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@section Styles { <link rel="stylesheet" href="~/css/admin-team.css" asp-append-version="true" /> }
+<section class="team-hero">
+ <div><span class="eyebrow">OPERAÇÃO & PESSOAS</span><h1>Equipe</h1><p>Profissionais, serviços, escala e bloqueios em uma visão operacional.</p></div>
+ <div class="page-actions"><button class="btn btn-light" data-team-refresh>Atualizar</button><button class="btn btn-primary" data-team-new>Novo profissional</button></div>
 </section>
-<div class="alert alert-warning d-none" id="ProfessionalsFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="ProfessionalsCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
+<section class="team-toolbar panel" aria-label="Filtros de equipe">
+ <label>Buscar<input type="search" data-team-search placeholder="Nome, função ou especialidade"></label>
+ <label>Status<select data-team-status><option value="">Todos</option><option value="Active">Ativos</option><option value="Inactive">Inativos</option></select></label>
+ <span class="team-count" data-team-count>0 profissionais</span>
 </section>
-<section class="enterprise-demo-grid"><article class="enterprise-card"><h3>Performance</h3><p>R$ 18.450 no mês • ⭐ 4,9 • 92% ocupação.</p><div class="progress-demo"><span style="width:84%"></span></div></article><article class="enterprise-card"><h3>Comissão estimada</h3><strong>R$ 7.380</strong><p>Baseada nas comandas concluídas.</p></article><article class="enterprise-card"><h3>Agenda de hoje</h3><div class="timeline-demo"><div>10:30 Lucas</div><div>14:00 Marina</div><div>18:30 André</div></div></article><article class="enterprise-card full"><h3>Serviços vinculados e ranking</h3><div class="tag-list"><span class="tag">Corte + Barba</span><span class="tag">Fade</span><span class="tag">Barba quente</span><span class="tag">#1 faturamento</span></div><div class="quick-actions-grid"><button class="btn btn-light" data-demo-action="Agenda do profissional aberta">Ver agenda</button><button class="btn btn-light" data-demo-action="Comissão calculada">Ver comissão</button><button class="btn btn-light" data-demo-action="Serviço vinculado">Vincular serviço</button><button class="btn btn-light" data-demo-action="Profissional inativado">Inativar</button></div></article></section>
-<section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/professionals</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="ProfessionalsRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
-</section>
-<div class="admin-modal-backdrop" id="ProfessionalsModal" hidden>
-    <form class="admin-modal" data-admin-form="Professionals">
-        <div class="modal-header"><h3>Novo/editar Profissional</h3><button type="button" class="modal-close" data-admin-close="Professionals">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Professionals">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
-    </form>
-</div>
-@section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Professionals')</script>}
+<section class="bs-skeleton panel" data-team-loading>Carregando equipe da unidade…</section>
+<section class="bs-error-state panel" data-team-error hidden><h2>Não foi possível carregar a equipe</h2><p>Confira a conexão com a API e tente novamente.</p><button class="btn btn-primary" data-team-refresh>Tentar novamente</button></section>
+<section class="bs-empty-state panel" data-team-empty hidden><h2>Sua equipe começa aqui</h2><p>Cadastre o primeiro profissional e configure serviços e escala.</p><button class="btn btn-primary" data-team-new>Cadastrar profissional</button></section>
+<section class="team-grid" data-team-grid aria-live="polite"></section>
+
+<div class="bs-drawer-backdrop" data-team-drawer hidden><aside class="bs-drawer team-drawer">
+ <form data-team-form><header><div><span class="eyebrow">PERFIL 360</span><h2 data-team-title>Novo profissional</h2></div><button type="button" class="modal-close" data-team-close>×</button></header>
+  <nav class="team-tabs"><button type="button" class="active" data-tab="data">Dados</button><button type="button" data-tab="services">Serviços</button><button type="button" data-tab="schedule">Agenda</button><button type="button" data-tab="block">Bloqueios</button></nav>
+  <section data-pane="data"><div class="form-row"><label>Nome completo<input name="name" required maxlength="180"></label><label>Cargo / função<input name="role" required maxlength="80"></label></div><div class="form-row"><label>Telefone<input name="phone" inputmode="tel"></label><label>E-mail<input name="email" type="email"></label></div><div class="form-row"><label>Documento<input name="document"></label><label>Vínculo<select name="employmentType"><option>CLT</option><option>MEI</option><option>Autônomo</option><option>Parceiro</option></select></label></div><div class="form-row"><label>Data de entrada<input name="admissionDate" type="date" required></label><label>Status<select name="status"><option value="Active">Ativo</option><option value="Inactive">Inativo</option></select></label></div><label>Especialidades<input name="specialties" placeholder="Corte, barba, coloração"></label></section>
+  <section data-pane="services" hidden><p class="pane-help">Somente serviços ativos da unidade podem ser vinculados.</p><div class="service-checklist" data-service-list></div></section>
+  <section data-pane="schedule" hidden><p class="pane-help">Configure expediente e pausa. A agenda recusará horários fora desta grade.</p><div data-schedule-list></div></section>
+  <section data-pane="block" hidden><div class="form-row"><label>Início<input name="blockStart" type="datetime-local"></label><label>Fim<input name="blockEnd" type="datetime-local"></label></div><label>Motivo<input name="blockReason" maxlength="30"></label><label>Descrição<textarea name="blockDescription"></textarea></label><button type="button" class="btn btn-secondary" data-create-block>Criar bloqueio</button><div class="block-list" data-block-list></div></section>
+  <footer class="drawer-actions"><button type="button" class="btn btn-light" data-team-close>Cancelar</button><button class="btn btn-primary" type="submit">Salvar alterações</button></footer>
+ </form>
+</aside></div>
+@section Scripts { <script src="~/js/admin-team.js" asp-append-version="true"></script> }

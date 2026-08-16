@@ -26,8 +26,8 @@ public class AdminController(IWebHostEnvironment environment) : Controller
         return Render("Client360");
     }
     [HttpGet("Professionals")] public IActionResult Professionals() => Render("Professionals");
-    [HttpGet("Team")] public IActionResult Team() => RedirectToAction(nameof(Professionals));
-    [HttpGet("Team/{id:guid}")] public IActionResult TeamProfile(Guid id) => Redirect($"/Admin/Professionals?profile={id}");
+    [HttpGet("Team")] public IActionResult Team() => Render("Professionals");
+    [HttpGet("Team/{id:guid}")] public IActionResult TeamProfile(Guid id) => Redirect($"/Admin/Team?profile={id}");
     [HttpGet("Commissions")] public IActionResult Commissions() => Commercial("Comissões", "commissions", "professionalId", "Profissional", "amount", "Valor", "saleStatus", "Situação da venda");
     [HttpGet("Packages")] public IActionResult Packages() => Commercial("Pacotes", "packages", "name", "Nome", "price", "Preço", "services", "Serviços (IDs separados por vírgula)");
     [HttpGet("ClientPackages")] public IActionResult ClientPackages() => Commercial("Pacotes de clientes", "client-packages", "clientId", "Cliente", "packageId", "Pacote", "remainingSessions", "Sessões restantes");
