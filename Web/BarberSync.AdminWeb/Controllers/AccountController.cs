@@ -7,30 +7,52 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.AdminWeb.Controllers;
 
-public class AccountController(IHttpClientFactory httpClientFactory) : Controller
+public class AccountController(
+    IHttpClientFactory httpClientFactory,
+    IWebHostEnvironment environment,
+    IConfiguration configuration) : Controller
 {
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        ViewData["ShowDiagnostics"] = environment.IsDevelopment();
+        ViewData["AllowFirstAdmin"] = configuration.GetValue<bool>("AdminSetup:AllowFirstAdministrator");
+        return View();
+    }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(new { message = "Informe e-mail e senha." });
+            return BadRequest(Failure("Informe e-mail e senha."));
 
-        using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        using var content = new StringContent(
+            JsonSerializer.Serialize(new { request.Email, request.Password }),
+            Encoding.UTF8,
+            "application/json");
         try
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").PostAsync("/api/auth/login", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
-                return StatusCode((int)response.StatusCode, new { message = "Não foi possível autenticar com os dados informados." });
+            {
+                var message = response.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden => "E-mail ou senha inválidos.",
+                    System.Net.HttpStatusCode.ServiceUnavailable => "O serviço de autenticação não conseguiu acessar o banco de dados. Contate o administrador.",
+                    _ when (int)response.StatusCode >= 500 => "O serviço de autenticação está indisponível no momento.",
+                    _ => "Não foi possível autenticar com os dados informados."
+                };
+                return StatusCode((int)response.StatusCode, Failure(message));
+            }
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
             var root = document.RootElement;
             var data = root.TryGetProperty("data", out var nested) ? nested : root;
             if (!data.TryGetProperty("accessToken", out var token) || string.IsNullOrWhiteSpace(token.GetString()) ||
                 !data.TryGetProperty("refreshToken", out var refreshToken) || string.IsNullOrWhiteSpace(refreshToken.GetString()))
-                return StatusCode(StatusCodes.Status502BadGateway, new { message = "A resposta do serviço de autenticação é inválida." });
+                return StatusCode(StatusCodes.Status502BadGateway, Failure("A resposta do serviço de autenticação é inválida."));
 
             var expires = data.TryGetProperty("expiresAt", out var expiresAt) && expiresAt.TryGetDateTimeOffset(out var parsedExpiry)
                 ? parsedExpiry : DateTimeOffset.UtcNow.AddMinutes(15);
@@ -42,11 +64,16 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
             Response.Cookies.Append("BarberSync.AccessToken", token.GetString()!, cookieOptions);
             Response.Cookies.Append("BarberSync.RefreshToken", refreshToken.GetString()!, new CookieOptions { HttpOnly = true, Secure = Request.IsHttps, SameSite = SameSiteMode.Strict });
 
-            return Ok(new { redirectUrl = "/Admin/Dashboard" });
+            var redirectUrl = Url.IsLocalUrl(request.ReturnUrl) ? request.ReturnUrl : "/Admin/Dashboard";
+            return Ok(new { redirectUrl });
         }
         catch (HttpRequestException)
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "Serviço de autenticação temporariamente indisponível." });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, Failure("Não foi possível acessar a API de autenticação. Tente novamente em instantes."));
+        }
+        catch (Exception exception) when (exception is JsonException or FormatException or InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, Failure("A API retornou uma resposta de autenticação inválida."));
         }
     }
 
@@ -90,5 +117,7 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
         }
     }
 
-    public sealed record LoginRequest(string Email, string Password);
+    private object Failure(string message) => new { message, traceId = HttpContext.TraceIdentifier };
+
+    public sealed record LoginRequest(string Email, string Password, string? ReturnUrl = null);
 }

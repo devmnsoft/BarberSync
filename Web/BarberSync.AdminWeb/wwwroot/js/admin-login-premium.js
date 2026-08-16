@@ -4,6 +4,7 @@
   const password = document.getElementById('password');
   const toggle = document.querySelector('[data-toggle-password]');
   const error = document.querySelector('[data-login-error]');
+  const csrf = form?.querySelector('input[name="__RequestVerificationToken"]');
   toggle?.addEventListener('click', () => {
     const visible = password.type === 'text';
     password.type = visible ? 'password' : 'text';
@@ -16,13 +17,23 @@
     const button = form.querySelector('[type="submit"]');
     error.hidden = true; button.disabled = true; button.querySelector('span').textContent = 'Entrando...';
     try {
-      const response = await fetch('/Account/Login', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: password.value }) });
+      const response = await fetch('/Account/Login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', RequestVerificationToken: csrf?.value || '' },
+        body: JSON.stringify({
+          email: document.getElementById('email').value.trim(),
+          password: password.value,
+          returnUrl: document.getElementById('returnUrl')?.value || null
+        })
+      });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const unavailable = response.status >= 500;
-        throw new Error(unavailable
-          ? 'O BarberSync está temporariamente indisponível. Verifique o diagnóstico local e tente novamente.'
-          : payload?.message || 'E-mail ou senha inválidos.');
+        const message = payload?.message || (unavailable
+          ? 'O BarberSync está temporariamente indisponível. Tente novamente em instantes.'
+          : 'E-mail ou senha inválidos.');
+        throw new Error(payload?.traceId ? `${message} Código de suporte: ${payload.traceId}` : message);
       }
       location.assign(payload?.redirectUrl || '/Admin/Dashboard');
     } catch (reason) {
