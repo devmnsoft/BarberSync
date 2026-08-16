@@ -15,6 +15,7 @@ public interface IAppointmentRepository
     Task<AppointmentResponse?> GetAsync(Guid tenantId, Guid branchId, Guid id, CancellationToken ct);
     Task<int?> GetServiceDurationAsync(Guid tenantId, Guid branchId, Guid serviceId, CancellationToken ct);
     Task<bool> HasConflictAsync(Guid tenantId, Guid branchId, Guid professionalId, DateTimeOffset start, DateTimeOffset end, Guid? exceptId, CancellationToken ct);
+    Task<string?> GetUnavailabilityReasonAsync(Guid tenantId, Guid branchId, Guid professionalId, Guid serviceId, DateTimeOffset start, DateTimeOffset end, CancellationToken ct);
     Task<AppointmentResponse> CreateAsync(AppointmentDraft appointment, CancellationToken ct);
     Task<AppointmentResponse> UpdateAsync(AppointmentDraft appointment, CancellationToken ct);
     Task<AppointmentResponse> ChangeStatusAsync(Guid tenantId, Guid branchId, Guid id, string expectedStatus, string status, string? reason, Guid userId, CancellationToken ct);
@@ -48,7 +49,7 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
     {
         var duration = await Duration(request.ServiceId, ct);
         var end = request.ScheduledStart.AddMinutes(duration);
-        await EnsureAvailable(request.ProfessionalId, request.ScheduledStart, end, null, ct);
+        await EnsureAvailable(request.ProfessionalId, request.ServiceId, request.ScheduledStart, end, null, ct);
         return await repository.CreateAsync(new(Guid.NewGuid(), currentUser.TenantId, currentUser.BranchId, request.ClientId, request.ProfessionalId, request.ServiceId, request.ScheduledStart, end, "Scheduled", request.Origin, request.Notes), ct);
     }
 
@@ -56,7 +57,7 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
     {
         _ = await Required(id, ct);
         var end = request.ScheduledStart.AddMinutes(await Duration(request.ServiceId, ct));
-        await EnsureAvailable(request.ProfessionalId, request.ScheduledStart, end, id, ct);
+        await EnsureAvailable(request.ProfessionalId, request.ServiceId, request.ScheduledStart, end, id, ct);
         return await repository.UpdateAsync(new(id, currentUser.TenantId, currentUser.BranchId, request.ClientId, request.ProfessionalId, request.ServiceId, request.ScheduledStart, end, "Scheduled", request.Origin, request.Notes), ct);
     }
 
@@ -75,14 +76,15 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
         var current = await Required(id, ct);
         if (current.Status is "Cancelled" or "NoShow" or "Finished") throw new InvalidOperationException("Este agendamento não pode ser reagendado.");
         var end = request.ScheduledStart.AddMinutes(current.DurationMinutes);
-        await EnsureAvailable(current.ProfessionalId, request.ScheduledStart, end, id, ct);
+        await EnsureAvailable(current.ProfessionalId, current.ServiceId, request.ScheduledStart, end, id, ct);
         return await repository.RescheduleAsync(currentUser.TenantId, currentUser.BranchId, id, request.ScheduledStart, end, request.Reason.Trim(), currentUser.UserId, ct);
     }
 
     public async Task<bool> IsAvailableAsync(AvailabilityRequest request, CancellationToken ct)
     {
         var end = request.Start.AddMinutes(await Duration(request.ServiceId, ct));
-        return !await repository.HasConflictAsync(currentUser.TenantId, currentUser.BranchId, request.ProfessionalId, request.Start, end, null, ct);
+        return await repository.GetUnavailabilityReasonAsync(currentUser.TenantId, currentUser.BranchId, request.ProfessionalId, request.ServiceId, request.Start, end, ct) is null
+            && !await repository.HasConflictAsync(currentUser.TenantId, currentUser.BranchId, request.ProfessionalId, request.Start, end, null, ct);
     }
 
     public async Task<IReadOnlyList<DateTimeOffset>> SmartSlotsAsync(Guid professionalId, Guid serviceId, DateOnly date, CancellationToken ct)
@@ -94,7 +96,8 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
         var result = new List<DateTimeOffset>();
         while (cursor.AddMinutes(duration) <= endOfDay)
         {
-            if (!await repository.HasConflictAsync(currentUser.TenantId, currentUser.BranchId, professionalId, cursor, cursor.AddMinutes(duration), null, ct)) result.Add(cursor);
+            if (await repository.GetUnavailabilityReasonAsync(currentUser.TenantId, currentUser.BranchId, professionalId, serviceId, cursor, cursor.AddMinutes(duration), ct) is null
+                && !await repository.HasConflictAsync(currentUser.TenantId, currentUser.BranchId, professionalId, cursor, cursor.AddMinutes(duration), null, ct)) result.Add(cursor);
             cursor = cursor.AddMinutes(15);
         }
         return result;
@@ -102,9 +105,11 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
 
     private async Task<int> Duration(Guid serviceId, CancellationToken ct) => await repository.GetServiceDurationAsync(currentUser.TenantId, currentUser.BranchId, serviceId, ct) ?? throw new KeyNotFoundException("Serviço não encontrado.");
     private async Task<AppointmentResponse> Required(Guid id, CancellationToken ct) => await GetAsync(id, ct) ?? throw new KeyNotFoundException("Agendamento não encontrado.");
-    private async Task EnsureAvailable(Guid professional, DateTimeOffset start, DateTimeOffset end, Guid? except, CancellationToken ct)
+    private async Task EnsureAvailable(Guid professional, Guid service, DateTimeOffset start, DateTimeOffset end, Guid? except, CancellationToken ct)
     {
         if (start >= end) throw new InvalidOperationException("O término deve ocorrer após o início.");
+        var reason = await repository.GetUnavailabilityReasonAsync(currentUser.TenantId, currentUser.BranchId, professional, service, start, end, ct);
+        if (reason is not null) throw new InvalidOperationException(reason);
         if (await repository.HasConflictAsync(currentUser.TenantId, currentUser.BranchId, professional, start, end, except, ct)) throw new InvalidOperationException("O profissional já possui compromisso neste horário.");
     }
 }

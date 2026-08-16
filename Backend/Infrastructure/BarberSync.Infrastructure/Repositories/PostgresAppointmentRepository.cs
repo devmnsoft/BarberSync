@@ -89,6 +89,40 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
         return (bool)(await command.ExecuteScalarAsync(ct) ?? false);
     }
 
+    public async Task<string?> GetUnavailabilityReasonAsync(Guid tenantId, Guid branchId, Guid professionalId, Guid serviceId, DateTimeOffset start, DateTimeOffset end, CancellationToken ct)
+    {
+        await using var connection = await connections.OpenConnectionAsync(ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            WITH local_slot AS (
+              SELECT (@start AT TIME ZONE 'America/Sao_Paulo') AS starts,
+                     (@finish AT TIME ZONE 'America/Sao_Paulo') AS finishes
+            )
+            SELECT CASE
+              WHEN NOT EXISTS (SELECT 1 FROM barber.professionals p WHERE p.id=@professional AND p.tenant_id=@tenant AND p.branch_id=@branch AND p.status='Active' AND p.is_active AND p.deleted_at IS NULL)
+                THEN 'Profissional inativo ou indisponível nesta unidade.'
+              WHEN NOT EXISTS (SELECT 1 FROM barber.professional_services ps WHERE ps.professional_id=@professional AND ps.service_id=@service)
+                THEN 'O profissional não executa o serviço selecionado.'
+              WHEN NOT EXISTS (
+                SELECT 1 FROM barber.professional_working_hours h, local_slot l
+                WHERE h.tenant_id=@tenant AND h.branch_id=@branch AND h.professional_id=@professional AND h.is_active
+                  AND h.day_of_week=EXTRACT(ISODOW FROM l.starts)::smallint
+                  AND l.starts::time>=h.start_time AND l.finishes::time<=h.end_time
+                  AND (h.break_start IS NULL OR NOT (l.starts::time<h.break_end AND l.finishes::time>h.break_start)))
+                THEN 'Horário fora da escala ou durante a pausa do profissional.'
+              WHEN EXISTS (
+                SELECT 1 FROM barber.professional_schedule_blocks b
+                WHERE b.tenant_id=@tenant AND b.branch_id=@branch AND b.professional_id=@professional
+                  AND b.start_at<@finish AND b.end_at>@start)
+                THEN 'Horário bloqueado na agenda do profissional.'
+              ELSE NULL END
+            """;
+        Add(command,"tenant",tenantId); Add(command,"branch",branchId); Add(command,"professional",professionalId);
+        Add(command,"service",serviceId); Add(command,"start",start); Add(command,"finish",end);
+        var result = await command.ExecuteScalarAsync(ct);
+        return result is null or DBNull ? null : Convert.ToString(result);
+    }
+
     public async Task<AppointmentResponse> CreateAsync(AppointmentDraft a, CancellationToken ct)
     {
         await using var connection = await connections.OpenConnectionAsync(ct);

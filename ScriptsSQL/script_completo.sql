@@ -207,6 +207,9 @@ INSERT INTO barber.permissions(id,code,description) VALUES
 ('10000000-0000-4000-8000-000000000028','Coupon.Redeem','Aplicar cupom em comanda'),
 ('10000000-0000-4000-8000-000000000029','Loyalty.Redeem','Resgatar cashback em comanda')
  ,('10000000-0000-4000-8000-000000000030','SystemHealth.View','Visualizar diagnóstico técnico sem dados sensíveis')
+ ,('10000000-0000-4000-8000-000000000031','Professional.Read','Visualizar profissionais da unidade')
+ ,('10000000-0000-4000-8000-000000000032','Professional.Update','Alterar cadastro, serviços e escala profissional')
+ ,('10000000-0000-4000-8000-000000000033','Appointment.Block','Criar bloqueios na agenda profissional')
 ON CONFLICT(id) DO UPDATE SET code=excluded.code,description=excluded.description;
 INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
 ('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
@@ -338,7 +341,20 @@ CREATE TABLE IF NOT EXISTS barber.purchase_receipts (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_purchase_receipt_invoice ON barber.purchase_receipts(tenant_id,branch_id,invoice_number);
 
+-- 015: escala operacional normalizada. A agenda, o totem e o mobile consultam a
+-- mesma fonte, sem inferir disponibilidade no cliente ou armazená-la no navegador.
+CREATE TABLE IF NOT EXISTS barber.professional_working_hours (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ professional_id uuid NOT NULL REFERENCES barber.professionals(id), day_of_week smallint NOT NULL CHECK(day_of_week BETWEEN 1 AND 7),
+ start_time time NOT NULL, end_time time NOT NULL, break_start time, break_end time, is_active boolean NOT NULL DEFAULT true,
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_professional_work_period CHECK(end_time > start_time),
+ CONSTRAINT ck_professional_break_period CHECK((break_start IS NULL AND break_end IS NULL) OR (break_start IS NOT NULL AND break_end IS NOT NULL AND break_end > break_start AND break_start >= start_time AND break_end <= end_time))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_professional_working_day ON barber.professional_working_hours(tenant_id,branch_id,professional_id,day_of_week) WHERE is_active;
+CREATE INDEX IF NOT EXISTS ix_professional_working_scope ON barber.professional_working_hours(tenant_id,branch_id,professional_id,day_of_week);
+
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES
-('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813'),('013','Integração transacional PDV, comissões e financeiro','pos-commercial-integration-20260813'),('014','Compras, recebimentos, estoque e contas a pagar','purchase-receipts-20260814')
+('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813'),('013','Integração transacional PDV, comissões e financeiro','pos-commercial-integration-20260813'),('014','Compras, recebimentos, estoque e contas a pagar','purchase-receipts-20260814'),('015','Escalas, pausas e disponibilidade profissional','professional-schedules-20260815')
 ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;
