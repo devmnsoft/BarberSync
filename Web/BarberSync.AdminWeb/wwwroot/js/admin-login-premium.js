@@ -15,6 +15,7 @@
     event.preventDefault();
     if (!form.reportValidity()) return;
     const button = form.querySelector('[type="submit"]');
+    const requestToken = form.querySelector('[name="__RequestVerificationToken"]')?.value;
     error.hidden = true; button.disabled = true; button.querySelector('span').textContent = 'Entrando...';
     try {
       const response = await fetch('/Account/Login', {
