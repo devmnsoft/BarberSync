@@ -13,6 +13,7 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
     public IActionResult Login() => View();
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
@@ -23,7 +24,13 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
         {
             var response = await httpClientFactory.CreateClient("BarberSyncApi").PostAsync("/api/auth/login", content, cancellationToken);
             if (!response.IsSuccessStatusCode)
-                return StatusCode((int)response.StatusCode, new { message = "Não foi possível autenticar com os dados informados." });
+                return StatusCode((int)response.StatusCode, new
+                {
+                    message = response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                        ? "E-mail ou senha inválidos. Confira os dados e tente novamente."
+                        : "Não foi possível autenticar com os dados informados.",
+                    traceId = ReadTraceId(response)
+                });
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
             var root = document.RootElement;
@@ -46,7 +53,11 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
         }
         catch (HttpRequestException)
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "Serviço de autenticação temporariamente indisponível." });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                message = "Serviço de autenticação temporariamente indisponível. Confirme se a API e o banco estão configurados.",
+                traceId = HttpContext.TraceIdentifier
+            });
         }
     }
 
@@ -89,6 +100,9 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
                 yield return new Claim(property.NameEquals("email") ? ClaimTypes.Email : property.Name, property.Value.GetString()!);
         }
     }
+
+    private static string? ReadTraceId(HttpResponseMessage response)
+        => response.Headers.TryGetValues("X-Trace-Id", out var values) ? values.FirstOrDefault() : null;
 
     public sealed record LoginRequest(string Email, string Password);
 }

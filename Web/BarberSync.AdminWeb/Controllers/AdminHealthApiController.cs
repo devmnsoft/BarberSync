@@ -11,38 +11,43 @@ public sealed class AdminHealthApiController(
     ILogger<AdminHealthApiController> logger) : ControllerBase
 {
     [HttpGet("real-data")]
-    public Task<IActionResult> RealData() => ProxyGet(
-        "/api/health/real-data",
-        new
-        {
-            success = false,
-            databaseConnected = false,
-            schemaReady = false,
-            realDataReady = false,
-            message = "Health de dados reais indisponível via proxy AdminApi.",
-            resources = Array.Empty<object>(),
-            isDemo = true
-        });
+    public Task<IActionResult> RealData(CancellationToken cancellationToken) =>
+        ProxyGet("/api/health/real-data", cancellationToken);
 
-    private async Task<IActionResult> ProxyGet(string path, object fallback)
+    private async Task<IActionResult> ProxyGet(string path, CancellationToken cancellationToken)
     {
         try
         {
             var client = httpClientFactory.CreateClient("BarberSyncApi");
-            var response = await client.GetAsync(BuildApiUrl(path));
+            using var response = await client.GetAsync(BuildApiUrl(path), cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 return Content(await response.Content.ReadAsStringAsync(), "application/json", Encoding.UTF8);
             }
 
             logger.LogWarning("Admin health proxy GET {Path} falhou com status {StatusCode}", path, response.StatusCode);
-            return Ok(fallback);
+            return DependencyProblem((int)response.StatusCode,
+                "O diagnóstico da API não pôde ser concluído.",
+                "A API respondeu com erro. Consulte o traceId e valide a conexão com o banco de dados.");
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning(ex, "Admin health proxy GET {Path} lançou exceção. Usando fallback controlado.", path);
-            return Ok(fallback);
+            throw;
         }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Admin health proxy GET {Path} não respondeu.", path);
+            return DependencyProblem(StatusCodes.Status503ServiceUnavailable,
+                "A API está indisponível.",
+                "Inicie a API e confirme a configuração do banco de dados antes de tentar novamente.");
+        }
+    }
+
+    private ObjectResult DependencyProblem(int statusCode, string title, string detail)
+    {
+        var problem = new ProblemDetails { Status = statusCode, Title = title, Detail = detail };
+        problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
+        return new ObjectResult(problem) { StatusCode = statusCode };
     }
 
     private string BuildApiUrl(string path)

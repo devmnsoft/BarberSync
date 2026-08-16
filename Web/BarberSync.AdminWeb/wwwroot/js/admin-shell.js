@@ -46,4 +46,20 @@ document.addEventListener("DOMContentLoaded", function () {
       cashIndicator.querySelector('strong').textContent = open ? 'aberto' : 'fechado';
     })
     .catch(() => { cashIndicator.querySelector('strong').textContent = 'indisponível'; });
+
+  const notificationCount = document.querySelector('[data-topbar-notification-count]');
+  if (notificationCount && !document.querySelector('[data-notifications-page]')) {
+    fetch('/AdminApi/notifications', { headers: { Accept: 'application/json' } })
+      .then(response => response.ok ? response.json() : Promise.reject())
+      .then(payload => {
+        const items = payload?.data?.items || payload?.data || payload?.items || payload || [];
+        const unread = Array.isArray(items) ? items.filter(item => !(item.isRead === true || item.read === true || String(item.status).toLowerCase() === 'read')).length : 0;
+        notificationCount.textContent = String(unread);
+        notificationCount.hidden = unread === 0;
+      })
+      .catch(() => {
+        notificationCount.textContent = '!';
+        notificationCount.title = 'Notificações indisponíveis';
+      });
+  }
 });
