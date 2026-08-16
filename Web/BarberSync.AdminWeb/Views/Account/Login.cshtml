@@ -1,3 +1,4 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment
 @{ Layout = null; }
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -15,6 +16,7 @@
         </section>
         <section class="login-form-panel">
             <form id="loginForm" class="login-form" autocomplete="on">
+                @Html.AntiForgeryToken()
                 <div class="mobile-logo"><img src="~/img/logo-barbersync.svg" alt="BarberSync" /></div>
                 <p class="eyebrow">ACESSO SEGURO</p>
                 <h2>Bem-vindo de volta</h2>
@@ -25,7 +27,7 @@
                 <div class="password-label"><label for="password">Senha</label><a href="/Account/ForgotPassword">Esqueci minha senha</a></div>
                 <div class="password-field"><input type="password" id="password" name="password" autocomplete="current-password" placeholder="Digite sua senha" required /><button type="button" data-toggle-password aria-label="Mostrar senha">Mostrar</button></div>
                 <button class="login-submit" type="submit"><span>Entrar</span></button>
-                <p class="privacy-note"><a href="/Help/Setup">Primeira configuração</a> · <a href="/Admin/Diagnostics">Diagnóstico local</a></p>
+                <p class="privacy-note"><a href="/Help/Setup">Primeira configuração</a>@if (Environment.IsDevelopment()) { <text> · <a href="/Admin/Diagnostics">Diagnóstico local</a></text> }</p>
                 <small class="privacy-note">Ao entrar, você concorda com as políticas de segurança e privacidade da sua organização.</small>
             </form>
         </section>

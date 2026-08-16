@@ -14,15 +14,17 @@
     event.preventDefault();
     if (!form.reportValidity()) return;
     const button = form.querySelector('[type="submit"]');
+    const requestToken = form.querySelector('[name="__RequestVerificationToken"]')?.value;
     error.hidden = true; button.disabled = true; button.querySelector('span').textContent = 'Entrando...';
     try {
-      const response = await fetch('/Account/Login', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: password.value }) });
+      const response = await fetch('/Account/Login', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', RequestVerificationToken: requestToken || '' }, body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: password.value }) });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const unavailable = response.status >= 500;
-        throw new Error(unavailable
+        const message = unavailable
           ? 'O BarberSync está temporariamente indisponível. Verifique o diagnóstico local e tente novamente.'
-          : payload?.message || 'E-mail ou senha inválidos.');
+          : payload?.message || 'E-mail ou senha inválidos.';
+        throw new Error(payload?.traceId ? `${message} Código de suporte: ${payload.traceId}` : message);
       }
       location.assign(payload?.redirectUrl || '/Admin/Dashboard');
     } catch (reason) {
