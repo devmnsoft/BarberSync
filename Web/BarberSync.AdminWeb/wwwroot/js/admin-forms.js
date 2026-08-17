@@ -32,9 +32,46 @@
   function validateForm(formOrId) {
     const form = typeof formOrId === 'string' ? (document.getElementById(formOrId) || document.querySelector(`[data-admin-form='${formOrId}']`)) : formOrId;
     if (!form) return false;
+    form.querySelectorAll('.is-invalid').forEach(input => input.classList.remove('is-invalid'));
     const valid = form.checkValidity();
     form.querySelectorAll(':invalid').forEach(input => input.classList.add('is-invalid'));
+    form.setAttribute('aria-invalid', valid ? 'false' : 'true');
     return valid;
+  }
+
+  function setSubmitting(form, submitting, label = 'Processando…') {
+    if (!form) return;
+    form.setAttribute('aria-busy', submitting ? 'true' : 'false');
+    form.querySelectorAll('button[type="submit"]').forEach(button => {
+      if (submitting) button.dataset.idleLabel ||= button.textContent.trim();
+      button.disabled = submitting;
+      button.classList.toggle('is-loading', submitting);
+      button.textContent = submitting ? label : (button.dataset.idleLabel || button.textContent);
+    });
+  }
+
+  function technicalError(message, traceId) {
+    const safeMessage = message || 'Não foi possível concluir a operação. Tente novamente.';
+    return traceId ? `${safeMessage} Código de suporte: ${traceId}` : safeMessage;
+  }
+
+  async function submit(form, operation, options = {}) {
+    if (!validateForm(form)) {
+      form.reportValidity();
+      return { success: false, validationError: true };
+    }
+    setSubmitting(form, true, options.loadingLabel);
+    try {
+      const result = await operation();
+      if (result?.success === false) {
+        const message = technicalError(result.message, result.traceId);
+        options.onError?.(message, result);
+        window.AdminToast?.showError?.(message);
+      }
+      return result;
+    } finally {
+      setSubmitting(form, false);
+    }
   }
 
   function fillForm(form, data = {}) {
@@ -50,7 +87,7 @@
     form?.querySelectorAll?.('.is-invalid').forEach(input => input.classList.remove('is-invalid'));
   }
 
-  const api = { validateRequired, validateEmail, applyMasks, serializeForm, validateForm, fillForm, resetForm };
+  const api = { validateRequired, validateEmail, applyMasks, serializeForm, validateForm, setSubmitting, technicalError, submit, fillForm, resetForm };
   window.AdminForms = api;
   Object.assign(window, api);
   document.addEventListener('DOMContentLoaded', applyMasks);

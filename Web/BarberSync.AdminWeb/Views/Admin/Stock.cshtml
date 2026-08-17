@@ -3,47 +3,24 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 <section class="page-header">
-    <div>
-        <h1 class="page-title">Estoque</h1>
-        <p class="page-subtitle">Produtos, mínimos e reposição crítica. Dados carregados por proxy MVC <strong>/AdminApi/products</strong> com fallback demo.</p>
-    </div>
-    <div class="page-actions">
-        <button class="btn btn-light" data-admin-refresh="Stock">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="Stock">Novo Produto</button>
-    </div>
+    <div><p class="eyebrow">ESTOQUE</p><h1 class="page-title">Movimentações e níveis</h1><p class="page-subtitle">Saldos e alertas carregados da operação da unidade selecionada.</p></div>
+    <div class="page-actions"><button class="btn btn-light" type="button" data-admin-refresh="Stock">Atualizar</button><button class="btn btn-primary" type="button" data-admin-new="Stock">Nova movimentação</button></div>
 </section>
-<div class="alert alert-warning d-none" id="StockFallback">API indisponível: modo demonstração seguro ativo.</div>
-<section class="admin-module-grid" id="StockCards">
-    <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
-</section>
-<section class="enterprise-demo-grid"><article class="enterprise-card"><h3>Produtos críticos</h3><p>Pomada Modeladora abaixo do mínimo.</p><span class="tag">Comprar 24 unidades</span></article><article class="enterprise-card"><h3>Valor em estoque</h3><strong>R$ 18.920</strong><p>Com alertas de reposição.</p></article><article class="enterprise-card"><h3>Movimentações</h3><div class="timeline-demo"><div>Entrada Balm +20</div><div>Saída Pomada -4</div><div>Ajuste Shampoo +8</div></div></article><article class="enterprise-card full"><button class="btn btn-primary" data-demo-action="Reposição gerada">Gerar reposição</button></article></section>
-<!-- Demo Experience 3.0 injected -->
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>Estoque conectado ao PDV</h3><p>Produtos vendidos na comanda reduzem estoque, geram movimento e mudam status para crítico abaixo do mínimo.</p><div class="quick-actions-grid"><button class="btn btn-primary" data-flow-replenish>Gerar pedido de reposição demo</button><button class="btn btn-light" onclick="const rows=window.BarberSyncDemoStore?.filter('products','critical')||[]; const text=rows.map(p=>`${p.name};${p.stock||p.quantity};${p.minimumStock}`).join('\n'); navigator.clipboard?.writeText(text); window.AdminToast?.show('Lista de reposição exportada em modo mock.','success');">Exportar lista de reposição mock</button></div></article>
+<section class="admin-module-grid" id="StockCards" aria-live="polite">
+    <article class="kpi-card"><div><p class="kpi-label">Carregando estoque</p><div class="bs-skeleton"></div></div></article>
 </section>
 <section class="panel module-panel">
-    <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
-        <span class="badge badge-info">/AdminApi/products</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table admin-table"><thead><tr><th>Nome</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="StockRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table>
-    </div>
+    <div class="panel-header"><div><h2>Registros operacionais</h2><p>Entradas, saídas e ajustes persistidos pela API.</p></div><span class="badge badge-info">Unidade atual</span></div>
+    <div class="table-responsive"><table class="table admin-table"><thead><tr><th>Produto</th><th>Detalhe</th><th>Status</th><th>Ações</th></tr></thead><tbody id="StockRows"><tr><td colspan="4"><div class="bs-skeleton"></div></td></tr></tbody></table></div>
 </section>
 <div class="admin-modal-backdrop" id="StockModal" hidden>
     <form class="admin-modal" data-admin-form="Stock">
-        <div class="modal-header"><h3>Novo/editar Produto</h3><button type="button" class="modal-close" data-admin-close="Stock">×</button></div>
-        <label>Nome<input name="name" required placeholder="Nome" /></label>
-        <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Stock">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
+        <div class="modal-header"><h2>Nova movimentação</h2><button type="button" class="modal-close" data-admin-close="Stock" aria-label="Fechar">×</button></div>
+        <label>Produto<input name="product" required /></label>
+        <label>Tipo<select name="movement" required><option value="Entrada">Entrada</option><option value="Saída">Saída</option><option value="Ajuste">Ajuste</option></select></label>
+        <label>Quantidade<input name="quantity" type="number" min="1" required /></label>
+        <label>Motivo<textarea name="notes" required></textarea></label>
+        <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Stock">Cancelar</button><button class="btn btn-primary" type="submit">Salvar movimentação</button></div>
     </form>
 </div>
-@section Scripts {<script src="~/js/admin-forms.js" asp-append-version="true"></script><script src="~/js/admin-crud.js" asp-append-version="true"></script><script src="~/js/admin-stock.js" asp-append-version="true"></script><script>window.renderAdminCrudPage && window.renderAdminCrudPage('Stock')</script>}
-
-<section class="panel"><div class="panel-header"><div><h3>Estoque integrado ao PDV</h3><p>Movimentações por entrada manual, saída por comanda e ajuste com alerta crítico e sugestão de compra.</p></div></div><div class="module-feature-grid" data-stock-demo></div></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Estoque 2.0</h3><p>Experiência conectada ao DemoStore 5.0 e aos eventos da demonstração.</p></div></div><div data-stock-v2></div></section>
-<section class="saas-grid" data-stock-30><article class="saas-card wide"><h3>Estoque 3.0</h3><div class="saas-actions"><button class="btn btn-primary" data-stock-sale>Venda de produto</button><button class="btn btn-light" data-stock-replenish>Pedido de reposição demo</button></div><div class="saas-list" data-stock-insights></div></article><article class="saas-card"><h3>Curva ABC e giro</h3><div data-stock-abc></div></article></section>
-
-<section class="panel"><div class="panel-header"><div><h3>Baixa de estoque do Fluxo Comercial 15.0</h3><p>Produto vendido baixa estoque, cria stockMovement, atualiza alerta crítico e histórico.</p></div></div><div data-commercial-flow-stock></div></section>
+@section Scripts { <script src="~/js/admin-crud.js" asp-append-version="true"></script><script>window.renderAdminCrudPage('Stock')</script> }
