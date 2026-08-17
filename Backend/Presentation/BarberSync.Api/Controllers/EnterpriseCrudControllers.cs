@@ -28,12 +28,12 @@ public abstract class EnterpriseCrudController(EnterpriseDataService data, ILogg
         }
         catch (EnterpriseValidationException ex)
         {
-            return BadRequest(new { success = false, message = "Existem campos inválidos.", data = (object?)null, errors = ex.Errors });
+            return BadRequest(new { success = false, message = "Existem campos inválidos.", data = (object?)null, errors = ex.Errors, traceId = HttpContext.TraceIdentifier });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao processar recurso {Resource}.", resource);
-            return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>() });
+            return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>(), traceId = HttpContext.TraceIdentifier });
         }
     }
 
