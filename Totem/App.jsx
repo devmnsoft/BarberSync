@@ -1,27 +1,20 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-const card = { padding: 16, borderRadius: 12, background: '#1f2937', minWidth: 260 };
+const steps = ['Unidade', 'Cliente', 'Serviço', 'Profissional', 'Horário', 'Confirmar'];
+const id = item => item?.id ?? item?.branchId ?? item?.serviceId ?? item?.professionalId;
+const name = item => item?.name ?? item?.displayName ?? item?.tradeName ?? 'Opção disponível';
 
-export default function App() {
-  return (
-    <main style={{ minHeight: '100vh', padding: 30, background: '#111827', color: '#fff' }}>
-      <h1>Totem Inteligente BarberSync</h1>
-      <p>Check-in gamificado, reconhecimento por vídeo e recomendações de upsell em tempo real.</p>
-
-      <section style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
-        <article style={card}>
-          <h3>Fila preditiva</h3>
-          <p>Tempo estimado: <strong style={{ color: '#34d399' }}>12 min</strong></p>
-        </article>
-        <article style={card}>
-          <h3>Recompensa do dia</h3>
-          <p>+80 pontos ao confirmar presença no totem.</p>
-        </article>
-        <article style={card}>
-          <h3>Notificações ao vivo</h3>
-          <p>Estoque crítico: 3 • Novos clientes hoje: 14</p>
-        </article>
-      </section>
-    </main>
-  );
+export default function App({ api }) {
+  const [step, setStep] = useState(0); const [flow, setFlow] = useState({ date: new Date().toISOString().slice(0, 10) });
+  const [items, setItems] = useState([]); const [busy, setBusy] = useState(false); const [error, setError] = useState(null); const [done, setDone] = useState(null); const [offline, setOffline] = useState(!navigator.onLine);
+  const selected = useMemo(() => ({ branch: flow.branch, service: flow.service, professional: flow.professional, slot: flow.slot }), [flow]);
+  useEffect(() => { const online = () => setOffline(false); const off = () => setOffline(true); addEventListener('online', online); addEventListener('offline', off); api.flow('GET').then(saved => saved?.step && setFlow(saved)).catch(() => {}); return () => { removeEventListener('online', online); removeEventListener('offline', off); }; }, []);
+  useEffect(() => { let active = true; setItems([]); setError(null); setBusy(true); const load = step === 0 ? api.branches() : step === 2 ? api.services(id(flow.branch)) : step === 3 ? api.professionals(id(flow.branch), id(flow.service)) : step === 4 ? api.slots(id(flow.branch), id(flow.service), id(flow.professional), flow.date) : Promise.resolve([]); load.then(data => active && setItems(Array.isArray(data) ? data : data?.slots ?? [])).catch(e => active && setError(e)).finally(() => active && setBusy(false)); return () => { active = false; }; }, [step, flow.date]);
+  const save = async patch => { const next = { ...flow, ...patch, step: step + 1 }; setFlow(next); await api.flow('PUT', next); setStep(value => value + 1); };
+  const identify = async event => { event.preventDefault(); if (busy) return; setBusy(true); setError(null); try { const client = await api.identify(event.currentTarget.phone.value); if (!client) { setFlow(v => ({ ...v, phone: event.currentTarget.phone.value, registering: true })); return; } await save({ client: { id: id(client), firstName: client.firstName || name(client) } }); } catch (e) { setError(e); } finally { setBusy(false); } };
+  const register = async event => { event.preventDefault(); if (busy) return; setBusy(true); setError(null); try { const form = new FormData(event.currentTarget); const client = await api.register({ firstName: form.get('firstName'), phone: flow.phone, consent: form.get('consent') === 'on', branchId: id(flow.branch) }); await save({ client: { id: id(client), firstName: client.firstName || name(client) }, registering: false }); } catch (e) { setError(e); } finally { setBusy(false); } };
+  const finish = async () => { if (busy) return; setBusy(true); setError(null); try { const command = { branchId: id(flow.branch), clientId: id(flow.client), serviceId: id(flow.service), professionalId: id(flow.professional), startsAt: flow.slot?.startsAt || flow.slot, origin: 'Kiosk' }; const checkIn = await api.checkIn(command); const preOrder = await api.preOrder({ ...command, appointmentId: checkIn.appointmentId || checkIn.id }); setDone({ ticket: checkIn.ticket || checkIn.queueNumber, order: preOrder.number || preOrder.orderNumber }); await api.flow('DELETE'); setFlow({ date: new Date().toISOString().slice(0, 10) }); } catch (e) { setError(e); } finally { setBusy(false); } };
+  const choose = item => save(step === 0 ? { branch: item } : step === 2 ? { service: item } : step === 3 ? { professional: item } : { slot: item });
+  if (done) return <main className="shell success"><div className="hero-icon">✓</div><p className="eyebrow">Tudo certo</p><h1>Check-in confirmado</h1><p className="lead">Sua senha é <strong>{done.ticket || 'emitida na recepção'}</strong>. A equipe já recebeu sua chegada{done.order ? ` e a pré-comanda ${done.order}` : ''}.</p><button className="primary" onClick={() => { setDone(null); setStep(0); }}>Novo atendimento</button></main>;
+  return <main className="shell"><header><div><p className="eyebrow">BarberSync • Autoatendimento</p><h1>{steps[step]}</h1></div><strong className="step-count">{step + 1}/{steps.length}</strong></header><nav aria-label="Etapas">{steps.map((label, index) => <span className={index === step ? 'active' : index < step ? 'complete' : ''} key={label}>{index < step ? '✓' : index + 1}<small>{label}</small></span>)}</nav>{offline && <div className="notice">Sem conexão. Nenhuma ação será simulada; aguarde ou chame a recepção.</div>}{error && <div className="error" role="alert"><strong>Não foi possível continuar</strong><p>{error.message}</p>{error.traceId && <small>Código de suporte: {error.traceId}</small>}</div>}<section className="stage">{busy && <div className="loading"><i />Carregando dados reais…</div>}{!busy && step === 1 && (flow.registering ? <form onSubmit={register}><label>Como podemos chamar você?<input required name="firstName" autoComplete="given-name" /></label><label className="consent"><input required type="checkbox" name="consent" /> Autorizo o uso destes dados para este atendimento.</label><button className="primary">Cadastrar e continuar</button></form> : <form onSubmit={identify}><label>Informe seu celular com DDD<input required name="phone" inputMode="tel" minLength="10" autoComplete="tel" /></label><p className="privacy">Mostraremos somente seu primeiro nome. Seus dados permanecem protegidos.</p><button className="primary">Identificar</button></form>)}{!busy && step === 4 && <label>Data do atendimento<input type="date" min={new Date().toISOString().slice(0, 10)} value={flow.date} onChange={e => setFlow(v => ({ ...v, date: e.target.value }))} /></label>}{!busy && [0, 2, 3, 4].includes(step) && <div className="options">{items.map(item => <button key={id(item) || item.startsAt || item} onClick={() => choose(item)}><strong>{step === 4 ? new Date(item.startsAt || item).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : name(item)}</strong>{item.durationMinutes && <small>{item.durationMinutes} min</small>}</button>)}{!items.length && <div className="empty"><strong>{step === 4 ? 'Nenhum horário disponível' : 'Nenhuma opção disponível'}</strong><p>{step === 4 ? 'Este profissional não possui horários livres nesta data. Volte e escolha outro profissional ou dia.' : 'Chame um atendente para continuar.'}</p></div>}</div>}{!busy && step === 5 && <div className="review"><h2>Revise antes de confirmar</h2><dl><div><dt>Unidade</dt><dd>{name(selected.branch)}</dd></div><div><dt>Serviço</dt><dd>{name(selected.service)}</dd></div><div><dt>Profissional</dt><dd>{name(selected.professional)}</dd></div><div><dt>Horário</dt><dd>{new Date(selected.slot?.startsAt || selected.slot).toLocaleString('pt-BR')}</dd></div></dl><button disabled={offline} className="primary" onClick={finish}>Confirmar check-in e pré-comanda</button></div>}</section>{step > 0 && step < 5 && !busy && <button className="back" onClick={() => { setError(null); setStep(v => v - 1); }}>← Voltar com segurança</button>}</main>;
 }

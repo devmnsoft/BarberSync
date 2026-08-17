@@ -1,58 +1,27 @@
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
-
-export class MobileApiError extends Error {
-  constructor(message, { status = 0, traceId = null } = {}) {
-    super(message);
-    this.name = 'MobileApiError';
-    this.status = status;
-    this.traceId = traceId;
-  }
-}
-
-function unwrap(payload) {
-  return payload?.data ?? payload?.items ?? payload;
-}
-
-async function httpGet(path, signal) {
+let accessToken = null;
+export class MobileApiError extends Error { constructor(message, { status = 0, traceId = null } = {}) { super(message); this.name = 'MobileApiError'; this.status = status; this.traceId = traceId; } }
+const unwrap = payload => payload?.data ?? payload?.items ?? payload;
+async function request(path, { method = 'GET', body, signal } = {}) {
   let response;
-  try {
-    response = await fetch(`${API_URL}${path}`, {
-      headers: { Accept: 'application/json' },
-      signal
-    });
-  } catch (error) {
-    if (error?.name === 'AbortError') throw error;
-    throw new MobileApiError('Não foi possível conectar ao BarberSync. Verifique sua internet e tente novamente.');
-  }
-
-  const traceId = response.headers.get('x-trace-id');
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new MobileApiError(
-      payload?.message || 'Não foi possível carregar seus dados agora.',
-      { status: response.status, traceId: payload?.traceId || traceId }
-    );
-  }
+  try { response = await fetch(`${API_URL}${path}`, { method, signal, headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}), ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
+  catch (error) { if (error?.name === 'AbortError') throw error; throw new MobileApiError('Sem conexão com o BarberSync. Nenhuma alteração foi simulada.'); }
+  const payload = await response.json().catch(() => null); const traceId = payload?.traceId || response.headers.get('x-trace-id');
+  if (!response.ok || payload?.success === false) throw new MobileApiError(payload?.message || 'Não foi possível concluir a operação.', { status: response.status, traceId });
   return unwrap(payload);
 }
-
-async function getMobileSummary(signal) {
-  const summary = await httpGet('/api/mobile/summary', signal);
-  if (!summary || typeof summary !== 'object') {
-    throw new MobileApiError('O serviço retornou uma resposta inválida.');
-  }
-  return {
-    operations: summary.operations ?? {},
-    appointments: Array.isArray(summary.appointments) ? summary.appointments : [],
-    loyalty: Array.isArray(summary.loyalty) ? summary.loyalty : [],
-    coupons: Array.isArray(summary.coupons) ? summary.coupons : [],
-    notifications: Array.isArray(summary.notifications) ? summary.notifications : []
-  };
-}
-
+const query = values => new URLSearchParams(Object.entries(values).filter(([, value]) => value !== undefined && value !== null).map(([key, value]) => [key, String(value)])).toString();
 export const mobileApi = {
-  getMobileSummary,
-  getOperationsSnapshot: signal => httpGet('/api/full-service-flow/snapshot', signal),
-  getAppointments: signal => httpGet('/api/appointments', signal),
-  getLoyaltyAccounts: signal => httpGet('/api/loyalty/accounts', signal)
+  setAccessToken(token) { accessToken = token || null; }, logout() { accessToken = null; },
+  login: input => request('/api/auth/login', { method: 'POST', body: input }), register: input => request('/api/mobile/client/register', { method: 'POST', body: input }),
+  getMobileSummary: signal => request('/api/mobile/summary', { signal }), services: signal => request('/api/mobile/services', { signal }),
+  slots: values => request(`/api/mobile/appointments/availability?${query(values)}`), createAppointment: input => request('/api/mobile/appointments', { method: 'POST', body: { ...input, origin: 'Mobile' } }),
+  reschedule: (id, startsAt, reason) => request(`/api/mobile/appointments/${id}/reschedule`, { method: 'POST', body: { startsAt, reason } }),
+  cancel: (id, reason) => request(`/api/mobile/appointments/${id}/cancel`, { method: 'POST', body: { reason } }),
+  history: signal => request('/api/mobile/client/history', { signal }), benefits: signal => request('/api/mobile/client/benefits', { signal }),
+  notifications: signal => request('/api/mobile/notifications', { signal }), readNotification: id => request(`/api/mobile/notifications/${id}/read`, { method: 'POST' }),
+  profile: signal => request('/api/mobile/client/profile', { signal }), updateProfile: input => request('/api/mobile/client/profile', { method: 'PUT', body: input }),
+  professionalDay: signal => request('/api/mobile/professional/day', { signal }), start: id => request(`/api/mobile/professional/appointments/${id}/start`, { method: 'POST' }),
+  finish: id => request(`/api/mobile/professional/appointments/${id}/finish`, { method: 'POST' }), commissions: signal => request('/api/mobile/professional/commissions', { signal }),
+  blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };

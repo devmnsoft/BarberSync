@@ -1,64 +1,31 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { colors } from './src/theme/colors';
-import { radius, spacing } from './src/theme/spacing';
-import { mobileApi } from './src/services/api';
-
-const Card = ({ children, accent }) => (
-  <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md, borderLeftWidth: accent ? 5 : 0, borderLeftColor: accent || colors.gold, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 18, elevation: 3 }}>{children}</View>
-);
-const Title = ({ children }) => <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{children}</Text>;
-const Empty = ({ children }) => <Text style={{ color: colors.muted, marginTop: spacing.sm }}>{children}</Text>;
-
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { colors } from './src/theme/colors'; import { radius, spacing } from './src/theme/spacing'; import { mobileApi } from './src/services/api';
+const Card = ({ children, color = colors.gold }) => <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md, borderLeftWidth: 5, borderLeftColor: color, elevation: 3 }}>{children}</View>;
+const Button = ({ title, onPress, disabled, secondary }) => <Pressable disabled={disabled} onPress={onPress} style={{ opacity: disabled ? .5 : 1, backgroundColor: secondary ? colors.card : colors.primary, borderWidth: secondary ? 1 : 0, borderColor: colors.primary, borderRadius: radius.lg, padding: spacing.md, alignItems: 'center', marginTop: spacing.sm }}><Text style={{ color: secondary ? colors.primary : colors.white, fontWeight: '900' }}>{title}</Text></Pressable>;
+const Empty = ({ text }) => <Card><Text style={{ fontWeight: '900', color: colors.ink }}>Nada por aqui</Text><Text style={{ color: colors.muted, marginTop: 6 }}>{text}</Text></Card>;
+const statusColor = value => /cancel/i.test(value) ? '#b84b55' : /finish|paid|conclu/i.test(value) ? '#25845f' : /service|atend/i.test(value) ? '#b87920' : colors.primary;
 export default function App() {
-  const [snapshot, setSnapshot] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const load = useCallback(async (signal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      setSnapshot(await mobileApi.getMobileSummary(signal));
-    } catch (requestError) {
-      if (requestError?.name !== 'AbortError') setError(requestError);
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    load(controller.signal);
-    return () => controller.abort();
-  }, [load]);
-
-  if (loading && !snapshot) return (
-    <View accessibilityRole="progressbar" accessibilityLabel="Carregando dados" style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-      <ActivityIndicator size="large" color={colors.primary} /><Text style={{ color: colors.muted, marginTop: spacing.md }}>Carregando sua experiência BarberSync…</Text>
-    </View>
-  );
-
-  if (error && !snapshot) return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.bg }}>
-      <Card accent={colors.primary}><Title>Não foi possível carregar seus dados</Title><Empty>{error.message}</Empty>{error.traceId ? <Text selectable style={{ color: colors.muted, marginTop: spacing.sm }}>Código de suporte: {error.traceId}</Text> : null}</Card>
-      <Pressable accessibilityRole="button" onPress={() => load()} style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Tentar novamente</Text></Pressable>
-    </View>
-  );
-
-  const appointments = snapshot?.appointments ?? [];
-  const loyalty = snapshot?.loyalty?.[0];
-  const coupons = snapshot?.coupons ?? [];
-  const notifications = snapshot?.notifications ?? [];
-  return (
-    <ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} tintColor={colors.primary} />} style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, paddingTop: 58 }}>
-      <Text style={{ color: colors.primary, fontSize: 32, fontWeight: '900', marginBottom: spacing.lg }}>BarberSync</Text>
-      {error ? <Card accent={colors.gold}><Title>Atualização indisponível</Title><Empty>{error.message} Os últimos dados carregados continuam visíveis.</Empty></Card> : null}
-      <Card accent={colors.gold}><Title>Próximo atendimento</Title>{appointments[0] ? <><Text style={{ marginTop: 10, color: colors.slate }}>{appointments[0].time} • {appointments[0].serviceName}</Text><Empty>{appointments[0].professionalName} • {appointments[0].status}</Empty></> : <Empty>Você não possui atendimentos agendados.</Empty>}</Card>
-      <Card><Title>Meus agendamentos</Title>{appointments.length ? appointments.map(item => <View key={item.id} style={{ marginTop: spacing.md }}><Text style={{ color: colors.slate, fontWeight: '800' }}>{item.serviceName}</Text><Empty>{item.time} • {item.professionalName} • {item.status}</Empty></View>) : <Empty>Nenhum agendamento encontrado.</Empty>}</Card>
-      <Card><Title>Cashback e pontos</Title>{loyalty ? <><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ {Number(loyalty.cashbackBalance ?? 0).toFixed(2).replace('.', ',')}</Text><Empty>{Number(loyalty.pointsBalance ?? 0)} pontos disponíveis.</Empty></> : <Empty>Nenhum saldo de fidelidade disponível.</Empty>}</Card>
-      <Card><Title>Cupons disponíveis</Title>{coupons.length ? coupons.map(coupon => <Text key={coupon.id ?? coupon.code} style={{ color: colors.slate, marginTop: spacing.sm }}><Text style={{ fontWeight: '900' }}>{coupon.code}</Text>{coupon.discount ? ` • ${coupon.discount}` : ''}</Text>) : <Empty>Nenhum cupom disponível no momento.</Empty>}</Card>
-      <Card><Title>Notificações</Title>{notifications.length ? notifications.map((item, index) => <Text key={item.id ?? index} style={{ color: colors.slate, marginTop: spacing.sm }}>• {typeof item === 'string' ? item : item.message ?? item.title}</Text>) : <Empty>Você está em dia. Nenhuma notificação nova.</Empty>}</Card>
-    </ScrollView>
-  );
+  const [data, setData] = useState(null); const [tab, setTab] = useState('Início'); const [loading, setLoading] = useState(true); const [error, setError] = useState(null); const [working, setWorking] = useState(false);
+  const load = useCallback(async signal => { setLoading(true); setError(null); try { setData(await mobileApi.getMobileSummary(signal)); } catch (e) { if (e.name !== 'AbortError') setError(e); } finally { if (!signal?.aborted) setLoading(false); } }, []);
+  useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort(); }, [load]);
+  const act = async (action, confirmation) => { if (working) return; if (confirmation) { const accepted = await new Promise(resolve => Alert.alert('Confirme a ação', confirmation, [{ text: 'Voltar', onPress: () => resolve(false) }, { text: 'Confirmar', onPress: () => resolve(true) }])); if (!accepted) return; } setWorking(true); setError(null); try { await action(); await load(); } catch (e) { setError(e); } finally { setWorking(false); } };
+  if (loading && !data) return <View style={center}><ActivityIndicator size="large" color={colors.primary}/><Text style={muted}>Carregando seus dados protegidos…</Text></View>;
+  if (error && !data) return <View style={[center, { padding: spacing.xl }]}><Card color="#b84b55"><Text style={title}>Não foi possível entrar</Text><Text style={muted}>{error.message}</Text>{error.traceId && <Text selectable style={muted}>Código: {error.traceId}</Text>}</Card><Button title="Tentar novamente" onPress={() => load()}/></View>;
+  const professional = data?.profile?.role === 'Professional' || data?.role === 'Professional'; const appointments = data?.appointments || data?.day?.appointments || []; const benefits = data?.benefits || {};
+  const tabs = professional ? ['Início', 'Agenda', 'Comissões', 'Bloqueios'] : ['Início', 'Agendar', 'Benefícios', 'Histórico', 'Alertas', 'Perfil'];
+  return <View style={{ flex: 1, backgroundColor: colors.bg }}><ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: spacing.lg, paddingTop: 54, paddingBottom: 110 }}><Text style={{ color: colors.primary, fontSize: 30, fontWeight: '900' }}>{professional ? 'Minha rotina' : 'Olá, ' + (data?.profile?.firstName || 'cliente')}</Text><Text style={muted}>{professional ? 'Agenda e atendimentos da sua unidade' : 'Seu cuidado, seus horários e benefícios'}</Text>{error && <Card color="#b84b55"><Text style={title}>A atualização falhou</Text><Text style={muted}>{error.message}</Text>{error.traceId && <Text selectable style={muted}>Código: {error.traceId}</Text>}</Card>}
+  {tab === 'Início' && <><Card><Text style={title}>{professional ? 'Próximo atendimento' : 'Próximo horário'}</Text>{appointments[0] ? <Appointment item={appointments[0]} /> : <Text style={muted}>Nenhum atendimento previsto.</Text>}</Card>{!professional && <Card><Text style={title}>Cashback</Text><Text style={{ color: '#25845f', fontSize: 28, fontWeight: '900' }}>R$ {Number(benefits.cashback ?? 0).toFixed(2).replace('.', ',')}</Text><Text style={muted}>Saldo obtido em operações confirmadas.</Text></Card>}</>}
+  {tab === 'Agenda' && (appointments.length ? appointments.map(item => <Card key={item.id} color={statusColor(item.status)}><Appointment item={item}/>{item.status === 'CheckedIn' && <Button disabled={working} title="Iniciar atendimento" onPress={() => act(() => mobileApi.start(item.id), 'O status ficará visível para a recepção.')}/>} {item.status === 'InService' && <Button disabled={working} title="Finalizar e encaminhar ao PDV" onPress={() => act(() => mobileApi.finish(item.id), 'O atendimento será encaminhado para pagamento.')}/>}</Card>) : <Empty text="Sua agenda está livre hoje."/>)}
+  {tab === 'Comissões' && <><Card><Text style={title}>Prevista</Text><Text style={money}>{currency(data?.commissions?.expected)}</Text></Card><Card color="#25845f"><Text style={title}>Disponível</Text><Text style={money}>{currency(data?.commissions?.available)}</Text></Card></>}
+  {tab === 'Bloqueios' && <BlockForm disabled={working} onSave={input => act(() => mobileApi.block(input), 'O horário ficará indisponível para novos agendamentos.')}/>}
+  {tab === 'Agendar' && <Schedule data={data} disabled={working} onSave={input => act(() => mobileApi.createAppointment(input), 'Confirma este agendamento?')}/>}
+  {tab === 'Benefícios' && <><Card><Text style={title}>Pacotes ativos</Text><Text style={muted}>{benefits.packages?.length ? benefits.packages.map(x => `${x.name}: ${x.remainingSessions} sessões`).join('\n') : 'Nenhum pacote ativo.'}</Text></Card><Card><Text style={title}>Assinaturas</Text><Text style={muted}>{benefits.subscriptions?.length ? benefits.subscriptions.map(x => `${x.name}: ${x.monthlyUsed}/${x.monthlyLimit} usos`).join('\n') : 'Nenhuma assinatura ativa.'}</Text></Card><Card><Text style={title}>Cupons</Text><Text style={muted}>{benefits.coupons?.length ? benefits.coupons.map(x => x.code).join(' • ') : 'Nenhum cupom disponível.'}</Text></Card></>}
+  {tab === 'Histórico' && ((data?.history || []).length ? data.history.map(x => <Card key={x.id} color={statusColor(x.status)}><Appointment item={x}/>{!/cancel|finish/i.test(x.status) && <Button secondary title="Cancelar com motivo" onPress={() => Alert.prompt('Motivo obrigatório', 'Informe por que deseja cancelar.', reason => reason?.trim() && act(() => mobileApi.cancel(x.id, reason), 'O cancelamento respeitará a antecedência da unidade.'))}/>}</Card>) : <Empty text="Você ainda não concluiu atendimentos."/>)}
+  {tab === 'Alertas' && ((data?.notifications || []).length ? data.notifications.map(n => <Card key={n.id}><Text style={title}>{n.title}</Text><Text style={muted}>{n.message}</Text>{!n.read && <Button secondary title="Marcar como lida" onPress={() => act(() => mobileApi.readNotification(n.id))}/>}</Card>) : <Empty text="Nenhuma notificação nova."/>)}
+  {tab === 'Perfil' && <Card><Text style={title}>Meus dados</Text><Text style={muted}>{data?.profile?.name}\n{data?.profile?.maskedEmail || data?.profile?.email}</Text><Text style={muted}>Somente você pode acessar estas informações.</Text></Card>}</ScrollView><ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ position: 'absolute', bottom: 0, backgroundColor: colors.card, maxHeight: 82, width: '100%' }} contentContainerStyle={{ padding: 10 }}>{tabs.map(x => <Pressable key={x} onPress={() => setTab(x)} style={{ backgroundColor: tab === x ? colors.primary : colors.bg, borderRadius: 20, padding: 14, marginRight: 8 }}><Text style={{ color: tab === x ? colors.white : colors.ink, fontWeight: '900' }}>{x}</Text></Pressable>)}</ScrollView></View>;
 }
+const Appointment = ({ item }) => <View><Text style={[title, { marginTop: 8 }]}>{item.serviceName}</Text><Text style={muted}>{new Date(item.startsAt || item.scheduledStart).toLocaleString('pt-BR')} • {item.professionalName}</Text><Text style={{ color: statusColor(item.status), fontWeight: '900', marginTop: 6 }}>{item.status}</Text>{item.clientFirstName && <Text style={muted}>Cliente: {item.clientFirstName}</Text>}{item.importantNotes && <Text style={muted}>Observação: {item.importantNotes}</Text>}</View>;
+const Schedule = ({ data, onSave, disabled }) => { const [serviceId, setService] = useState(null); return <><Text style={title}>Escolha um serviço</Text><View style={{ marginTop: 12 }}>{(data?.services || []).map(s => <Button key={s.id} secondary={serviceId !== s.id} title={`${s.name} • ${s.durationMinutes} min`} onPress={() => setService(s.id)}/>)}</View>{serviceId ? <Button disabled={disabled} title="Consultar horários reais" onPress={() => onSave({ serviceId, branchId: data.profile.branchId, professionalId: data.professionals?.[0]?.id, startsAt: data.availableSlots?.[0]?.startsAt })}/> : null}</> };
+const BlockForm = ({ onSave, disabled }) => { const [reason, setReason] = useState(''); const [start, setStart] = useState(''); return <Card><Text style={title}>Bloquear horário</Text><TextInput placeholder="Data/hora ISO" value={start} onChangeText={setStart} style={input}/><TextInput placeholder="Motivo obrigatório" value={reason} onChangeText={setReason} style={input}/><Button disabled={disabled || !reason.trim() || !start.trim()} title="Confirmar bloqueio" onPress={() => onSave({ startsAt: start, reason })}/></Card>; };
+const currency = value => `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`; const center = { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }; const title = { fontSize: 18, fontWeight: '900', color: colors.ink }; const muted = { color: colors.muted, marginTop: spacing.sm }; const money = { color: colors.primary, fontSize: 28, fontWeight: '900', marginTop: 8 }; const input = { backgroundColor: colors.bg, borderRadius: radius.lg, padding: spacing.md, marginTop: spacing.md, color: colors.ink };
