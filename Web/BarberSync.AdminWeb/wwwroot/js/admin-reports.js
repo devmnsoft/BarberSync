@@ -1,1 +1,23 @@
-(() => { const store=()=>window.BarberSyncDemoStore; const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); function render(){const h=document.querySelector('[data-reports-v2]'); if(!h||!store())return; const sum=store().dashboardSummary(); const reps=['Financeiro','Agenda','Profissionais','Serviços','Clientes','Estoque','Campanhas','PublicWeb','Totem','NPS']; h.innerHTML=`<div class="quick-actions-grid"><button class="btn btn-light" onclick="window.print()">Imprimir</button><button class="btn btn-light" data-report-mock>Exportar PDF mock</button><button class="btn btn-light" data-report-mock>Exportar Excel mock</button></div><div class="enterprise-demo-grid">${reps.map(r=>`<article class="enterprise-card"><h3>${r}</h3><p>Período: hoje</p><strong>${r==='Financeiro'?money(sum.revenue):r==='NPS'?sum.nps.toFixed(1):sum.appointments}</strong><div class="progress"><span style="width:${Math.min(100,sum.appointments*12)}%"></span></div></article>`).join('')}</div>`;} document.addEventListener('click',e=>{if(e.target.closest('[data-report-mock]')) window.BarberSyncEventBus?.emit('copilot:actionExecuted',{action:'reportExportMock'});}); window.addEventListener('barbersync:store-changed',render); document.addEventListener('DOMContentLoaded',render); })();
+(() => {
+  'use strict';
+  const $ = selector => document.querySelector(selector);
+  const labels = { revenueToday:'Faturamento hoje',revenueMonth:'Faturamento do mês',averageTicket:'Ticket médio',newClients:'Clientes novos',recurringClients:'Clientes recorrentes',pendingCommissions:'Comissões pendentes',purchasesAwaitingReceipt:'Compras a receber',overduePayables:'Contas vencidas',packagesSold:'Pacotes vendidos',activeSubscriptions:'Assinaturas ativas',recurringRevenue:'Receita recorrente',criticalStock:'Estoque crítico',noShow:'No-show',cashDifference:'Divergência de caixa',todayAppointments:'Agenda de hoje',waiting:'Aguardando',late:'Atrasados',kioskCheckins:'Check-ins Totem',openOrders:'Pré-comandas abertas',expiringPackages:'Pacotes vencendo',expiredSubscriptions:'Assinaturas vencidas',inactiveClients:'Clientes inativos' };
+  const currency = new Set(['revenueToday','revenueMonth','averageTicket','pendingCommissions','recurringRevenue','cashDifference']);
+  const format = (key,value) => currency.has(key) ? Number(value).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) : Number(value).toLocaleString('pt-BR');
+  const escape = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  async function load(event) {
+    event?.preventDefault(); const view = $('[name="view"]')?.value || 'owner';
+    $('[data-report-loading]').hidden=false; $('[data-report-error]').hidden=true; $('[data-report-kpis]').hidden=true; $('[data-report-content]').hidden=true;
+    try {
+      const response=await fetch(`/AdminApi/executive/${view}`,{headers:{Accept:'application/json'}}); const payload=await response.json().catch(()=>null);
+      if(!response.ok || !payload?.success) throw Object.assign(new Error(payload?.detail||payload?.title||'A API não retornou dados.'),{traceId:payload?.traceId});
+      const rows=Object.entries(payload.data.metrics||{}); const max=Math.max(...rows.map(([,v])=>Number(v)),1);
+      $('[data-report-kpis]').innerHTML=rows.map(([key,value])=>`<article class="premium-kpi ${['overduePayables','criticalStock','late','cashDifference'].includes(key)&&Number(value)>0?'critical':''}"><span class="kpi-name">${escape(labels[key]||key)}</span><strong>${escape(format(key,value))}</strong><small>Dado confirmado na unidade atual</small></article>`).join('');
+      $('[data-report-chart]').innerHTML=rows.filter(([,v])=>Number(v)>0).slice(0,12).map(([key,value])=>`<div class="chart-row"><span>${escape(labels[key]||key)}</span><i><b style="width:${Math.max(3,Number(value)/max*100)}%"></b></i><strong>${escape(format(key,value))}</strong></div>`).join('')||'<div class="dashboard-empty"><strong>Sem dados no período.</strong><p>Altere os filtros ou aguarde novos lançamentos.</p></div>';
+      $('[data-report-table]').innerHTML=rows.map(([key,value])=>`<tr><td>${escape(labels[key]||key)}</td><td>${escape(format(key,value))}</td><td>Tenant e unidade autenticados</td></tr>`).join('');
+      $('[data-report-kpis]').hidden=false; $('[data-report-content]').hidden=false;
+    } catch(error) { $('[data-report-error]').hidden=false; $('[data-report-error-message]').textContent=error.message; $('[data-report-trace]').textContent=`traceId: ${error.traceId||'não informado pela API'}`; }
+    finally { $('[data-report-loading]').hidden=true; }
+  }
+  $('[data-report-filters]')?.addEventListener('submit',load); $('[data-report-retry]')?.addEventListener('click',load); $('[data-report-print]')?.addEventListener('click',()=>window.print()); document.addEventListener('DOMContentLoaded',load);
+})();

@@ -15,7 +15,7 @@
   async function request(path) {
     const response = await fetch(path, { headers: { Accept: 'application/json' } });
     const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload || payload.isDemo || payload?.data?.isDemo) throw new Error(payload?.detail || payload?.message || 'API indisponível');
+    if (!response.ok || !payload || payload.isDemo || payload?.data?.isDemo) throw Object.assign(new Error(payload?.detail || payload?.message || 'API indisponível'), { traceId: payload?.traceId });
     return payload;
   }
 
@@ -79,9 +79,9 @@
     $('[data-dashboard-content]').hidden = true;
     try {
       const [dashboardPayload, appointmentsPayload, ordersPayload, productsPayload, clientsPayload] = await Promise.all([
-        request('/AdminApi/dashboard'), request('/AdminApi/appointments'), request('/AdminApi/service-orders'), request('/AdminApi/products'), request('/AdminApi/clients')
+        request('/AdminApi/executive/owner'), request('/AdminApi/appointments'), request('/AdminApi/service-orders'), request('/AdminApi/products'), request('/AdminApi/clients')
       ]);
-      const summary = unwrap(dashboardPayload) || {};
+      const summary = unwrap(dashboardPayload)?.metrics || {};
       const appointments = list(appointmentsPayload), orders = list(ordersPayload), products = list(productsPayload), clients = list(clientsPayload);
       const completed = appointments.filter(item => ['finished', 'completed', 'finalizado', 'concluido'].includes(status(item))).length;
       const openOrders = orders.filter(item => ['open', 'aberta', 'awaitingpayment', 'aguardandopagamento'].includes(status(item))).length;
@@ -90,6 +90,9 @@
       const critical = products.filter(product => Number(get(product, 'stock', 'quantity', 'currentStock')) <= Number(get(product, 'minStock', 'minimumStock') || 0)).length;
       const metrics = [
         ['Faturamento hoje', money(revenue), 'Recebimentos confirmados no dia.', '/Admin/Financial', get(summary, 'revenueVariation')],
+        ['Faturamento do mês', money(get(summary, 'revenueMonth') || 0), 'Recebimentos confirmados no mês.', '/Admin/Financial', null],
+        ['Clientes novos', number(get(summary, 'newClients') || 0), 'Cadastros realizados no mês.', '/Admin/Clients', null],
+        ['Clientes recorrentes', number(get(summary, 'recurringClients') || 0), 'Clientes com mais de uma visita.', '/Admin/Clients', null],
         ['Agendamentos hoje', number(get(summary, 'appointmentsToday') ?? appointments.length), 'Horários registrados na agenda.', '/Admin/Appointments', get(summary, 'appointmentsVariation')],
         ['Atendimentos concluídos', number(get(summary, 'completedAttendances') ?? completed), 'Serviços finalizados pela equipe.', '/Admin/Operations', get(summary, 'attendanceVariation')],
         ['Comandas abertas', number(get(summary, 'openOrders') ?? openOrders), 'Comandas que ainda exigem conclusão.', '/Admin/ServiceOrders', null],
@@ -109,6 +112,8 @@
       $('[data-dashboard-kpis]').hidden = false; $('[data-dashboard-content]').hidden = false;
     } catch (error) {
       $('[data-dashboard-error]').hidden = false;
+      const paragraph = $('[data-dashboard-error] p');
+      if (paragraph) paragraph.textContent = `${error.message} · traceId: ${error.traceId || 'não informado pela API'}`;
     } finally { $('[data-dashboard-loading]').hidden = true; }
   }
   document.addEventListener('DOMContentLoaded', load);
