@@ -28,7 +28,7 @@ public static class DependencyInjection
         services.AddScoped<CrmLeadService>();
 
         services.AddScoped<ICopilotService, CopilotService>();
-        services.AddScoped<IAiProvider, MockAiProvider>();
+        services.AddScoped<IAiProvider, UnconfiguredAiProvider>();
         services.AddScoped<IHrProfessionalService, HrProfessionalService>();
         services.AddScoped<IAutonomousGrowthService, AutonomousGrowthService>();
         services.AddScoped<IStrategicGrowthService, StrategicGrowthService>();

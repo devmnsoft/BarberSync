@@ -6,6 +6,13 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     const flow = window.KioskFlow;
+    try {
+      await flow.initialize();
+    } catch (error) {
+      const host = document.querySelector('.kiosk-step, .kiosk-services-screen');
+      if (host) showError(host, error.message);
+      return;
+    }
     const renderSummary = () => {
       const state = flow.state;
       const host = document.querySelector('[data-kiosk-summary-lateral]');
@@ -27,7 +34,7 @@
         const payload = await flow.request(`/KioskApi/services?deviceCode=${encodeURIComponent(flow.deviceCode)}`);
         const services = Array.isArray(payload.data) ? payload.data : [];
         servicesHost.innerHTML = services.length ? services.map(service => `<article class="k-card"><h3>${escapeHtml(service.name)}</h3><p>${escapeHtml(service.description || service.category || '')}</p><strong>${money(service.price)}</strong><span>${Number(service.durationMinutes || 30)} min</span><a class="k-btn" data-service="${escapeHtml(service.id)}" data-name="${escapeHtml(service.name)}" data-price="${Number(service.price || 0)}" href="/Kiosk/Client">Selecionar</a></article>`).join('') : '<article class="k-card"><h3>Nenhum serviço disponível</h3><p>Peça ajuda a um atendente.</p></article>';
-        servicesHost.addEventListener('click', event => { const target = event.target.closest('[data-service]'); if (target) flow.setState({ serviceId: target.dataset.service, serviceName: target.dataset.name, amount: Number(target.dataset.price) }); });
+        servicesHost.addEventListener('click', async event => { const target = event.target.closest('[data-service]'); if (!target) return; event.preventDefault(); await flow.setState({ serviceId: target.dataset.service, serviceName: target.dataset.name, amount: Number(target.dataset.price) }); location.href = target.href; });
       } catch (error) { showError(servicesHost, error.message); }
     }
 
@@ -37,26 +44,26 @@
         const payload = await flow.request(`/KioskApi/professionals?serviceId=${encodeURIComponent(flow.state.serviceId || '')}&deviceCode=${encodeURIComponent(flow.deviceCode)}`);
         const professionals = Array.isArray(payload.data) ? payload.data : [];
         professionalsHost.innerHTML = professionals.length ? professionals.map(item => `<article class="k-card"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.specialty || 'Profissional')}</p><span>${item.estimatedWaitMinutes ? `Espera estimada: ${Number(item.estimatedWaitMinutes)} min` : 'Disponibilidade no caixa'}</span><a class="k-btn" data-professional="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" href="/Kiosk/Confirm">Escolher</a></article>`).join('') : '<article class="k-card"><h3>Nenhum profissional disponível</h3><p>Peça ajuda a um atendente.</p></article>';
-        professionalsHost.addEventListener('click', event => { const target = event.target.closest('[data-professional]'); if (target) flow.setState({ professionalId: target.dataset.professional, professionalName: target.dataset.name }); });
+        professionalsHost.addEventListener('click', async event => { const target = event.target.closest('[data-professional]'); if (!target) return; event.preventDefault(); await flow.setState({ professionalId: target.dataset.professional, professionalName: target.dataset.name }); location.href = target.href; });
       } catch (error) { showError(professionalsHost, error.message); }
     }
 
     document.getElementById('kioskClientForm')?.addEventListener('submit', async event => {
       event.preventDefault(); const button = event.submitter; setBusy(button, true);
-      try { const client = Object.fromEntries(new FormData(event.currentTarget)); const result = await flow.post('/KioskApi/client/quick-register', client); flow.setState({ client: result.data || client, clientId: result.data?.id }); location.href = '/Kiosk/Professional'; }
+      try { const client = Object.fromEntries(new FormData(event.currentTarget)); const result = await flow.post('/KioskApi/client/quick-register', client); await flow.setState({ client: result.data || client, clientId: result.data?.id }); location.href = '/Kiosk/Professional'; }
       catch (error) { alert(error.message); setBusy(button, false); }
     });
 
     const summary = document.getElementById('kioskSummary');
     if (summary) { const state = flow.state; summary.innerHTML = `<strong>${escapeHtml(state.serviceName)}</strong><span>${escapeHtml(state.professionalName)}</span><span>${escapeHtml(state.client?.name)}</span><strong>${money(state.amount)}</strong>`; }
 
-    document.querySelectorAll('.payment-options button').forEach(button => button.addEventListener('click', () => { flow.setState({ paymentMethod: button.dataset.payment || button.textContent.trim() }); renderSummary(); document.querySelectorAll('.payment-options button').forEach(item => item.classList.toggle('selected', item === button)); }));
+    document.querySelectorAll('.payment-options button').forEach(button => button.addEventListener('click', async () => { await flow.setState({ paymentMethod: button.dataset.payment || button.textContent.trim() }); renderSummary(); document.querySelectorAll('.payment-options button').forEach(item => item.classList.toggle('selected', item === button)); }));
     document.getElementById('kioskPay')?.addEventListener('click', async event => {
       const button = event.currentTarget; setBusy(button, true);
       try {
         const state = flow.state;
         const result = await flow.post('/KioskApi/session', { ...state, channel: 'Kiosk', status: 'WaitingPayment', createdAt: new Date().toISOString() });
-        flow.saveSummary({ ...state, session: result.data, status: 'Enviado ao caixa', paymentMethod: state.paymentMethod || 'Caixa' });
+        await flow.saveSummary({ ...state, session: result.data, status: 'Enviado ao caixa', paymentMethod: state.paymentMethod || 'Caixa' });
         location.href = '/Kiosk/Success';
       } catch (error) { alert(error.message); setBusy(button, false); }
     });
