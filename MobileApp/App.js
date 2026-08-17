@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { colors } from './src/theme/colors';
 import { radius, spacing } from './src/theme/spacing';
 import { mobileApi } from './src/services/api';
@@ -7,48 +7,58 @@ import { mobileApi } from './src/services/api';
 const Card = ({ children, accent }) => (
   <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md, borderLeftWidth: accent ? 5 : 0, borderLeftColor: accent || colors.gold, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 18, elevation: 3 }}>{children}</View>
 );
-
-const Pill = ({ children }) => <Text style={{ backgroundColor: colors.goldSoft, color: colors.primary, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5, marginRight: 6, marginTop: 8, fontWeight: '800' }}>{children}</Text>;
+const Title = ({ children }) => <Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>{children}</Text>;
+const Empty = ({ children }) => <Text style={{ color: colors.muted, marginTop: spacing.sm }}>{children}</Text>;
 
 export default function App() {
-  const [snapshot, setSnapshot] = useState(mobileApi.demo);
-  const [lastAction, setLastAction] = useState('Pronto para agendar.');
+  const [snapshot, setSnapshot] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let active = true;
-    mobileApi.getMobileSummary()
-      .then((summary) => {
-        if (active) setSnapshot(summary);
-      });
-    return () => { active = false; };
+  const load = useCallback(async (signal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      setSnapshot(await mobileApi.getMobileSummary(signal));
+    } catch (requestError) {
+      if (requestError?.name !== 'AbortError') setError(requestError);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   }, []);
 
-  const nextAppointment = Array.isArray(snapshot.appointments) ? snapshot.appointments[0] : null;
-  const loyalty = Array.isArray(snapshot.loyalty) ? snapshot.loyalty[0] : null;
-  const coupons = Array.isArray(snapshot.coupons) ? snapshot.coupons : [];
-  const notifications = Array.isArray(snapshot.notifications) ? snapshot.notifications : [];
-  const flowSteps = Array.isArray(snapshot.operations?.steps) && snapshot.operations.steps.length
-    ? snapshot.operations.steps
-    : ['Cliente', 'Agendamento', 'Check-in', 'Atendimento', 'Comanda', 'Pagamento', 'Recibo', 'Estoque', 'Cashback', 'Avaliação', 'Dashboard'];
+  useEffect(() => {
+    const controller = new AbortController();
+    load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
+  if (loading && !snapshot) return (
+    <View accessibilityRole="progressbar" accessibilityLabel="Carregando dados" style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+      <ActivityIndicator size="large" color={colors.primary} /><Text style={{ color: colors.muted, marginTop: spacing.md }}>Carregando sua experiência BarberSync…</Text>
+    </View>
+  );
+
+  if (error && !snapshot) return (
+    <View style={{ flex: 1, justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.bg }}>
+      <Card accent={colors.primary}><Title>Não foi possível carregar seus dados</Title><Empty>{error.message}</Empty>{error.traceId ? <Text selectable style={{ color: colors.muted, marginTop: spacing.sm }}>Código de suporte: {error.traceId}</Text> : null}</Card>
+      <Pressable accessibilityRole="button" onPress={() => load()} style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Tentar novamente</Text></Pressable>
+    </View>
+  );
+
+  const appointments = snapshot?.appointments ?? [];
+  const loyalty = snapshot?.loyalty?.[0];
+  const coupons = snapshot?.coupons ?? [];
+  const notifications = snapshot?.notifications ?? [];
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, paddingTop: 58 }}>
-      <Card accent={colors.primary}><Text style={{ color: colors.primary, fontSize: 14, fontWeight: '900' }}>LOGIN DEMO VISUAL</Text><Text style={{ color: colors.ink, fontSize: 22, fontWeight: '900', marginTop: 4 }}>Cliente Demo autenticado</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Acesso rápido por telefone, biometria mock e token de fidelidade local.</Text></Card>
-      <Text style={{ color: colors.primary, fontSize: 32, fontWeight: '900' }}>BarberSync</Text>
-      <Card accent={colors.gold}><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Canal comercial SaaS</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Home • Serviços • Agendar • Meus agendamentos • Cashback • Cupons • Promoções • Avaliações • Perfil • Notificações.</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap' }}><Pill>Home</Pill><Pill>Serviços</Pill><Pill>Agendar</Pill><Pill>Cashback</Pill><Pill>Cupons</Pill><Pill>Perfil</Pill></View></Card>
-      <Text style={{ color: colors.muted, marginTop: 6, marginBottom: 18 }}>Mobile premium coerente com canais: serviços publicados, promoções, cashback, agendamentos, perfil e notificações demo.</Text>
-      <Card accent={colors.gold}><Text style={{ fontSize: 20, fontWeight: '900', color: colors.ink }}>Olá, Cliente Demo 👋</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Seu próximo atendimento é {nextAppointment?.time || 'hoje às 18:30'} com {nextAppointment?.professionalName || 'Rafael Barber'}.</Text><Text style={{ color: colors.gold, marginTop: 8, fontWeight: '900' }}>Chegue 5 minutos antes e ganhe cashback extra.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Serviços publicados no Mobile</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Mesma curadoria visual do Admin 10.0, com toggles de canal simulados.</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap' }}><Pill>✂️ Corte R$ 45</Pill><Pill>💈 Combo R$ 78</Pill><Pill>🧴 Hidratação R$ 89</Pill></View></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Agendamentos</Text><Text style={{ marginTop: 10, color: colors.slate }}>{nextAppointment?.time || 'Hoje 18:30'} • {nextAppointment?.serviceName || 'Corte + Barba'} • {nextAppointment?.professionalName || 'Rafael Barber'}</Text><Text style={{ color: colors.muted }}>Status: {nextAppointment?.status || 'confirmado'} • Check-in disponível no Totem.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Cashback</Text><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ {Number(loyalty?.cashbackBalance ?? 38.5).toFixed(2).replace('.', ',')}</Text><Text style={{ color: colors.muted }}>{loyalty?.pointsBalance ?? 1280} pontos • Disponível para o próximo agendamento.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Promoções publicadas</Text><Text style={{ color: colors.muted, marginTop: 8 }}>{coupons.length ? coupons.map((coupon) => `${coupon.code} ${coupon.discount}`).join(' • ') : 'Cupom RETORNO20 e BEMVINDO15'} com validade e segmentação demo configuráveis no Admin.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Notificações demo</Text><Text style={{ color: colors.muted, marginTop: 8 }}>{notifications.length ? notifications.map((item) => `🔔 ${item}`).join(' • ') : '🔔 Agendamento confirmado • 💸 Cashback disponível • 🎁 Promoção ativa • 🖥️ Check-in no Totem liberado.'}</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Histórico de serviços</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Últimos atendimentos: Corte + Barba, Hidratação e Barboterapia com recibos demo locais.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Avaliação</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Avalie seu último atendimento com NPS, comentário e estrelas em modo demo.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Perfil</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Preferência: Corte + Barba • Profissional favorito: Rafael Barber • NPS: promotor.</Text></Card>
-      <Card><Text style={{ fontSize: 18, fontWeight: '900', color: colors.ink }}>Dados demo integrados</Text><Text style={{ color: colors.muted, marginTop: 8 }}>Serviços, agendamento, cashback e histórico refletem a API demo quando disponível e usam fallback local quando offline. Fluxo: {snapshot.operations?.currentFlow || flowSteps.join(' → ')}.</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm }}>{flowSteps.map((step) => <Pill key={step}>{step}</Pill>)}</View></Card>
-      <Pressable accessibilityRole='button' onPress={() => setLastAction('Agendamento demo preparado e pronto para sincronizar com PublicWeb, Kiosk e Admin.')} style={{ backgroundColor: colors.primary, borderRadius: radius.lg, padding: spacing.lg, alignItems: 'center' }}><Text style={{ color: colors.white, fontWeight: '900' }}>Agendar agora</Text></Pressable>
-      <Text style={{ color: colors.muted, textAlign: 'center', marginTop: spacing.md }}>{lastAction}</Text>
+    <ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} tintColor={colors.primary} />} style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: spacing.xl, paddingTop: 58 }}>
+      <Text style={{ color: colors.primary, fontSize: 32, fontWeight: '900', marginBottom: spacing.lg }}>BarberSync</Text>
+      {error ? <Card accent={colors.gold}><Title>Atualização indisponível</Title><Empty>{error.message} Os últimos dados carregados continuam visíveis.</Empty></Card> : null}
+      <Card accent={colors.gold}><Title>Próximo atendimento</Title>{appointments[0] ? <><Text style={{ marginTop: 10, color: colors.slate }}>{appointments[0].time} • {appointments[0].serviceName}</Text><Empty>{appointments[0].professionalName} • {appointments[0].status}</Empty></> : <Empty>Você não possui atendimentos agendados.</Empty>}</Card>
+      <Card><Title>Meus agendamentos</Title>{appointments.length ? appointments.map(item => <View key={item.id} style={{ marginTop: spacing.md }}><Text style={{ color: colors.slate, fontWeight: '800' }}>{item.serviceName}</Text><Empty>{item.time} • {item.professionalName} • {item.status}</Empty></View>) : <Empty>Nenhum agendamento encontrado.</Empty>}</Card>
+      <Card><Title>Cashback e pontos</Title>{loyalty ? <><Text style={{ color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 8 }}>R$ {Number(loyalty.cashbackBalance ?? 0).toFixed(2).replace('.', ',')}</Text><Empty>{Number(loyalty.pointsBalance ?? 0)} pontos disponíveis.</Empty></> : <Empty>Nenhum saldo de fidelidade disponível.</Empty>}</Card>
+      <Card><Title>Cupons disponíveis</Title>{coupons.length ? coupons.map(coupon => <Text key={coupon.id ?? coupon.code} style={{ color: colors.slate, marginTop: spacing.sm }}><Text style={{ fontWeight: '900' }}>{coupon.code}</Text>{coupon.discount ? ` • ${coupon.discount}` : ''}</Text>) : <Empty>Nenhum cupom disponível no momento.</Empty>}</Card>
+      <Card><Title>Notificações</Title>{notifications.length ? notifications.map((item, index) => <Text key={item.id ?? index} style={{ color: colors.slate, marginTop: spacing.sm }}>• {typeof item === 'string' ? item : item.message ?? item.title}</Text>) : <Empty>Você está em dia. Nenhuma notificação nova.</Empty>}</Card>
     </ScrollView>
   );
 }
