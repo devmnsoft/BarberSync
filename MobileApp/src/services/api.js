@@ -1,59 +1,58 @@
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
-const demo = {
-  operations: {
-    revenueToday: 4280,
-    occupancy: 88,
-    waiting: 3,
-    currentFlow: 'Cliente → Agendamento → Check-in → Atendimento → Comanda → Pagamento → Recibo → Estoque → Cashback → Avaliação → Dashboard',
-    steps: ['Cliente', 'Agendamento', 'Check-in', 'Atendimento', 'Comanda', 'Pagamento', 'Recibo', 'Estoque', 'Cashback', 'Avaliação', 'Dashboard']
-  },
-  appointments: [
-    { id: 'mob-001', serviceName: 'Corte + Barba', professionalName: 'Rafael Barber', time: '18:30', status: 'Confirmado' },
-    { id: 'mob-002', serviceName: 'Hidratação Capilar', professionalName: 'Camila Beauty', time: 'Amanhã 10:00', status: 'Disponível' }
-  ],
-  loyalty: [
-    { id: 'loy-001', pointsBalance: 1280, cashbackBalance: 38.5, tierLevel: 3 }
-  ],
-  coupons: [
-    { code: 'RETORNO20', discount: '20%', status: 'Ativo' },
-    { code: 'BEMVINDO15', discount: '15%', status: 'Ativo' }
-  ],
-  notifications: ['Agendamento confirmado', 'Cashback disponível', 'Check-in no Totem liberado']
-};
-
-function unwrap(payload, fallback) {
-  const data = payload?.data ?? payload?.items ?? payload;
-  if (Array.isArray(data)) return data.length ? data : fallback;
-  return data && Object.keys(data).length ? data : fallback;
-}
-
-async function httpGet(path, fallback) {
-  try {
-    const response = await fetch(`${API_URL}${path}`, { headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`Request failed for ${path} with status ${response.status}`);
-    return unwrap(await response.json(), fallback);
-  } catch (error) {
-    console.warn('[BarberSync MobileApi] modo demo offline', error?.message || error);
-    return fallback;
+export class MobileApiError extends Error {
+  constructor(message, { status = 0, traceId = null } = {}) {
+    super(message);
+    this.name = 'MobileApiError';
+    this.status = status;
+    this.traceId = traceId;
   }
 }
 
-async function getMobileSummary() {
-  const summary = await httpGet('/api/mobile/summary', demo);
+function unwrap(payload) {
+  return payload?.data ?? payload?.items ?? payload;
+}
+
+async function httpGet(path, signal) {
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: { Accept: 'application/json' },
+      signal
+    });
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    throw new MobileApiError('Não foi possível conectar ao BarberSync. Verifique sua internet e tente novamente.');
+  }
+
+  const traceId = response.headers.get('x-trace-id');
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new MobileApiError(
+      payload?.message || 'Não foi possível carregar seus dados agora.',
+      { status: response.status, traceId: payload?.traceId || traceId }
+    );
+  }
+  return unwrap(payload);
+}
+
+async function getMobileSummary(signal) {
+  const summary = await httpGet('/api/mobile/summary', signal);
+  if (!summary || typeof summary !== 'object') {
+    throw new MobileApiError('O serviço retornou uma resposta inválida.');
+  }
   return {
-    operations: { ...demo.operations, ...(summary.operations ?? {}) },
-    appointments: summary.appointments ?? demo.appointments,
-    loyalty: summary.loyalty ?? demo.loyalty,
-    coupons: summary.coupons ?? demo.coupons,
-    notifications: summary.notifications ?? demo.notifications
+    operations: summary.operations ?? {},
+    appointments: Array.isArray(summary.appointments) ? summary.appointments : [],
+    loyalty: Array.isArray(summary.loyalty) ? summary.loyalty : [],
+    coupons: Array.isArray(summary.coupons) ? summary.coupons : [],
+    notifications: Array.isArray(summary.notifications) ? summary.notifications : []
   };
 }
 
 export const mobileApi = {
   getMobileSummary,
-  getOperationsSnapshot: () => httpGet('/api/full-service-flow/snapshot', demo.operations),
-  getAppointments: () => httpGet('/api/appointments', demo.appointments),
-  getLoyaltyAccounts: () => httpGet('/api/loyalty/accounts', demo.loyalty),
-  demo
+  getOperationsSnapshot: signal => httpGet('/api/full-service-flow/snapshot', signal),
+  getAppointments: signal => httpGet('/api/appointments', signal),
+  getLoyaltyAccounts: signal => httpGet('/api/loyalty/accounts', signal)
 };
