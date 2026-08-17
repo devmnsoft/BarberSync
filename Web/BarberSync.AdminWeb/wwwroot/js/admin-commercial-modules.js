@@ -28,7 +28,8 @@
   async function load() {
     state.hidden = false; state.textContent = 'Carregando dados operacionais…'; table.hidden = true;
     const response = await window.adminGet(`/api/${endpoint}`);
-    if (!response.success) { state.textContent = response.message || 'Não foi possível carregar os dados.'; return; }
+    if (!response.success) { state.classList.add('bs-error-state'); state.textContent = window.AdminForms.technicalError(response.message, response.traceId); return; }
+    state.classList.remove('bs-error-state');
     items = Array.isArray(response.data) ? response.data : response.data?.items || [];
     render(document.querySelector('#commercial-search').value);
   }
@@ -39,12 +40,18 @@
   document.querySelector('#commercial-search').oninput = e => render(e.target.value);
   drawer.querySelector('form').onsubmit = async e => {
     e.preventDefault();
-    const payload = Object.fromEntries(new FormData(e.currentTarget));
-    Object.keys(payload).forEach(k => { if (/services|items/i.test(k)) payload[k] = payload[k].split(',').map(x => x.trim()).filter(Boolean); });
-    if (endpoint === 'commissions') payload.saleStatus = 'Paid';
-    const response = await window.adminPost(`/api/${endpoint}`, payload);
-    if (!response.success) return;
-    window.AdminToast?.showSuccess?.('Registro salvo com sucesso.'); e.currentTarget.reset(); close(); await load();
+    const form = e.currentTarget;
+    const error = document.querySelector('#commercial-error');
+    error.hidden = true;
+    await window.AdminForms.submit(form, async () => {
+      const payload = Object.fromEntries(new FormData(form));
+      Object.keys(payload).forEach(k => { if (/services|items/i.test(k)) payload[k] = payload[k].split(',').map(x => x.trim()).filter(Boolean); });
+      if (endpoint === 'commissions') payload.saleStatus = 'Paid';
+      const response = await window.adminPost(`/api/${endpoint}`, payload);
+      if (!response.success) return response;
+      window.AdminToast?.showSuccess?.('Registro salvo com sucesso.'); form.reset(); close(); await load();
+      return response;
+    }, { loadingLabel: 'Salvando…', onError: message => { error.textContent = message; error.hidden = false; } });
   };
   tbody.onclick = async e => {
     const button = e.target.closest('[data-delete]'); if (!button || !confirm('Confirma a inativação deste registro?')) return;

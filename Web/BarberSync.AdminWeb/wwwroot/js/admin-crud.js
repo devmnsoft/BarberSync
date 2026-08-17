@@ -95,7 +95,7 @@
   function ensureWorkspace(module, panel) {
     const copy = moduleCopy[module] || { detail: 'Operação BarberSync' };
     if (!document.getElementById(`${module}Toolbar`)) {
-      panel.insertAdjacentHTML('afterbegin', `<div class="module-toolbar" id="${module}Toolbar"><input class="form-control" id="${module}Search" placeholder="Buscar em ${module}..." /><select class="form-control" id="${module}Status"><option value="">Todos os status</option><option>Ativo</option><option>Disponível</option><option>Confirmado</option><option>Crítico</option><option>Demo</option></select><button class="btn btn-light" data-admin-export="${module}">Exportar visão</button></div>`);
+      panel.insertAdjacentHTML('afterbegin', `<div class="module-toolbar" id="${module}Toolbar"><input class="form-control" id="${module}Search" placeholder="Buscar em ${module}..." /><select class="form-control" id="${module}Status"><option value="">Todos os status</option><option>Ativo</option><option>Disponível</option><option>Confirmado</option><option>Crítico</option></select><button class="btn btn-light" data-admin-export="${module}">Exportar visão</button></div>`);
     }
     if (!document.getElementById(`${module}Insights`)) {
       panel.insertAdjacentHTML('beforebegin', `<section class="panel module-insights" id="${module}Insights"><div><strong>Fluxo visual completo</strong><p>${copy.detail}</p></div><div class="status-flow"><span>Listar</span><span>Criar</span><span>Editar</span><span>Detalhar</span><span>Excluir</span></div></section>`);
@@ -118,12 +118,10 @@
     const id = escapeHtml(i.id || idx);
     const detailLabel = module === 'Clients' ? 'Ver Cliente 360' : module === 'Professionals' ? 'Performance' : module === 'ServiceOrders' ? 'Ver recibo' : 'Detalhe';
     const base = `<button class='btn btn-secondary' data-admin-detail='${module}' data-index='${idx}'>${detailLabel}</button> <button class='btn btn-secondary' data-admin-edit='${module}' data-id='${id}' data-index='${idx}'>Editar</button> <button class='btn btn-danger' data-admin-remove='${module}' data-id='${id}'>Excluir</button>`;
-    if (module === 'Services') return `${base}<div class='row-actions'><button class='channel-toggle is-on' data-channel-toggle='PublicWeb'>PublicWeb</button><button class='channel-toggle is-on' data-channel-toggle='Totem'>Totem</button><button class='channel-toggle is-on' data-channel-toggle='Mobile'>Mobile</button></div>`;
     if (module === 'Appointments') return `${base}<div class='status-flow'><span>Agendado</span><span>Confirmado</span><span>Check-in</span><span>Em atendimento</span><span>Finalizado</span></div><div class='row-actions'><button data-id='${id}' data-appointment-action='confirm'>Confirmar</button><button data-id='${id}' data-appointment-action='check-in'>Check-in</button><button data-id='${id}' data-appointment-action='start'>Iniciar</button><button data-id='${id}' data-appointment-action='finish'>Finalizar</button><button data-id='${id}' data-appointment-action='cancel'>Cancelar</button></div>`;
     if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-id='${id}' data-order-action='pay'>Registrar pagamento</button><button data-id='${id}' data-order-action='close'>Fechar</button></div>`;
-    if (module === 'Stock') return `${base}<div class='stock-bar'><span style='width:${Math.max(12, Math.min(100, Number(i.quantity || i.stock || 35)))}%'></span></div><small>Sugestão: comprar 12 unidades</small>`;
+    if (module === 'Stock') return `${base}<div class='stock-bar'><span style='width:${Math.max(0, Math.min(100, Number(i.quantity || i.stock || 0)))}%'></span></div>`;
     if (module === 'Coupons') return `${base}<div class='row-actions'><button data-copy-coupon='${escapeHtml(i.code || 'RETORNO20')}'>Copiar código</button></div>`;
-    if (module === 'Reviews') return `${base}<div class='row-actions'><button data-demo-action='Responder cliente'>Responder cliente</button><button data-demo-action='Criar ação de recuperação'>Criar ação de recuperação</button></div>`;
     return base;
   }
 
@@ -155,12 +153,7 @@
   }
 
   function richDetail(module, item) {
-    if (module === 'Clients') return `<div class="detail-grid"><div><span>Nome</span><strong>${escapeHtml(name(item))}</strong></div><div><span>Telefone</span><strong>${escapeHtml(item.phone || '(11) 98888-0000')}</strong></div><div><span>E-mail</span><strong>${escapeHtml(item.email || 'cliente@demo.com')}</strong></div><div><span>VIP</span><strong>${item.vip || 'Sim'}</strong></div><div><span>Cashback</span><strong>R$ 48,00</strong></div><div><span>Total gasto</span><strong>R$ 1.860,00</strong></div><div><span>Ticket médio</span><strong>R$ 124,00</strong></div><div><span>Último atendimento</span><strong>24/05/2026</strong></div><div><span>Próximo agendamento</span><strong>06/06/2026 10:30</strong></div><div><span>Serviços preferidos</span><strong>Corte + Barba</strong></div><div><span>Profissional preferido</span><strong>Rafael Barber</strong></div><div><span>Pagamentos</span><strong>PIX, Cartão</strong></div><div><span>Histórico</span><strong>15 atendimentos concluídos</strong></div><div><span>Observações</span><strong>Prefere pomada matte</strong></div></div><p class="next-step"><strong>Próxima melhor ação:</strong> Enviar campanha de retorno.</p>`;
-    if (module === 'Professionals') return `<div class="detail-grid"><div><span>Receita do mês</span><strong>R$ 18.450,00</strong></div><div><span>Atendimentos</span><strong>142</strong></div><div><span>Comissão estimada</span><strong>R$ 4.612,50</strong></div><div><span>Avaliação média</span><strong>4,9 ⭐</strong></div><div><span>Serviços mais realizados</span><strong>Corte, Barba, Sobrancelha</strong></div><div><span>Ocupação</span><strong>86%</strong></div><div><span>Ranking</span><strong>#1 da unidade</strong></div><div><span>Meta do mês</span><strong>R$ 22.000</strong></div></div><div class="stock-bar"><span style="width:84%"></span></div>`;
-    if (module === 'ServiceOrders') return `<div class="receipt-box"><h3>BarberSync</h3><p>Comanda #${escapeHtml(item.id || 'DEMO-001')} • ${escapeHtml(name(item))}</p><p>Data: 02/06/2026</p><hr><p>Corte masculino R$ 70,00</p><p>Barba tradicional R$ 45,00</p><p>Pomada modeladora R$ 38,00</p><hr><p>Subtotal: R$ 153,00</p><p>Desconto: R$ 10,00</p><p>Cashback: R$ 7,00</p><h3>Total: R$ 136,00</h3><p>Forma de pagamento: PIX</p><strong>Obrigado pela preferência.</strong></div>`;
-    if (module === 'Stock') return `<div class="detail-grid"><div><span>Status</span><strong>Crítico</strong></div><div><span>Estoque atual</span><strong>4</strong></div><div><span>Mínimo</span><strong>12</strong></div><div><span>Sugestão de compra</span><strong>24 unidades</strong></div></div><button class="btn btn-primary" data-demo-action="Reposição gerada">Gerar reposição</button>`;
-    if (module === 'Reviews') return `<div class="detail-grid"><div><span>Nota média</span><strong>4,8</strong></div><div><span>NPS</span><strong>72</strong></div><div><span>5 estrelas</span><strong>78%</strong></div><div><span>Promotores</span><strong>134</strong></div><div><span>Detratores</span><strong>6</strong></div></div><p>Comentário: Atendimento excelente e pontual.</p>`;
-    return Object.entries(item).slice(0, 14).map(([k, v]) => `<div><span>${escapeHtml(k)}</span><strong>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`).join('');
+    return Object.entries(item).slice(0, 18).map(([key, value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : value)}</strong></div>`).join('');
   }
 
   function normalizePayload(module, body) {
@@ -198,44 +191,34 @@
   window.renderAdminCrudPage = async function (module) {
     const endpoint = endpointMap[module] || '/AdminApi/dashboard';
     const copy = moduleCopy[module] || { icon: '💈', singular: module };
-    const demo = [
-      { id: 'demo-1', name: `${copy.singular} demo 1`, status: 'Ativo', category: 'Demonstração', total: 70 },
-      { id: 'demo-2', name: `${copy.singular} demo 2`, status: 'Pendente', category: 'Operação', total: 95 },
-      { id: 'demo-3', name: `${copy.singular} demo 3`, status: 'Ativo', category: 'SaaS', total: 130 }
-    ];
     hydrateModal(module);
     const panel = document.querySelector('.module-panel');
     if (panel) ensureWorkspace(module, panel);
-    let currentList = demo;
+    let currentList = [];
     let editingId = null;
 
     const load = async () => {
-      const { data, fallback } = await adminApiClient.get(endpoint, demo);
-      const isDemoMode = fallback || adminApiClient.isDemoResponse(data);
-      if (isDemoMode) {
-        document.getElementById(`${module}Fallback`)?.classList.remove('d-none');
-        window.AdminToast?.showWarning?.('API indisponível. Dados carregados em modo demonstração.');
-      } else {
-        document.getElementById(`${module}Fallback`)?.classList.add('d-none');
+      const rows = document.getElementById(`${module}Rows`);
+      rows.innerHTML = '<tr><td colspan="4"><div class="bs-skeleton" aria-label="Carregando registros"></div></td></tr>';
+      const data = await adminApiClient.adminGet(endpoint);
+      if (data?.success === false) {
+        currentList = [];
+        document.getElementById(`${module}Cards`).innerHTML = '';
+        rows.innerHTML = `<tr><td colspan="4"><div class="bs-error-state">${escapeHtml(data.message || 'Não foi possível carregar os registros.')}${data.traceId ? `<span data-trace-id>Código de suporte: ${escapeHtml(data.traceId)}</span>` : ''}</div></td></tr>`;
+        return;
       }
-      const apiList = normalizeList(data);
-      const demoList = isDemoMode ? (window.BarberSyncDemoStore?.get(module) || []) : [];
-      const fallbackList = isDemoMode && apiList.length === 0 && demoList.length === 0 ? demo : apiList;
-      const list = isDemoMode ? [...demoList, ...fallbackList.filter(item => !demoList.some(demoItem => String(demoItem.id) === String(item.id)))] : apiList;
+      const list = normalizeList(data?.data ?? data);
       currentList = list;
-      const activeCount = list.filter(x => /ativo|dispon|confirm|ok/i.test(status(x))).length || list.length;
+      const activeCount = list.filter(x => /ativo|active|dispon|confirm|ok/i.test(status(x))).length;
       const revenue = list.reduce((acc, x) => acc + Number(x.total || x.price || x.revenueMonth || 0), 0);
-      document.getElementById(`${module}Cards`).innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>registros</span></div></article><article class='kpi-card'><div class='kpi-icon'>✅</div><div><p class='kpi-label'>Ativos</p><strong class='kpi-value'>${activeCount}</strong><span class='kpi-variation'>em operação</span></div></article><article class='kpi-card'><div class='kpi-icon'>💰</div><div><p class='kpi-label'>Potencial</p><strong class='kpi-value'>${money(revenue)}</strong><span class='kpi-variation'>amostra</span></div></article><article class='kpi-card'><div class='kpi-icon'>🛡️</div><div><p class='kpi-label'>Origem</p><strong class='kpi-value'>${isDemoMode ? 'Demo' : 'API'}</strong><span class='kpi-variation'>proxy MVC</span></div></article>`;
+      document.getElementById(`${module}Cards`).innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>registros reais</span></div></article><article class='kpi-card'><div class='kpi-icon'>✅</div><div><p class='kpi-label'>Ativos</p><strong class='kpi-value'>${activeCount}</strong><span class='kpi-variation'>em operação</span></div></article><article class='kpi-card'><div class='kpi-icon'>💰</div><div><p class='kpi-label'>Valor</p><strong class='kpi-value'>${money(revenue)}</strong><span class='kpi-variation'>dados da API</span></div></article>`;
       const term = (document.getElementById(`${module}Search`)?.value || '').toLowerCase();
       const filtered = list.filter(i => JSON.stringify(i).toLowerCase().includes(term));
-      document.getElementById(`${module}Rows`).innerHTML = filtered.slice(0, 16).map((i, idx) => `<tr><td><strong>${escapeHtml(name(i))}</strong><small>${escapeHtml(i.email || i.phone || i.time || i.code || '')}</small></td><td>${escapeHtml(detail(i))}</td><td><span class='badge badge-success'>${escapeHtml(status(i))}</span></td><td>${actionButtons(module, i, idx)}</td></tr>`).join('') || `<tr><td colspan="4"><div class="empty-state-mini">Nenhum registro encontrado. Use Novo ${copy.singular} para cadastrar um registro real.</div></td></tr>`;
-      document.getElementById(`${module}Kanban`)?.remove();
-      decorateRows(module, filtered, document.getElementById(`${module}Rows`));
+      rows.innerHTML = filtered.slice(0, 50).map((i, idx) => `<tr><td><strong>${escapeHtml(name(i))}</strong><small>${escapeHtml(i.email || i.phone || i.time || i.code || '')}</small></td><td>${escapeHtml(detail(i))}</td><td><span class='badge badge-success'>${escapeHtml(status(i))}</span></td><td>${actionButtons(module, i, idx)}</td></tr>`).join('') || `<tr><td colspan="4"><div class="bs-empty-state">Nenhum registro encontrado.</div></td></tr>`;
     };
-
     await load();
     document.getElementById(`${module}Search`)?.addEventListener('input', load);
-    document.querySelector(`[data-admin-export='${module}']`)?.addEventListener('click', () => writeToast('Visão exportada em modo demonstração.', 'info'));
+    document.querySelector(`[data-admin-export='${module}']`)?.addEventListener('click', () => writeToast('Exportação disponível nos relatórios executivos.', 'info'));
     document.querySelector(`[data-admin-new='${module}']`)?.addEventListener('click', () => { editingId = null; const form = document.querySelector(`[data-admin-form='${module}']`); form?.reset(); clearApiErrors(form); document.getElementById(`${module}ModalTitle`).textContent = `Novo ${copy.singular}`; window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false); });
     document.querySelector(`[data-admin-refresh='${module}']`)?.addEventListener('click', load);
     document.querySelectorAll(`[data-admin-close='${module}']`).forEach(b => b.addEventListener('click', () => window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true)));
@@ -250,14 +233,13 @@
       try {
         const canUpdate = !['Stock'].includes(module);
         const result = editingId && canUpdate
-          ? await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body, { success: true, message: 'Atualizado em modo demonstração.' })
-          : await adminApiClient.post(mutationEndpoint, body, { success: true, message: 'Salvo em modo demonstração.' });
+          ? await adminApiClient.put(`${endpoint}/${encodeURIComponent(editingId)}`, body)
+          : await adminApiClient.post(mutationEndpoint, body);
         if (result?.success === false) {
           document.querySelector(`[data-form-error='${module}']`).hidden = false;
           showFormErrors(applyApiErrors(e.target, result.errors || []));
           return;
         }
-        if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, editingId ? 'update' : 'create', { id: editingId || `${module.toLowerCase()}-${Date.now()}`, ...body, status: body.status || 'Ativo' });
         window.AdminModal?.closeModal ? window.AdminModal.closeModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = true);
         e.target.reset();
         writeToast(result?.message || `${copy.singular} salvo com sucesso.`);
@@ -272,12 +254,8 @@
       const detailBtn = e.target.closest('[data-admin-detail]');
       const apptAction = e.target.closest('[data-appointment-action]');
       const orderAction = e.target.closest('[data-order-action]');
-      const channelToggle = e.target.closest('[data-channel-toggle]');
       const copyCoupon = e.target.closest('[data-copy-coupon]');
-      const demoAction = e.target.closest('[data-demo-action]');
-      if (channelToggle) { channelToggle.classList.toggle('is-on'); writeToast(`${channelToggle.dataset.channelToggle} atualizado. Ação simulada com sucesso em modo demonstração.`, 'success'); }
       if (copyCoupon) { navigator.clipboard?.writeText(copyCoupon.dataset.copyCoupon); writeToast('Cupom copiado com sucesso.', 'success'); }
-      if (demoAction) { writeToast(`${demoAction.dataset.demoAction}. Ação simulada com sucesso em modo demonstração.`, 'success'); }
       if (detailBtn) {
         const item = currentList[Number(detailBtn.dataset.index)] || {};
         document.getElementById(`${module}DetailBody`).innerHTML = richDetail(module, item);
@@ -293,9 +271,34 @@
         document.getElementById(`${module}ModalTitle`).textContent = `Editar ${copy.singular}`;
         window.AdminModal?.openModal ? window.AdminModal.openModal(`${module}Modal`) : (document.getElementById(`${module}Modal`).hidden = false);
       }
-      if (remove) window.AdminModal?.confirmAction ? window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, async () => { const result = await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true, isDemo: true }); if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(result?.message || `${copy.singular} excluído com sucesso.`); await load(); }) : (confirm(`Excluir ${copy.singular}?`) && adminApiClient.delete(`${endpoint}/${remove.dataset.id}`, { success: true, isDemo: true }).then(result => { if (adminApiClient.isDemoResponse(result)) updateLocalDemoStore(module, 'delete', { id: remove.dataset.id }); writeToast(result?.message || `${copy.singular} excluído com sucesso.`); return load(); }));
-      if (apptAction) { const result = await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(apptAction.dataset.id || 'demo')}/${apptAction.dataset.appointmentAction}`, {}, { success: true, isDemo: true }); const map = { confirm: 'Confirmado', 'check-in': 'Check-in', start: 'Em atendimento', finish: 'Atendimento finalizado', cancel: 'Cancelado' }; const statusText = map[apptAction.dataset.appointmentAction] || apptAction.textContent; if (adminApiClient.isDemoResponse(result)) { window.BarberSyncDemoStore?.updateStatus('Appointments', apptAction.dataset.id || 'demo', statusText); if (apptAction.dataset.appointmentAction === 'finish') window.BarberSyncDemoStore?.createServiceOrderFromAppointment(apptAction.dataset.id || 'demo'); } apptAction.closest('tr')?.querySelector('.badge') && (apptAction.closest('tr').querySelector('.badge').textContent = statusText); writeToast(`Agendamento atualizado: ${statusText}.`, 'info'); await load(); }
-      if (orderAction) { const result = await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(orderAction.dataset.id || 'demo')}/${orderAction.dataset.orderAction}`, { amount: 70, method: 'PIX' }, { success: true, isDemo: true }); if (adminApiClient.isDemoResponse(result)) { if (orderAction.dataset.orderAction === 'pay') { window.BarberSyncDemoStore?.payServiceOrder(orderAction.dataset.id || 'demo', { method: 'PIX' }); } else { window.BarberSyncDemoStore?.updateStatus('ServiceOrders', orderAction.dataset.id || 'demo', 'Fechada'); } } writeToast(result?.message || (orderAction.dataset.orderAction === 'pay' ? 'Pagamento aprovado, estoque baixado, cashback e avaliação gerados.' : 'Comanda fechada com recibo visual.'), 'success'); await load(); }
+      if (remove) {
+        const executeDelete = async () => {
+          const result = await adminApiClient.delete(`${endpoint}/${remove.dataset.id}`);
+          if (result?.success === false) return;
+          writeToast(result?.message || `${copy.singular} excluído com sucesso.`);
+          await load();
+        };
+        if (window.AdminModal?.confirmAction) window.AdminModal.confirmAction(`Excluir ${copy.singular}?`, executeDelete);
+        else if (confirm(`Excluir ${copy.singular}?`)) await executeDelete();
+      }
+      if (apptAction) {
+        const id = apptAction.dataset.id;
+        if (!id) return;
+        const result = await adminApiClient.post(`/AdminApi/appointments/${encodeURIComponent(id)}/${apptAction.dataset.appointmentAction}`, {});
+        if (result?.success === false) return;
+        writeToast(result?.message || 'Agendamento atualizado.', 'info');
+        await load();
+      }
+      if (orderAction) {
+        const id = orderAction.dataset.id;
+        if (!id) return;
+        const item = currentList.find(value => String(value.id) === String(id));
+        const payload = orderAction.dataset.orderAction === 'pay' ? { amount: Number(item?.total), method: item?.paymentMethod } : {};
+        const result = await adminApiClient.post(`/AdminApi/service-orders/${encodeURIComponent(id)}/${orderAction.dataset.orderAction}`, payload);
+        if (result?.success === false) return;
+        writeToast(result?.message || 'Comanda atualizada.', 'success');
+        await load();
+      }
     });
   };
 
@@ -338,14 +341,6 @@
     cards.innerHTML = `<article class='kpi-card'><div class='kpi-icon'>${copy.icon}</div><div><p class='kpi-label'>Total</p><strong class='kpi-value'>${list.length}</strong><span class='kpi-variation'>renderizado</span></div></article>`;
   }
 
-  function updateLocalDemoStore(moduleName, action, item) {
-    if (window.BarberSyncDemoStore) {
-      if (action === 'delete') return window.BarberSyncDemoStore.remove(moduleName, item?.id);
-      if (action === 'update') return window.BarberSyncDemoStore.update(moduleName, item?.id, item);
-      return window.BarberSyncDemoStore.add(moduleName, item);
-    }
-    return [];
-  }
 
   function showFormErrors(errors) {
     const message = Array.isArray(errors) ? errors.join('\n') : (errors || 'Revise os campos obrigatórios.');
@@ -357,16 +352,6 @@
     form?.reset?.();
   }
 
-  Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, updateLocalDemoStore, showFormErrors, clearForm, applyApiErrors, clearApiErrors });
+  Object.assign(window, { openCreateModal, openEditModal, openDetailsModal, confirmDelete, submitModuleForm, refreshModule, renderModuleTable, renderModuleCards, showFormErrors, clearForm, applyApiErrors, clearApiErrors });
 
 })();
-// BarberSync Demo Experience 1.0 required global aliases
-window.initModuleCrud = window.initModuleCrud || ((moduleName, options) => window.renderAdminCrudPage?.(moduleName, options));
-window.loadModuleData = window.loadModuleData || (async (moduleName) => window.BarberSyncDemoStore?.get(moduleName) || []);
-window.renderModule = window.renderModule || ((moduleName) => window.renderAdminCrudPage?.(moduleName));
-window.renderTable = window.renderTable || ((moduleName, data) => window.renderModuleTable?.(moduleName, data));
-window.renderCards = window.renderCards || ((moduleName, data) => window.renderModuleCards?.(moduleName, data));
-window.submitForm = window.submitForm || ((moduleName) => window.submitModuleForm?.(moduleName));
-window.deleteItem = window.deleteItem || ((moduleName, id) => window.confirmDelete?.(moduleName, id));
-window.updateStatus = window.updateStatus || ((moduleName, id, status) => { window.BarberSyncDemoStore?.patch(moduleName, id, { status }); window.AdminToast?.showSuccess?.('Status atualizado em modo demonstração.'); window.refreshModule?.(moduleName); });
-window.showToastByResult = window.showToastByResult || ((result) => (result?.success === false ? window.AdminToast?.showError : window.AdminToast?.showSuccess)?.(result?.message || 'Ação concluída.'));
