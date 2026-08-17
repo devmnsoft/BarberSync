@@ -10,7 +10,11 @@ namespace BarberSync.AdminWeb.Controllers;
 public class AccountController(IHttpClientFactory httpClientFactory) : Controller
 {
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = IsSafeReturnUrl(returnUrl) ? returnUrl : null;
+        return View();
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -49,13 +53,21 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
             Response.Cookies.Append("BarberSync.AccessToken", token.GetString()!, cookieOptions);
             Response.Cookies.Append("BarberSync.RefreshToken", refreshToken.GetString()!, new CookieOptions { HttpOnly = true, Secure = Request.IsHttps, SameSite = SameSiteMode.Strict });
 
-            return Ok(new { redirectUrl = "/Admin/Dashboard" });
+            return Ok(new { redirectUrl = IsSafeReturnUrl(request.ReturnUrl) ? request.ReturnUrl : "/Admin/Dashboard" });
         }
         catch (HttpRequestException)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, new
             {
                 message = "Serviço de autenticação temporariamente indisponível. Confirme se a API e o banco estão configurados.",
+                traceId = HttpContext.TraceIdentifier
+            });
+        }
+        catch (Exception exception) when (exception is JsonException or FormatException or InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                message = "O serviço de autenticação retornou uma resposta inválida. Tente novamente em instantes.",
                 traceId = HttpContext.TraceIdentifier
             });
         }
@@ -104,5 +116,8 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
     private static string? ReadTraceId(HttpResponseMessage response)
         => response.Headers.TryGetValues("X-Trace-Id", out var values) ? values.FirstOrDefault() : null;
 
-    public sealed record LoginRequest(string Email, string Password);
+    private bool IsSafeReturnUrl(string? returnUrl)
+        => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
+
+    public sealed record LoginRequest(string Email, string Password, string? ReturnUrl = null);
 }
