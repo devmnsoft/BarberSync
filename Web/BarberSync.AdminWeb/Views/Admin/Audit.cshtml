@@ -1,3 +1,51 @@
-@{ ViewData["Title"] = "Auditoria e Logs"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
-<section class="saas7-hero" data-audit-page><div><span class="badge">Sistema > Auditoria</span><h1>Auditoria e logs visuais</h1><p>Eventos do EventBus, ações de usuário, cadastros, agenda, comandas pagas, estoque, campanhas, Copilot, Totem e acessos demo.</p></div><div class="saas7-actions"><button class="btn btn-light" data-export-audit>Exportar mock</button><button class="btn btn-secondary" data-clear-audit>Limpar logs demo</button></div></section>
-<section class="saas7-card full"><div class="saas7-toolbar"><select data-audit-module><option value="">Todos módulos</option><option>Configurações</option><option>Totem</option><option>Marketing</option><option>PDV</option><option>Estoque</option></select><select data-audit-severity><option value="">Todas severidades</option><option value="success">Sucesso</option><option value="info">Info</option><option value="warning">Atenção</option><option value="danger">Crítico</option></select><input type="date"><input type="date"></div><div style="margin-top:16px" data-audit-list></div></section>
+@{ ViewData["Title"] = "Auditoria operacional"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+
+<section class="page-header audit-header" data-audit-page>
+    <div>
+        <span class="badge">Sistema · Auditoria</span>
+        <h1 class="page-title">Auditoria operacional</h1>
+        <p class="page-subtitle">Rastreie ações reais da unidade, investigue pelo traceId e exporte o resultado filtrado.</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-light" type="button" data-audit-refresh>Atualizar</button>
+        <button class="btn btn-primary" type="button" data-export-audit disabled>Exportar CSV</button>
+    </div>
+</section>
+
+<section class="enterprise-card full audit-filters" aria-label="Filtros de auditoria">
+    <div class="form-grid audit-filter-grid">
+        <label>Módulo<select class="form-control" data-audit-filter="module"><option value="">Todos</option></select></label>
+        <label>Ação<select class="form-control" data-audit-filter="action"><option value="">Todas</option></select></label>
+        <label>Usuário<input class="form-control" data-audit-filter="user" placeholder="Nome ou identificador"></label>
+        <label>Entidade<input class="form-control" data-audit-filter="entity" placeholder="Ex.: payments"></label>
+        <label>TraceId<input class="form-control" data-audit-filter="trace" placeholder="Cole o código de rastreio"></label>
+        <label>De<input class="form-control" type="date" data-audit-filter="from"></label>
+        <label>Até<input class="form-control" type="date" data-audit-filter="to"></label>
+        <button class="btn btn-secondary audit-clear" type="button" data-audit-clear>Limpar filtros</button>
+    </div>
+</section>
+
+<section class="audit-summary" aria-live="polite">
+    <article class="kpi-card"><p class="kpi-label">Eventos encontrados</p><strong class="kpi-value" data-audit-count>—</strong><span>Escopo da unidade ativa</span></article>
+    <article class="kpi-card"><p class="kpi-label">Última atividade</p><strong class="kpi-value audit-last" data-audit-last>—</strong><span>Horário local</span></article>
+</section>
+
+<section class="enterprise-card full audit-content">
+    <div class="audit-loading" data-audit-loading><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+    <div class="empty-state-mini" data-audit-empty hidden><strong>Nenhum evento encontrado</strong><p>Não há registros para os filtros selecionados nesta unidade.</p></div>
+    <div class="empty-state-mini audit-error" data-audit-error hidden><strong>Não foi possível carregar a auditoria</strong><p data-audit-error-message>Tente novamente. Se o erro persistir, informe o traceId ao suporte.</p><button class="btn btn-light" type="button" data-audit-refresh>Tentar novamente</button></div>
+    <div class="table-responsive" data-audit-table hidden>
+        <table class="admin-table"><thead><tr><th>Quando</th><th>Módulo</th><th>Ação</th><th>Usuário</th><th>Entidade</th><th>Rastreio</th><th></th></tr></thead><tbody data-audit-rows></tbody></table>
+    </div>
+</section>
+
+<aside class="audit-drawer" data-audit-drawer hidden aria-labelledby="audit-detail-title" aria-modal="true" role="dialog">
+    <button class="audit-drawer-scrim" type="button" data-audit-close aria-label="Fechar detalhe"></button>
+    <div class="audit-drawer-panel">
+        <header><div><span class="badge">Evento auditado</span><h2 id="audit-detail-title">Detalhe do evento</h2></div><button class="btn btn-light" type="button" data-audit-close aria-label="Fechar">×</button></header>
+        <div data-audit-detail></div>
+    </div>
+</aside>
+
+@section Styles { <link rel="stylesheet" href="~/css/admin-audit.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/admin-audit.js" asp-append-version="true"></script> }
