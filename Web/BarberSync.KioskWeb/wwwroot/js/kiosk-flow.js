@@ -1,18 +1,28 @@
 (() => {
-  const FLOW_KEY = 'barbersync.kiosk.flow';
-  const SUMMARY_KEY = 'barbersync.kiosk.summary';
-  const read = key => { try { return JSON.parse(sessionStorage.getItem(key) || '{}'); } catch { return {}; } };
-  const write = (key, value) => sessionStorage.setItem(key, JSON.stringify(value));
+  let state = {};
+
+  const requestState = async (method, patch) => {
+    const response = await fetch('/KioskFlow', {
+      method,
+      headers: patch ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
+      body: patch ? JSON.stringify(patch) : undefined
+    });
+    if (!response.ok) throw new Error('Não foi possível manter a etapa atual do atendimento.');
+    return response.status === 204 ? {} : response.json();
+  };
 
   window.KioskFlow = {
     deviceCode: window.BarberSyncKiosk?.deviceCode || new URLSearchParams(location.search).get('deviceCode') || 'KIOSK-001',
-    get state() { return read(FLOW_KEY); },
-    setState(patch) {
-      const next = { ...this.state, ...patch, deviceCode: this.deviceCode, updatedAt: new Date().toISOString() };
-      write(FLOW_KEY, next);
-      return next;
+    get state() { return state; },
+    async initialize() {
+      state = await requestState('GET');
+      return state;
     },
-    reset() { sessionStorage.removeItem(FLOW_KEY); sessionStorage.removeItem(SUMMARY_KEY); },
+    async setState(patch) {
+      state = await requestState('PUT', { ...patch, deviceCode: this.deviceCode });
+      return state;
+    },
+    async reset() { state = await requestState('DELETE'); },
     async request(url, options = {}) {
       const response = await fetch(url, { headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) }, ...options });
       const payload = await response.json().catch(() => ({ success: false, message: 'Resposta inválida do servidor.' }));
@@ -20,7 +30,7 @@
       return payload;
     },
     post(url, body) { return this.request(url, { method: 'POST', body: JSON.stringify(body) }); },
-    saveSummary(summary) { write(SUMMARY_KEY, summary); this.setState(summary); return summary; },
-    get summary() { return read(SUMMARY_KEY); }
+    async saveSummary(summary) { return this.setState(summary); },
+    get summary() { return state; }
   };
 })();

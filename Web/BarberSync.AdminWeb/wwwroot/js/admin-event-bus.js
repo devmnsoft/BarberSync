@@ -1,9 +1,7 @@
 (() => {
-  const STORAGE_KEY = 'barbersync.demo.events.v6';
-  const LEGACY_KEYS = ['barbersync.demo.events'];
+  let eventHistory = [];
   const listeners = new Map();
   const titles = {
-    'demo:scenarioLoaded':['Cenário demo carregado','Demo','success'], 'demo:reset':['Demo resetada','Demo','warning'],
     'public:leadCreated':['Lead público criado','PublicWeb','success'], 'public:appointmentRequested':['Agendamento público solicitado','PublicWeb','success'],
     'kiosk:attendanceCreated':['Atendimento criado no Totem','Totem','success'], 'kiosk:paymentCompleted':['Pagamento concluído no Totem','Totem','success'],
     'client:created':['Cliente criado','Clientes 360','success'], 'client:updated':['Cliente atualizado','Clientes 360','info'],
@@ -42,34 +40,17 @@
     'flow:receiptGenerated':['Recibo gerado no fluxo','Atendimento Completo','success'],
     'flow:stockUpdated':['Estoque atualizado no fluxo','Atendimento Completo','success'],
     'flow:apiSynced':['API sincronizada no fluxo','Atendimento Completo','success'],
-    'flow:apiSyncFallback':['API indisponível no fluxo','Atendimento Completo','warning'],
+    'flow:apiSyncFailed':['API indisponível no fluxo','Atendimento Completo','warning'],
     'flow:cashbackGenerated':['Cashback gerado no fluxo','Atendimento Completo','success'],
     'flow:reviewCreated':['Avaliação criada no fluxo','Atendimento Completo','success'],
     'flow:completed':['Fluxo completo concluído','Atendimento Completo','success'],
     'flow:autoValidated':['Fluxo completo validado automaticamente','Atendimento Completo','success']
   };
   const clone = value => JSON.parse(JSON.stringify(value));
-  const read = () => {
-    try {
-      const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if (Array.isArray(current) && current.length) return current;
-      for (const key of LEGACY_KEYS) {
-        const legacy = JSON.parse(localStorage.getItem(key) || '[]');
-        if (Array.isArray(legacy) && legacy.length) {
-          const migrated = legacy.map(normalizeEvent);
-          write(migrated);
-          localStorage.removeItem(key);
-          return migrated;
-        }
-      }
-    } catch { /* localStorage unavailable: return empty history */ }
-    return [];
-  };
-  const write = events => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(-500))); } catch { /* ignore quota errors in demo */ }
-  };
+  const read = () => eventHistory;
+  const write = events => { eventHistory = events.slice(-500); };
   const normalizeEvent = (raw = {}) => {
-    const eventName = raw.eventName || raw.name || 'demo:event';
+    const eventName = raw.eventName || raw.name || 'ui:event';
     const meta = titles[eventName] || [eventName.replaceAll(':', ' › '), raw.module || 'BarberSync', raw.severity || 'info'];
     const payload = raw.payload || {};
     return {
@@ -101,19 +82,6 @@
       window.dispatchEvent(new CustomEvent(`barbersync:${eventName}`, { detail: payload }));
       call(eventName, payload, event); call('*', payload, event);
       notify(event);
-      if ((eventName.startsWith('flow:') || eventName.startsWith('commercialFlow:')) && window.BarberSyncDemoStore) {
-        try {
-          const store = window.BarberSyncDemoStore;
-          store.add('dashboardEvents', { type:'flow', title:event.title, module:event.module, eventName:event.eventName, at:event.createdAt });
-          const settings = store.getSettings ? store.getSettings() : {};
-          const notifications = settings.notifications || {};
-          notifications.items = [{ title:event.title, module:event.module, type:event.severity, read:false, route:eventName.startsWith('commercialFlow:') ? '/Admin/CommercialFlow' : '/Admin/FullServiceFlow' }, ...(notifications.items || [])].slice(0, 20);
-          notifications.unread = (notifications.items || []).filter(x => !x.read).length;
-          store.updateSettings?.('notifications', notifications);
-          store.add('reports', { name:'Auditoria demo - ' + event.title, status:'Registrado', module:event.module, eventName:event.eventName, at:event.createdAt });
-          store.refreshDashboard?.();
-        } catch (err) { console.warn('[BarberSyncEventBus] fluxo demo auditável indisponível', err); }
-      }
       return clone(event);
     },
     history() { return clone(read()); },

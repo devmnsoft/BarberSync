@@ -30,11 +30,9 @@ public sealed class CopilotService(IAiProvider aiProvider) : ICopilotService
         var answer = new CopilotMessageDto(Guid.NewGuid(), conversationId, "assistant", answerText, DateTime.UtcNow);
         Messages.Add(answer);
 
-        var generatedSuggestions = new[]
-        {
-            new CopilotSuggestionDto(Guid.NewGuid(), request.TenantId, "sales", "Sugestão inteligente", "Ofereça combo corte + barba nos horários ociosos.", "high", DateTime.UtcNow),
-            new CopilotSuggestionDto(Guid.NewGuid(), request.TenantId, "retention", "Ação recomendada", "Contate clientes VIP sem retorno há 30 dias.", "medium", DateTime.UtcNow)
-        };
+        // Suggestions must originate from an enabled provider and real tenant data.
+        // An unconfigured installation never invents operational recommendations.
+        var generatedSuggestions = Array.Empty<CopilotSuggestionDto>();
 
         Suggestions.AddRange(generatedSuggestions);
         return new CopilotAskResponseDto(conversationId, answer, generatedSuggestions);
@@ -58,10 +56,8 @@ public sealed class CopilotService(IAiProvider aiProvider) : ICopilotService
     }
 }
 
-public sealed class MockAiProvider : IAiProvider
+public sealed class UnconfiguredAiProvider : IAiProvider
 {
-    public string GenerateAnswer(string prompt)
-    {
-        return $"Resumo do dia: faturamento estável. Pergunta recebida: {prompt}";
-    }
+    public string GenerateAnswer(string prompt) =>
+        "O provedor de IA ainda não está configurado. Nenhuma análise operacional foi gerada.";
 }
