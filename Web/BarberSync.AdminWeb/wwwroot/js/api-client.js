@@ -12,23 +12,28 @@
     return url.startsWith('/') ? `/AdminApi${url}` : `/AdminApi/${url}`;
   };
 
-  const fallback = (message = 'Modo demonstração ativo.') => ({ success: true, message, data: null, isDemo: true });
-
   async function request(method, url, body) {
-    try {
-      const response = await fetch(normalize(url), {
-        method,
-        headers: body == null ? {} : { 'content-type': 'application/json' },
-        body: body == null ? undefined : JSON.stringify(body)
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const text = await response.text();
-      return text ? JSON.parse(text) : fallback('Operação realizada com sucesso.');
-    } catch (error) {
-      window.AdminToast?.showWarning?.('API indisponível. Usando modo demonstração.');
-      console.warn('[BarberSync Api legacy] fallback ativado', error?.message || error);
-      return fallback();
+    const response = await fetch(normalize(url), {
+      method,
+      headers: body == null ? { accept: 'application/json' } : { accept: 'application/json', 'content-type': 'application/json' },
+      body: body == null ? undefined : JSON.stringify(body)
+    });
+    const text = await response.text();
+    let payload = null;
+    if (text) {
+      try { payload = JSON.parse(text); }
+      catch { payload = { message: text }; }
     }
+    if (!response.ok) {
+      const traceId = payload?.traceId || payload?.extensions?.traceId;
+      const message = payload?.detail || payload?.message || payload?.title || `A operação falhou (HTTP ${response.status}).`;
+      const error = new Error(traceId ? `${message} Código de suporte: ${traceId}` : message);
+      error.status = response.status;
+      error.traceId = traceId;
+      error.payload = payload;
+      throw error;
+    }
+    return payload;
   }
 
   window.Api = {
