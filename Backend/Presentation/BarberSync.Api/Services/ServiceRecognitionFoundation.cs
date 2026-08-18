@@ -1,32 +1,66 @@
+using System.Data.Common;
+using System.Text.Json;
+using BarberSync.Application.Abstractions;
+
 namespace BarberSync.Api.Services.Recognition;
 
-public sealed record ServiceRecognitionEvent(Guid Id, Guid TenantId, Guid BranchId, Guid? CameraDeviceId, Guid? AppointmentId, DateTimeOffset OccurredAt, IReadOnlySet<string> Signals);
-public sealed record ServiceRecognitionEvidence(Guid Id, Guid EventId, string EvidenceType, string? StorageUri, DateTimeOffset? ExpiresAt);
-public sealed record ServiceRecognitionSuggestion(Guid Id, Guid EventId, string ServiceCategory, decimal Confidence, string Reason, string Status = "Pending");
-public sealed record ServiceRecognitionConfirmation(Guid Id, Guid SuggestionId, string Decision, Guid? CorrectedServiceId, Guid? ServiceOrderId, Guid ConfirmedBy, DateTimeOffset ConfirmedAt);
-public interface IServiceRecognitionProvider { Task<ServiceRecognitionSuggestion?> SuggestAsync(ServiceRecognitionEvent recognitionEvent, CancellationToken cancellationToken); }
-public interface IDevRuleBasedRecognitionProvider : IServiceRecognitionProvider { }
-public interface IServiceRecognitionService { Task<ServiceRecognitionSuggestion?> SuggestAsync(ServiceRecognitionEvent recognitionEvent, CancellationToken cancellationToken); }
+public sealed record RecognitionEvent(Guid Id, Guid TenantId, Guid BranchId, Guid CameraDeviceId, Guid? StationId, Guid? AppointmentId, Guid? ProfessionalId, DateTimeOffset OccurredAt, string[] Signals);
+public sealed record RecognitionRule(Guid Id, string Name, Guid ServiceId, string[] SignalKeys, decimal MinimumConfidence, int? MinimumDurationSeconds, bool Active);
+public sealed record RecognitionSuggestion(Guid Id, Guid EventId, Guid? ServiceId, Guid? ProfessionalId, decimal Confidence, string Reason, string Status, DateTimeOffset CreatedAt);
+public sealed record CameraDevice(Guid Id, string Name, Guid BranchId, bool Active);
+public sealed record ServiceStation(Guid Id, string Name, string Type, Guid? CameraDeviceId, bool Active);
+public sealed record RecognitionDecision(Guid SuggestionId, Guid? ServiceId, Guid? ServiceOrderId, Guid? ClientId, Guid? ProfessionalId, bool CreatePreOrder, string? Reason);
 
-public sealed class DevRuleBasedRecognitionProvider : IDevRuleBasedRecognitionProvider
+public interface IAiProvider { string Name { get; } bool IsConfigured { get; } Task<bool> TestAsync(CancellationToken ct); }
+public sealed class UnconfiguredAiProvider : IAiProvider { public string Name => nameof(UnconfiguredAiProvider); public bool IsConfigured => false; public Task<bool> TestAsync(CancellationToken ct) => Task.FromResult(false); }
+
+public interface IServiceRecognitionRepository
 {
-    private static readonly (string Category, string[] Signals, decimal Confidence, string Reason)[] Rules =
-    [
-        ("Barba", ["chair-inclined","face-towel"], .82m, "Cadeira inclinada e toalha no rosto."),
-        ("Corte", ["cape","scissors-or-clipper"], .85m, "Capa e tesoura ou máquina em uso."),
-        ("Lavagem/Hidratação", ["washbasin","washing"], .88m, "Atividade registrada no lavatório."),
-        ("Tratamento/Cauterização", ["product-application","pause-time"], .78m, "Aplicação de produto seguida de pausa."),
-        ("Sobrancelha", ["eyebrow-zone","tweezers-or-razor"], .84m, "Zona de sobrancelha com pinça ou navalha."),
-        ("Escova/Finalização", ["dryer-or-flatiron"], .80m, "Secador ou prancha detectado.")
-    ];
-    public Task<ServiceRecognitionSuggestion?> SuggestAsync(ServiceRecognitionEvent e, CancellationToken ct)
-    {
-        var rule = Rules.FirstOrDefault(r => r.Signals.All(e.Signals.Contains));
-        ServiceRecognitionSuggestion? result = rule.Category is null ? null : new(Guid.NewGuid(),e.Id,rule.Category,rule.Confidence,rule.Reason);
-        return Task.FromResult(result);
-    }
+    Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(Guid tenant, Guid branch, string resource, CancellationToken ct);
+    Task<Dictionary<string, object?>> CreateAsync(Guid tenant, Guid branch, string resource, JsonElement payload, CancellationToken ct);
+    Task<RecognitionSuggestion> RecordEventAsync(RecognitionEvent item, CancellationToken ct);
+    Task<Guid?> DecideAsync(Guid tenant, Guid branch, Guid user, RecognitionDecision decision, bool confirm, string traceId, CancellationToken ct);
 }
-public sealed class ServiceRecognitionService(IDevRuleBasedRecognitionProvider provider) : IServiceRecognitionService
+public interface IServiceRecognitionService : IServiceRecognitionRepository { }
+
+public sealed class ServiceRecognitionService(IDbConnectionFactory connections, IAiProvider provider) : IServiceRecognitionService
 {
-    public Task<ServiceRecognitionSuggestion?> SuggestAsync(ServiceRecognitionEvent e, CancellationToken ct) => provider.SuggestAsync(e,ct);
+    private static readonly HashSet<string> Resources = ["camera_devices", "service_stations", "recognition_rules", "service_recognition_events", "service_recognition_suggestions"];
+    public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(Guid tenant, Guid branch, string resource, CancellationToken ct)
+    {
+        EnsureResource(resource); await using var db = await connections.OpenConnectionAsync(ct);
+        var sql=resource=="service_recognition_suggestions"
+            ? "SELECT to_jsonb(x) FROM (SELECT s.*,e.camera_device_id,e.camera_zone_id,e.occurred_at,e.branch_id FROM barber.service_recognition_suggestions s JOIN barber.service_recognition_events e ON e.id=s.event_id WHERE e.tenant_id=@tenant AND e.branch_id=@branch ORDER BY s.created_at DESC LIMIT 200) x"
+            : $"SELECT to_jsonb(x) FROM barber.{resource} x WHERE tenant_id=@tenant AND branch_id=@branch ORDER BY created_at DESC LIMIT 200";
+        await using var cmd = Command(db, sql); Add(cmd,"tenant",tenant); Add(cmd,"branch",branch);
+        var rows=new List<Dictionary<string,object?>>(); await using var reader=await cmd.ExecuteReaderAsync(ct); while(await reader.ReadAsync(ct)) rows.Add(JsonSerializer.Deserialize<Dictionary<string,object?>>(reader.GetString(0))!); return rows;
+    }
+    public async Task<Dictionary<string, object?>> CreateAsync(Guid tenant, Guid branch, string resource, JsonElement p, CancellationToken ct)
+    {
+        EnsureResource(resource); var id=Guid.NewGuid(); await using var db=await connections.OpenConnectionAsync(ct); string sql=resource switch
+        {
+            "camera_devices" => "INSERT INTO barber.camera_devices(id,tenant_id,branch_id,name,provider_key,is_active) VALUES(@id,@tenant,@branch,@name,@type,@active)",
+            "service_stations" => "INSERT INTO barber.service_stations(id,tenant_id,branch_id,camera_device_id,name,station_type,is_active) SELECT @id,@tenant,@branch,@camera,@name,@type,@active WHERE @camera IS NULL OR EXISTS(SELECT 1 FROM barber.camera_devices WHERE id=@camera AND tenant_id=@tenant AND branch_id=@branch)",
+            _ => "INSERT INTO barber.recognition_rules(id,tenant_id,branch_id,name,signal_keys,service_id,minimum_confidence,minimum_duration_seconds,is_active) SELECT @id,@tenant,@branch,@name,@signals::jsonb,@service,@confidence,@duration,@active WHERE EXISTS(SELECT 1 FROM barber.services WHERE id=@service AND tenant_id=@tenant AND (branch_id IS NULL OR branch_id=@branch) AND status='Active' AND deleted_at IS NULL)"
+        };
+        await using var cmd=Command(db,sql); Add(cmd,"id",id);Add(cmd,"tenant",tenant);Add(cmd,"branch",branch);Add(cmd,"name",Required(p,"name"));Add(cmd,"type",Text(p,"type") ?? Text(p,"providerKey"));Add(cmd,"active",Bool(p,"active",true));Add(cmd,"camera",GuidValue(p,"cameraDeviceId"));Add(cmd,"service",GuidValue(p,"serviceId"));Add(cmd,"signals",p.TryGetProperty("signals",out var s)?s.GetRawText():"[]");Add(cmd,"confidence",Decimal(p,"minimumConfidence",.75m));Add(cmd,"duration",Int(p,"minimumDurationSeconds")); if(await cmd.ExecuteNonQueryAsync(ct)!=1) throw new InvalidOperationException("Vínculo inválido para a unidade ou serviço inativo."); return new(){{"id",id}};
+    }
+    public async Task<RecognitionSuggestion> RecordEventAsync(RecognitionEvent e, CancellationToken ct)
+    {
+        if(!provider.IsConfigured) throw new InvalidOperationException("Provider de IA não configurado; nenhum evento operacional foi processado.");
+        await using var db=await connections.OpenConnectionAsync(ct); await using var tx=await db.BeginTransactionAsync(ct);
+        await using(var camera=Command(db,"SELECT 1 FROM barber.camera_devices WHERE id=@camera AND tenant_id=@tenant AND branch_id=@branch AND is_active",tx)){Add(camera,"camera",e.CameraDeviceId);Add(camera,"tenant",e.TenantId);Add(camera,"branch",e.BranchId);if(await camera.ExecuteScalarAsync(ct) is null)throw new InvalidOperationException("Câmera não pertence à unidade ou está inativa.");}
+        await using(var insert=Command(db,"INSERT INTO barber.service_recognition_events(id,tenant_id,branch_id,camera_device_id,camera_zone_id,appointment_id,occurred_at,event_signals) VALUES(@id,@tenant,@branch,@camera,@station,@appointment,@at,@signals::jsonb)",tx)){Add(insert,"id",e.Id);Add(insert,"tenant",e.TenantId);Add(insert,"branch",e.BranchId);Add(insert,"camera",e.CameraDeviceId);Add(insert,"station",null);Add(insert,"appointment",e.AppointmentId);Add(insert,"at",e.OccurredAt);Add(insert,"signals",JsonSerializer.Serialize(e.Signals));await insert.ExecuteNonQueryAsync(ct);}
+        Guid service; decimal confidence; string reason; await using(var rule=Command(db,"SELECT service_id,minimum_confidence,name FROM barber.recognition_rules WHERE tenant_id=@tenant AND branch_id=@branch AND is_active AND signal_keys <@ @signals::jsonb ORDER BY jsonb_array_length(signal_keys) DESC LIMIT 1",tx)){Add(rule,"tenant",e.TenantId);Add(rule,"branch",e.BranchId);Add(rule,"signals",JsonSerializer.Serialize(e.Signals));await using var r=await rule.ExecuteReaderAsync(ct);if(!await r.ReadAsync(ct))throw new InvalidOperationException("Nenhuma regra ativa corresponde ao evento; nenhuma sugestão foi criada.");service=r.GetGuid(0);confidence=r.GetDecimal(1);reason=r.GetString(2);}
+        var suggestion=new RecognitionSuggestion(Guid.NewGuid(),e.Id,service,e.ProfessionalId,confidence,reason,"Pending",DateTimeOffset.UtcNow); await using(var cmd=Command(db,"INSERT INTO barber.service_recognition_suggestions(id,event_id,suggested_service_id,professional_id,provider,confidence,reason) VALUES(@id,@event,@service,@professional,@provider,@confidence,@reason)",tx)){Add(cmd,"id",suggestion.Id);Add(cmd,"event",e.Id);Add(cmd,"service",service);Add(cmd,"professional",e.ProfessionalId);Add(cmd,"provider",provider.Name);Add(cmd,"confidence",confidence);Add(cmd,"reason",reason);await cmd.ExecuteNonQueryAsync(ct);} await Notify(db,tx,e.TenantId,e.BranchId,"RecognitionSuggestionPending","Sugestão de IA aguardando confirmação",$"/Admin/ServiceRecognition?suggestion={suggestion.Id}",suggestion.Id,ct); await tx.CommitAsync(ct); return suggestion;
+    }
+    public async Task<Guid?> DecideAsync(Guid tenant,Guid branch,Guid user,RecognitionDecision d,bool confirm,string trace,CancellationToken ct)
+    {
+        await using var db=await connections.OpenConnectionAsync(ct);await using var tx=await db.BeginTransactionAsync(System.Data.IsolationLevel.Serializable,ct); Guid service; Guid? professional; await using(var q=Command(db,"SELECT s.suggested_service_id,s.professional_id FROM barber.service_recognition_suggestions s JOIN barber.service_recognition_events e ON e.id=s.event_id WHERE s.id=@id AND e.tenant_id=@tenant AND e.branch_id=@branch AND s.status='Pending' FOR UPDATE",tx)){Add(q,"id",d.SuggestionId);Add(q,"tenant",tenant);Add(q,"branch",branch);await using var r=await q.ExecuteReaderAsync(ct);if(!await r.ReadAsync(ct))throw new InvalidOperationException("Sugestão já decidida ou fora da unidade.");service=d.ServiceId ?? r.GetGuid(0);professional=d.ProfessionalId ?? (r.IsDBNull(1)?null:r.GetGuid(1));}
+        Guid? order=null;if(confirm){order=d.ServiceOrderId;if(order is null){if(!d.CreatePreOrder||d.ClientId is null)throw new InvalidOperationException("Selecione uma comanda aberta ou confirme a criação de pré-comanda.");order=Guid.NewGuid();await using var o=Command(db,"INSERT INTO barber.service_orders(id,tenant_id,branch_id,client_id,number,notes,status) SELECT @id,@tenant,@branch,@client,concat('PRE-',substr(@id::text,1,8)),'Pré-comanda criada após confirmação humana de sugestão de IA','Open' WHERE EXISTS(SELECT 1 FROM barber.clients WHERE id=@client AND tenant_id=@tenant AND branch_id=@branch AND deleted_at IS NULL)",tx);Add(o,"id",order);Add(o,"tenant",tenant);Add(o,"branch",branch);Add(o,"client",d.ClientId);if(await o.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException("Cliente inválido para a unidade.");}await using var item=Command(db,"INSERT INTO barber.service_order_items(id,tenant_id,branch_id,service_order_id,item_type,service_id,professional_id,description,unit_price,total,payload) SELECT gen_random_uuid(),@tenant,@branch,@order,'Service',s.id,@professional,s.name,s.price,s.price,jsonb_build_object('recognitionSuggestionId',@suggestion) FROM barber.services s JOIN barber.service_orders o ON o.id=@order AND o.tenant_id=@tenant AND o.branch_id=@branch AND o.status='Open' WHERE s.id=@service AND s.tenant_id=@tenant AND (s.branch_id IS NULL OR s.branch_id=@branch) AND s.status='Active' AND s.deleted_at IS NULL",tx);Add(item,"tenant",tenant);Add(item,"branch",branch);Add(item,"order",order);Add(item,"professional",professional);Add(item,"suggestion",d.SuggestionId);Add(item,"service",service);if(await item.ExecuteNonQueryAsync(ct)!=1)throw new InvalidOperationException("Comanda não está aberta ou serviço está inativo.");}
+        var status=confirm?"Confirmed":"Rejected";await using(var u=Command(db,"UPDATE barber.service_recognition_suggestions SET status=@status WHERE id=@id",tx)){Add(u,"status",status);Add(u,"id",d.SuggestionId);await u.ExecuteNonQueryAsync(ct);}await using(var c=Command(db,"INSERT INTO barber.service_recognition_confirmations(id,suggestion_id,decision,corrected_service_id,service_order_id,confirmed_by,notes) VALUES(gen_random_uuid(),@id,@decision,@service,@order,@user,@notes)",tx)){Add(c,"id",d.SuggestionId);Add(c,"decision",confirm?"Confirmed":"Discarded");Add(c,"service",confirm?service:null);Add(c,"order",order);Add(c,"user",user);Add(c,"notes",d.Reason);await c.ExecuteNonQueryAsync(ct);}var action=confirm?"RecognitionSuggestionConfirmed":"RecognitionSuggestionRejected";await Audit(db,tx,tenant,branch,user,action,d.SuggestionId,trace,d.Reason,ct);if(confirm)await Audit(db,tx,tenant,branch,user,"RecognitionSuggestionConvertedToOrder",order!.Value,trace,null,ct);await Notify(db,tx,tenant,branch,action,confirm?"Sugestão de IA confirmada":"Sugestão de IA rejeitada","/Admin/ServiceRecognition",d.SuggestionId,ct);await tx.CommitAsync(ct);return order;
+    }
+    private static async Task Notify(DbConnection db,DbTransaction tx,Guid tenant,Guid branch,string type,string title,string link,Guid entity,CancellationToken ct){await using var c=Command(db,"INSERT INTO barber.notifications(id,tenant_id,branch_id,title,message,payload) SELECT gen_random_uuid(),@tenant,@branch,@title,@title,jsonb_build_object('type',@type,'priority','High','link',@link,'entityId',@entity) WHERE NOT EXISTS(SELECT 1 FROM barber.notifications WHERE tenant_id=@tenant AND branch_id=@branch AND is_active AND read_at IS NULL AND payload->>'type'=@type AND payload->>'entityId'=@entity::text)",tx);Add(c,"tenant",tenant);Add(c,"branch",branch);Add(c,"title",title);Add(c,"type",type);Add(c,"link",link);Add(c,"entity",entity);await c.ExecuteNonQueryAsync(ct);}
+    private static async Task Audit(DbConnection db,DbTransaction tx,Guid tenant,Guid branch,Guid user,string action,Guid entity,string trace,string? reason,CancellationToken ct){await using var c=Command(db,"INSERT INTO barber.audit_logs(id,tenant_id,branch_id,user_id,operation,entity_name,entity_id,correlation_id,module,action,description) VALUES(gen_random_uuid(),@tenant,@branch,@user,@action,'RecognitionSuggestion',@entity,@trace,'IA',@action,@reason)",tx);Add(c,"tenant",tenant);Add(c,"branch",branch);Add(c,"user",user);Add(c,"action",action);Add(c,"entity",entity);Add(c,"trace",trace);Add(c,"reason",reason);await c.ExecuteNonQueryAsync(ct);}
+    private static DbCommand Command(DbConnection db,string sql,DbTransaction? tx=null){var c=db.CreateCommand();c.CommandText=sql;c.Transaction=tx;return c;}private static void Add(DbCommand c,string name,object? value){var p=c.CreateParameter();p.ParameterName=name;p.Value=value??DBNull.Value;c.Parameters.Add(p);}private static void EnsureResource(string value){if(!Resources.Contains(value))throw new ArgumentOutOfRangeException(nameof(value));}private static string Required(JsonElement p,string n)=>Text(p,n) is {Length:>0} v?v:throw new InvalidOperationException($"{n} é obrigatório.");private static string? Text(JsonElement p,string n)=>p.TryGetProperty(n,out var v)&&v.ValueKind==JsonValueKind.String?v.GetString():null;private static Guid? GuidValue(JsonElement p,string n)=>Guid.TryParse(Text(p,n),out var v)?v:null;private static bool Bool(JsonElement p,string n,bool d)=>p.TryGetProperty(n,out var v)?v.GetBoolean():d;private static decimal Decimal(JsonElement p,string n,decimal d)=>p.TryGetProperty(n,out var v)?v.GetDecimal():d;private static int? Int(JsonElement p,string n)=>p.TryGetProperty(n,out var v)&&v.TryGetInt32(out var i)?i:null;
 }
