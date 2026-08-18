@@ -13,6 +13,14 @@
   const unwrap = payload => payload?.data?.items || payload?.data || payload?.items || payload || [];
   const isRead = item => item.isRead === true || item.read === true || String(item.status).toLowerCase() === 'read';
   const idOf = item => item.id || item.notificationId;
+  const aiTypeLabels = {
+    RecognitionSuggestionPending: 'Sugestão aguardando confirmação',
+    RecognitionSuggestionOverdue: 'Sugestão pendente há muito tempo',
+    AiProviderNotConfigured: 'Provider de IA não configurado',
+    AiProviderUnavailable: 'Erro no provider de IA',
+    RecognitionSuggestionConfirmed: 'Sugestão confirmada',
+    RecognitionSuggestionRejected: 'Sugestão rejeitada'
+  };
   let notifications = [];
   const filterValue = name => document.querySelector(`[data-notification-filter="${name}"]`)?.value.trim().toLowerCase() || '';
 
@@ -44,7 +52,7 @@
       const read = isRead(item);
       return `<article class="saas7-log ${read ? '' : 'saas7-info'}">
         <strong>${escapeHtml(item.title || item.message || 'Notificação')}</strong>
-        <p><span class="badge">${escapeHtml(item.priority || item.payload?.priority || 'Normal')}</span> ${escapeHtml(item.type || item.payload?.type || item.category || 'Operação')} • ${read ? 'Lida' : 'Não lida'}</p>
+        <p><span class="badge">${escapeHtml(item.priority || item.payload?.priority || 'Normal')}</span> ${escapeHtml(aiTypeLabels[item.type || item.payload?.type] || item.type || item.payload?.type || item.category || 'Operação')} • ${read ? 'Lida' : 'Não lida'}</p>
         ${(item.link || item.payload?.link) ? `<a class="btn btn-primary" href="${escapeHtml(item.link || item.payload.link)}">Abrir destino</a>` : ''}
         ${read || !id ? '' : `<button class="btn btn-light" type="button" data-read-id="${id}">Marcar como lida</button>`}
       </article>`;

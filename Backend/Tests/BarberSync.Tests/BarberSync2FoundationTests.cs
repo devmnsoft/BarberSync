@@ -1,22 +1,37 @@
 using BarberSync.Api.Services.Growth;
 using BarberSync.Api.Services.Recognition;
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BarberSync.Tests;
 
 public sealed class BarberSync2FoundationTests
 {
     [Fact]
-    public async Task Rule_provider_suggests_barba_but_requires_separate_confirmation()
+    public void Recognition_contracts_keep_suggestions_pending_until_human_confirmation()
     {
-        var provider = new DevRuleBasedRecognitionProvider();
-        var evt = new ServiceRecognitionEvent(Guid.NewGuid(),Guid.NewGuid(),Guid.NewGuid(),null,null,DateTimeOffset.UtcNow,
-            new HashSet<string>(["chair-inclined","face-towel"]));
-        var result = await provider.SuggestAsync(evt,CancellationToken.None);
-        Assert.NotNull(result); Assert.Equal("Barba",result.ServiceCategory); Assert.Equal("Pending",result.Status);
+        var serviceId = Guid.NewGuid();
+        var evt = new RecognitionEvent(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, null, null,
+            DateTimeOffset.UtcNow, ["chair-inclined", "face-towel"]);
+        var rule = new RecognitionRule(Guid.NewGuid(), "Barba", serviceId, ["chair-inclined", "face-towel"], .85m, 300, true);
+        var suggestion = new RecognitionSuggestion(Guid.NewGuid(), evt.Id, rule.ServiceId, null, rule.MinimumConfidence,
+            rule.Name, "Pending", DateTimeOffset.UtcNow);
+        var decision = new RecognitionDecision(suggestion.Id, serviceId, null, null, null, false, null);
+
+        Assert.NotEmpty(evt.Signals);
+        Assert.True(rule.Active);
+        Assert.Equal("Pending", suggestion.Status);
+        Assert.False(decision.CreatePreOrder);
+        Assert.Null(decision.ServiceOrderId);
+    }
+
+    [Fact]
+    public async Task Unconfigured_ai_provider_is_safe_by_default()
+    {
+        IAiProvider provider = new UnconfiguredAiProvider();
+
+        Assert.False(provider.IsConfigured);
+        Assert.False(await provider.TestAsync(CancellationToken.None));
+        Assert.Equal(nameof(UnconfiguredAiProvider), provider.Name);
     }
 
     [Fact]
