@@ -33,22 +33,24 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     ];
     private static readonly List<object> AuditEvents = [];
 
-    [HttpGet("api/products")]
+    // These endpoints support legacy, authenticated demonstration screens only.
+    // An explicit namespace prevents them from competing with production routes.
+    [HttpGet("api/demo-operations/products")]
     public IActionResult GetProducts() => Ok(Envelope(Products, "Produtos carregados com sucesso."));
 
-    [HttpGet("api/stock/critical")]
+    [HttpGet("api/demo-operations/stock/critical")]
     public IActionResult GetCriticalStock() => Ok(Envelope(Products.Where(IsCritical).ToArray(), "Estoque crítico carregado com sucesso."));
 
-    [HttpPost("api/stock/entry")]
+    [HttpPost("api/demo-operations/stock/entry")]
     public IActionResult StockEntry([FromBody] JsonElement payload) => Ok(Mutation("Entrada de estoque registrada com sucesso.", payload));
 
-    [HttpPost("api/stock/exit")]
+    [HttpPost("api/demo-operations/stock/exit")]
     public IActionResult StockExit([FromBody] JsonElement payload) => Ok(Mutation("Saída de estoque registrada com sucesso.", payload));
 
-    [HttpGet("api/service-orders")]
+    [HttpGet("api/demo-operations/service-orders")]
     public IActionResult GetServiceOrders() => Ok(Envelope(ServiceOrders, "Comandas carregadas com sucesso."));
 
-    [HttpPost("api/service-orders/open")]
+    [HttpPost("api/demo-operations/service-orders/open")]
     public IActionResult OpenServiceOrder([FromBody] JsonElement payload)
     {
         var order = new { id = $"so-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", number = $"CMD-{Random.Shared.Next(2000, 9999)}", status = "Open", total = 0m, payload = ToObject(payload), channel = "Demo" };
@@ -57,13 +59,13 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         return Ok(Mutation("Comanda aberta com sucesso.", order));
     }
 
-    [HttpPost("api/service-orders/{id}/add-service")]
+    [HttpPost("api/demo-operations/service-orders/{id}/add-service")]
     public IActionResult AddService(string id, [FromBody] JsonElement payload) => Ok(Mutation("Serviço adicionado à comanda.", payload, id));
 
-    [HttpPost("api/service-orders/{id}/add-product")]
+    [HttpPost("api/demo-operations/service-orders/{id}/add-product")]
     public IActionResult AddProduct(string id, [FromBody] JsonElement payload) => Ok(Mutation("Produto adicionado à comanda e estoque reservado.", payload, id));
 
-    [HttpPost("api/service-orders/{id}/pay")]
+    [HttpPost("api/demo-operations/service-orders/{id}/pay")]
     public IActionResult PayServiceOrder(string id, [FromBody] JsonElement payload)
     {
         var payment = new { id = $"pay-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", serviceOrderId = id, status = "APPROVED", payload = ToObject(payload), paidAt = DateTime.UtcNow };
@@ -71,13 +73,13 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         return Ok(Mutation("Pagamento aprovado e registrado com sucesso.", payment, id));
     }
 
-    [HttpPost("api/service-orders/{id}/close")]
+    [HttpPost("api/demo-operations/service-orders/{id}/close")]
     public IActionResult CloseServiceOrder(string id, [FromBody] JsonElement payload) => Ok(Mutation("Comanda fechada com sucesso.", payload, id));
 
-    [HttpGet("api/leads")]
+    [HttpGet("api/demo-operations/leads")]
     public IActionResult GetLeads() => Ok(Envelope(Leads, "Leads carregados com sucesso."));
 
-    [HttpPost("api/leads")]
+    [HttpPost("api/demo-operations/leads")]
     public IActionResult CreateLead([FromBody] JsonElement payload)
     {
         var lead = new { id = $"lead-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}", protocol = $"PUB-2026-{Leads.Count + 1:0000}", payload = ToObject(payload), status = "Novo", channel = "PublicWeb", createdAt = DateTime.UtcNow };
@@ -86,10 +88,10 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         return Ok(Mutation("Lead recebido e enviado ao Admin.", lead));
     }
 
-    [HttpPost("api/kiosk/check-in")]
+    [HttpPost("api/demo-operations/kiosk/check-in")]
     public IActionResult KioskCheckIn([FromBody] JsonElement payload) => RegisterKiosk("Check-in realizado no totem.", payload, "CheckedIn");
 
-    [HttpPost("api/kiosk/service-order")]
+    [HttpPost("api/demo-operations/kiosk/service-order")]
     public IActionResult KioskServiceOrder([FromBody] JsonElement payload) => RegisterKiosk("Comanda do totem criada.", payload, "ServiceOrderCreated");
 
     [HttpPost("api/demo-operations/kiosk/payment/mock")]
@@ -99,23 +101,23 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
     public IActionResult KioskReview([FromBody] JsonElement payload) => RegisterKiosk("Avaliação registrada no totem.", payload, "ReviewCreated");
 
     [HttpGet("api/demo-operations/kiosk/status")]
-    [HttpGet("api/kiosk/demo-status")]
+    [HttpGet("api/demo-operations/kiosk/demo-status")]
     public IActionResult KioskStatus() => Ok(Envelope(new { online = true, deviceCode = "KIOSK-DEMO-001", currentStep = "Pronto", attendances = KioskAttendances.Count, paymentsMockEnabled = true, lastHeartbeat = DateTime.UtcNow }, "Totem online."));
 
-    [HttpGet("api/audit/events")]
+    [HttpGet("api/demo-operations/audit/events")]
     public IActionResult Audit() => Ok(Envelope(AuditEvents.Take(100).ToArray(), "Eventos de auditoria carregados."));
 
-    [HttpPost("api/audit/events")]
+    [HttpPost("api/demo-operations/audit/events")]
     public IActionResult CreateAudit([FromBody] JsonElement payload)
     {
         RegisterAudit("client:audit", ToObject(payload));
         return Ok(Mutation("Evento de auditoria registrado.", payload));
     }
 
-    [HttpGet("api/full-service-flow/loyalty/accounts")]
+    [HttpGet("api/demo-operations/full-service-flow/loyalty/accounts")]
     public IActionResult LoyaltyAccounts() => Ok(Envelope(CashbackAccounts, "Contas de cashback carregadas com sucesso."));
 
-    [HttpGet("api/mobile/summary")]
+    [HttpGet("api/demo-operations/mobile/summary")]
     public IActionResult MobileSummary() => Ok(Envelope(new
     {
         operations = FullServiceSnapshotObject(),
@@ -130,10 +132,10 @@ public class DemoOperationsController(ILogger<DemoOperationsController> logger) 
         notifications = new[] { "Agendamento confirmado", "Cashback disponível", "Check-in no Totem liberado", "Avaliação NPS pendente" }
     }, "Resumo mobile sincronizado com FullServiceFlow."));
 
-    [HttpGet("api/full-service-flow/snapshot")]
+    [HttpGet("api/demo-operations/full-service-flow/snapshot")]
     public IActionResult FullServiceFlowSnapshot() => Ok(Envelope(FullServiceSnapshotObject(), "Fluxo completo sincronizado."));
 
-    [HttpPost("api/full-service-flow/run")]
+    [HttpPost("api/demo-operations/full-service-flow/run")]
     public IActionResult RunFullServiceFlow([FromBody] JsonElement payload)
     {
         var now = DateTime.UtcNow;
