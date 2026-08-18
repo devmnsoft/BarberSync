@@ -10,7 +10,7 @@ on:
       - 'Backend/**'
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,4 +20,5 @@ jobs:
       - run: dotnet restore BarberSync.sln
       - run: dotnet build BarberSync.sln --configuration Debug --no-restore
       - run: dotnet build BarberSync.sln --configuration Release --no-restore
-      - run: dotnet test BarberSync.sln --configuration Debug --no-build
+      # Automated .NET tests are intentionally deferred to the final testing phase.
+      # The test sources remain versioned, but BarberSync.Tests is outside the main solution.

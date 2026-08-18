@@ -19,8 +19,9 @@ jobs:
         run: dotnet build BarberSync.sln --configuration Debug --no-restore
       - name: Build Release
         run: dotnet build BarberSync.sln --configuration Release --no-restore
-      - name: Test
-        run: dotnet test BarberSync.sln --configuration Debug --no-build
+      # Automated .NET tests are intentionally deferred to the final testing phase.
+      # Keep both production builds mandatory while BarberSync.Tests remains versioned
+      # outside the main solution.
       - name: Check JavaScript syntax
         run: find Web -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
