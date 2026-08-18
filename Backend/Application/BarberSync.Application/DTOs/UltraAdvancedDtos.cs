@@ -9,11 +9,11 @@ public class VideoRecognitionInsightDto
     public decimal PostureScore { get; set; }
     public decimal InstrumentHandlingScore { get; set; }
     public decimal TechniqueAdherenceScore { get; set; }
-    public IEnumerable<ServiceRecognitionEventDto> RecognizedServices { get; set; } = Array.Empty<ServiceRecognitionEventDto>();
+    public IEnumerable<RecognizedServiceDto> RecognizedServices { get; set; } = Array.Empty<RecognizedServiceDto>();
     public IEnumerable<string> UpsellSuggestions { get; set; } = Array.Empty<string>();
 }
 
-public record ServiceRecognitionEventDto(string ServiceName, decimal Confidence, string Instrument, string Technique);
+public record RecognizedServiceDto(string ServiceName, decimal Confidence, string Instrument, string Technique);
 public record AutomationTriggerStateDto(string TriggerKey, bool Active, string Action);
 
 public class PredictiveAnalyticsSummaryDto

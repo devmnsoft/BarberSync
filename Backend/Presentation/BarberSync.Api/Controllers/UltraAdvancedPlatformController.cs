@@ -12,8 +12,8 @@ public class UltraAdvancedPlatformController : ControllerBase
     {
         var recognizedServices = new[]
         {
-            new ServiceRecognitionEventDto("Corte Degradê", 0.96m, "Máquina + tesoura", "Finalização com textura"),
-            new ServiceRecognitionEventDto("Barba Terapêutica", 0.91m, "Navalha", "Compressa quente")
+            new RecognizedServiceDto("Corte Degradê", 0.96m, "Máquina + tesoura", "Finalização com textura"),
+            new RecognizedServiceDto("Barba Terapêutica", 0.91m, "Navalha", "Compressa quente")
         };
 
         return Ok(new VideoRecognitionInsightDto
