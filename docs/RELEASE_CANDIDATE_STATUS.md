@@ -24,6 +24,11 @@ como aprovação.
 - A mudança elimina seleção ambígua de action e impede que uma resposta em memória
   seja servida acidentalmente por uma rota operacional. A política privada global
   continua sendo aplicada aos endpoints legados.
+- As mutações CRUD genéricas dos módulos comerciais agora exigem um dos papéis
+  `SuperAdmin`, `Owner`, `Admin` ou `Manager`. Pacotes, assinaturas, fornecedores,
+  compras e financeiro também declaram autenticação no próprio controller, sem
+  depender apenas da política fallback global. As ações transacionais preservam
+  suas matrizes específicas para caixa, recepção e profissional.
 
 ## Contratos e isolamento revisados estaticamente
 
@@ -35,6 +40,15 @@ como aprovação.
   abreviações `recognition_events` e `recognition_suggestions`).
 - Esta revisão estática não substitui os smokes autenticados de perfil, tenant e
   unidade contra PostgreSQL real.
+
+## Varredura de demo e fallback
+
+O comando solicitado encontrou **350 ocorrências**: **0 removidas nesta revisão**,
+**139 classificadas em documentação/legacy**, **0 em testes deferidos** e **211 em
+código ou interface ainda pendentes de isolamento/remoção**. Termos técnicos como
+`fallback` também entram na contagem textual; portanto, cada ocorrência pendente
+precisa de classificação funcional antes da publicação. Nenhuma foi ocultada ou
+declarada resolvida apenas por documentação.
 
 ## Pendências reais e riscos
 

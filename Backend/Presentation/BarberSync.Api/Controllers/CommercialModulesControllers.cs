@@ -10,16 +10,16 @@ public abstract class CommercialModuleController(EnterpriseDataService data, ILo
 {
     [HttpGet] public Task<IActionResult> GetAll(CancellationToken ct) => List(ct);
     [HttpGet("{id:guid}")] public Task<IActionResult> GetOne(Guid id, CancellationToken ct) => Get(id, ct);
-    [HttpPost] public Task<IActionResult> Post([FromBody] JsonElement payload, CancellationToken ct) => Create(payload, ct);
-    [HttpPut("{id:guid}")] public Task<IActionResult> Put(Guid id, [FromBody] JsonElement payload, CancellationToken ct) => Update(id, payload, ct);
+    [HttpPost, Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")] public Task<IActionResult> Post([FromBody] JsonElement payload, CancellationToken ct) => Create(payload, ct);
+    [HttpPut("{id:guid}"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")] public Task<IActionResult> Put(Guid id, [FromBody] JsonElement payload, CancellationToken ct) => Update(id, payload, ct);
     [HttpDelete("{id:guid}")] [Authorize(Roles = "SuperAdmin,Owner,Admin")] public Task<IActionResult> Remove(Guid id, CancellationToken ct) => Delete(id, ct);
 }
 
 [ApiController, Route("api/commissions"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager,Professional")]
 public sealed class CommissionsController(EnterpriseDataService data, ILogger<CommissionsController> log) : CommercialModuleController(data, log, "commissions");
-[ApiController, Route("api/packages")]
+[ApiController, Route("api/packages"), Authorize]
 public sealed class PackagesController(EnterpriseDataService data, ILogger<PackagesController> log) : CommercialModuleController(data, log, "packages");
-[ApiController, Route("api/client-packages")]
+[ApiController, Route("api/client-packages"), Authorize]
 public sealed class ClientPackagesController(EnterpriseDataService data, ILogger<ClientPackagesController> log) : CommercialModuleController(data, log, "client-packages")
 {
     [HttpPost("sell"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager,Cashier,Receptionist")]
@@ -29,9 +29,9 @@ public sealed class ClientPackagesController(EnterpriseDataService data, ILogger
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] ReasonRequest request, CancellationToken ct) => Ok(await data.CancelPackageAsync(id, request.Reason, ct));
 }
-[ApiController, Route("api/memberships")]
+[ApiController, Route("api/memberships"), Authorize]
 public sealed class MembershipsController(EnterpriseDataService data, ILogger<MembershipsController> log) : CommercialModuleController(data, log, "memberships");
-[ApiController, Route("api/client-memberships")]
+[ApiController, Route("api/client-memberships"), Authorize]
 public sealed class ClientMembershipsController(EnterpriseDataService data, ILogger<ClientMembershipsController> log) : CommercialModuleController(data, log, "client-memberships")
 {
     [HttpPost("activate"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager,Cashier,Receptionist")]
@@ -43,9 +43,9 @@ public sealed class ClientMembershipsController(EnterpriseDataService data, ILog
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] ReasonRequest request, CancellationToken ct) => Ok(await data.CancelMembershipAsync(id, request.Reason, ct));
 }
-[ApiController, Route("api/suppliers")]
+[ApiController, Route("api/suppliers"), Authorize]
 public sealed class SuppliersController(EnterpriseDataService data, ILogger<SuppliersController> log) : CommercialModuleController(data, log, "suppliers");
-[ApiController, Route("api/purchases")]
+[ApiController, Route("api/purchases"), Authorize]
 public sealed class PurchasesController(EnterpriseDataService data, ILogger<PurchasesController> log) : CommercialModuleController(data, log, "purchases")
 {
     [HttpPost("{id:guid}/approve"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
@@ -56,7 +56,7 @@ public sealed class PurchasesController(EnterpriseDataService data, ILogger<Purc
     public async Task<IActionResult> Receive(Guid id, [FromBody] PurchaseReceiptRequest request, CancellationToken ct)
         => Ok(await data.ReceivePurchaseAsync(id, request.InvoiceNumber, request.DueDate, request.Items, ct));
 }
-[ApiController, Route("api/finance")]
+[ApiController, Route("api/finance"), Authorize]
 public sealed class FinanceController(EnterpriseDataService data, ILogger<FinanceController> log) : CommercialModuleController(data, log, "financial-entries");
 
 public sealed record PackageSaleRequest(Guid PackageId, Guid ClientId, bool Paid);
