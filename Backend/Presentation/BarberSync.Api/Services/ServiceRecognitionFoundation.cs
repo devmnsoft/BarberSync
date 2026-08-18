@@ -30,6 +30,8 @@ public sealed class ServiceRecognitionService(IDbConnectionFactory connections, 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(Guid tenant, Guid branch, string resource, CancellationToken ct)
     {
         EnsureResource(resource); await using var db = await connections.OpenConnectionAsync(ct);
+        if (resource == "service_recognition_suggestions")
+            await NotifyOverdueSuggestionsAsync(db, tenant, branch, ct);
         var sql=resource=="service_recognition_suggestions"
             ? "SELECT to_jsonb(x) FROM (SELECT s.*,e.camera_device_id,e.camera_zone_id,e.occurred_at,e.branch_id FROM barber.service_recognition_suggestions s JOIN barber.service_recognition_events e ON e.id=s.event_id WHERE e.tenant_id=@tenant AND e.branch_id=@branch ORDER BY s.created_at DESC LIMIT 200) x"
             : $"SELECT to_jsonb(x) FROM barber.{resource} x WHERE tenant_id=@tenant AND branch_id=@branch ORDER BY created_at DESC LIMIT 200";
@@ -77,6 +79,21 @@ public sealed class ServiceRecognitionService(IDbConnectionFactory connections, 
         await tx.CommitAsync(ct);
     }
     private static async Task Notify(DbConnection db,DbTransaction tx,Guid tenant,Guid branch,string type,string title,string link,Guid entity,CancellationToken ct){await using var c=Command(db,"INSERT INTO barber.notifications(id,tenant_id,branch_id,title,message,payload) SELECT gen_random_uuid(),@tenant,@branch,@title,@title,jsonb_build_object('type',@type,'priority','High','link',@link,'entityId',@entity) WHERE NOT EXISTS(SELECT 1 FROM barber.notifications WHERE tenant_id=@tenant AND branch_id=@branch AND is_active AND read_at IS NULL AND payload->>'type'=@type AND payload->>'entityId'=@entity::text)",tx);Add(c,"tenant",tenant);Add(c,"branch",branch);Add(c,"title",title);Add(c,"type",type);Add(c,"link",link);Add(c,"entity",entity);await c.ExecuteNonQueryAsync(ct);}
+    private static async Task NotifyOverdueSuggestionsAsync(DbConnection db,Guid tenant,Guid branch,CancellationToken ct)
+    {
+        await using var c=Command(db,"""
+            INSERT INTO barber.notifications(id,tenant_id,branch_id,title,message,payload)
+            SELECT gen_random_uuid(),e.tenant_id,e.branch_id,'Sugestão de IA pendente há muito tempo',
+                   'Uma sugestão aguarda confirmação humana há mais de 30 minutos.',
+                   jsonb_build_object('type','RecognitionSuggestionOverdue','priority','High','link',concat('/Admin/ServiceRecognition?suggestion=',s.id),'entityId',s.id)
+            FROM barber.service_recognition_suggestions s
+            JOIN barber.service_recognition_events e ON e.id=s.event_id
+            WHERE e.tenant_id=@tenant AND e.branch_id=@branch AND s.status='Pending'
+              AND s.created_at <= now() - interval '30 minutes'
+              AND NOT EXISTS(SELECT 1 FROM barber.notifications n WHERE n.tenant_id=e.tenant_id AND n.branch_id=e.branch_id AND n.is_active AND n.read_at IS NULL AND n.payload->>'type'='RecognitionSuggestionOverdue' AND n.payload->>'entityId'=s.id::text)
+            """);
+        Add(c,"tenant",tenant);Add(c,"branch",branch);await c.ExecuteNonQueryAsync(ct);
+    }
     private static async Task Audit(DbConnection db,DbTransaction tx,Guid tenant,Guid branch,Guid? user,string action,Guid entity,string trace,string? reason,CancellationToken ct){await using var c=Command(db,"INSERT INTO barber.audit_logs(id,tenant_id,branch_id,user_id,operation,entity_name,entity_id,correlation_id,module,action,description) VALUES(gen_random_uuid(),@tenant,@branch,@user,@action,@entityName,@entity,@trace,'IA',@action,@reason)",tx);Add(c,"tenant",tenant);Add(c,"branch",branch);Add(c,"user",user);Add(c,"action",action);Add(c,"entityName",action.StartsWith("AiProvider",StringComparison.Ordinal)?"AiProvider":"RecognitionSuggestion");Add(c,"entity",entity);Add(c,"trace",trace);Add(c,"reason",reason);await c.ExecuteNonQueryAsync(ct);}
     private static DbCommand Command(DbConnection db,string sql,DbTransaction? tx=null){var c=db.CreateCommand();c.CommandText=sql;c.Transaction=tx;return c;}private static void Add(DbCommand c,string name,object? value){var p=c.CreateParameter();p.ParameterName=name;p.Value=value??DBNull.Value;c.Parameters.Add(p);}private static void EnsureResource(string value){if(!Resources.Contains(value))throw new ArgumentOutOfRangeException(nameof(value));}private static string Required(JsonElement p,string n)=>Text(p,n) is {Length:>0} v?v:throw new InvalidOperationException($"{n} é obrigatório.");private static string? Text(JsonElement p,string n)=>p.TryGetProperty(n,out var v)&&v.ValueKind==JsonValueKind.String?v.GetString():null;private static Guid? GuidValue(JsonElement p,string n)=>Guid.TryParse(Text(p,n),out var v)?v:null;private static bool Bool(JsonElement p,string n,bool d)=>p.TryGetProperty(n,out var v)?v.GetBoolean():d;private static decimal Decimal(JsonElement p,string n,decimal d)=>p.TryGetProperty(n,out var v)?v.GetDecimal():d;private static int? Int(JsonElement p,string n)=>p.TryGetProperty(n,out var v)&&v.TryGetInt32(out var i)?i:null;
 }

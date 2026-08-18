@@ -25,6 +25,19 @@ public sealed class BarberSync2FoundationTests
     }
 
     [Fact]
+    public void Recognition_resources_keep_camera_and_station_active_and_branch_scoped()
+    {
+        var branchId = Guid.NewGuid();
+        var camera = new CameraDevice(Guid.NewGuid(), "Câmera cadeira 1", branchId, true);
+        var station = new ServiceStation(Guid.NewGuid(), "Cadeira 1", "Chair", camera.Id, true);
+
+        Assert.Equal(branchId, camera.BranchId);
+        Assert.Equal(camera.Id, station.CameraDeviceId);
+        Assert.True(camera.Active);
+        Assert.True(station.Active);
+    }
+
+    [Fact]
     public async Task Unconfigured_ai_provider_is_safe_by_default()
     {
         IAiProvider provider = new UnconfiguredAiProvider();
