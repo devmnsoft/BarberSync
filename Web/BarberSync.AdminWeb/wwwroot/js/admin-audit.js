@@ -14,6 +14,7 @@
   const validDate = date => !Number.isNaN(date.getTime());
   const formatDate = event => validDate(eventDate(event)) ? eventDate(event).toLocaleString('pt-BR') : 'Data não informada';
   const traceId = event => text(field(event, 'traceId', 'trace_id', 'correlationId'));
+  const aiActions = new Set(['RecognitionSuggestionCreated', 'RecognitionSuggestionConfirmed', 'RecognitionSuggestionRejected', 'RecognitionSuggestionConvertedToOrder', 'AiProviderTested', 'AiProviderUnavailable']);
 
   function toggle(selector, visible) { const element = one(selector); if (element) element.hidden = !visible; }
   function setOptions(name, values) {
@@ -52,7 +53,7 @@
       const user = text(field(event, 'userName', 'userId', 'user')) || 'Sistema';
       const entity = text(field(event, 'entityName', 'entity')) || '—';
       const trace = traceId(event);
-      return `<tr><td>${escapeHtml(formatDate(event))}</td><td><span class="audit-badge">${escapeHtml(module)}</span></td><td><strong>${escapeHtml(action)}</strong><small>${escapeHtml(field(event, 'description'))}</small></td><td>${escapeHtml(user)}</td><td>${escapeHtml(entity)}</td><td><code>${escapeHtml(trace || '—')}</code></td><td><button class="btn btn-light btn-small" type="button" data-audit-open="${index}">Detalhes</button></td></tr>`;
+      return `<tr><td>${escapeHtml(formatDate(event))}</td><td><span class="audit-badge">${escapeHtml(aiActions.has(action) ? 'IA' : module)}</span></td><td><strong>${escapeHtml(action)}</strong><small>${escapeHtml(field(event, 'description'))}</small></td><td>${escapeHtml(user)}</td><td>${escapeHtml(entity)}</td><td><code>${escapeHtml(trace || '—')}</code></td><td><button class="btn btn-light btn-small" type="button" data-audit-open="${index}">Detalhes</button></td></tr>`;
     }).join('');
   }
 

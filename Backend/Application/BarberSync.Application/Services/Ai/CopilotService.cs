@@ -3,7 +3,7 @@ using BarberSync.Application.DTOs.Ai;
 
 namespace BarberSync.Application.Services.Ai;
 
-public sealed class CopilotService(IAiProvider aiProvider) : ICopilotService
+public sealed class CopilotService(IAiProvider aiProvider, ILogger<CopilotService>? logger = null) : ICopilotService
 {
     private static readonly List<CopilotConversationDto> Conversations = [];
     private static readonly List<CopilotMessageDto> Messages = [];
@@ -26,7 +26,7 @@ public sealed class CopilotService(IAiProvider aiProvider) : ICopilotService
         }
 
         Messages.Add(new CopilotMessageDto(Guid.NewGuid(), conversationId, "user", request.Question, DateTime.UtcNow));
-        var answerText = aiProvider.GenerateAnswer(request.Question);
+        var answerText = GenerateSafeAnswer(request.Question);
         var answer = new CopilotMessageDto(Guid.NewGuid(), conversationId, "assistant", answerText, DateTime.UtcNow);
         Messages.Add(answer);
 
@@ -36,6 +36,19 @@ public sealed class CopilotService(IAiProvider aiProvider) : ICopilotService
 
         Suggestions.AddRange(generatedSuggestions);
         return new CopilotAskResponseDto(conversationId, answer, generatedSuggestions);
+    }
+
+    private string GenerateSafeAnswer(string question)
+    {
+        try
+        {
+            return aiProvider.GenerateAnswer(question);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "AI provider failed while answering a Copilot question.");
+            return "O provedor de IA está temporariamente indisponível. Tente novamente mais tarde.";
+        }
     }
 
     public IReadOnlyCollection<CopilotSuggestionDto> GetSuggestions(Guid tenantId) =>
