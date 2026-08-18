@@ -19,9 +19,12 @@ public class DemoCommerceController : ControllerBase
         new { id = "so-003", number = "1003", client = "Visitante Totem", professional = "Lucas Navalha", status = "InService", channel = "Kiosk", total = 45.00m, isDemo = true }
     ];
 
-    [HttpGet("api/products")]
+    // Legacy demonstration data must never shadow the transactional endpoints.
+    // Keep it under an explicit namespace while old presentation prototypes are
+    // being retired.
+    [HttpGet("api/demo-commerce/products")]
     public IActionResult ProductsGet() => Ok(new { success = true, message = "Produtos carregados em modo demonstração.", data = Products, items = Products, total = Products.Length, isDemo = true });
 
-    [HttpGet("api/service-orders")]
+    [HttpGet("api/demo-commerce/service-orders")]
     public IActionResult ServiceOrdersGet() => Ok(new { success = true, message = "Comandas carregadas em modo demonstração.", data = ServiceOrders, items = ServiceOrders, total = ServiceOrders.Length, isDemo = true });
 }
