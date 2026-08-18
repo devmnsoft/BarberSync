@@ -16,8 +16,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberSync.PublicWeb", "Web
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberSync.KioskWeb", "Web/BarberSync.KioskWeb/BarberSync.KioskWeb.csproj", "{6AB015A2-B40D-4F33-8E6D-8D741A53FD1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BarberSync.Tests", "Backend/Tests/BarberSync.Tests/BarberSync.Tests.csproj", "{4682F304-DC3D-4078-99C1-B7B182565B83}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,10 +50,6 @@ Global
 		{6AB015A2-B40D-4F33-8E6D-8D741A53FD1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6AB015A2-B40D-4F33-8E6D-8D741A53FD1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6AB015A2-B40D-4F33-8E6D-8D741A53FD1A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4682F304-DC3D-4078-99C1-B7B182565B83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4682F304-DC3D-4078-99C1-B7B182565B83}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4682F304-DC3D-4078-99C1-B7B182565B83}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4682F304-DC3D-4078-99C1-B7B182565B83}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
