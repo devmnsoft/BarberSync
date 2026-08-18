@@ -36,7 +36,8 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Suppliers")] public IActionResult Suppliers() => Commercial("Fornecedores", "suppliers", "name", "Nome / razão social", "document", "CPF / CNPJ", "phone", "Telefone");
     [HttpGet("Purchases")] public IActionResult Purchases() => Commercial("Compras", "purchases", "supplierId", "Fornecedor", "invoiceNumber", "Nota fiscal", "items", "Itens (produto:quantidade:custo)");
     [HttpGet("Finance")] public IActionResult Finance() => Commercial("Financeiro gerencial", "finance", "description", "Descrição", "amount", "Valor", "category", "Categoria");
-    [HttpGet("ServiceRecognition")] public IActionResult ServiceRecognition() => Commercial("Reconhecimento de serviço", "service-recognition", "cameraId", "Câmera", "chair", "Ambiente / cadeira", "signals", "Sinais detectados");
+    [HttpGet("ServiceRecognition")] public IActionResult ServiceRecognition() => Render("ServiceRecognition");
+    [HttpGet("System/AiSettings"), Authorize(Roles = "Owner,SuperAdmin,Admin")] public IActionResult AiSettings() => Render("AiSettings");
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
     [HttpGet("Appointments")] public IActionResult Appointments() => Render("Appointments");
     [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => Render("ServiceOrders");

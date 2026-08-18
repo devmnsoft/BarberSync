@@ -104,7 +104,7 @@ builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IWhatsAppProvider, 
 builder.Services.AddSingleton<BarberSync.Api.Services.Growth.IEmailProvider, BarberSync.Api.Services.Growth.UnconfiguredEmailProvider>();
 builder.Services.AddSingleton<BarberSync.Api.Services.Growth.ISmsProvider, BarberSync.Api.Services.Growth.UnconfiguredSmsProvider>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.INotificationDispatcher, BarberSync.Api.Services.Growth.NotificationDispatcher>();
-builder.Services.AddSingleton<BarberSync.Api.Services.Recognition.IDevRuleBasedRecognitionProvider, BarberSync.Api.Services.Recognition.DevRuleBasedRecognitionProvider>();
+builder.Services.AddSingleton<BarberSync.Api.Services.Recognition.IAiProvider, BarberSync.Api.Services.Recognition.UnconfiguredAiProvider>();
 builder.Services.AddScoped<BarberSync.Api.Services.Recognition.IServiceRecognitionService, BarberSync.Api.Services.Recognition.ServiceRecognitionService>();
 
 builder.Services.AddHealthChecks();

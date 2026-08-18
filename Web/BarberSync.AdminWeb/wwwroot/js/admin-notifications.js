@@ -14,6 +14,7 @@
   const isRead = item => item.isRead === true || item.read === true || String(item.status).toLowerCase() === 'read';
   const idOf = item => item.id || item.notificationId;
   let notifications = [];
+  const filterValue = name => document.querySelector(`[data-notification-filter="${name}"]`)?.value.trim().toLowerCase() || '';
 
   async function api(path, options = {}) {
     const response = await fetch(`/AdminApi/${path}`, {
@@ -33,16 +34,18 @@
     count.textContent = String(unread);
     document.querySelectorAll('[data-topbar-notification-count]').forEach(element => { element.textContent = String(unread); });
     readAll.disabled = unread === 0;
-    if (!notifications.length) {
+    const visible = notifications.filter(item => (!filterValue('priority') || String(item.priority || item.payload?.priority || '').toLowerCase() === filterValue('priority')) && (!filterValue('type') || String(item.type || item.payload?.type || '').toLowerCase().includes(filterValue('type'))) && (!filterValue('status') || (filterValue('status') === 'read') === isRead(item)) && (!filterValue('branch') || String(item.branchId || item.branch_id || '').toLowerCase().includes(filterValue('branch'))));
+    if (!visible.length) {
       list.innerHTML = '<div class="empty-state"><strong>Nenhuma notificação</strong><p>Os alertas reais da sua unidade aparecerão aqui.</p></div>';
       return;
     }
-    list.innerHTML = notifications.map(item => {
+    list.innerHTML = visible.map(item => {
       const id = escapeHtml(idOf(item));
       const read = isRead(item);
       return `<article class="saas7-log ${read ? '' : 'saas7-info'}">
         <strong>${escapeHtml(item.title || item.message || 'Notificação')}</strong>
-        <p>${escapeHtml(item.type || item.category || 'Operação')} • ${read ? 'Lida' : 'Não lida'}</p>
+        <p><span class="badge">${escapeHtml(item.priority || item.payload?.priority || 'Normal')}</span> ${escapeHtml(item.type || item.payload?.type || item.category || 'Operação')} • ${read ? 'Lida' : 'Não lida'}</p>
+        ${(item.link || item.payload?.link) ? `<a class="btn btn-primary" href="${escapeHtml(item.link || item.payload.link)}">Abrir destino</a>` : ''}
         ${read || !id ? '' : `<button class="btn btn-light" type="button" data-read-id="${id}">Marcar como lida</button>`}
       </article>`;
     }).join('');
@@ -88,6 +91,8 @@
       window.BarberSyncToast?.show?.(error.message, 'error');
     }
   });
+
+  document.querySelectorAll('[data-notification-filter]').forEach(control => control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', render));
 
   load();
 })();
