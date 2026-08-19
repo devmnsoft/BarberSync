@@ -4,6 +4,7 @@ public sealed record CreateAppointmentRequest(Guid ClientId, Guid ProfessionalId
 public sealed record UpdateAppointmentRequest(Guid ClientId, Guid ProfessionalId, Guid ServiceId, DateTimeOffset ScheduledStart, string Origin, string? Notes);
 public sealed record RescheduleAppointmentRequest(DateTimeOffset ScheduledStart, string Reason);
 public sealed record CancelAppointmentRequest(string Reason);
+public sealed record NoShowAppointmentRequest(string Reason);
 public sealed record AppointmentFilter(DateTimeOffset? From, DateTimeOffset? To, Guid? ProfessionalId, Guid? ServiceId, string? Status, string? Origin);
 public sealed record AvailabilityRequest(Guid ProfessionalId, Guid ServiceId, DateTimeOffset Start);
 public sealed record AppointmentResponse(Guid Id, Guid ClientId, string ClientName, Guid ProfessionalId, string ProfessionalName, Guid ServiceId, string ServiceName, DateTimeOffset ScheduledStart, DateTimeOffset ScheduledEnd, int DurationMinutes, string Status, string Origin, string? Notes, string? CancellationReason);
@@ -28,7 +29,7 @@ public interface IAppointmentService
     Task<AppointmentResponse?> GetAsync(Guid id, CancellationToken ct);
     Task<AppointmentResponse> CreateAsync(CreateAppointmentRequest request, CancellationToken ct);
     Task<AppointmentResponse> UpdateAsync(Guid id, UpdateAppointmentRequest request, CancellationToken ct);
-    Task<AppointmentResponse> ChangeStatusAsync(Guid id, string status, CancelAppointmentRequest? cancellation, CancellationToken ct);
+    Task<AppointmentResponse> ChangeStatusAsync(Guid id, string status, string? reason, CancellationToken ct);
     Task<AppointmentResponse> RescheduleAsync(Guid id, RescheduleAppointmentRequest request, CancellationToken ct);
     Task<bool> IsAvailableAsync(AvailabilityRequest request, CancellationToken ct);
     Task<IReadOnlyList<DateTimeOffset>> SmartSlotsAsync(Guid professionalId, Guid serviceId, DateOnly date, CancellationToken ct);
@@ -61,13 +62,14 @@ public sealed class AppointmentService(IAppointmentRepository repository, Abstra
         return await repository.UpdateAsync(new(id, currentUser.TenantId, currentUser.BranchId, request.ClientId, request.ProfessionalId, request.ServiceId, request.ScheduledStart, end, "Scheduled", request.Origin, request.Notes), ct);
     }
 
-    public async Task<AppointmentResponse> ChangeStatusAsync(Guid id, string status, CancelAppointmentRequest? cancellation, CancellationToken ct)
+    public async Task<AppointmentResponse> ChangeStatusAsync(Guid id, string status, string? reason, CancellationToken ct)
     {
         if (!Transitions.TryGetValue(status, out var allowed)) throw new InvalidOperationException("Status de destino inválido.");
         var current = await Required(id, ct);
         if (!allowed.Contains(current.Status, StringComparer.OrdinalIgnoreCase)) throw new InvalidOperationException($"Transição de {current.Status} para {status} não permitida.");
-        if (status == "Cancelled" && string.IsNullOrWhiteSpace(cancellation?.Reason)) throw new InvalidOperationException("O motivo do cancelamento é obrigatório.");
-        return await repository.ChangeStatusAsync(currentUser.TenantId, currentUser.BranchId, id, current.Status, status, cancellation?.Reason?.Trim(), currentUser.UserId, ct);
+        if (status is "Cancelled" or "NoShow" && string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException(status == "Cancelled" ? "O motivo do cancelamento é obrigatório." : "O motivo da ausência é obrigatório.");
+        return await repository.ChangeStatusAsync(currentUser.TenantId, currentUser.BranchId, id, current.Status, status, reason?.Trim(), currentUser.UserId, ct);
     }
 
     public async Task<AppointmentResponse> RescheduleAsync(Guid id, RescheduleAppointmentRequest request, CancellationToken ct)

@@ -23,13 +23,17 @@ repositório.
 - [x] Mobile exige escolha explícita de profissional e horário retornado pela disponibilidade real antes de criar o agendamento.
 - [x] Totem retoma a etapa mantida no servidor e conserva a limpeza remota ao concluir o fluxo.
 - [x] Smokes estáticos cobrem os contratos de disponibilidade Mobile e retomada/limpeza do Totem.
+- [x] Cancelamento, no-show e remoção de item exigem justificativa; a remoção de
+  item é auditada na mesma transação.
+- [x] Pagamentos legados em `localStorage` e seus sucessos simulados foram
+  removidos; `/Admin/Payments` conduz ao PDV real.
 
 - [x] Controladores que simulavam pagamento, estoque, comanda e auditoria em memória removidos.
 - [x] Telas ainda dependentes de armazenamento local isoladas em `Development` + `SuperAdmin`.
 - [x] Estoque protegido explicitamente por autenticação e `Stock.View`, `Stock.Entry` ou `Stock.Adjust`.
 - [ ] SDK .NET disponível no executor (`dotnet --info`: comando ausente).
 - [ ] PostgreSQL disponível no executor (`psql --version`: comando ausente).
-- [ ] As 347 correspondências brutas restantes da varredura foram classificadas e resolvidas.
+- [ ] As 351 correspondências brutas restantes da varredura foram classificadas e resolvidas.
 
 ## Smokes funcionais obrigatórios
 
