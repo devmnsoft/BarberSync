@@ -5,25 +5,20 @@
 <section class="page-header">
     <div>
         <h1 class="page-title">Campanhas</h1>
-        <p class="page-subtitle">CRM, canais e conversão. Dados carregados por proxy MVC <strong>/AdminApi/campaigns</strong> com fallback demo.</p>
+        <p class="page-subtitle">CRM, canais e conversão persistidos pela API transacional.</p>
     </div>
     <div class="page-actions">
         <button class="btn btn-light" data-admin-refresh="Campaigns">Atualizar</button>
-        <button class="btn btn-primary" data-admin-new="Campaigns">Novo Campanha</button>
+        <button class="btn btn-primary" data-admin-new="Campaigns">Nova campanha</button>
     </div>
 </section>
-<div class="alert alert-warning d-none" id="CampaignsFallback">API indisponível: modo demonstração seguro ativo.</div>
+
 <section class="admin-module-grid" id="CampaignsCards">
     <article class="kpi-card"><div class="kpi-icon">💈</div><div><p class="kpi-label">Carregando</p><strong class="kpi-value">...</strong><span class="kpi-variation">BarberSync</span></div></article>
 </section>
-<section class="enterprise-demo-grid"><article class="enterprise-card wide"><h3>Jornada da campanha</h3><div class="timeline-demo"><div>Segmentar público-alvo</div><div>Enviar WhatsApp</div><div>Gerar cupom</div><div>Medir retorno</div></div></article><article class="enterprise-card"><h3>Resultado mock</h3><strong>18 reativações</strong><p>ROI estimado 4,2x.</p></article></section>
-<!-- Demo Experience 3.0 injected -->
-<section class="enterprise-demo-grid">
-  <article class="enterprise-card wide"><h3>Campanhas e recorrência</h3><p>Selecione público, associe cupom, simule envio e veja resultado demo no Dashboard e timeline dos clientes.</p><div class="quick-actions-grid"><button class="btn btn-primary" data-flow-quick-campaign="Clientes inativos">Clientes inativos</button><button class="btn btn-light" data-flow-quick-campaign="VIP">VIP</button><button class="btn btn-light" data-flow-quick-campaign="Aniversariantes">Aniversariantes</button><button class="btn btn-light" data-flow-quick-campaign="Com cashback">Com cashback</button><button class="btn btn-light" data-flow-quick-campaign="Sem retorno">Sem retorno</button></div></article>
-</section>
 <section class="panel module-panel">
     <div class="panel-header">
-        <div><h3>Registros operacionais</h3><p>CRUD demonstrável com modais, toasts e fallback controlado.</p></div>
+        <div><h3>Registros operacionais</h3><p>CRUD transacional com validação e mensagens de operação.</p></div>
         <span class="badge badge-info">/AdminApi/campaigns</span>
     </div>
     <div class="table-responsive">
@@ -35,11 +30,8 @@
         <div class="modal-header"><h3>Novo/editar Campanha</h3><button type="button" class="modal-close" data-admin-close="Campaigns">×</button></div>
         <label>Nome<input name="name" required placeholder="Nome" /></label>
         <label>Status<select name="status"><option>Ativo</option><option>Em atendimento</option><option>Pendente</option></select></label>
-        <label>Observação<input name="notes" placeholder="Observação demo" /></label>
+        <label>Observação<input name="notes" placeholder="Observação" /></label>
         <div class="modal-actions"><button type="button" class="btn btn-light" data-admin-close="Campaigns">Cancelar</button><button class="btn btn-primary" type="submit">Salvar</button></div>
     </form>
 </div>
 @section Scripts {<script>window.renderAdminCrudPage && window.renderAdminCrudPage('Campaigns')</script>}
-
-<section class="panel"><div class="panel-header"><div><h3>Campanhas e automações demo</h3><p>Experiência conectada ao DemoStore 5.0 e aos eventos da demonstração.</p></div></div><div data-campaigns-v2></div></section>
-<section class="saas-grid" data-campaigns-30><article class="saas-card wide"><h3>Campanhas 3.0</h3><div class="saas-actions"><button class="btn btn-primary" data-campaign-create>Criar campanha segmentada</button><button class="btn btn-light" data-campaign-coupon>Gerar cupom</button></div><div class="saas-list" data-campaign-segments></div></article><article class="saas-card"><h3>Resultado demo</h3><div class="saas-list" data-campaign-results></div></article></section>
