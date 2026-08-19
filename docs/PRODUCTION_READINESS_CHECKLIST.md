@@ -20,6 +20,18 @@ repositório.
 
 ### Evidência parcial desta sprint
 
+- [x] Em 19 de agosto de 2026, todos os 101 arquivos `.js` rastreados passaram
+  em `node --check`; Mobile smoke, Totem smoke e bundle Vite do Totem passaram.
+- [ ] Clean, restore, builds Debug/Release, SQL e startups da Sprint 7: o executor
+  não possui `dotnet` nem `psql` (ambos retornaram código 127).
+- [ ] Smokes Presencial, Tenant/Branch, Totem E2E, Mobile Cliente E2E, Mobile
+  Profissional E2E, IA, Relatórios, Notificações e Auditoria: dependem da API e
+  do PostgreSQL reais e não foram declarados aprovados.
+- [ ] Limpeza literal encerrada: a medição atual encontrou 393 linhas/129
+  arquivos no repositório e 150 linhas/36 arquivos no recorte de código das
+  aplicações; ocorrências isoladas de desenvolvimento e usos técnicos ainda
+  precisam ser separados de resíduos operacionais.
+
 - [x] Filtros de período do relatório executivo chegam ao backend e são usados
   também pela exportação CSV; intervalo incompleto ou invertido é rejeitado.
 - [x] Exportação executiva registra usuário autenticado, tenant, unidade,
