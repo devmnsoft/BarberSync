@@ -28,6 +28,16 @@ como aprovação.
 
 ## Correções desta revisão
 
+- O agendamento Mobile deixou de escolher silenciosamente o primeiro profissional
+  e o primeiro horário do resumo. O cliente agora escolhe serviço, profissional e
+  data, consulta `/api/mobile/appointments/availability`, seleciona explicitamente
+  um horário retornado e somente então confirma a criação.
+- A retomada do Totem agora restaura também a etapa persistida pela API. Antes, os
+  dados do fluxo eram recuperados, mas a interface sempre reabria na primeira
+  etapa, deixando estado e tela inconsistentes.
+- Os smokes de Mobile e Totem passaram a rejeitar regressões nesses contratos
+  (seleção implícita, falta de consulta real, falta de limpeza ou retomada da sessão).
+
 - Os controladores `DemoOperationsController` e `CommercialOpsController` foram
   removidos. Eles mantinham produtos, comandas, pagamentos, estoque, clientes e
   auditoria em memória e fabricavam aprovações de pagamento. Esses endpoints não
@@ -70,6 +80,13 @@ inclui documentação, testes browser-side legados, lockfiles e usos técnicos d
 `fallback`, e portanto não deve ser apresentado como quantidade de defeitos. A
 contagem anterior de 207 pendências operacionais precisa ser reclassificada após
 esta remoção, em vez de ser reduzida por estimativa.
+
+Na medição desta revisão, executada com a expressão literal solicitada e exclusão
+de `node_modules`, `dist`, `bin` e `obj`, foram encontradas **349 linhas em 114
+arquivos**. A diferença para o registro anterior decorre da reprodução da
+contagem no estado atual do branch; nenhuma redução artificial foi declarada.
+As correções acima removem uma pendência operacional que não continha nenhum dos
+termos da expressão, portanto não alteram essa métrica literal.
 
 ## Pendências reais e riscos
 

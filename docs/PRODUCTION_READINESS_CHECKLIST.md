@@ -20,6 +20,10 @@ repositório.
 
 ### Evidência parcial desta sprint
 
+- [x] Mobile exige escolha explícita de profissional e horário retornado pela disponibilidade real antes de criar o agendamento.
+- [x] Totem retoma a etapa mantida no servidor e conserva a limpeza remota ao concluir o fluxo.
+- [x] Smokes estáticos cobrem os contratos de disponibilidade Mobile e retomada/limpeza do Totem.
+
 - [x] Controladores que simulavam pagamento, estoque, comanda e auditoria em memória removidos.
 - [x] Telas ainda dependentes de armazenamento local isoladas em `Development` + `SuperAdmin`.
 - [x] Estoque protegido explicitamente por autenticação e `Stock.View`, `Stock.Entry` ou `Stock.Adjust`.
