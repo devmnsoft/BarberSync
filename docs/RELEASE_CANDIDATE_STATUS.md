@@ -15,6 +15,19 @@ como aprovação.
 | PostgreSQL | Bloqueado pelo ambiente | `psql --version` falhou porque o cliente PostgreSQL não está instalado; o script não foi aplicado e não está aprovado. |
 | Smoke HTTP/comercial | Bloqueado | A API não pode ser iniciada sem o SDK e não há PostgreSQL local; nenhum fluxo manual foi declarado como aprovado. |
 
+### Evidência da execução de 18 de agosto de 2026
+
+- `dotnet --info` e `psql --version` retornaram código 127 (`command not found`).
+- Foi tentada a preparação desta máquina Ubuntu com `apt-get update`; o proxy do
+  ambiente respondeu HTTP 403 para os repositórios oficiais. A instalação direta
+  do SDK por `https://dot.net/v1/dotnet-install.sh` também respondeu HTTP 403.
+  Por isso, não foi possível executar honestamente clean, restore, builds, startup
+  ou aplicação do SQL nesta revisão.
+- `npm test --prefix MobileApp`, `npm test --prefix Totem` e
+  `npm run build --prefix Totem` foram executados novamente e aprovados.
+- `node --check` foi executado sobre todos os `.js` de `Web`, `MobileApp` e
+  `Totem`, excluindo `node_modules` e `dist`, e não encontrou erro de sintaxe.
+
 ## Correções desta revisão
 
 - Os controladores legados de demonstração deixaram de disputar `/api/products`,
@@ -43,12 +56,13 @@ como aprovação.
 
 ## Varredura de demo e fallback
 
-O comando solicitado encontrou **350 ocorrências**: **0 removidas nesta revisão**,
-**139 classificadas em documentação/legacy**, **0 em testes deferidos** e **211 em
-código ou interface ainda pendentes de isolamento/remoção**. Termos técnicos como
-`fallback` também entram na contagem textual; portanto, cada ocorrência pendente
-precisa de classificação funcional antes da publicação. Nenhuma foi ocultada ou
-declarada resolvida apenas por documentação.
+Uma nova varredura, excluindo dependências e artefatos (`node_modules`, `dist`,
+`bin` e `obj`), encontrou **392 linhas em 131 arquivos**. Nesta revisão foram
+**0 removidas**, **0 justificadas individualmente** e **392 permanecem pendentes de
+classificação**. Termos técnicos como `fallback` e documentação de release também
+entram na contagem textual; portanto, o total bruto não equivale automaticamente a
+392 defeitos operacionais. Nenhuma ocorrência foi ocultada ou declarada resolvida
+apenas por documentação.
 
 ## Pendências reais e riscos
 
