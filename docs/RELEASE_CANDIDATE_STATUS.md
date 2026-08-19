@@ -4,6 +4,23 @@ Atualizado em 19 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 4 — revisão de caixa
+
+A revisão encontrou uma divergência concreta entre o nome exigido pelo contrato de
+produção (`cash_movements`) e o razão usado pela aplicação (`cash_transactions`).
+O schema 016 cria o razão canônico, migra o histórico de forma idempotente e passa
+a registrar origem e usuário. Caixa manual, recebimento no PDV e estorno agora
+usam a mesma tabela; consultas de saldo, conferência e histórico também leem essa
+fonte única. A tabela antiga foi preservada apenas como fonte de migração para não
+perder histórico em upgrades.
+
+Os gates .NET e PostgreSQL foram tentados antes das alterações e continuam
+bloqueados pela ausência de `dotnet` e `psql` neste executor. Por isso esta rodada
+não declara SQL, compilação, fluxos ponta a ponta, módulos restantes ou UX como
+aprovados. Mobile, Totem, bundle do Totem e sintaxe JavaScript foram reexecutados
+e aprovados. A varredura literal permanece em **351 linhas / 114 arquivos**; esta
+correção não introduziu fallback operacional. A decisão permanece **NO-GO**.
+
 ## Gates executados
 
 | Gate | Resultado | Evidência / observação |

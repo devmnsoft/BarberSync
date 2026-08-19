@@ -56,7 +56,7 @@ public sealed class PostgresCashRegisterRepository(IDbConnectionFactory connecti
         var movementId = Guid.NewGuid();
         var signedAmount = type is "Withdrawal" or "Expense" ? -request.Amount : request.Amount;
         var description = type == "Expense" ? $"{request.Category}: {request.Reason.Trim()}" : request.Reason.Trim();
-        await using (var command = Command(connection, "INSERT INTO barber.cash_transactions(id,tenant_id,branch_id,cash_register_id,type,amount,description) VALUES(@id,@tenant,@branch,@register,@type,@amount,@description)", transaction))
+        await using (var command = Command(connection, "INSERT INTO barber.cash_movements(id,tenant_id,branch_id,cash_register_id,type,amount,description,origin,created_by) VALUES(@id,@tenant,@branch,@register,@type,@amount,@description,'Manual',@user)", transaction))
         {
             Add(command, "id", movementId); Add(command, "tenant", tenant); Add(command, "branch", branch); Add(command, "register", id);
             Add(command, "type", type); Add(command, "amount", signedAmount); Add(command, "description", description);
@@ -91,7 +91,7 @@ public sealed class PostgresCashRegisterRepository(IDbConnectionFactory connecti
             SELECT r.status,r.opening_balance,
               COALESCE(sum(t.amount) FILTER(WHERE t.amount>0),0),COALESCE(-sum(t.amount) FILTER(WHERE t.amount<0),0),
               r.opening_balance+COALESCE(sum(t.amount),0),r.actual_balance,r.opened_at,r.closed_at
-            FROM barber.cash_registers r LEFT JOIN barber.cash_transactions t ON t.cash_register_id=r.id
+            FROM barber.cash_registers r LEFT JOIN barber.cash_movements t ON t.cash_register_id=r.id
             WHERE r.id=@id AND r.tenant_id=@tenant AND r.branch_id=@branch AND r.deleted_at IS NULL
             GROUP BY r.id
             """;
@@ -103,7 +103,7 @@ public sealed class PostgresCashRegisterRepository(IDbConnectionFactory connecti
             expected=reader.GetDecimal(4); actual=reader.IsDBNull(5)?null:reader.GetDecimal(5); opened=reader.GetFieldValue<DateTimeOffset>(6); closed=reader.IsDBNull(7)?null:reader.GetFieldValue<DateTimeOffset>(7);
         }
         var movements = new List<CashMovementResponse>();
-        await using (var command = Command(connection, "SELECT id,type,amount,COALESCE(description,''),created_at FROM barber.cash_transactions WHERE cash_register_id=@id ORDER BY created_at DESC"))
+        await using (var command = Command(connection, "SELECT id,type,amount,COALESCE(description,''),created_at FROM barber.cash_movements WHERE cash_register_id=@id ORDER BY created_at DESC"))
         {
             Add(command, "id", id); await using var reader = await command.ExecuteReaderAsync(ct);
             while(await reader.ReadAsync(ct)) movements.Add(new(reader.GetGuid(0),reader.GetString(1),reader.GetDecimal(2),reader.GetString(3),reader.GetFieldValue<DateTimeOffset>(4)));
@@ -119,7 +119,7 @@ public sealed class PostgresCashRegisterRepository(IDbConnectionFactory connecti
     private static async Task EnsureOpen(DbConnection connection, DbTransaction transaction, Guid tenant, Guid branch, Guid id, CancellationToken ct)
     { await using var command=Command(connection,"SELECT 1 FROM barber.cash_registers WHERE id=@id AND tenant_id=@tenant AND branch_id=@branch AND status='Open' AND deleted_at IS NULL FOR UPDATE",transaction);Add(command,"id",id);Add(command,"tenant",tenant);Add(command,"branch",branch);if(await command.ExecuteScalarAsync(ct) is null)throw new InvalidOperationException("O caixa não está aberto."); }
     private static async Task<decimal> Expected(DbConnection connection, DbTransaction transaction, Guid id, CancellationToken ct)
-    { await using var command=Command(connection,"SELECT r.opening_balance+COALESCE(sum(t.amount),0) FROM barber.cash_registers r LEFT JOIN barber.cash_transactions t ON t.cash_register_id=r.id WHERE r.id=@id GROUP BY r.id",transaction);Add(command,"id",id);return Convert.ToDecimal(await command.ExecuteScalarAsync(ct)); }
+    { await using var command=Command(connection,"SELECT r.opening_balance+COALESCE(sum(t.amount),0) FROM barber.cash_registers r LEFT JOIN barber.cash_movements t ON t.cash_register_id=r.id WHERE r.id=@id GROUP BY r.id",transaction);Add(command,"id",id);return Convert.ToDecimal(await command.ExecuteScalarAsync(ct)); }
     private static async Task Audit(DbConnection connection, DbTransaction transaction, Guid tenant, Guid branch, Guid user, string operation, Guid entity, string description, CancellationToken ct)
     { await using var command=Command(connection,"INSERT INTO barber.audit_logs(id,tenant_id,branch_id,user_id,operation,entity_name,entity_id,description,module,action) VALUES(@id,@tenant,@branch,@user,@operation,'CashRegister',@entity,@description,'Cash',@operation)",transaction);Add(command,"id",Guid.NewGuid());Add(command,"tenant",tenant);Add(command,"branch",branch);Add(command,"user",user);Add(command,"operation",operation);Add(command,"entity",entity);Add(command,"description",description);await command.ExecuteNonQueryAsync(ct); }
     private static DbCommand Command(DbConnection connection,string sql,DbTransaction? transaction=null){var command=connection.CreateCommand();command.CommandText=sql;command.Transaction=transaction;return command;}
