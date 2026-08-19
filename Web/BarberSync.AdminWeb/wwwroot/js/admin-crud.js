@@ -64,8 +64,8 @@
   const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
   const normalizeList = data => Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : (Array.isArray(data?.data) ? data.data : (data ? [data] : [])));
   const detail = i => i.service || i.specialty || i.category || i.channel || i.comment || i.code || i.phone || i.description || i.client || i.priority || i.status || 'Operação BarberSync';
-  const status = i => i.status || (i.isDemo ? 'Demo' : 'Ativo');
-  const name = i => i.name || i.fullName || i.title || i.client || i.code || i.label || i.product || 'Registro demo';
+  const status = i => i.status || 'Não informado';
+  const name = i => i.name || i.fullName || i.title || i.client || i.code || i.label || i.product || 'Registro';
   const money = value => Number(value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   function fieldHtml([key, label, type, required]) {
@@ -109,7 +109,7 @@
   function decorateRows(module, list, rowsEl) {
     if (module === 'ServiceOrders') {
       const by = label => list.filter(i => status(i).toLowerCase().includes(label));
-      rowsEl.closest('.table-responsive').insertAdjacentHTML('beforebegin', `<div class="kanban-board" id="${module}Kanban"><div><h4>Abertas</h4>${by('abert').map(card).join('') || card(list[0])}</div><div><h4>Em pagamento</h4>${by('pag').map(card).join('') || card(list[1])}</div><div><h4>Fechadas</h4>${by('fech').map(card).join('') || card({ name: 'Recibo visual demo', total: 95, status: 'Fechada' })}</div></div>`);
+      rowsEl.closest('.table-responsive').insertAdjacentHTML('beforebegin', `<div class="kanban-board" id="${module}Kanban"><div><h4>Abertas</h4>${by('abert').map(card).join('') || '<p class="bs-empty-state">Nenhuma comanda aberta.</p>'}</div><div><h4>Em pagamento</h4>${by('pag').map(card).join('') || '<p class="bs-empty-state">Nenhuma comanda em pagamento.</p>'}</div><div><h4>Fechadas</h4>${by('fech').map(card).join('') || '<p class="bs-empty-state">Nenhuma comanda fechada.</p>'}</div></div>`);
     }
     function card(i = {}) { return `<article class="kanban-card"><strong>${escapeHtml(name(i))}</strong><span>${escapeHtml(detail(i))}</span><b>${money(i.total || i.price || 0)}</b></article>`; }
   }
@@ -121,7 +121,7 @@
     if (module === 'Appointments') return `${base}<div class='status-flow'><span>Agendado</span><span>Confirmado</span><span>Check-in</span><span>Em atendimento</span><span>Finalizado</span></div><div class='row-actions'><button data-id='${id}' data-appointment-action='confirm'>Confirmar</button><button data-id='${id}' data-appointment-action='check-in'>Check-in</button><button data-id='${id}' data-appointment-action='start'>Iniciar</button><button data-id='${id}' data-appointment-action='finish'>Finalizar</button><button data-id='${id}' data-appointment-action='cancel'>Cancelar</button></div>`;
     if (module === 'ServiceOrders') return `${base}<div class='row-actions'><button data-id='${id}' data-order-action='pay'>Registrar pagamento</button><button data-id='${id}' data-order-action='close'>Fechar</button></div>`;
     if (module === 'Stock') return `${base}<div class='stock-bar'><span style='width:${Math.max(0, Math.min(100, Number(i.quantity || i.stock || 0)))}%'></span></div>`;
-    if (module === 'Coupons') return `${base}<div class='row-actions'><button data-copy-coupon='${escapeHtml(i.code || 'RETORNO20')}'>Copiar código</button></div>`;
+    if (module === 'Coupons') return `${base}<div class='row-actions'><button data-copy-coupon='${escapeHtml(i.code || '')}'>Copiar código</button></div>`;
     return base;
   }
 
