@@ -19,4 +19,12 @@ if (!main.includes('/KioskApi')) {
   process.exit(1);
 }
 
+const app = fs.readFileSync('App.jsx', 'utf8');
+for (const contract of ["setStep(saved.step)", "api.flow('DELETE')", 'Confirmar check-in e pré-comanda']) {
+  if (!app.includes(contract)) {
+    console.error(`Totem flow is missing contract: ${contract}`);
+    process.exit(1);
+  }
+}
+
 console.log('Totem smoke test passed.');

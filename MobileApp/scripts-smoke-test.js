@@ -19,9 +19,20 @@ for (const file of requiredFiles) {
 const appSource = fs.readFileSync('App.js', 'utf8');
 for (const importPath of ["./src/theme/colors", "./src/theme/spacing", "./src/services/api"]) {
   if (!appSource.includes(importPath)) {
-    console.error(`App.js is missing required demo import: ${importPath}`);
+    console.error(`App.js is missing required production import: ${importPath}`);
     process.exit(1);
   }
+}
+
+for (const contract of ['mobileApi.slots', 'professionalId, serviceId, date', 'Confirmar agendamento']) {
+  if (!appSource.includes(contract)) {
+    console.error(`Mobile scheduling flow is missing contract: ${contract}`);
+    process.exit(1);
+  }
+}
+if (/availableSlots\?\.\[0\]|professionals\?\.\[0\]/.test(appSource)) {
+  console.error('Mobile must not silently select the first professional or slot.');
+  process.exit(1);
 }
 
 for (const jsFile of ['App.js', 'src/services/api.js', 'src/theme/colors.js', 'src/theme/spacing.js']) {
