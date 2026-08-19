@@ -48,6 +48,8 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
     // deployment represents one configured branch.
     private Guid TenantId => ScopeId("tenant_id", "BarberSync:DefaultTenantId", "11111111-1111-1111-1111-111111111111");
     private Guid BranchId => ScopeId("branch_id", "BarberSync:DefaultBranchId", "22222222-2222-2222-2222-222222222222");
+    private Guid? UserId => Guid.TryParse(httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? httpContextAccessor.HttpContext?.User.FindFirstValue("sub"), out var value) ? value : null;
 
     private Guid ScopeId(string claim, string configurationKey, string fallback)
     {
@@ -72,7 +74,10 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(string resource, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        var sql = $"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload) from barber.{Table(resource)} where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null order by created_at desc";
+        var projection = resource.Equals("products", StringComparison.OrdinalIgnoreCase)
+            ? "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload||jsonb_build_object('currentStock',current_stock,'minStock',minimum_stock,'costPrice',cost_price,'salePrice',sale_price))"
+            : "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload)";
+        var sql = $"select {projection} from barber.{Table(resource)} where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
         AddScope(command);
         var items = new List<Dictionary<string, object?>>();
@@ -197,13 +202,13 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> CriticalStockAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        const string sql = @"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload)
+        const string sql = @"select jsonb_strip_nulls(jsonb_build_object('id', id::text, 'tenantId', tenant_id::text, 'branchId', branch_id::text, 'status', status, 'isActive', is_active, 'createdAt', created_at, 'updatedAt', updated_at) || payload || jsonb_build_object('currentStock',current_stock,'minStock',minimum_stock,'costPrice',cost_price,'salePrice',sale_price))
 from barber.products
 where deleted_at is null
   and tenant_id = @tenantScope
   and branch_id = @branchScope
   and is_active
-  and coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)
+  and current_stock <= minimum_stock
 order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
         AddScope(command);
@@ -260,7 +265,7 @@ order by created_at desc";
             ["activeClients"] = await Count("clients", "deleted_at is null and is_active"),
             ["openServiceOrders"] = await Count("service_orders", "deleted_at is null and status in ('Open','Payment')"),
             ["averageTicket"] = await SumPayments("created_at >= date_trunc('month', now())") / Math.Max(await Count("payments"), 1),
-            ["criticalStock"] = await Count("products", "deleted_at is null and coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)"),
+            ["criticalStock"] = await Count("products", "deleted_at is null and current_stock <= minimum_stock"),
             ["averageRating"] = await AverageRating(),
             ["activeCampaigns"] = await Count("campaigns", "deleted_at is null and is_active"),
             ["kioskOnline"] = await Count("kiosk_devices", "deleted_at is null and is_active"),
@@ -342,15 +347,39 @@ order by created_at desc";
 
     public async Task<Dictionary<string, object?>> StockMovementAsync(string type, JsonElement payload, CancellationToken cancellationToken = default)
     {
-        var enrichedPayload = EnrichPayload(payload, new Dictionary<string, object?> { ["type"] = type });
-        var movement = await CreateAsync("stock_movements", enrichedPayload, cancellationToken);
-        if (ExtractString(payload, "productId") is { } productId && Guid.TryParse(productId, out var productGuid))
-        {
-            await ApplyStockToProductAsync(productGuid, type, payload, cancellationToken);
-        }
+        if (!Guid.TryParse(ExtractString(payload, "productId"), out var productId)) throw new EnterpriseValidationException([new("productId", "Produto é obrigatório.")]);
+        var quantity = ExtractDecimal(payload, "quantity") ?? 0;
+        var reason = ExtractString(payload, "reason")?.Trim();
+        if (quantity <= 0) throw new EnterpriseValidationException([new("quantity", "Quantidade deve ser maior que zero.")]);
+        if (type == "adjustment" && string.IsNullOrWhiteSpace(reason)) throw new EnterpriseValidationException([new("reason", "Motivo é obrigatório para ajuste de estoque.")]);
+        if (type is not ("entry" or "exit" or "adjustment")) throw new EnterpriseValidationException([new("type", "Tipo de movimentação inválido.")]);
+
+        var requestedBalance = ExtractDecimal(payload, "balance");
         await using var connection = await OpenAsync(cancellationToken);
-        await NotifyAsync(connection, type == "exit" ? "Saída de estoque registrada." : "Entrada de estoque registrada.", "stock_movements", Guid.Parse(movement["id"]!.ToString()!), cancellationToken);
-        return movement;
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var product = new NpgsqlCommand(@"update barber.products set current_stock = case when @type='adjustment' then @balance else current_stock + case when @type='exit' then -@quantity else @quantity end end,
+payload=jsonb_set(payload,'{currentStock}',to_jsonb(case when @type='adjustment' then @balance else current_stock + case when @type='exit' then -@quantity else @quantity end end),true), updated_at=now()
+where id=@product and tenant_id=@tenant and branch_id=@branch and deleted_at is null and is_active
+and (@type<>'adjustment' or @balance>=0 or allow_negative_stock)
+and (@type<>'exit' or current_stock>=@quantity or allow_negative_stock)
+returning current_stock, minimum_stock", connection, transaction);
+        product.Parameters.AddWithValue("type", type); product.Parameters.AddWithValue("balance", requestedBalance ?? -1m); product.Parameters.AddWithValue("quantity", quantity);
+        product.Parameters.AddWithValue("product", productId); product.Parameters.AddWithValue("tenant", TenantId); product.Parameters.AddWithValue("branch", BranchId);
+        await using var reader = await product.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) throw new EnterpriseValidationException([new("productId", "Produto inativo, fora da unidade ou sem estoque suficiente.")]);
+        var balance = reader.GetDecimal(0); var minimum = reader.GetDecimal(1); await reader.CloseAsync();
+        var movementId = Guid.NewGuid();
+        await using var movement = new NpgsqlCommand(@"insert into barber.stock_movements(id,tenant_id,branch_id,product_id,type,quantity,balance_after,reason,created_by,payload)
+values(@id,@tenant,@branch,@product,@type,@quantity,@balance,@reason,@user,@payload::jsonb)
+returning jsonb_build_object('id',id::text,'productId',product_id::text,'type',type,'quantity',quantity,'balanceAfter',balance_after,'reason',reason,'createdAt',created_at)::text", connection, transaction);
+        movement.Parameters.AddWithValue("id", movementId); movement.Parameters.AddWithValue("tenant", TenantId); movement.Parameters.AddWithValue("branch", BranchId); movement.Parameters.AddWithValue("product", productId);
+        movement.Parameters.AddWithValue("type", type); movement.Parameters.AddWithValue("quantity", quantity); movement.Parameters.AddWithValue("balance", balance); movement.Parameters.AddWithValue("reason", (object?)reason ?? DBNull.Value);
+        movement.Parameters.AddWithValue("user", NpgsqlDbType.Uuid, UserId is { } user ? user : DBNull.Value); movement.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, EnrichPayload(payload, new Dictionary<string, object?> { ["origin"] = "Manual" }).GetRawText());
+        var result = await movement.ExecuteScalarAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        await AuditAsync(connection, "Estoque", type, "stock_movements", movementId, "Movimentação de estoque registrada.", JsonSerializer.Serialize(new { productId, quantity, balance, reason }), cancellationToken);
+        if (balance <= minimum) await NotifyAsync(connection, "Produto abaixo do estoque mínimo.", "products", productId, cancellationToken);
+        return Deserialize(result?.ToString() ?? "{}");
     }
 
     public async Task<Dictionary<string, object?>> PayServiceOrderAsync(Guid orderId, JsonElement payload, CancellationToken cancellationToken = default)
@@ -361,7 +390,8 @@ order by created_at desc";
         try
         {
             var payment = await InsertWithConnectionAsync(connection, transaction, "payments", EnrichPayload(payload, new Dictionary<string, object?> { ["serviceOrderId"] = orderId, ["receiptNumber"] = $"REC-{DateTime.UtcNow:yyyyMMddHHmmss}" }), "Paid", cancellationToken);
-            await ApplySoldProductsAsync(connection, transaction, orderPayload, cancellationToken);
+            await ApplySoldProductsAsync(connection, transaction, orderId, orderPayload, cancellationToken);
+            await GenerateCommissionsAsync(connection, transaction, orderId, Guid.Parse(payment["id"]!.ToString()!), cancellationToken);
             await using (var command = new NpgsqlCommand("update barber.service_orders set status = 'Paid', payload = payload || @payment::jsonb, updated_at = now() where id = @id", connection, transaction))
             {
                 command.Parameters.AddWithValue("id", orderId);
@@ -712,7 +742,7 @@ on conflict (id) do update set payload = jsonb_set(barber.loyalty_accounts.paylo
         return json;
     }
 
-    private async Task ApplySoldProductsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string orderPayloadJson, CancellationToken cancellationToken)
+    private async Task ApplySoldProductsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, Guid orderId, string orderPayloadJson, CancellationToken cancellationToken)
     {
         using var document = JsonDocument.Parse(orderPayloadJson);
         if (!document.RootElement.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array) return;
@@ -728,16 +758,19 @@ on conflict (id) do update set payload = jsonb_set(barber.loyalty_accounts.paylo
             if (quantity <= 0) throw new EnterpriseValidationException([new("items", "Quantidade de produto vendido deve ser maior que zero.")]);
 
             await using var productCommand = new NpgsqlCommand(@"update barber.products
-set payload = jsonb_set(payload, '{currentStock}', to_jsonb(coalesce((payload->>'currentStock')::numeric, 0) - @quantity), true), updated_at = now()
-where id = @productId
+set current_stock = current_stock - @quantity, payload=jsonb_set(payload,'{currentStock}',to_jsonb(current_stock-@quantity),true), updated_at = now()
+where id = @productId and tenant_id=@tenant and branch_id=@branch
   and deleted_at is null
   and is_active
-  and coalesce((payload->>'currentStock')::numeric, 0) >= @quantity
-returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload->>'minStock')::numeric, 0)", connection, transaction);
+  and (current_stock >= @quantity or allow_negative_stock)
+returning current_stock, minimum_stock", connection, transaction);
             productCommand.Parameters.AddWithValue("productId", productGuid);
             productCommand.Parameters.AddWithValue("quantity", quantity);
-            var critical = await productCommand.ExecuteScalarAsync(cancellationToken);
-            if (critical is null) throw new EnterpriseValidationException([new("items", "Produto sem estoque suficiente para fechar a comanda.")]);
+            productCommand.Parameters.AddWithValue("tenant", TenantId);
+            productCommand.Parameters.AddWithValue("branch", BranchId);
+            await using var stockReader = await productCommand.ExecuteReaderAsync(cancellationToken);
+            if (!await stockReader.ReadAsync(cancellationToken)) throw new EnterpriseValidationException([new("items", "Produto inativo, fora da unidade ou sem estoque suficiente para fechar a comanda.")]);
+            var balance = stockReader.GetDecimal(0); await stockReader.CloseAsync();
 
             var movementPayload = JsonSerializer.Serialize(new
             {
@@ -747,12 +780,40 @@ returning coalesce((payload->>'currentStock')::numeric, 0) <= coalesce((payload-
                 reason = "Baixa automática por pagamento de comanda",
                 isDemo = false
             }, JsonOptions);
-            await using var movementCommand = new NpgsqlCommand("insert into barber.stock_movements (tenant_id, branch_id, payload, status) values (@tenantId, @branchId, @payload::jsonb, 'Confirmed')", connection, transaction);
+            await using var movementCommand = new NpgsqlCommand(@"insert into barber.stock_movements
+(id,tenant_id,branch_id,product_id,service_order_id,type,quantity,balance_after,reason,created_by,payload,status)
+values (@id,@tenantId,@branchId,@productId,@orderId,'Sale',@quantity,@balance,'Baixa automática por pagamento de comanda',@user,@payload::jsonb,'Posted')", connection, transaction);
+            movementCommand.Parameters.AddWithValue("id", Guid.NewGuid());
             movementCommand.Parameters.AddWithValue("tenantId", TenantId);
             movementCommand.Parameters.AddWithValue("branchId", BranchId);
+            movementCommand.Parameters.AddWithValue("productId", productGuid);
+            movementCommand.Parameters.AddWithValue("orderId", orderId);
+            movementCommand.Parameters.AddWithValue("quantity", quantity);
+            movementCommand.Parameters.AddWithValue("balance", balance);
+            movementCommand.Parameters.AddWithValue("user", NpgsqlDbType.Uuid, UserId is { } user ? user : DBNull.Value);
             movementCommand.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, movementPayload);
             await movementCommand.ExecuteNonQueryAsync(cancellationToken);
         }
+    }
+
+    private async Task GenerateCommissionsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, Guid orderId, Guid paymentId, CancellationToken cancellationToken)
+    {
+        const string sql = @"insert into barber.commissions(id,tenant_id,branch_id,professional_id,payment_id,service_order_item_id,base_amount,percentage,amount,status,created_by,payload)
+select gen_random_uuid(),i.tenant_id,i.branch_id,i.professional_id,@payment,i.id,i.total,
+coalesce(ps.commission_percent,s.commission_percent,p.default_commission,0),
+round(i.total*coalesce(ps.commission_percent,s.commission_percent,p.default_commission,0)/100,2),'Available',@user,
+jsonb_build_object('origin','PaidServiceOrder','serviceOrderId',@order)
+from barber.service_order_items i
+join barber.services s on s.id=i.service_id and s.tenant_id=i.tenant_id
+join barber.professionals p on p.id=i.professional_id and p.tenant_id=i.tenant_id
+left join barber.professional_services ps on ps.professional_id=i.professional_id and ps.service_id=i.service_id
+where i.service_order_id=@order and i.tenant_id=@tenant and i.branch_id=@branch and i.item_type='Service' and i.deleted_at is null
+and coalesce(ps.commission_percent,s.commission_percent,p.default_commission,0)>0
+on conflict(payment_id,service_order_item_id) do nothing";
+        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        command.Parameters.AddWithValue("payment", paymentId); command.Parameters.AddWithValue("order", orderId); command.Parameters.AddWithValue("tenant", TenantId); command.Parameters.AddWithValue("branch", BranchId);
+        command.Parameters.AddWithValue("user", NpgsqlDbType.Uuid, UserId is { } user ? user : DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private async Task RecalculateProfessionalRatingAsync(NpgsqlConnection connection, string reviewJson, CancellationToken cancellationToken)
@@ -798,9 +859,10 @@ where id = @id and deleted_at is null", connection);
 
     private async Task AuditAsync(NpgsqlConnection connection, string module, string action, string entityName, Guid entityId, string description, string metadata, CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand("insert into barber.audit_logs (tenant_id, branch_id, module, action, entity_name, entity_id, description, metadata) values (@tenantId, @branchId, @module, @action, @entityName, @entityId, @description, @metadata::jsonb)", connection);
+        await using var command = new NpgsqlCommand("insert into barber.audit_logs (tenant_id, branch_id, user_id, module, action, operation, entity_name, entity_id, description, metadata) values (@tenantId, @branchId, @userId, @module, @action, @action, @entityName, @entityId, @description, @metadata::jsonb)", connection);
         command.Parameters.AddWithValue("tenantId", TenantId);
         command.Parameters.AddWithValue("branchId", BranchId);
+        command.Parameters.AddWithValue("userId", NpgsqlDbType.Uuid, UserId is { } user ? user : DBNull.Value);
         command.Parameters.AddWithValue("module", module);
         command.Parameters.AddWithValue("action", action);
         command.Parameters.AddWithValue("entityName", entityName);
@@ -812,16 +874,28 @@ where id = @id and deleted_at is null", connection);
 
     private async Task NotifyAsync(NpgsqlConnection connection, string message, string entityName, Guid entityId, CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand("insert into barber.notifications (tenant_id, branch_id, title, message, entity_name, entity_id, payload) values (@tenantId, @branchId, @title, @message, @entityName, @entityId, @payload::jsonb)", connection);
+        await using var command = new NpgsqlCommand(@"insert into barber.notifications (id,tenant_id,branch_id,title,message,entity_name,entity_id,payload)
+values (gen_random_uuid(),@tenantId,@branchId,@title,@message,@entityName,@entityId,@payload::jsonb)
+on conflict (tenant_id,branch_id,entity_name,entity_id,message) where is_active and read_at is null and deleted_at is null do nothing", connection);
         command.Parameters.AddWithValue("tenantId", TenantId);
         command.Parameters.AddWithValue("branchId", BranchId);
         command.Parameters.AddWithValue("title", "BarberSync");
         command.Parameters.AddWithValue("message", message);
         command.Parameters.AddWithValue("entityName", entityName);
         command.Parameters.AddWithValue("entityId", entityId);
-        command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, JsonSerializer.Serialize(new { entityName, entityId, createdAt = DateTime.UtcNow }, JsonOptions));
+        command.Parameters.AddWithValue("payload", NpgsqlDbType.Jsonb, JsonSerializer.Serialize(new { entityName, entityId, link = EntityLink(entityName, entityId), createdAt = DateTime.UtcNow }, JsonOptions));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
+
+    private static string EntityLink(string entityName, Guid entityId) => entityName switch
+    {
+        "products" or "stock_movements" => $"/Admin/Stock?id={entityId}",
+        "purchases" => $"/Admin/Purchases?id={entityId}",
+        "commissions" => $"/Admin/Commissions?id={entityId}",
+        "financial_entries" => $"/Admin/Financial?id={entityId}",
+        "cash_registers" => $"/Admin/Cash?id={entityId}",
+        _ => "/Admin/Notifications"
+    };
 
 
     private static JsonElement EnrichPayload(JsonElement payload, IReadOnlyDictionary<string, object?> values)

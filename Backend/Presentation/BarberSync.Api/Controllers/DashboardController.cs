@@ -17,7 +17,7 @@ public sealed class DashboardController(EnterpriseDataService data, ILogger<Dash
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao carregar dashboard.");
-            return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", data = (object?)null, errors = Array.Empty<object>() });
+            return StatusCode(500, new { success = false, message = "Erro interno ao processar a solicitação.", traceId = HttpContext.TraceIdentifier, data = (object?)null, errors = Array.Empty<object>() });
         }
     }
 }

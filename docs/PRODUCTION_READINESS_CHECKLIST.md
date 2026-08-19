@@ -20,6 +20,16 @@ repositório.
 
 ### Evidência parcial desta sprint
 
+- [x] Estoque manual e baixa no PDV usam saldo e histórico relacionais em uma transação, com tenant, unidade, origem e usuário.
+- [x] Ajuste manual rejeita motivo ausente; produto inativo, fora da unidade ou sem saldo é rejeitado.
+- [x] Recebimento de compra mantém custo médio e registra usuário; índices protegem estoque e financeiro contra repetição do mesmo recebimento.
+- [x] Comissão de pagamento é restrita a item de serviço e idempotente por pagamento/item.
+- [x] Notificação ativa é idempotente por unidade, entidade e mensagem e possui link acionável.
+- [x] Falha do dashboard inclui `traceId`.
+- [ ] Fluxos acima executados contra PostgreSQL real; `psql` não existe no executor.
+- [ ] Builds Debug/Release; `dotnet` não existe no executor.
+- [ ] UX de Estoque, Compras, Financeiro, Caixa, Relatórios, Dashboard, Auditoria, Notificações e PDV validada em navegador real.
+
 - [x] Caixa manual, pagamento em dinheiro no PDV e estorno escrevem no razão canônico `cash_movements`, com origem, usuário, tenant e unidade.
 - [x] Migração 016 copia idempotentemente o histórico de `cash_transactions`; saldo, conferência e histórico consultam a mesma fonte.
 - [ ] Aplicação real da migração 016 pendente: `psql` não está instalado neste executor.

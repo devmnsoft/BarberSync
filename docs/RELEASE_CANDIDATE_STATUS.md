@@ -4,6 +4,30 @@ Atualizado em 19 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 5 — estoque, compras, comissão e notificações
+
+A revisão estática encontrou uma quebra operacional concreta: o código de estoque
+gravava apenas `payload`, embora `stock_movements` exija produto, tipo, quantidade
+e saldo relacionais. Entradas, saídas, ajustes e baixas do PDV agora atualizam
+`products.current_stock` e inserem o histórico relacional na mesma transação, com
+origem, usuário, tenant e unidade. Ajustes exigem motivo; produto inativo, de outra
+unidade ou sem saldo é rejeitado. O dashboard e a consulta de estoque crítico usam
+as colunas canônicas.
+
+Recebimentos de compras passaram a atribuir o usuário à movimentação. Índices
+idempotentes impedem repetir comissão por item/pagamento, financeiro por
+recebimento, movimento de estoque por produto/recebimento e notificação ativa por
+entidade/mensagem. Pagamentos de comandas geram comissão somente para itens de
+serviço relacionais e com percentual configurado; produtos não entram no cálculo.
+Erros do dashboard agora devolvem `traceId`.
+
+Os gates obrigatórios foram tentados antes das alterações. `dotnet` e `psql`
+continuam ausentes (código 127), logo build, aplicação/reaplicação SQL, smoke HTTP,
+isolamento multi-tenant e UX visual permanecem **não aprovados**. Os checks de
+JavaScript, Mobile e Totem passaram. A varredura literal atual encontrou **353
+linhas em 114 arquivos**; é uma contagem bruta que inclui documentação e testes,
+não uma declaração de 353 fallbacks operacionais. A decisão permanece **NO-GO**.
+
 ## Sprint de Produção 4 — revisão de caixa
 
 A revisão encontrou uma divergência concreta entre o nome exigido pelo contrato de

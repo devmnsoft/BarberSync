@@ -168,15 +168,16 @@ from barber.purchase_items where id=@item and purchase_id=@purchase and tenant_i
             await using var productCommand = new NpgsqlCommand(@"update barber.products set
 current_stock=current_stock+@quantity,
 cost_price=case when coalesce((payload->>'costMethod'),'Average')='Average' then round(((current_stock*cost_price)+(@quantity*@cost))/nullif(current_stock+@quantity,0),2) else @cost end,
-payload=payload||jsonb_build_object('lastPurchaseCost',@cost,'lastPurchaseAt',now()), updated_at=now()
+payload=payload||jsonb_build_object('currentStock',current_stock+@quantity,'lastPurchaseCost',@cost,'lastPurchaseAt',now()), updated_at=now()
 where id=@product and tenant_id=@tenant and branch_id=@branch and deleted_at is null and is_active
 returning current_stock", connection, transaction);
             productCommand.Parameters.AddWithValue("quantity", received.Quantity); productCommand.Parameters.AddWithValue("cost", received.UnitCost); productCommand.Parameters.AddWithValue("product", productId); productCommand.Parameters.AddWithValue("tenant", TenantId); productCommand.Parameters.AddWithValue("branch", BranchId);
             var balance = await productCommand.ExecuteScalarAsync(ct) ?? throw Rule("productId", "Produto inativo ou fora da unidade.");
 
-            await using var movement = new NpgsqlCommand(@"insert into barber.stock_movements(id,tenant_id,branch_id,product_id,type,quantity,balance_after,reason,payload)
-values(@id,@tenant,@branch,@product,'PurchaseReceipt',@quantity,@balance,'Recebimento de compra',jsonb_build_object('purchaseId',@purchase,'purchaseReceiptId',@receipt,'unitCost',@cost,'invoiceNumber',@invoice))", connection, transaction);
+            await using var movement = new NpgsqlCommand(@"insert into barber.stock_movements(id,tenant_id,branch_id,product_id,type,quantity,balance_after,reason,created_by,payload)
+values(@id,@tenant,@branch,@product,'PurchaseReceipt',@quantity,@balance,'Recebimento de compra',@user,jsonb_build_object('origin','PurchaseReceipt','purchaseId',@purchase,'purchaseReceiptId',@receipt,'unitCost',@cost,'invoiceNumber',@invoice))", connection, transaction);
             movement.Parameters.AddWithValue("id", Guid.NewGuid()); movement.Parameters.AddWithValue("tenant", TenantId); movement.Parameters.AddWithValue("branch", BranchId); movement.Parameters.AddWithValue("product", productId); movement.Parameters.AddWithValue("quantity", received.Quantity); movement.Parameters.AddWithValue("balance", Convert.ToDecimal(balance)); movement.Parameters.AddWithValue("purchase", purchaseId); movement.Parameters.AddWithValue("receipt", receiptId); movement.Parameters.AddWithValue("cost", received.UnitCost); movement.Parameters.AddWithValue("invoice", invoiceNumber.Trim());
+            movement.Parameters.AddWithValue("user", NpgsqlDbType.Uuid, UserId is { } user ? user : DBNull.Value);
             await movement.ExecuteNonQueryAsync(ct);
             await using var updateItem = new NpgsqlCommand("update barber.purchase_items set received_quantity=received_quantity+@quantity,unit_cost=@cost,updated_at=now() where id=@id", connection, transaction);
             updateItem.Parameters.AddWithValue("quantity", received.Quantity); updateItem.Parameters.AddWithValue("cost", received.UnitCost); updateItem.Parameters.AddWithValue("id", received.PurchaseItemId); await updateItem.ExecuteNonQueryAsync(ct);
