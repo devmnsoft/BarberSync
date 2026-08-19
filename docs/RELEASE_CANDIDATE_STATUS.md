@@ -4,6 +4,30 @@ Atualizado em 19 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 7 — gates reais e smokes autenticados
+
+Os gates foram reexecutados no executor do candidato em 19 de agosto de 2026.
+`dotnet --info` e `psql --version` falharam com código 127 porque os executáveis
+não estão instalados. Por isso não foram executados clean, restore, builds,
+aplicação do schema, startup dos três processos nem smokes autenticados. A
+decisão continua **NO-GO**; inspeção estática não foi usada para promover
+nenhum desses gates.
+
+Os 101 arquivos JavaScript rastreados pelo Git passaram em `node --check`. Os
+smokes contratuais de Mobile e Totem passaram, e o bundle Vite de produção do
+Totem foi gerado com sucesso (26 módulos transformados). Esses scripts verificam
+arquivos e contratos essenciais no código; eles não substituem os fluxos
+autenticados contra API e PostgreSQL, que permanecem pendentes.
+
+A varredura literal solicitada, excluindo dependências e artefatos, encontrou
+**393 linhas em 129 arquivos**. No recorte de código publicado dos quatro
+diretórios de aplicação, excluindo Markdown e lockfile, foram **150 linhas em 36
+arquivos**. Há superfícies de demonstração deliberadamente isoladas em
+`Development` + `SuperAdmin`, usos técnicos da palavra `fallback` e resíduos que
+ainda precisam de classificação; portanto a meta de limpeza não está aprovada.
+Nenhuma classe de `BarberSync.Tests` foi alterada e `dotnet test` não foi
+reativado nesta fase.
+
 ## Sprint de Produção 6 — relatórios, auditoria e notificações
 
 O relatório executivo agora envia o período escolhido à API e a exportação CSV
