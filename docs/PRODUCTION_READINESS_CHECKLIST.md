@@ -18,6 +18,23 @@ repositório.
 - [ ] Varredura de resíduos demo concluída, sem ocorrência operacional pendente.
 - [ ] Nenhuma classe de `BarberSync.Tests` alterada nesta fase.
 
+### Evidência da Sprint de Produção 9
+
+- [ ] SDK .NET: `dotnet --info` não pôde ser executado porque o binário não existe
+  no executor; uma busca no sistema também não encontrou instalação alternativa.
+- [ ] PostgreSQL: `psql --version` não pôde ser executado porque o cliente não
+  existe. A tentativa de instalar PostgreSQL via APT foi recusada pelo proxy com
+  HTTP 403, portanto o schema não foi aplicado.
+- [ ] API, AdminWeb, KioskWeb, SystemHealth e smokes autenticados: não executados,
+  pois dependem dos dois gates anteriores. Nenhum resultado foi inferido.
+- [x] JavaScript publicado passou em `node --check`; Mobile e Totem passaram nos
+  smokes contratuais e o bundle de produção do Totem foi gerado.
+- [ ] Limpeza literal concluída: a medição encontrou 377 linhas/123 arquivos no
+  repositório e 206 linhas/57 arquivos no recorte das aplicações, ainda pendentes
+  de classificação integral.
+- [x] `BarberSync.Tests` permaneceu fora desta fase e `dotnet test` não foi
+  executado, conforme o plano de release.
+
 ### Evidência parcial desta sprint
 
 - [x] Em 19 de agosto de 2026, todos os 101 arquivos `.js` rastreados passaram

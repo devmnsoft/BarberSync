@@ -4,6 +4,26 @@ Atualizado em 19 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 9 — tentativa de validação real
+
+A validação foi iniciada em um executor Ubuntu 24.04 em 19 de agosto de 2026.
+`dotnet` e `psql` não estavam presentes. Também foi tentada a instalação real de
+PostgreSQL pelo gerenciador do sistema (`apt-get update && apt-get install -y
+postgresql postgresql-client wget ca-certificates`), mas o proxy do ambiente
+recusou os repositórios Ubuntu com HTTP 403. Não há binários alternativos de
+`dotnet` ou `psql` no sistema. Assim, este registro **não** aprova por inferência
+clean, restore, builds, SQL, startups, SystemHealth ou qualquer smoke autenticado.
+A decisão permanece **NO-GO**.
+
+Os gates disponíveis foram reexecutados: sintaxe JavaScript publicada, smoke
+contratual Mobile, smoke contratual Totem e bundle Vite do Totem passaram. A
+varredura literal, sem dependências ou artefatos, contabilizou **377 linhas em
+123 arquivos** no repositório e **206 linhas em 57 arquivos** em `Backend`,
+`Web`, `MobileApp` e `Totem`. As ocorrências incluem superfícies deliberadamente
+isoladas por `DevelopmentOnly` + `SuperAdmin`, documentação e usos técnicos; elas
+não foram convertidas artificialmente em defeitos nem declaradas resolvidas.
+`BarberSync.Tests` permaneceu intocado e `dotnet test` não foi executado.
+
 ## Sprint de Produção 7 — gates reais e smokes autenticados
 
 Os gates foram reexecutados no executor do candidato em 19 de agosto de 2026.
