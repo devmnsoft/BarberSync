@@ -28,13 +28,19 @@ como aprovação.
 
 ## Correções desta revisão
 
-- Os controladores legados de demonstração deixaram de disputar `/api/products`,
-  `/api/service-orders`, estoque, auditoria, check-in e Full Service Flow com os
-  controladores transacionais. Todos os recursos legados agora ficam nos namespaces
-  explícitos `/api/demo-commerce` ou `/api/demo-operations`.
-- A mudança elimina seleção ambígua de action e impede que uma resposta em memória
-  seja servida acidentalmente por uma rota operacional. A política privada global
-  continua sendo aplicada aos endpoints legados.
+- Os controladores `DemoOperationsController` e `CommercialOpsController` foram
+  removidos. Eles mantinham produtos, comandas, pagamentos, estoque, clientes e
+  auditoria em memória e fabricavam aprovações de pagamento. Esses endpoints não
+  têm mais como responder com sucesso simulado; os fluxos publicados devem usar os
+  controladores transacionais e o PostgreSQL.
+- Nove superfícies que ainda dependem de `DemoStore`, armazenamento do navegador ou
+  respostas simuladas (Lead to Cash, SaaS Control Center, Full Service Flow, fluxo
+  comercial, configurações de plataforma, add-ons, automações, integrações e base
+  de conhecimento) agora só respondem em `Development` para `SuperAdmin`.
+- O link de integrações simuladas foi removido da navegação operacional, evitando
+  um menu morto em produção.
+- O controller de estoque agora declara autenticação e as permissões existentes
+  `Stock.View`, `Stock.Entry` e `Stock.Adjust` em cada leitura e mutação.
 - As mutações CRUD genéricas dos módulos comerciais agora exigem um dos papéis
   `SuperAdmin`, `Owner`, `Admin` ou `Manager`. Pacotes, assinaturas, fornecedores,
   compras e financeiro também declaram autenticação no próprio controller, sem
@@ -54,15 +60,16 @@ como aprovação.
 
 ## Varredura de demo e fallback
 
-Uma nova varredura, excluindo dependências e artefatos (`node_modules`, `dist`,
-`bin` e `obj`), encontrou **393 linhas em 131 arquivos**. A classificação por
-localização e finalidade resultou em **158 ocorrências de documentação/legacy**,
-**16 de teste browser-side legado**, **12 de artefato gerado de desenvolvimento**
-(`package-lock.json`) e **207 operacionais pendentes**. Foram **0 corrigidas** nesta
-revisão. A classificação não aprova as ocorrências operacionais: cada uma ainda
-precisa ser removida ou comprovadamente isolada da publicação. Termos técnicos
-como `fallback` também entram na contagem textual; portanto, o total bruto não
-equivale automaticamente a 393 defeitos.
+A varredura literal solicitada, excluindo dependências e artefatos (`node_modules`,
+`dist`, `bin` e `obj`), caiu de **393 linhas em 131 arquivos** para **347 linhas em
+114 arquivos**. Nesta rodada foram eliminados **2 controladores fake completos**
+(345 linhas de código em memória, incluindo 8 ocorrências literais da expressão de
+busca), isoladas **9 telas de desenvolvimento** e removido **1 item de menu**.
+Ainda existem **347 correspondências brutas** a classificar/corrigir; esse número
+inclui documentação, testes browser-side legados, lockfiles e usos técnicos de
+`fallback`, e portanto não deve ser apresentado como quantidade de defeitos. A
+contagem anterior de 207 pendências operacionais precisa ser reclassificada após
+esta remoção, em vez de ser reduzida por estimativa.
 
 ## Pendências reais e riscos
 
@@ -76,8 +83,8 @@ equivale automaticamente a 393 defeitos.
    inspeção estática isoladamente não prova ausência de vazamento.
 5. Executar a matriz visual em navegador real nas larguras 1920, 1440, 1366, 1024,
    768 e 390 px. Nenhuma aprovação visual foi inferida do build do bundle.
-6. O repositório ainda contém telas legacy de demonstração e armazenamento local.
-   Elas precisam ser removidas ou isoladas de navegação e publicação antes do go-live.
+6. O repositório ainda contém telas legacy de demonstração e armazenamento local;
+   as nove superfícies isoladas nesta rodada não encerram essa limpeza.
 
 ## Checklist de publicação
 

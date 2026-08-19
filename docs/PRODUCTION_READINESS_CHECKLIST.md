@@ -18,6 +18,15 @@ repositório.
 - [ ] Varredura de resíduos demo concluída, sem ocorrência operacional pendente.
 - [ ] Nenhuma classe de `BarberSync.Tests` alterada nesta fase.
 
+### Evidência parcial desta sprint
+
+- [x] Controladores que simulavam pagamento, estoque, comanda e auditoria em memória removidos.
+- [x] Telas ainda dependentes de armazenamento local isoladas em `Development` + `SuperAdmin`.
+- [x] Estoque protegido explicitamente por autenticação e `Stock.View`, `Stock.Entry` ou `Stock.Adjust`.
+- [ ] SDK .NET disponível no executor (`dotnet --info`: comando ausente).
+- [ ] PostgreSQL disponível no executor (`psql --version`: comando ausente).
+- [ ] As 347 correspondências brutas restantes da varredura foram classificadas e resolvidas.
+
 ## Smokes funcionais obrigatórios
 
 Cada cenário deve registrar os identificadores das entidades, usuário, tenant,
@@ -84,4 +93,3 @@ unidade, horário UTC e `traceId` de eventual erro.
 
 O release só pode mudar para **GO** quando todos os itens obrigatórios acima
 tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**.
-
