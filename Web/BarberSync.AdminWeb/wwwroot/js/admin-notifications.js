@@ -80,7 +80,7 @@
     if (!button) return;
     button.disabled = true;
     try {
-      await api(`notifications/${encodeURIComponent(button.dataset.readId)}`, { method: 'PUT', body: JSON.stringify({ isRead: true, readAt: new Date().toISOString() }) });
+      await api(`notifications/${encodeURIComponent(button.dataset.readId)}/read`, { method: 'POST' });
       await load();
     } catch (error) {
       button.disabled = false;
@@ -91,8 +91,7 @@
   readAll?.addEventListener('click', async () => {
     readAll.disabled = true;
     try {
-      const unread = notifications.filter(item => !isRead(item) && idOf(item));
-      await Promise.all(unread.map(item => api(`notifications/${encodeURIComponent(idOf(item))}`, { method: 'PUT', body: JSON.stringify({ isRead: true, readAt: new Date().toISOString() }) })));
+      await api('notifications/read-all', { method: 'POST' });
       await load();
     } catch (error) {
       readAll.disabled = false;
