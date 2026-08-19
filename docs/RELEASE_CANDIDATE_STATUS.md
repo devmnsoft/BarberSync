@@ -1,6 +1,6 @@
 # BarberSync 2.0 — status do release candidate
 
-Atualizado em 18 de agosto de 2026. Este documento registra somente verificações
+Atualizado em 19 de agosto de 2026. Este documento registra somente verificações
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
@@ -15,14 +15,12 @@ como aprovação.
 | PostgreSQL | Bloqueado pelo ambiente | `psql --version` falhou porque o cliente PostgreSQL não está instalado; o script não foi aplicado e não está aprovado. |
 | Smoke HTTP/comercial | Bloqueado | A API não pode ser iniciada sem o SDK e não há PostgreSQL local; nenhum fluxo manual foi declarado como aprovado. |
 
-### Evidência da execução de 18 de agosto de 2026
+### Evidência da execução de 19 de agosto de 2026
 
 - `dotnet --info` e `psql --version` retornaram código 127 (`command not found`).
-- Foi tentada a preparação desta máquina Ubuntu com `apt-get update`; o proxy do
-  ambiente respondeu HTTP 403 para os repositórios oficiais. A instalação direta
-  do SDK por `https://dot.net/v1/dotnet-install.sh` também respondeu HTTP 403.
-  Por isso, não foi possível executar honestamente clean, restore, builds, startup
-  ou aplicação do SQL nesta revisão.
+- Como os executáveis necessários não existem no ambiente, não foi possível
+  executar honestamente clean, restore, builds, startup ou aplicação do SQL nesta
+  revisão. Nenhum desses gates foi inferido a partir de inspeção estática.
 - `npm test --prefix MobileApp`, `npm test --prefix Totem` e
   `npm run build --prefix Totem` foram executados novamente e aprovados.
 - `node --check` foi executado sobre todos os `.js` de `Web`, `MobileApp` e
@@ -57,12 +55,14 @@ como aprovação.
 ## Varredura de demo e fallback
 
 Uma nova varredura, excluindo dependências e artefatos (`node_modules`, `dist`,
-`bin` e `obj`), encontrou **392 linhas em 131 arquivos**. Nesta revisão foram
-**0 removidas**, **0 justificadas individualmente** e **392 permanecem pendentes de
-classificação**. Termos técnicos como `fallback` e documentação de release também
-entram na contagem textual; portanto, o total bruto não equivale automaticamente a
-392 defeitos operacionais. Nenhuma ocorrência foi ocultada ou declarada resolvida
-apenas por documentação.
+`bin` e `obj`), encontrou **393 linhas em 131 arquivos**. A classificação por
+localização e finalidade resultou em **158 ocorrências de documentação/legacy**,
+**16 de teste browser-side legado**, **12 de artefato gerado de desenvolvimento**
+(`package-lock.json`) e **207 operacionais pendentes**. Foram **0 corrigidas** nesta
+revisão. A classificação não aprova as ocorrências operacionais: cada uma ainda
+precisa ser removida ou comprovadamente isolada da publicação. Termos técnicos
+como `fallback` também entram na contagem textual; portanto, o total bruto não
+equivale automaticamente a 393 defeitos.
 
 ## Pendências reais e riscos
 
@@ -80,6 +80,9 @@ apenas por documentação.
    Elas precisam ser removidas ou isoladas de navegação e publicação antes do go-live.
 
 ## Checklist de publicação
+
+O checklist operacional detalhado, incluindo segurança, backup e rollback, está
+em [`PRODUCTION_READINESS_CHECKLIST.md`](PRODUCTION_READINESS_CHECKLIST.md).
 
 - [ ] Build Debug e Release aprovados com SDK .NET 10.
 - [ ] Script SQL aplicado duas vezes, sem erro, em banco limpo.
