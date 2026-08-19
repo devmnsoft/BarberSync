@@ -20,6 +20,18 @@ repositório.
 
 ### Evidência parcial desta sprint
 
+- [x] Filtros de período do relatório executivo chegam ao backend e são usados
+  também pela exportação CSV; intervalo incompleto ou invertido é rejeitado.
+- [x] Exportação executiva registra usuário autenticado, tenant, unidade,
+  correlação e período em `audit_logs`.
+- [x] Estoque crítico executivo consulta as colunas relacionais canônicas.
+- [x] Leitura individual e coletiva de notificações persiste `read_at`/`status`
+  e é limitada ao tenant e unidade das claims.
+- [x] Lista de notificações expõe estado de leitura e vínculo da entidade a partir
+  das colunas relacionais, sem depender de payload como banco operacional.
+- [ ] Relatórios obrigatórios restantes e equivalência completa dos dashboards
+  executados contra banco real; a ausência de .NET/PostgreSQL impede aprovação.
+
 - [x] Estoque manual e baixa no PDV usam saldo e histórico relacionais em uma transação, com tenant, unidade, origem e usuário.
 - [x] Ajuste manual rejeita motivo ausente; produto inativo, fora da unidade ou sem saldo é rejeitado.
 - [x] Recebimento de compra mantém custo médio e registra usuário; índices protegem estoque e financeiro contra repetição do mesmo recebimento.

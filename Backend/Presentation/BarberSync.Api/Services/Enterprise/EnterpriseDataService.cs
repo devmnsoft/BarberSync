@@ -89,6 +89,38 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
         return items;
     }
 
+    public async Task<IReadOnlyList<Dictionary<string, object?>>> ListNotificationsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        const string sql = @"select jsonb_strip_nulls(jsonb_build_object(
+  'id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,
+  'title',title,'message',message,'status',status,'isRead',read_at is not null,
+  'readAt',read_at,'entityName',entity_name,'entityId',entity_id::text,
+  'createdAt',created_at,'updatedAt',updated_at) || payload)
+from barber.notifications
+where tenant_id=@tenantScope and branch_id=@branchScope and deleted_at is null and is_active
+order by created_at desc";
+        await using var command = new NpgsqlCommand(sql, connection);
+        AddScope(command);
+        var items = new List<Dictionary<string, object?>>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) items.Add(Deserialize(reader.GetString(0)));
+        return items;
+    }
+
+    public async Task<int> MarkNotificationReadAsync(Guid? id, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        var sql = @"update barber.notifications
+set read_at=coalesce(read_at,now()),status='Read',updated_at=now()
+where tenant_id=@tenantScope and branch_id=@branchScope and deleted_at is null and is_active and read_at is null"
+            + (id.HasValue ? " and id=@id" : string.Empty);
+        await using var command = new NpgsqlCommand(sql, connection);
+        AddScope(command);
+        if (id.HasValue) command.Parameters.AddWithValue("id", id.Value);
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<Dictionary<string, object?>?> GetAsync(string resource, Guid id, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);

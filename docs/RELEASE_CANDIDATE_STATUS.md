@@ -4,6 +4,27 @@ Atualizado em 19 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 6 — relatórios, auditoria e notificações
+
+O relatório executivo agora envia o período escolhido à API e a exportação CSV
+reutiliza os mesmos parâmetros da tela. O backend valida intervalos, aplica o
+período ao faturamento e ticket médio e registra a exportação com `user_id`,
+tenant, unidade e intervalo. O KPI de estoque crítico deixou de ler o JSON legado
+e usa diretamente `products.current_stock` e `minimum_stock`.
+
+Notificações agora possuem projeção própria das colunas relacionais, inclusive
+estado de leitura e entidade. As ações individual e em lote persistem `read_at` e
+`status` no banco, sempre filtradas pelo tenant e unidade autenticados; a tela não
+faz mais uma atualização genérica de payload nem dispara uma requisição por item.
+Todos os novos erros técnicos retornam `traceId`.
+
+Os gates obrigatórios foram tentados antes das alterações. `dotnet` e `psql` não
+existem no executor (código 127), portanto compilação, aplicação SQL, smoke HTTP,
+matriz tenant/branch e revisão visual continuam sem aprovação. JavaScript, Mobile
+e Totem passaram. A varredura literal encontrou **353 linhas em 114 arquivos**,
+mesmo total bruto anterior; nenhum fallback operacional foi introduzido ou
+removido nesta rodada. A decisão permanece **NO-GO**.
+
 ## Sprint de Produção 5 — estoque, compras, comissão e notificações
 
 A revisão estática encontrou uma quebra operacional concreta: o código de estoque

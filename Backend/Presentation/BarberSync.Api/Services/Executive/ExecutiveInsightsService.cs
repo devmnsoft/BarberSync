@@ -37,16 +37,28 @@ public sealed class ExecutiveInsightsService(IConfiguration configuration, IHttp
         return Convert.ToDecimal(await command.ExecuteScalarAsync(ct) ?? 0);
     }
 
-    public async Task<object> OwnerAsync(CancellationToken ct)
+    public Task<object> OwnerAsync(CancellationToken ct) => OwnerAsync(null, null, ct);
+
+    public async Task<object> OwnerAsync(DateOnly? from, DateOnly? to, CancellationToken ct)
     {
+        if (from.HasValue != to.HasValue) throw new ArgumentException("Informe as datas inicial e final do período.");
+        if (from > to) throw new ArgumentException("A data inicial não pode ser posterior à data final.");
         var scope = Scope(); await using var db = await Open(ct);
         const string paid = "tenant_id=@tenant and branch_id=@branch and deleted_at is null and status in ('Paid','Approved','Completed')";
+        var start = from?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) ?? new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var end = to?.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) ?? DateTime.UtcNow;
+        async Task<decimal> PeriodScalar(string sql)
+        {
+            await using var command = new NpgsqlCommand(sql, db); AddScope(command, scope);
+            command.Parameters.AddWithValue("from", start); command.Parameters.AddWithValue("to", end);
+            return Convert.ToDecimal(await command.ExecuteScalarAsync(ct) ?? 0);
+        }
         var today = await Scalar(db, scope, $"select coalesce(sum(amount),0) from barber.payments where {paid} and coalesce(paid_at,created_at)::date=current_date", ct);
-        var month = await Scalar(db, scope, $"select coalesce(sum(amount),0) from barber.payments where {paid} and coalesce(paid_at,created_at)>=date_trunc('month',now())", ct);
-        var sales = await Scalar(db, scope, $"select count(*) from barber.payments where {paid} and coalesce(paid_at,created_at)>=date_trunc('month',now())", ct);
+        var month = await PeriodScalar($"select coalesce(sum(amount),0) from barber.payments where {paid} and coalesce(paid_at,created_at)>=@from and coalesce(paid_at,created_at)<@to");
+        var sales = await PeriodScalar($"select count(*) from barber.payments where {paid} and coalesce(paid_at,created_at)>=@from and coalesce(paid_at,created_at)<@to");
         return new
         {
-            period = new { from = DateTime.UtcNow.Date, to = DateTime.UtcNow },
+            period = new { from = start, to = end },
             metrics = new Dictionary<string, decimal>
             {
                 ["revenueToday"] = today, ["revenueMonth"] = month, ["averageTicket"] = sales == 0 ? 0 : month / sales,
@@ -58,7 +70,7 @@ public sealed class ExecutiveInsightsService(IConfiguration configuration, IHttp
                 ["packagesSold"] = await Scalar(db, scope, "select count(*) from barber.client_packages where tenant_id=@tenant and branch_id=@branch and deleted_at is null and created_at>=date_trunc('month',now())", ct),
                 ["activeSubscriptions"] = await Scalar(db, scope, "select count(*) from barber.client_memberships where tenant_id=@tenant and branch_id=@branch and deleted_at is null and status='Active'", ct),
                 ["recurringRevenue"] = await Scalar(db, scope, "select coalesce(sum((payload->>'monthlyPrice')::numeric),0) from barber.client_memberships where tenant_id=@tenant and branch_id=@branch and deleted_at is null and status='Active' and payload->>'monthlyPrice' ~ '^[0-9]+(\\.[0-9]+)?$'", ct),
-                ["criticalStock"] = await Scalar(db, scope, "select count(*) from barber.products where tenant_id=@tenant and branch_id=@branch and deleted_at is null and coalesce((payload->>'currentStock')::numeric,0)<=coalesce((payload->>'minStock')::numeric,0)", ct),
+                ["criticalStock"] = await Scalar(db, scope, "select count(*) from barber.products where tenant_id=@tenant and branch_id=@branch and deleted_at is null and is_active and current_stock<=minimum_stock", ct),
                 ["noShow"] = await Scalar(db, scope, "select count(*) from barber.appointments where tenant_id=@tenant and branch_id=@branch and deleted_at is null and status='NoShow' and created_at>=date_trunc('month',now())", ct),
                 ["cashDifference"] = await Scalar(db, scope, "select coalesce(sum(abs(actual_balance-expected_balance)),0) from barber.cash_registers where tenant_id=@tenant and branch_id=@branch and deleted_at is null and status='Closed' and closed_at>=date_trunc('month',now())", ct)
             },
@@ -86,8 +98,9 @@ public sealed class ExecutiveInsightsService(IConfiguration configuration, IHttp
     public async Task AuditAsync(string operation, string description, CancellationToken ct)
     {
         var scope = Scope(); await using var db = await Open(ct);
-        await using var command = new NpgsqlCommand("insert into barber.audit_logs(id,tenant_id,branch_id,operation,entity_name,module,action,description,correlation_id) values(gen_random_uuid(),@tenant,@branch,@operation,'executive_report','Relatórios',@operation,@description,@trace)", db);
+        await using var command = new NpgsqlCommand("insert into barber.audit_logs(id,tenant_id,branch_id,user_id,operation,entity_name,module,action,description,correlation_id) values(gen_random_uuid(),@tenant,@branch,@user,@operation,'executive_report','Relatórios',@operation,@description,@trace)", db);
         AddScope(command, scope); command.Parameters.AddWithValue("operation", operation); command.Parameters.AddWithValue("description", description);
+        command.Parameters.AddWithValue("user", NpgsqlTypes.NpgsqlDbType.Uuid, Guid.TryParse(accessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? accessor.HttpContext?.User.FindFirstValue("sub"), out var userId) ? userId : DBNull.Value);
         command.Parameters.AddWithValue("trace", accessor.HttpContext?.TraceIdentifier ?? ""); await command.ExecuteNonQueryAsync(ct);
     }
 }

@@ -7,9 +7,10 @@
   const escape = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
   async function load(event) {
     event?.preventDefault(); const view = $('[name="view"]')?.value || 'owner';
+    const query = new URLSearchParams(new FormData($('[data-report-filters]'))); query.delete('view');
     $('[data-report-loading]').hidden=false; $('[data-report-error]').hidden=true; $('[data-report-kpis]').hidden=true; $('[data-report-content]').hidden=true;
     try {
-      const response=await fetch(`/AdminApi/executive/${view}`,{headers:{Accept:'application/json'}}); const payload=await response.json().catch(()=>null);
+      const response=await fetch(`/AdminApi/executive/${view}?${query}`,{headers:{Accept:'application/json'}}); const payload=await response.json().catch(()=>null);
       if(!response.ok || !payload?.success) throw Object.assign(new Error(payload?.detail||payload?.title||'A API não retornou dados.'),{traceId:payload?.traceId});
       const rows=Object.entries(payload.data.metrics||{}); const max=Math.max(...rows.map(([,v])=>Number(v)),1);
       $('[data-report-kpis]').innerHTML=rows.map(([key,value])=>`<article class="premium-kpi ${['overduePayables','criticalStock','late','cashDifference'].includes(key)&&Number(value)>0?'critical':''}"><span class="kpi-name">${escape(labels[key]||key)}</span><strong>${escape(format(key,value))}</strong><small>Dado confirmado na unidade atual</small></article>`).join('');
@@ -20,4 +21,8 @@
     finally { $('[data-report-loading]').hidden=true; }
   }
   $('[data-report-filters]')?.addEventListener('submit',load); $('[data-report-retry]')?.addEventListener('click',load); $('[data-report-print]')?.addEventListener('click',()=>window.print()); document.addEventListener('DOMContentLoaded',load);
+  $('[data-report-export]')?.addEventListener('click', () => {
+    const query = new URLSearchParams(new FormData($('[data-report-filters]'))); query.delete('view');
+    window.location.assign(`/AdminApi/executive/export.csv?${query}`);
+  });
 })();
