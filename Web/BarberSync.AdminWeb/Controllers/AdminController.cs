@@ -10,11 +10,11 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("")] public IActionResult Index() => Render("Dashboard");
     [HttpGet("Dashboard")] public IActionResult Dashboard() => Render("Dashboard");
     [HttpGet("ChannelManager")] public IActionResult ChannelManager() => Render("ChannelManager");
-    [HttpGet("LeadToCash")] public IActionResult LeadToCash() => Render("LeadToCash");
-    [HttpGet("SaasControlCenter")] public IActionResult SaasControlCenter() => Render("SaasControlCenter");
+    [HttpGet("LeadToCash")] public IActionResult LeadToCash() => DevelopmentOnly("LeadToCash");
+    [HttpGet("SaasControlCenter")] public IActionResult SaasControlCenter() => DevelopmentOnly("SaasControlCenter");
     [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
-    [HttpGet("FullServiceFlow")] public IActionResult FullServiceFlow() => Render("FullServiceFlow");
-    [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => Render("CommercialFlow");
+    [HttpGet("FullServiceFlow")] public IActionResult FullServiceFlow() => DevelopmentOnly("FullServiceFlow");
+    [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => DevelopmentOnly("CommercialFlow");
     [HttpGet("DemoCenter")] public IActionResult DemoCenter() => DevelopmentOnly("DemoCenter");
     [HttpGet("DemoExperience")] public IActionResult DemoExperience() => DevelopmentOnly("DemoExperience");
     [HttpGet("DemoWizard")] public IActionResult DemoWizard() => DevelopmentOnly("DemoWizard");
@@ -56,7 +56,7 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Kiosk")] public IActionResult Kiosk() => Render("Kiosk");
     [HttpGet("PublicSite")] public IActionResult PublicSite() => Render("PublicSite");
     [HttpGet("Settings")] public IActionResult Settings() => Render("Settings");
-    [HttpGet("PlatformSettings")] public IActionResult PlatformSettings() => Render("PlatformSettings");
+    [HttpGet("PlatformSettings")] public IActionResult PlatformSettings() => DevelopmentOnly("PlatformSettings");
     [HttpGet("Users")] public IActionResult Users() => Render("Users");
     [HttpGet("Branches")] public IActionResult Branches() => Render("Branches");
     [HttpGet("Audit")] public IActionResult Audit() => Render("Audit");
@@ -70,12 +70,12 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Onboarding")] public IActionResult Onboarding() => Render("Onboarding");
     [HttpGet("Subscription")] public IActionResult Subscription() => Render("Subscription");
     [HttpGet("ClientOnboarding")] public IActionResult ClientOnboarding() => Render("ClientOnboarding");
-    [HttpGet("AddOns")] public IActionResult AddOns() => Render("AddOns");
-    [HttpGet("Automations")] public IActionResult Automations() => Render("Automations");
+    [HttpGet("AddOns")] public IActionResult AddOns() => DevelopmentOnly("AddOns");
+    [HttpGet("Automations")] public IActionResult Automations() => DevelopmentOnly("Automations");
     [HttpGet("Assistant")] public IActionResult Assistant() => Render("Assistant");
     [HttpGet("Reputation")] public IActionResult Reputation() => RedirectToAction(nameof(Reviews));
-    [HttpGet("Integrations")] public IActionResult Integrations() => Render("Integrations");
-    [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => Render("KnowledgeBase");
+    [HttpGet("Integrations")] public IActionResult Integrations() => DevelopmentOnly("Integrations");
+    [HttpGet("KnowledgeBase")] public IActionResult KnowledgeBase() => DevelopmentOnly("KnowledgeBase");
     [HttpGet("Diagnostics")] public IActionResult Diagnostics() => DevelopmentOnly("Diagnostics");
 
     private IActionResult DevelopmentOnly(string module)
