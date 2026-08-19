@@ -20,6 +20,10 @@ repositório.
 
 ### Evidência parcial desta sprint
 
+- [x] Caixa manual, pagamento em dinheiro no PDV e estorno escrevem no razão canônico `cash_movements`, com origem, usuário, tenant e unidade.
+- [x] Migração 016 copia idempotentemente o histórico de `cash_transactions`; saldo, conferência e histórico consultam a mesma fonte.
+- [ ] Aplicação real da migração 016 pendente: `psql` não está instalado neste executor.
+
 - [x] Mobile exige escolha explícita de profissional e horário retornado pela disponibilidade real antes de criar o agendamento.
 - [x] Totem retoma a etapa mantida no servidor e conserva a limpeza remota ao concluir o fluxo.
 - [x] Smokes estáticos cobrem os contratos de disponibilidade Mobile e retomada/limpeza do Totem.
