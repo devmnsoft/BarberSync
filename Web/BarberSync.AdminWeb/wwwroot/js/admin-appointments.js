@@ -56,7 +56,9 @@
     if (['cancel','no-show'].includes(action)) {
       const accepted = await window.BarberSyncConfirm?.ask?.({ title: action === 'cancel' ? 'Cancelar agendamento?' : 'Registrar ausência?', message:'Esta ação ficará registrada no histórico.', confirmText:'Confirmar' });
       if (accepted === false) return;
-      if (action === 'cancel') { const reason = prompt('Informe o motivo do cancelamento:')?.trim(); if (!reason) return toast('validation','O motivo do cancelamento é obrigatório.'); body = JSON.stringify({reason}); }
+      const reason = prompt(action === 'cancel' ? 'Informe o motivo do cancelamento:' : 'Informe o motivo da ausência:')?.trim();
+      if (!reason) return toast('validation', action === 'cancel' ? 'O motivo do cancelamento é obrigatório.' : 'O motivo da ausência é obrigatório.');
+      body = JSON.stringify({reason});
     }
     button.disabled = true;
     try { await api(`appointments/${button.dataset.id}/${action}`, {method:'POST', body}); toast('updated', action === 'no-show' ? 'Ausência registrada.' : 'Agenda atualizada.'); await load(); }

@@ -43,7 +43,7 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => Render("ServiceOrders");
     [HttpGet("Attendance")] public IActionResult Attendance() => Render("Operations");
     [HttpGet("Cash")] public IActionResult Cash() => Render("Cash");
-    [HttpGet("Payments")] public IActionResult Payments() => Render("Payments");
+    [HttpGet("Payments")] public IActionResult Payments() => RedirectToAction(nameof(ServiceOrders));
     [HttpGet("Financial")] public IActionResult Financial() => Render("Financial");
     [HttpGet("Products")] public IActionResult Products() => Render("Products");
     [HttpGet("Stock")] public IActionResult Stock() => Render("Stock");

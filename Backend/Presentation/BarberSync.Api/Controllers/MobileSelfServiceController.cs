@@ -38,7 +38,7 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
     public Task<IActionResult> Cancel(Guid id, CancelAppointmentRequest request, CancellationToken ct) => OwnedClientAppointment(id, async item =>
     {
         if (item.ScheduledStart - DateTimeOffset.UtcNow < TimeSpan.FromHours(2)) return Conflict(Error("O prazo mínimo de cancelamento desta unidade é de 2 horas."));
-        var result = await appointments.ChangeStatusAsync(item.Id, "Cancelled", request, ct); await Event("Mobile.AppointmentCancelled", id, "/Admin/Appointments", "Agendamento cancelado pelo Mobile", ct); return Ok(Envelope(result));
+        var result = await appointments.ChangeStatusAsync(item.Id, "Cancelled", request.Reason, ct); await Event("Mobile.AppointmentCancelled", id, "/Admin/Appointments", "Agendamento cancelado pelo Mobile", ct); return Ok(Envelope(result));
     }, ct);
 
     [HttpGet("client/history")]

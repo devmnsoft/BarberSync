@@ -28,6 +28,14 @@ como aprovação.
 
 ## Correções desta revisão
 
+- Cancelamento e no-show agora exigem justificativa no contrato da API e na
+  Agenda; a transição continua persistida no histórico com usuário e unidade.
+- A remoção de item da comanda agora exige motivo, registra os metadados no item
+  excluído e cria evento de auditoria dentro da mesma transação.
+- A tela legada de Pagamentos, que mantinha pagamentos fictícios no
+  `localStorage` e simulava estorno/recibo, foi removida. A rota antiga redireciona
+  ao PDV transacional e o item duplicado saiu da navegação.
+
 - O agendamento Mobile deixou de escolher silenciosamente o primeiro profissional
   e o primeiro horário do resumo. O cliente agora escolhe serviço, profissional e
   data, consulta `/api/mobile/appointments/availability`, seleciona explicitamente
@@ -81,12 +89,16 @@ inclui documentação, testes browser-side legados, lockfiles e usos técnicos d
 contagem anterior de 207 pendências operacionais precisa ser reclassificada após
 esta remoção, em vez de ser reduzida por estimativa.
 
-Na medição desta revisão, executada com a expressão literal solicitada e exclusão
-de `node_modules`, `dist`, `bin` e `obj`, foram encontradas **349 linhas em 114
-arquivos**. A diferença para o registro anterior decorre da reprodução da
-contagem no estado atual do branch; nenhuma redução artificial foi declarada.
-As correções acima removem uma pendência operacional que não continha nenhum dos
-termos da expressão, portanto não alteram essa métrica literal.
+Na medição de 19 de agosto, executada com a expressão literal solicitada e
+exclusão de `node_modules`, `dist`, `bin` e `obj`, foram encontradas **351 linhas
+em 114 arquivos**. O artefato operacional `admin-payments.js`, que continha
+`localStorage`, `mock` e sucesso fabricado, foi integralmente removido. As demais
+351 correspondências brutas ainda precisam de classificação; incluem este
+registro de evidência, documentação, lockfiles e usos técnicos, portanto não são
+declaradas como 351 defeitos. O total bruto cresceu em relação à medição anterior
+porque a própria documentação de evidência cita os termos pesquisados; a
+pendência operacional removida é contabilizada por artefato, não por subtração
+artificial dessa métrica autorreferente.
 
 ## Pendências reais e riscos
 

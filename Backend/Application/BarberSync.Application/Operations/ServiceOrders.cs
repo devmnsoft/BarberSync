@@ -4,6 +4,7 @@ public sealed record OpenServiceOrderRequest(Guid ClientId, Guid? AppointmentId,
 public sealed record AddServiceItemRequest(Guid ServiceId, Guid ProfessionalId, decimal Quantity = 1);
 public sealed record AddProductItemRequest(Guid ProductId, decimal Quantity = 1, Guid? ProfessionalId = null);
 public sealed record UpdateOrderItemRequest(decimal Quantity, decimal Discount = 0, Guid? ProfessionalId = null);
+public sealed record RemoveOrderItemRequest(string Reason);
 public sealed record ApplyDiscountRequest(decimal Amount, string Reason);
 public sealed record ApplyCouponRequest(string Code);
 public sealed record ApplyCashbackRequest(decimal Amount);
@@ -69,7 +70,7 @@ public interface IServiceOrderRepository
     Task<ServiceOrderResponse> AddServiceAsync(Guid tenant, Guid branch, Guid id, AddServiceItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> AddProductAsync(Guid tenant, Guid branch, Guid id, AddProductItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> UpdateItemAsync(Guid tenant, Guid branch, Guid id, Guid itemId, UpdateOrderItemRequest request, CancellationToken ct);
-    Task<ServiceOrderResponse> RemoveItemAsync(Guid tenant, Guid branch, Guid id, Guid itemId, CancellationToken ct);
+    Task<ServiceOrderResponse> RemoveItemAsync(Guid tenant, Guid branch, Guid user, Guid id, Guid itemId, RemoveOrderItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyDiscountAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyDiscountRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyCouponAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCouponRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyCashbackAsync(Guid tenant, Guid branch, Guid user, Guid id, ApplyCashbackRequest request, CancellationToken ct);
@@ -92,7 +93,7 @@ public interface IServiceOrderService
     Task<ServiceOrderResponse> AddServiceAsync(Guid id, AddServiceItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> AddProductAsync(Guid id, AddProductItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> UpdateItemAsync(Guid id, Guid itemId, UpdateOrderItemRequest request, CancellationToken ct);
-    Task<ServiceOrderResponse> RemoveItemAsync(Guid id, Guid itemId, CancellationToken ct);
+    Task<ServiceOrderResponse> RemoveItemAsync(Guid id, Guid itemId, RemoveOrderItemRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyDiscountAsync(Guid id, ApplyDiscountRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyCouponAsync(Guid id, ApplyCouponRequest request, CancellationToken ct);
     Task<ServiceOrderResponse> ApplyCashbackAsync(Guid id, ApplyCashbackRequest request, CancellationToken ct);
@@ -111,7 +112,7 @@ public sealed class ServiceOrderService(IServiceOrderRepository repository, Abst
     public Task<ServiceOrderResponse> AddServiceAsync(Guid id,AddServiceItemRequest request,CancellationToken ct) => repository.AddServiceAsync(current.TenantId,current.BranchId,id,request,ct);
     public Task<ServiceOrderResponse> AddProductAsync(Guid id,AddProductItemRequest request,CancellationToken ct) => repository.AddProductAsync(current.TenantId,current.BranchId,id,request,ct);
     public Task<ServiceOrderResponse> UpdateItemAsync(Guid id,Guid itemId,UpdateOrderItemRequest request,CancellationToken ct) => repository.UpdateItemAsync(current.TenantId,current.BranchId,id,itemId,request,ct);
-    public Task<ServiceOrderResponse> RemoveItemAsync(Guid id,Guid itemId,CancellationToken ct) => repository.RemoveItemAsync(current.TenantId,current.BranchId,id,itemId,ct);
+    public Task<ServiceOrderResponse> RemoveItemAsync(Guid id,Guid itemId,RemoveOrderItemRequest request,CancellationToken ct) => repository.RemoveItemAsync(current.TenantId,current.BranchId,current.UserId,id,itemId,request,ct);
     public Task<ServiceOrderResponse> ApplyDiscountAsync(Guid id,ApplyDiscountRequest request,CancellationToken ct) => repository.ApplyDiscountAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
     public Task<ServiceOrderResponse> ApplyCouponAsync(Guid id,ApplyCouponRequest request,CancellationToken ct) => repository.ApplyCouponAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
     public Task<ServiceOrderResponse> ApplyCashbackAsync(Guid id,ApplyCashbackRequest request,CancellationToken ct) => repository.ApplyCashbackAsync(current.TenantId,current.BranchId,current.UserId,id,request,ct);
