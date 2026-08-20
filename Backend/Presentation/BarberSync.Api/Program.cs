@@ -91,7 +91,6 @@ builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 builder.Services.AddScoped<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
 builder.Services.AddScoped<ExecutiveInsightsService>();
