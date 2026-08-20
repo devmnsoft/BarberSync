@@ -21,6 +21,22 @@ request() {
   echo "PASS ${name}: ${method} ${path} -> ${status}"
 }
 
+wait_for_health() {
+  local attempts="${SMOKE_HEALTH_ATTEMPTS:-60}" delay="${SMOKE_HEALTH_DELAY_SECONDS:-2}"
+  local attempt
+
+  for ((attempt = 1; attempt <= attempts; attempt++)); do
+    if request health GET /health 200; then
+      return 0
+    fi
+    echo "WAIT health: attempt ${attempt}/${attempts}; retrying in ${delay}s" >&2
+    sleep "$delay"
+  done
+
+  echo "FAIL health: API did not become ready after ${attempts} attempts" >&2
+  return 1
+}
+
 require_trace() {
   local name="$1"
   if ! grep -qi '^X-Trace-Id: .' "$work_dir/${name}.headers" &&
@@ -31,7 +47,7 @@ require_trace() {
   fi
 }
 
-request health GET /health 200
+wait_for_health
 grep -Eq '"database"[[:space:]]*:[[:space:]]*"Healthy"' "$work_dir/health.json" || {
   echo 'FAIL health: PostgreSQL is not healthy' >&2
   cat "$work_dir/health.json" >&2
@@ -45,12 +61,15 @@ request protected GET /api/dashboard/summary 401
 request invalid_login POST /api/auth/login 400,401 '{"email":"nobody@example.invalid","password":"DefinitelyInvalid123!","tenantSlug":"missing"}'
 require_trace invalid_login
 request notifications GET /api/notifications 401
-request reports GET /api/finance 401
+request finance GET /api/finance 401
 request stock GET /api/stock 401
 request cash_registers GET /api/cash-registers/current 401
 request service_orders GET /api/service-orders 401
+request purchases GET /api/purchases 401
+request service_recognition GET /api/service-recognition/suggestions 401
+request ai_settings GET /api/system/ai-settings 401
 
-for name in protected notifications reports stock cash_registers service_orders; do
+for name in protected notifications finance stock cash_registers service_orders purchases service_recognition ai_settings; do
   require_trace "$name"
 done
 

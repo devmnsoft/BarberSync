@@ -4,6 +4,33 @@ Atualizado em 20 de agosto de 2026. Este checklist é um gate de publicação: u
 item sem evidência permanece reprovado, mesmo quando a implementação existe no
 repositório.
 
+## Auditoria contratual da Sprint de Produção 15
+
+- [x] Todas as rotas chamadas pelo smoke foram confrontadas com actions reais; o
+  dashboard usa `/api/dashboard/summary`, financeiro usa `/api/finance` e caixa
+  usa a action existente `/api/cash-registers/current`.
+- [x] O próprio script aguarda `/health` com tentativas limitadas e continua
+  exigindo status exato, sem aceitar 200, 404 ou 500 em rota protegida.
+- [x] A matriz 401 cobre dashboard, notificações, financeiro, estoque, caixa,
+  comandas, compras, reconhecimento de serviço e configurações de IA, exigindo
+  também correlação em cada resposta.
+- [x] Política fallback, `Authorize`, roles e permissões dos controllers
+  operacionais foram revisados estaticamente; nenhuma abertura pública foi
+  adicionada. `/health` é anônimo por desenho para readiness.
+- [x] Health usa `IBarberSchemaInitializer`, responde 200/503 segundo banco e
+  schema e publica somente estado sanitizado; observabilidade adiciona
+  `X-Trace-Id` e o handler global produz JSON correlacionado sem stack trace.
+- [x] Workflow mantém PostgreSQL 16, SDK .NET 10 para `net10.0`, SQL duas vezes,
+  builds Debug/Release, checks frontend e porta 5080, sem `continue-on-error`.
+- [x] Revisão estática do SQL confirmou guardas nas tabelas/índices/colunas,
+  migração do caixa com `ON CONFLICT` e versão do schema sem chave duplicada.
+- [ ] Execução local de .NET, PostgreSQL e smoke HTTP: `dotnet` e `psql` não estão
+  instalados; nenhuma aprovação runtime foi inferida da auditoria estática.
+- [x] Checks locais disponíveis passaram; scan focado registrou 188 linhas em 48
+  arquivos e não encontrou ocorrência operacional nova nos arquivos alterados.
+- [x] `BarberSync.Tests` permanece intocado e `dotnet test` continua reservado
+  para a fase final.
+
 ## Gate obrigatório da Sprint de Produção 11
 
 - [x] `.github/workflows/production-readiness.yml` criado para pull requests de
