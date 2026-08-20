@@ -4,6 +4,36 @@ Atualizado em 20 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 15 — contrato do production smoke
+
+A auditoria estática confirmou os mapeamentos reais usados pelo smoke: `/health`,
+`/api/dashboard/summary`, `/api/notifications`, `/api/finance`, `/api/stock`,
+`/api/cash-registers/current`, `/api/service-orders`, `/api/purchases`,
+`/api/service-recognition/suggestions`, `/api/system/ai-settings` e
+`/api/auth/login`. Não existe action `GET /api/reports` nem `GET
+/api/cash-registers`; por isso o gate usa, respectivamente, o módulo financeiro
+real e a action `current`, sem transformar 404/405 em sucesso.
+
+O smoke agora possui sua própria espera limitada por `/health` e ampliou a matriz
+401 para compras, reconhecimento de serviço e configurações de IA. Cada rota
+protegida continua exigindo exatamente 401 e correlação por `traceId` ou
+`X-Trace-Id`; login inválido aceita somente os contratos 400/401. A política
+fallback autenticada protege dashboard e notificações, e os demais controllers
+auditados também declaram `Authorize`/roles/permissões. `/health` permanece a
+única rota operacional do smoke explicitamente anônima e retorna 200/503 conforme
+o resultado de `IBarberSchemaInitializer`.
+
+O workflow foi conferido sem alteração: .NET 10 coincide com `net10.0`, PostgreSQL
+16 possui healthcheck, o SQL idempotente é aplicado duas vezes, builds Debug e
+Release e checks frontend permanecem obrigatórios, e API/smoke usam a porta 5080.
+O SQL canônico já usa guardas idempotentes nas estruturas recentes, `ON CONFLICT`
+na migração do caixa e na versão do schema. `dotnet` e `psql` não existem neste
+executor, portanto build, reaplicação real do SQL e smoke HTTP permanecem sem
+aprovação local. Os checks disponíveis passaram. O scan focado permaneceu em 188
+linhas/48 arquivos; não apontou ocorrência operacional nova nos arquivos tocados
+e a classificação integral do legado isolado continua pendente. O estado segue
+**NO-GO** até evidência runtime/hospedada.
+
 ## Sprint de Produção 11 — gate executável de produção
 
 Foi criado o workflow obrigatório `Production Readiness`, acionado em pull
