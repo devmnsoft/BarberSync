@@ -38,7 +38,10 @@ grep -Eq '"database"[[:space:]]*:[[:space:]]*"Healthy"' "$work_dir/health.json" 
   exit 1
 }
 
-request protected GET /api/dashboard 401
+# Use a route that is actually mapped by DashboardController.  Testing the
+# controller prefix alone exercises the 404 path instead of the authorization
+# policy and makes the readiness gate fail before it can validate protection.
+request protected GET /api/dashboard/summary 401
 request invalid_login POST /api/auth/login 400,401 '{"email":"nobody@example.invalid","password":"DefinitelyInvalid123!","tenantSlug":"missing"}'
 require_trace invalid_login
 request notifications GET /api/notifications 401
