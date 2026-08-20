@@ -142,14 +142,18 @@ app.MapControllers();
 app.MapGet("/health", async (IBarberSchemaInitializer database, CancellationToken cancellationToken) =>
 {
     var result = await database.CheckHealthAsync(cancellationToken);
-    return Results.Ok(new
+    var payload = new
     {
-        api = "Healthy",
+        api = result.Success ? "Healthy" : "Unhealthy",
         database = result.DatabaseStatus,
         schema = result.SchemaReady ? result.Schema : null,
         schemaVersions = result.SchemaVersions,
         message = result.Message
-    });
+    };
+
+    return result.Success
+        ? Results.Ok(payload)
+        : Results.Json(payload, statusCode: StatusCodes.Status503ServiceUnavailable);
 }).AllowAnonymous();
 
 app.Run();

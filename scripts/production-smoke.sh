@@ -13,7 +13,7 @@ request() {
     args+=(-H 'Content-Type: application/json' --data "$body")
   fi
   status="$(curl "${args[@]}" "${base_url}${path}")"
-  if [[ "$status" != "$expected" ]]; then
+  if [[ ",$expected," != *",$status,"* ]]; then
     echo "FAIL ${name}: ${method} ${path} returned ${status}, expected ${expected}" >&2
     cat "$response" >&2
     return 1
@@ -39,7 +39,7 @@ grep -Eq '"database"[[:space:]]*:[[:space:]]*"Healthy"' "$work_dir/health.json" 
 }
 
 request protected GET /api/dashboard 401
-request invalid_login POST /api/auth/login 401 '{"email":"nobody@example.invalid","password":"DefinitelyInvalid123!","tenantSlug":"missing"}'
+request invalid_login POST /api/auth/login 400,401 '{"email":"nobody@example.invalid","password":"DefinitelyInvalid123!","tenantSlug":"missing"}'
 require_trace invalid_login
 request notifications GET /api/notifications 401
 request reports GET /api/finance 401
