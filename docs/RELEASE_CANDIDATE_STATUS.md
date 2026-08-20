@@ -1,8 +1,39 @@
 # BarberSync 2.0 — status do release candidate
 
-Atualizado em 19 de agosto de 2026. Este documento registra somente verificações
+Atualizado em 20 de agosto de 2026. Este documento registra somente verificações
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
+
+## Sprint de Produção 11 — gate executável de produção
+
+Foi criado o workflow obrigatório `Production Readiness`, acionado em pull
+requests para `main` e manualmente. O job Ubuntu instala o SDK .NET 10 (framework
+usado por todos os projetos da solução) e Node.js 20, provisiona PostgreSQL 16 e
+executa, em ordem, `dotnet --info`, `psql --version`, restore, builds Debug e
+Release, aplicação do `script_completo.sql` com `ON_ERROR_STOP`, validação das dez
+tabelas críticas, checks frontend, startup da API em Release, `/health` e smoke
+HTTP operacional. A connection string e as configurações efêmeras de CORS/JWT
+ficam apenas no ambiente do job.
+
+O smoke `scripts/production-smoke.sh` exige banco saudável, 401 nos endpoints
+protegidos de dashboard, notificações, relatórios/financeiro, estoque, caixa e
+comandas, erro tratado no login inválido e correlação por `traceId` ou
+`X-Trace-Id`. O log da API é publicado como artefato quando o job falha.
+
+Neste executor local, os checks de JavaScript, Mobile, Totem e bundle Totem
+passaram. `dotnet` e `psql` continuam indisponíveis localmente; ao contrário das
+sprints anteriores, esses gates agora são executados pelo runner hospedado com
+as ferramentas e o PostgreSQL real, e uma falha interrompe o workflow. O estado
+permanece **NO-GO até a primeira execução verde do workflow no pull request**;
+nenhum resultado remoto foi antecipado neste documento.
+
+A busca literal solicitada encontrou **188 linhas em 48 arquivos** antes e depois
+desta alteração. Não foi introduzida ocorrência nem encontrado novo fallback em
+superfície operacional tocada. As superfícies DemoStore restantes já são legado
+ou ferramentas deliberadamente isoladas por `DevelopmentOnly` + `SuperAdmin`, e
+os usos de “fallback” do cliente HTTP representam tratamento de falha sem fabricar
+sucesso. A classificação integral das superfícies legadas permanece uma pendência
+real; nenhuma contagem foi artificialmente reduzida.
 
 ## Sprint de Produção 9 — tentativa de validação real
 
