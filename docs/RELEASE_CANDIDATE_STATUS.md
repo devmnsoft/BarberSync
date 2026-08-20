@@ -339,3 +339,25 @@ builds, banco, smokes autenticados, matriz de isolamento e validação visual.
 A busca complementar eliminou ainda a configuração pública estática (branding,
 serviços, profissionais e Totem fabricados) e o fallback de sugestões do Copilot.
 O Copilot agora rejeita tenant vazio e preserva o estado vazio do serviço real.
+
+## Sprint de Produção 19 — auditoria pós-remoção
+
+A auditoria encontrou um consumidor órfão do novo contrato de escopo: a página
+legacy `/Copilot` chamava `/api/copilot/suggestions` sem `tenantId`. O cliente
+agora lê exclusivamente a claim assinada `tenant_id` exposta pelo servidor e a
+envia explicitamente; se a claim estiver ausente, a tela interrompe a chamada e
+exibe erro, sem UUID default ou estado demonstrativo. O endpoint também trata
+UUID ausente, malformado, vazio ou zero de modo uniforme com HTTP 400, `traceId`
+e `X-Trace-Id`.
+
+Não foram encontradas referências runtime a `PublicConfigController`,
+`ConfigurationService`, `/api/public-config` ou aos onze bundles removidos. A
+checagem dos `script src` locais também não encontrou assets inexistentes. O
+compose e `.env.example` usam os nomes `BarberSync__DefaultTenantId` e
+`BarberSync__DefaultBranchId` coerentes com as chaves lidas pela API.
+
+Docker, SDK .NET e `psql` não estão instalados neste executor. O gate foi
+acionado e parou imediatamente com `ERROR: Docker is required.`; portanto build
+.NET, SQL, API, health e smoke E2E continuam sem evidência. Sintaxe dos scripts,
+smokes Mobile/Totem e build Totem foram aprovados. A decisão permanece
+**NO-GO**.

@@ -18,14 +18,19 @@ public class CopilotController(ICopilotService copilotService) : ControllerBase
     public ActionResult<CopilotAskResponseDto> Ask([FromBody] CopilotAskRequestDto request) => Ok(copilotService.Ask(request));
 
     [HttpGet("suggestions")]
-    public ActionResult<IReadOnlyCollection<CopilotSuggestionDto>> Suggestions([FromQuery] Guid tenantId)
+    public ActionResult<IReadOnlyCollection<CopilotSuggestionDto>> Suggestions([FromQuery] string? tenantId)
     {
-        if (tenantId == Guid.Empty)
+        if (!Guid.TryParse(tenantId, out var parsedTenantId) || parsedTenantId == Guid.Empty)
         {
-            return BadRequest(new { message = "tenantId é obrigatório e deve ser um UUID válido." });
+            Response.Headers["X-Trace-Id"] = HttpContext.TraceIdentifier;
+            return BadRequest(new
+            {
+                message = "tenantId é obrigatório e deve ser um UUID válido e não vazio.",
+                traceId = HttpContext.TraceIdentifier
+            });
         }
 
-        return Ok(copilotService.GetSuggestions(tenantId));
+        return Ok(copilotService.GetSuggestions(parsedTenantId));
     }
 
     [HttpPost("actions")]
