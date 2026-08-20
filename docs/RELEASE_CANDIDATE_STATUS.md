@@ -4,6 +4,28 @@ Atualizado em 20 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 16 — gate local versionado
+
+O gate do CI agora é um único contrato versionado, executável por
+`scripts/run-production-readiness.sh` e pelo equivalente PowerShell. O Docker
+Compose fixa PostgreSQL 16, SDK .NET 10, Node 20, porta 5080 e as credenciais
+efêmeras do banco `barber`. O fluxo preserva restore, builds Debug/Release, duas
+aplicações do SQL com `ON_ERROR_STOP`, validação das tabelas críticas, API,
+`/health`, production smoke e os quatro checks frontend. Todos os logs ficam em
+`artifacts/production-readiness` e os containers são removidos ao terminar.
+
+O workflow passou a invocar esse mesmo gate, eliminando cópias divergentes dos
+comandos. Ele não usa `gh`, `GH_TOKEN` ou `api.github.com`; não executa
+`dotnet test` e não altera `BarberSync.Tests`.
+
+Neste executor, `docker` não está instalado. A execução Docker foi iniciada e
+interrompida corretamente pela validação de pré-requisito, portanto PostgreSQL,
+restore/build, reaplicação SQL, API, health e production smoke **não são
+declarados aprovados**. Os checks executáveis no host — sintaxe JavaScript,
+Mobile smoke, Totem smoke e build Totem — passaram. O scan literal continua em
+48 arquivos e sua classificação integral permanece pendente. A decisão segue
+**NO-GO** até uma execução completa do script em um host Docker.
+
 ## Sprint de Produção 15 — contrato do production smoke
 
 A auditoria estática confirmou os mapeamentos reais usados pelo smoke: `/health`,

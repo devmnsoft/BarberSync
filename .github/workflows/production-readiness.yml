@@ -11,137 +11,19 @@ permissions:
 jobs:
   production-readiness:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      ASPNETCORE_ENVIRONMENT: ProductionReadiness
-      ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=barber;Username=postgres;Password=postgres
-      Cors__AllowedOrigins__0: http://localhost:5080
-      Jwt__Issuer: BarberSync.Api
-      Jwt__Audience: BarberSync.Clients
-      Jwt__SigningKey: production-readiness-only-signing-key-32-characters-minimum
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: barber
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d barber"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 10 SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Show toolchain information
-        run: |
-          dotnet --info
-          psql --version
-
-      - name: Restore solution
-        run: dotnet restore BarberSync.sln
-
-      - name: Build solution (Debug)
-        run: dotnet build BarberSync.sln --configuration Debug --no-restore
-
-      - name: Build solution (Release)
-        run: dotnet build BarberSync.sln --configuration Release --no-restore
-
-      - name: Apply canonical PostgreSQL schema
-        run: |
-          connection="host=localhost port=5432 dbname=barber user=postgres password=postgres"
-          psql "$connection" -v ON_ERROR_STOP=1 -f ScriptsSQL/script_completo.sql
-          # A second application is intentional: the canonical bootstrap must also
-          # be safe during retries and rolling deployments.
-          psql "$connection" -v ON_ERROR_STOP=1 -f ScriptsSQL/script_completo.sql
-
-      - name: Validate critical PostgreSQL tables and columns
-        run: |
-          connection="host=localhost port=5432 dbname=barber user=postgres password=postgres"
-          psql "$connection" -c "\dt barber.*"
-          psql "$connection" -v ON_ERROR_STOP=1 <<'SQL'
-          select table_name, column_name
-          from information_schema.columns
-          where table_schema = 'barber'
-            and table_name in (
-              'cash_movements', 'products', 'stock_movements',
-              'financial_entries', 'commissions', 'notifications', 'audit_logs',
-              'service_orders', 'service_order_items', 'purchase_receipts'
-            )
-          order by table_name, column_name;
-
-          DO $$
-          DECLARE missing text;
-          BEGIN
-            SELECT string_agg(required_table, ', ' ORDER BY required_table)
-              INTO missing
-            FROM unnest(ARRAY[
-              'cash_movements', 'products', 'stock_movements',
-              'financial_entries', 'commissions', 'notifications', 'audit_logs',
-              'service_orders', 'service_order_items', 'purchase_receipts'
-            ]) AS required_table
-            WHERE to_regclass('barber.' || required_table) IS NULL;
-
-            IF missing IS NOT NULL THEN
-              RAISE EXCEPTION 'Missing critical tables: %', missing;
-            END IF;
-          END $$;
-          SQL
-
-      - name: Check Web JavaScript syntax
-        run: find Web -name "*.js" -print0 | xargs -0 -r -n1 node --check
-
-      - name: Run Mobile smoke checks
-        run: npm test --prefix MobileApp
-
-      - name: Run Totem smoke checks
-        run: npm test --prefix Totem
-
-      - name: Build Totem
-        run: npm run build --prefix Totem
-
-      - name: Start API and run HTTP smoke checks
-        shell: bash
-        run: |
-          set -euo pipefail
-          dotnet run --project Backend/Presentation/BarberSync.Api/BarberSync.Api.csproj --configuration Release --no-build --urls http://localhost:5080 > api-production-readiness.log 2>&1 &
-          api_pid=$!
-          trap 'kill "$api_pid" 2>/dev/null || true; cat api-production-readiness.log' EXIT
-
-          ready=false
-          for i in {1..60}; do
-            if curl -fsS http://localhost:5080/health > /tmp/barbersync-health.json; then
-              ready=true
-              break
-            fi
-            sleep 2
-          done
-          if [[ "$ready" != true ]]; then
-            echo "API did not become healthy within 120 seconds" >&2
-            exit 1
-          fi
-          cat /tmp/barbersync-health.json
-          scripts/production-smoke.sh http://localhost:5080
+      - name: Run the versioned production-readiness gate
+        run: ./scripts/run-production-readiness.sh
 
       - name: Upload API log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: production-readiness-api-log
-          path: api-production-readiness.log
+          name: production-readiness-logs
+          path: artifacts/production-readiness/
           if-no-files-found: ignore

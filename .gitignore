@@ -8,6 +8,7 @@ node_modules/
 
 # Logs
 *.log
+artifacts/production-readiness/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
