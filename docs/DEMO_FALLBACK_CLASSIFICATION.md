@@ -89,3 +89,18 @@ profissionais e configuração de Totem inteiramente estáticos; nenhuma aplica�
 consumia essas rotas, e mantê-las expostas aparentava sucesso operacional sem
 persistência. PublicWeb e Totem continuam nos contratos reais baseados em
 `EnterpriseDataService` e escopo explícito.
+
+## Sprint de Produção 19 — verificação de regressão
+
+A busca literal solicitada em `Backend`, `Web`, `MobileApp` e `Totem`, excluindo
+`node_modules` e `dist`, retornou 161 linhas. As ocorrências remanescentes são as
+superfícies dev-only já classificadas, testes browser-side, lockfiles, mensagens
+técnicas e legado ainda registrado como pendência; nenhum dos onze bundles
+removidos voltou a ser referenciado. A única mensagem de sucesso demonstrativo
+encontrada no consumidor legacy do Copilot foi removida: indisponibilidade agora
+preserva o erro real, e a consulta exige a claim `tenant_id` da sessão.
+
+A auditoria também confirmou zero referência runtime aos tipos/rota de
+configuração pública removidos e zero `script src` local inexistente. O gate não
+avançou por ausência do binário Docker, logo a classificação não altera o estado
+**NO-GO** nem afirma validação de build, SQL ou API runtime.
