@@ -1,8 +1,33 @@
 # BarberSync 2.0 — checklist de prontidão para produção
 
-Atualizado em 19 de agosto de 2026. Este checklist é um gate de publicação: um
+Atualizado em 20 de agosto de 2026. Este checklist é um gate de publicação: um
 item sem evidência permanece reprovado, mesmo quando a implementação existe no
 repositório.
+
+## Gate obrigatório da Sprint de Produção 11
+
+- [x] `.github/workflows/production-readiness.yml` criado para pull requests de
+  `main` e execução manual, com PostgreSQL 16 saudável, .NET SDK 10 e Node.js 20.
+- [x] Job configurado para executar `dotnet --info`, `psql --version`, restore e
+  builds Debug/Release reais, sem `dotnet test` e sem incluir `BarberSync.Tests`
+  na solução.
+- [x] Job configurado para aplicar `ScriptsSQL/script_completo.sql` com
+  `ON_ERROR_STOP=1`, listar o schema e falhar se qualquer uma das dez tabelas
+  críticas estiver ausente.
+- [x] Job configurado para subir a API Release contra o PostgreSQL do service,
+  aguardar `/health` e executar `scripts/production-smoke.sh`.
+- [x] Smoke operacional cobre health/banco, login inválido tratado, autenticação
+  dos endpoints protegidos e presença de correlação nas respostas de erro.
+- [x] `node --check`, smoke Mobile, smoke Totem e build Totem estão no mesmo gate;
+  os quatro checks também passaram localmente em 20 de agosto de 2026.
+- [ ] Primeira execução hospedada completamente verde. Até essa evidência existir,
+  restore, builds, SQL, runtime e smoke HTTP permanecem **NO-GO**, pois este
+  executor local não fornece `dotnet` nem `psql`.
+- [ ] Classificação literal encerrada: a medição atual é 188 linhas/48 arquivos,
+  sem alteração nesta sprint; permanecem legado, superfícies dev-only protegidas
+  e usos técnicos a revisar, sem novo fallback operacional identificado.
+- [x] `BarberSync.Tests` continua fora da solução e nenhuma classe de teste foi
+  tocada; `dotnet test` continua reservado para a fase final.
 
 ## Critérios de entrada do release candidate
 
