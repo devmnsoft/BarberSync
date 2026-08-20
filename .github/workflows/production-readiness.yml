@@ -63,7 +63,12 @@ jobs:
         run: dotnet build BarberSync.sln --configuration Release --no-restore
 
       - name: Apply canonical PostgreSQL schema
-        run: psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 -f ScriptsSQL/script_completo.sql
+        run: |
+          connection="host=localhost port=5432 dbname=barber user=postgres password=postgres"
+          psql "$connection" -v ON_ERROR_STOP=1 -f ScriptsSQL/script_completo.sql
+          # A second application is intentional: the canonical bootstrap must also
+          # be safe during retries and rolling deployments.
+          psql "$connection" -v ON_ERROR_STOP=1 -f ScriptsSQL/script_completo.sql
 
       - name: Validate critical PostgreSQL tables and columns
         run: |
