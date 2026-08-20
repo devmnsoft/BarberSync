@@ -226,3 +226,16 @@ unidade, horário UTC e `traceId` de eventual erro.
 
 O release só pode mudar para **GO** quando todos os itens obrigatórios acima
 tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**.
+
+## Sprint de Produção 18 — limpeza dos 15 assets operacionais
+
+- [x] Os 15 assets pendentes foram revisados: 11 bundles legados, não carregados
+  por nenhuma view, foram removidos; 4 laboratórios permanecem protegidos por
+  `Development` + `SuperAdmin`.
+- [x] O serviço de dados não inventa tenant/unidade para chamadas anônimas e
+  rejeita configuração ausente, UUID vazio ou inválido com mensagem explícita.
+- [x] `.env.example` e o compose do gate declaram ambos os escopos obrigatórios.
+- [ ] Gate Docker, builds .NET, SQL idempotente, smokes autenticados e matriz
+  tenant/unidade executados. Até essa evidência, a decisão permanece **NO-GO**.
+- [x] Endpoint legado de configuração pública estática removido; Copilot exige
+  tenant explícito e devolve somente sugestões do serviço real, inclusive vazio.

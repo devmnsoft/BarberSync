@@ -18,21 +18,14 @@ public class CopilotController(ICopilotService copilotService) : ControllerBase
     public ActionResult<CopilotAskResponseDto> Ask([FromBody] CopilotAskRequestDto request) => Ok(copilotService.Ask(request));
 
     [HttpGet("suggestions")]
-    public ActionResult<IReadOnlyCollection<CopilotSuggestionDto>> Suggestions([FromQuery] Guid? tenantId)
+    public ActionResult<IReadOnlyCollection<CopilotSuggestionDto>> Suggestions([FromQuery] Guid tenantId)
     {
-        var resolvedTenantId = tenantId.GetValueOrDefault(Guid.Parse("11111111-2222-3333-4444-555555555555"));
-        var suggestions = copilotService.GetSuggestions(resolvedTenantId);
-        if (suggestions.Count > 0)
+        if (tenantId == Guid.Empty)
         {
-            return Ok(suggestions);
+            return BadRequest(new { message = "tenantId é obrigatório e deve ser um UUID válido." });
         }
 
-        return Ok(new[]
-        {
-            new CopilotSuggestionDto(Guid.Parse("22222222-2222-2222-2222-222222222221"), resolvedTenantId, "retention", "Recuperar clientes inativos", "Criar campanha WhatsApp para clientes VIP sem visita nos últimos 30 dias.", "Alta", DateTime.UtcNow),
-            new CopilotSuggestionDto(Guid.Parse("22222222-2222-2222-2222-222222222222"), resolvedTenantId, "stock", "Repor Pomada Modeladora", "Gerar pedido ao fornecedor para evitar ruptura no fim de semana.", "Crítica", DateTime.UtcNow),
-            new CopilotSuggestionDto(Guid.Parse("22222222-2222-2222-2222-222222222223"), resolvedTenantId, "capacity", "Abrir agenda extra sexta", "Convidar profissional parceiro para elevar capacidade no pico 18h-20h.", "Média", DateTime.UtcNow)
-        });
+        return Ok(copilotService.GetSuggestions(tenantId));
     }
 
     [HttpPost("actions")]

@@ -46,12 +46,12 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
     // Authenticated back-office requests are always scoped from signed JWT claims.
     // Defaults remain available only to the anonymous public/kiosk surfaces, whose
     // deployment represents one configured branch.
-    private Guid TenantId => ScopeId("tenant_id", "BarberSync:DefaultTenantId", "11111111-1111-1111-1111-111111111111");
-    private Guid BranchId => ScopeId("branch_id", "BarberSync:DefaultBranchId", "22222222-2222-2222-2222-222222222222");
+    private Guid TenantId => ScopeId("tenant_id", "BarberSync:DefaultTenantId");
+    private Guid BranchId => ScopeId("branch_id", "BarberSync:DefaultBranchId");
     private Guid? UserId => Guid.TryParse(httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? httpContextAccessor.HttpContext?.User.FindFirstValue("sub"), out var value) ? value : null;
 
-    private Guid ScopeId(string claim, string configurationKey, string fallback)
+    private Guid ScopeId(string claim, string configurationKey)
     {
         var user = httpContextAccessor.HttpContext?.User;
         if (user?.Identity?.IsAuthenticated == true)
@@ -62,7 +62,11 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
                 : throw new UnauthorizedAccessException($"Claim obrigatória {claim} ausente ou inválida.");
         }
 
-        return Guid.Parse(configuration[configurationKey] ?? fallback);
+        var configuredScope = configuration[configurationKey];
+        return Guid.TryParse(configuredScope, out var configuredValue) && configuredValue != Guid.Empty
+            ? configuredValue
+            : throw new InvalidOperationException(
+                $"Configuração obrigatória {configurationKey} ausente ou inválida para a superfície anônima.");
     }
 
     private void AddScope(NpgsqlCommand command)

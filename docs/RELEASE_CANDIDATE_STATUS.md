@@ -322,3 +322,20 @@ em [`PRODUCTION_READINESS_CHECKLIST.md`](PRODUCTION_READINESS_CHECKLIST.md).
 
 **Decisão atual: NO-GO.** Os gates de compilação .NET, execução SQL e smoke real
 continuam obrigatórios e bloqueiam a publicação.
+
+## Sprint de Produção 18 — encerramento da classificação operacional
+
+Os 15 assets classificados como operacionais foram inspecionados. Onze bundles
+legados não eram carregados por view/layout e foram removidos, eliminando código
+de campanha, dashboard, estoque, assinatura e outros fluxos baseado em DemoStore
+ou armazenamento do navegador. Quatro laboratórios legítimos continuam somente
+em `Development` e para `SuperAdmin`; promovê-los exigirá API e persistência real.
+
+O escopo de PublicWeb/Totem agora depende obrigatoriamente de UUIDs explícitos de
+tenant e unidade. Claims autenticadas inválidas continuam rejeitadas e não há
+UUID fixo no runtime do serviço. A decisão permanece **NO-GO** até o gate Docker,
+builds, banco, smokes autenticados, matriz de isolamento e validação visual.
+
+A busca complementar eliminou ainda a configuração pública estática (branding,
+serviços, profissionais e Totem fabricados) e o fallback de sugestões do Copilot.
+O Copilot agora rejeita tenant vazio e preserva o estado vazio do serviço real.

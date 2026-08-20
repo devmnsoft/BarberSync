@@ -7,7 +7,7 @@
     { key: 'publicApi', label: 'PublicApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
     { key: 'kioskApi', label: 'KioskApi', urls: ['/AdminApi/services', '/AdminApi/professionals'] },
     { key: 'swagger', label: 'Swagger', urls: ['/AdminApi/swagger', '/AdminApi/swagger.json'] },
-    { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/css/admin-diagnostics.css', '/css/admin-full-service-flow.css', '/js/admin-dashboard.js', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/js/admin-diagnostics.js', '/js/admin-full-service-flow.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
+    { key: 'assets', label: 'Assets', urls: ['/css/admin-design-system.css', '/css/admin-layout.css', '/css/admin-diagnostics.css', '/css/admin-full-service-flow.css', '/js/admin-demo-store.js', '/js/admin-event-bus.js', '/js/admin-diagnostics.js', '/js/admin-full-service-flow.js', '/img/logo-barbersync.svg'], accept: 'text/css,application/javascript,image/svg+xml,*/*' },
     { key: 'publicWeb', label: 'PublicWeb', url: '/Admin/PublicSite', accept: 'text/html,*/*' },
     { key: 'kiosk', label: 'Kiosk', url: '/Admin/Kiosk', accept: 'text/html,*/*' }
   ];
