@@ -4,6 +4,20 @@ Atualizado em 20 de agosto de 2026. Este checklist é um gate de publicação: u
 item sem evidência permanece reprovado, mesmo quando a implementação existe no
 repositório.
 
+## Triagem da Sprint de Produção 17
+
+- [x] Os 48 arquivos encontrados pelo scan literal foram classificados um a um
+  em `docs/DEMO_FALLBACK_CLASSIFICATION.md`.
+- [x] O backend não fabrica mais tenant/unidade fixos para PublicWeb/Totem;
+  deployments precisam fornecer dois UUIDs válidos e o gate Docker os declara.
+- [x] Superfícies classificadas como dev-only foram vinculadas à proteção
+  `DevelopmentOnly` (ambiente Development + papel SuperAdmin).
+- [ ] Quinze assets operacionais classificados ainda precisam migrar para APIs
+  persistidas ou perder as ações demo/mock antes do GO.
+- [ ] Gate Docker completo: o comando `docker` não existe neste executor; build,
+  SQL em duas aplicações, API, health e production smoke seguem sem evidência.
+- [x] `BarberSync.Tests` não foi alterado e `dotnet test` continua fora do gate.
+
 ## Gate local da Sprint de Produção 16
 
 - [x] Docker Compose versionado com PostgreSQL 16, SDK .NET 10, Node 20, API na
