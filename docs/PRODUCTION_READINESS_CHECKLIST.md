@@ -4,6 +4,24 @@ Atualizado em 20 de agosto de 2026. Este checklist é um gate de publicação: u
 item sem evidência permanece reprovado, mesmo quando a implementação existe no
 repositório.
 
+## Gate local da Sprint de Produção 16
+
+- [x] Docker Compose versionado com PostgreSQL 16, SDK .NET 10, Node 20, API na
+  porta 5080 e banco efêmero `barber`.
+- [x] Scripts Bash e PowerShell executam o mesmo fluxo, falham no primeiro erro,
+  preservam logs e sempre removem os containers.
+- [x] O fluxo contém restore, builds Debug/Release, duas aplicações SQL,
+  validação de tabelas críticas, API/health/smoke e todos os checks frontend.
+- [x] GitHub Actions invoca o script versionado, sem duplicar rotas ou comandos.
+- [x] O gate não depende de GitHub CLI, token, API do GitHub, `dotnet` ou `psql`
+  instalados no host; `BarberSync.Tests` e `dotnet test` permanecem fora.
+- [ ] Execução Docker completa neste executor: bloqueada porque o comando
+  `docker` não está instalado. Nenhum gate runtime foi aprovado por inferência.
+- [x] Checks disponíveis no host passaram: `node --check`, Mobile smoke, Totem
+  smoke e build Totem.
+- [ ] Scan demo/fallback encerrado: a busca solicitada ainda encontra 48 arquivos
+  que incluem legado isolado, testes e usos técnicos a classificar.
+
 ## Auditoria contratual da Sprint de Produção 15
 
 - [x] Todas as rotas chamadas pelo smoke foram confrontadas com actions reais; o
