@@ -4,6 +4,25 @@ Atualizado em 20 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 17 — classificação e escopo anônimo obrigatório
+
+O executor continua sem o comando `docker`, portanto o gate não foi iniciado e
+nenhum resultado de restore, build, SQL, API, health ou smoke foi inferido. Em vez
+de repetir um PR de bloqueio, os 48 arquivos do scan solicitado foram classificados
+individualmente: 1 operacional corrigido, 26 dev-only, 1 teste, 4 legados, 1
+gerado e 15 operacionais ainda pendentes.
+
+A correção operacional removeu os UUIDs fixos usados silenciosamente como tenant
+e unidade nas superfícies anônimas. PublicWeb/Totem agora falham de forma explícita
+se o deployment não fornecer UUIDs válidos em `BarberSync:DefaultTenantId` e
+`BarberSync:DefaultBranchId`; requisições autenticadas continuam usando somente
+as claims assinadas. O compose do gate recebeu a configuração explícita do banco
+efêmero e `.env.example` passou a documentar as duas variáveis obrigatórias.
+
+Os checks frontend disponíveis passaram novamente. O candidato permanece
+**NO-GO**: falta executar o gate Docker e migrar/remover os 15 assets operacionais
+inventariados, sem usar armazenamento local ou sucesso simulado.
+
 ## Sprint de Produção 16 — gate local versionado
 
 O gate do CI agora é um único contrato versionado, executável por
