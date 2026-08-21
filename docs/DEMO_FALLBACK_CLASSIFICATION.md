@@ -104,3 +104,17 @@ A auditoria também confirmou zero referência runtime aos tipos/rota de
 configuração pública removidos e zero `script src` local inexistente. O gate não
 avançou por ausência do binário Docker, logo a classificação não altera o estado
 **NO-GO** nem afirma validação de build, SQL ou API runtime.
+
+## Sprint de Produção 20 — isolamento final do Copilot
+
+O scan final permaneceu em 161 ocorrências brutas. Elas continuam limitadas às
+ferramentas dev-only protegidas, testes browser-side, dependências registradas em
+lockfiles, textos legacy e mensagens técnicas já classificadas; nenhum dos onze
+bundles removidos, `PublicConfigController` ou `ConfigurationService` reapareceu.
+
+A auditoria encontrou, porém, uma falha real de isolamento: embora sugestões já
+exigissem `tenantId`, o controller aceitava qualquer UUID informado por um
+usuário autenticado, e as demais operações do Copilot também confiavam no escopo
+recebido. Todas as entradas com tenant agora precisam coincidir com a claim
+assinada `tenant_id`; conversas e mensagens também são verificadas contra o
+tenant da sessão. Rejeições preservam `traceId` e `X-Trace-Id`, sem fallback.

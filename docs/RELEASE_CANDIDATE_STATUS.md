@@ -361,3 +361,20 @@ acionado e parou imediatamente com `ERROR: Docker is required.`; portanto build
 .NET, SQL, API, health e smoke E2E continuam sem evidência. Sintaxe dos scripts,
 smokes Mobile/Totem e build Totem foram aprovados. A decisão permanece
 **NO-GO**.
+
+## Sprint de Produção 20 — release candidate pós-Copilot
+
+A auditoria final encontrou e corrigiu uma quebra de isolamento no Copilot: um
+token autenticado podia consultar ou gravar usando um `tenantId` diferente da
+claim assinada. O controller agora compara todas as entradas de tenant com
+`tenant_id` e só entrega mensagens de conversas pertencentes ao tenant da
+sessão. UUID ausente ou vazio retorna 400; divergência retorna 403; conversa fora
+do escopo retorna 404. Todas essas rejeições incluem `traceId` no corpo e
+`X-Trace-Id` no header. O production smoke passou a provar também que sugestões
+do Copilot rejeitam acesso sem token com 401 e correlação.
+
+O PR #201 não pôde ser consultado ou fechado neste executor porque o GitHub CLI
+não possui autenticação; seu fechamento como superseded por #202 e #203 continua
+uma ação manual obrigatória. Docker, SDK .NET e `psql` também permanecem
+indisponíveis. Assim, build .NET, aplicação SQL e runtime da API continuam sem
+evidência local, e a decisão do release candidate permanece **NO-GO**.
