@@ -78,9 +78,14 @@ public sealed partial class EnterpriseDataService(IConfiguration configuration, 
     public async Task<IReadOnlyList<Dictionary<string, object?>>> ListAsync(string resource, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
-        var projection = resource.Equals("products", StringComparison.OrdinalIgnoreCase)
-            ? "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload||jsonb_build_object('currentStock',current_stock,'minStock',minimum_stock,'costPrice',cost_price,'salePrice',sale_price))"
-            : "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload)";
+        var projection = resource.ToLowerInvariant() switch
+        {
+            "products" => "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload||jsonb_build_object('currentStock',current_stock,'minStock',minimum_stock,'costPrice',cost_price,'salePrice',sale_price))",
+            "stock_movements" => "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'productId',product_id::text,'serviceOrderId',service_order_id::text,'type',type,'quantity',quantity,'balanceAfter',balance_after,'reason',reason,'status',status,'createdAt',created_at)||payload)",
+            "commissions" => "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'professionalId',professional_id::text,'paymentId',payment_id::text,'serviceOrderItemId',service_order_item_id::text,'baseAmount',base_amount,'percentage',percentage,'amount',amount,'status',status,'createdAt',created_at)||payload)",
+            "audit_logs" => "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'userId',user_id::text,'operation',operation,'entityName',entity_name,'entityId',entity_id::text,'module',module,'action',action,'description',description,'createdAt',created_at)||payload)",
+            _ => "jsonb_strip_nulls(jsonb_build_object('id',id::text,'tenantId',tenant_id::text,'branchId',branch_id::text,'status',status,'isActive',is_active,'createdAt',created_at,'updatedAt',updated_at)||payload)"
+        };
         var sql = $"select {projection} from barber.{Table(resource)} where tenant_id = @tenantScope and branch_id = @branchScope and deleted_at is null order by created_at desc";
         await using var command = new NpgsqlCommand(sql, connection);
         AddScope(command);

@@ -27,7 +27,14 @@ $Criteria = @(
     @{ Label="mobile professional"; Marker="AUTH_SMOKE_MOBILE_PROFESSIONAL"; File=(Join-Path $Production "authenticated-production-smoke.log") },
     @{ Label="notifications"; Marker="AUTH_SMOKE_NOTIFICATIONS"; File=(Join-Path $Production "authenticated-production-smoke.log") },
     @{ Label="stock"; Marker="AUTH_SMOKE_STOCK"; File=(Join-Path $Production "authenticated-production-smoke.log") },
-    @{ Label="cash register"; Marker="AUTH_SMOKE_CASH_REGISTER"; File=(Join-Path $Production "authenticated-production-smoke.log") }
+    @{ Label="cash register"; Marker="AUTH_SMOKE_CASH_REGISTER"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="service order"; Marker="AUTH_SMOKE_SERVICE_ORDER"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="payment"; Marker="AUTH_SMOKE_PAYMENT"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="stock movement"; Marker="AUTH_SMOKE_STOCK_MOVEMENT"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="cash movement"; Marker="AUTH_SMOKE_CASH_MOVEMENT"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="financial entry"; Marker="AUTH_SMOKE_FINANCIAL_ENTRY"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="commission"; Marker="AUTH_SMOKE_COMMISSION"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="POS"; Marker="AUTH_SMOKE_POS"; File=(Join-Path $Production "authenticated-production-smoke.log") }
 )
 $Missing = 0; $Rows = @()
 foreach ($Criterion in $Criteria) {

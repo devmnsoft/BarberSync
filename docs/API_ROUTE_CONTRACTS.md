@@ -17,7 +17,7 @@ indica também a declaração explícita no controller.
 | Professionals | CRUD | `/api/professionals[/{id}]` | Professionals | Sim (fallback) | sessão | Admin | OK |
 | Services | CRUD | `/api/services[/{id}]` | Services | Sim (fallback) | sessão | Admin | OK |
 | Products | CRUD | `/api/products[/{id}]` | Products | Sim (fallback) | sessão | Admin | OK |
-| Stock | GET/POST | `/api/stock`, `/api/stock/{entry\|exit\|adjustment}` | Stock | Sim (`Authorize`) | `Stock.*` | Admin | OK |
+| Stock | GET/POST | `/api/stock`, `/api/stock/movements`, `/api/stock/{entry\|exit\|adjustment}` | Stock | Sim (`Authorize`) | `Stock.*` | Admin | produto e movimentos reais |
 | Purchases | CRUD/POST | `/api/purchases[/{id}]`, `/{id}/receive` | Purchases | Sim (`Authorize`) | Manager+ na escrita | Admin | OK |
 | ServiceOrders | POST | `/api/service-orders/open` | ServiceOrders/Open | Sim (`Authorize`) | `ServiceOrder.Create` | Admin | OK |
 | ServiceOrders | POST/DELETE | `/api/service-orders/{id}/items/{services\|products\|{itemId}}` | ServiceOrders items | Sim | `ServiceOrder.Update` | Admin | motivo exigido na remoção |
@@ -25,7 +25,7 @@ indica também a declaração explícita no controller.
 | Payments | CRUD | `/api/payments[/{id}]` | Payments | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
 | CashRegisters | GET/POST | `/api/cash-registers/current`, `/open`, `/{id}/{supply\|withdrawal\|expense\|close}` | CashRegisters | Sim (`Authorize`) | `Cash.*` | Admin | OK |
 | Financial | GET | `/api/finance` | Finance/GetAll | Sim (`Authorize`) | sessão | Admin | OK |
-| Commissions | GET | `/api/commissions` | Commissions/GetAll | Sim (`Authorize`) | Professional/Manager+ | Admin/Mobile profissional | OK |
+| Commissions | GET | `/api/commissions` | Commissions/GetAll | Sim (`Authorize`) | Manager+ | Admin | visão financeira geral; profissional usa `/api/mobile/professional/commissions` com ownership |
 | Reports | GET | `/api/executive/{owner\|reception\|export.csv}` | Executive | Sim (`Authorize`) | roles por action | Admin | período compartilhado |
 | Notifications | GET/POST | `/api/notifications`, `/{id}/read`, `/read-all` | Notifications | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
 | Audit | GET | `/api/audit`, `/events`, `/{id}` | Audit | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
@@ -62,3 +62,17 @@ indica também a declaração explícita no controller.
 ## Authenticated production-readiness contract
 
 `POST /api/auth/login` returns the real JWT in `data.accessToken`; readiness clients send it as `Authorization: Bearer`. The smoke verifies an invalid login has `traceId`, then exercises `/api/dashboard/summary`, role-scoped `/api/mobile/summary`, persistent notification read-all, stock and current cash-register data. Client responses must omit professional commissions/blocks; professional responses must include those owned collections. Kiosk discovery requires the explicit `READINESS-KIOSK-001` query value and omission returns 400. No 404 or 500 is accepted.
+
+## Production-readiness POS contract (Sprint 26)
+
+The canonical flow is `POST /api/service-orders/open`, `GET /api/service-orders/{id}`,
+`POST /api/service-orders/{id}/items/services`, `POST /api/service-orders/{id}/items/products`,
+`DELETE /api/service-orders/{id}/items/{itemId}` (JSON body `{ "reason": "..." }`) and
+`POST /api/service-orders/{id}/payments`. Opening uses `{clientId, appointmentId?, notes?}`;
+service/product items use catalog IDs plus quantity and the service professional; payment uses
+`{idempotencyKey, splits:[{method,amount,receivedAmount?}], note?}`. Read-back evidence uses
+`GET /api/cash-registers/current`, `/api/stock`, `/api/stock/movements`, `/api/finance`,
+`/api/commissions`, and `/api/audit`. All are authenticated and tenant/branch scoped. A paid
+order must expose status `Paid` and zero balance; its payment ID/order ID correlate the cash,
+revenue, stock, commission and audit records. The readiness total is 65.00 (service 40.00 plus
+product 25.00).

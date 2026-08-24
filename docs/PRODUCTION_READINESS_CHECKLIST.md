@@ -259,4 +259,5 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
 - [ ] Dashboard, notifications, stock, and current cash register returned scoped persisted data.
 - [ ] Explicit kiosk device succeeded and missing deviceCode failed clearly.
 - [ ] `authenticated-production-smoke.log` contains every required PASS marker.
+- [ ] POS evidence contains exact PASS markers for service order, payment, stock movement, cash movement, financial entry, commission and aggregate POS; absent or skipped markers fail the gate.
 - [ ] POS is not SKIPPED before declaring GO.

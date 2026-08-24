@@ -17,6 +17,15 @@ call() { # name method path token expected [body]
 }
 contains() { grep -Fqi -- "$2" "$tmp/$1.json" || { echo "FAIL $1: response does not contain expected readiness scope" >&2; cat "$tmp/$1.json" >&2; exit 1; }; }
 not_contains() { ! grep -Fqi -- "$2" "$tmp/$1.json" || { echo "FAIL $1: response leaked forbidden scope" >&2; exit 1; }; }
+json_value() { python3 - "$tmp/$1.json" "$2" <<'PY'
+import json,sys
+value=json.load(open(sys.argv[1],encoding="utf-8"))
+for part in sys.argv[2].split('.'):
+    if isinstance(value,dict) and part in value: value=value[part]
+    else: raise SystemExit("missing JSON path: "+sys.argv[2])
+print(value)
+PY
+}
 login() {
   local n=$1 email=$2 password=$3
   call "$n" POST /api/auth/login '' 200 "{\"email\":\"$email\",\"password\":\"$password\",\"tenantSlug\":\"$tenant_slug\"}"
@@ -46,8 +55,62 @@ cashier=$(login cashier_login "$READINESS_CASHIER_EMAIL" "$READINESS_CASHIER_PAS
 call cash GET /api/cash-registers/current "$cashier" 200; contains cash "$READINESS_BRANCH_ID"
 echo EVIDENCE:AUTH_SMOKE_CASH_REGISTER:PASS
 
-# There is no stable, documented all-in-one create/add/pay/ledger verification contract yet.
-echo EVIDENCE:AUTH_SMOKE_POS:SKIPPED_CONTRACT_NOT_FOUND
+client_id=70000000-0000-4000-8000-000000000013
+professional_id=70000000-0000-4000-8000-000000000012
+service_id=70000000-0000-4000-8000-000000000030
+product_id=70000000-0000-4000-8000-000000000040
+initial_stock=$(python3 - "$tmp/stock.json" "$product_id" <<'PY'
+import json,sys
+def rows(v):
+    if isinstance(v,list): return v
+    if isinstance(v,dict):
+        for k in ('data','items'):
+            if k in v: return rows(v[k])
+    return []
+for row in rows(json.load(open(sys.argv[1]))):
+    if str(row.get('id','')).lower()==sys.argv[2].lower(): print(row.get('currentStock')); break
+else: raise SystemExit('readiness product not returned by /api/stock')
+PY
+)
+call order_open POST /api/service-orders/open "$cashier" 201 "{\"clientId\":\"$client_id\",\"notes\":\"Production readiness authenticated smoke\"}"
+order_id=$(json_value order_open id); [[ -n $order_id ]]
+call order_service POST "/api/service-orders/$order_id/items/services" "$cashier" 200 "{\"serviceId\":\"$service_id\",\"professionalId\":\"$professional_id\",\"quantity\":1}"
+call order_product POST "/api/service-orders/$order_id/items/products" "$cashier" 200 "{\"productId\":\"$product_id\",\"quantity\":1}"
+[[ $(json_value order_product total) == 65* ]] || { echo 'FAIL POS total is not 65.00' >&2; exit 1; }
+echo EVIDENCE:AUTH_SMOKE_SERVICE_ORDER:PASS
+idempotency_key="readiness-$order_id"
+call payment POST "/api/service-orders/$order_id/payments" "$cashier" 200 "{\"idempotencyKey\":\"$idempotency_key\",\"splits\":[{\"method\":\"Cash\",\"amount\":65,\"receivedAmount\":65}],\"note\":\"Production readiness\"}"
+payment_id=$(json_value payment id); [[ $(json_value payment orderStatus) == Paid ]]
+call order_paid GET "/api/service-orders/$order_id" "$cashier" 200; contains order_paid '"status":"Paid"'
+echo EVIDENCE:AUTH_SMOKE_PAYMENT:PASS
+call stock_after GET /api/stock "$admin" 200
+final_stock=$(python3 - "$tmp/stock_after.json" "$product_id" <<'PY'
+import json,sys
+def rows(v):
+    if isinstance(v,list): return v
+    if isinstance(v,dict):
+        for k in ('data','items'):
+            if k in v:return rows(v[k])
+    return []
+for row in rows(json.load(open(sys.argv[1]))):
+    if str(row.get('id','')).lower()==sys.argv[2].lower(): print(row.get('currentStock'));break
+else: raise SystemExit('readiness product missing after payment')
+PY
+)
+python3 - "$initial_stock" "$final_stock" <<'PY'
+import sys
+assert float(sys.argv[2]) == float(sys.argv[1])-1, 'product stock did not decrease exactly once'
+PY
+call stock_movements GET /api/stock/movements "$admin" 200; contains stock_movements "$order_id"
+echo EVIDENCE:AUTH_SMOKE_STOCK_MOVEMENT:PASS
+call cash_after GET /api/cash-registers/current "$cashier" 200; contains cash_after '"type":"Sale"'; contains cash_after "$payment_id"
+echo EVIDENCE:AUTH_SMOKE_CASH_MOVEMENT:PASS
+call finance GET /api/finance "$admin" 200; contains finance "$payment_id"; contains finance "$order_id"
+echo EVIDENCE:AUTH_SMOKE_FINANCIAL_ENTRY:PASS
+call commissions GET /api/commissions "$admin" 200; contains commissions "$payment_id"; contains commissions "$professional_id"
+echo EVIDENCE:AUTH_SMOKE_COMMISSION:PASS
+call audit GET /api/audit "$admin" 200; contains audit "$payment_id"; contains audit 'Payment.Register'
+echo EVIDENCE:AUTH_SMOKE_POS:PASS
 call kiosk_missing GET /api/kiosk/services '' 400
 call kiosk_explicit GET "/api/kiosk/services?deviceCode=$READINESS_KIOSK_DEVICE_CODE" '' 200; contains kiosk_explicit 'Readiness Haircut'; not_contains kiosk_explicit 'KIOSK-001'
 echo EVIDENCE:AUTH_SMOKE_KIOSK:PASS

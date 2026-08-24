@@ -11,11 +11,13 @@ labels=(
   'SQL segunda aplicação' 'schema validation' 'API runtime' '/health'
   'production-smoke' 'node --check' 'Mobile smoke' 'Totem smoke' 'Totem build' 'PR #201 fechado ou inexistente'
   'readiness seed' 'authenticated smoke' 'auth login' 'auth dashboard' 'mobile client' 'mobile professional' 'notifications' 'stock' 'cash register'
+  'service order' 'payment' 'stock movement' 'cash movement' 'financial entry' 'commission' 'POS'
 )
 markers=(
   DOTNET_RESTORE BUILD_DEBUG BUILD_RELEASE SQL_APPLY_1 SQL_APPLY_2 SCHEMA_VALIDATION API_RUNTIME HEALTH
   PRODUCTION_SMOKE FRONTEND_CHECKS MOBILE_SMOKE TOTEM_SMOKE TOTEM_BUILD PR_201_RESOLVED
   READINESS_SEED AUTHENTICATED_PRODUCTION_SMOKE AUTH_SMOKE_LOGIN AUTH_SMOKE_DASHBOARD AUTH_SMOKE_MOBILE_CLIENT AUTH_SMOKE_MOBILE_PROFESSIONAL AUTH_SMOKE_NOTIFICATIONS AUTH_SMOKE_STOCK AUTH_SMOKE_CASH_REGISTER
+  AUTH_SMOKE_SERVICE_ORDER AUTH_SMOKE_PAYMENT AUTH_SMOKE_STOCK_MOVEMENT AUTH_SMOKE_CASH_MOVEMENT AUTH_SMOKE_FINANCIAL_ENTRY AUTH_SMOKE_COMMISSION AUTH_SMOKE_POS
 )
 files=(
   "$production/dotnet-restore.log" "$production/dotnet-build-debug.log" "$production/dotnet-build-release.log"
@@ -24,6 +26,7 @@ files=(
   "$evidence/frontend-checks.md" "$evidence/frontend-checks.md" "$evidence/frontend-checks.md"
   "$evidence/frontend-checks.md" "$evidence/pr-status.md"
   "$production/readiness-seed.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log"
+  "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log" "$production/authenticated-production-smoke.log"
 )
 missing=0
 rows=''
