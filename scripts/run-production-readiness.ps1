@@ -17,14 +17,18 @@ function Add-PassMarker {
     "EVIDENCE:${Marker}:PASS" | Tee-Object -FilePath (Join-Path $LogDir $Log) -Append
 }
 
+New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+Remove-Item (Join-Path $LogDir "*.log") -Force -ErrorAction SilentlyContinue
+& (Join-Path $Root "scripts/validate-readiness-contracts.ps1") 2>&1 | Tee-Object -FilePath (Join-Path $LogDir "readiness-contracts-static.log")
+if ($LASTEXITCODE -ne 0) { throw "Static readiness contract validation failed." }
+Add-PassMarker "READINESS_CONTRACTS_STATIC" "readiness-contracts-static.log"
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw "Docker is required." }
 docker info *> $null
 if ($LASTEXITCODE -ne 0) { throw "The Docker daemon is unavailable." }
 docker compose version *> $null
 if ($LASTEXITCODE -ne 0) { throw "Docker Compose v2 is required." }
 
-New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
-Remove-Item (Join-Path $LogDir "*.log") -Force -ErrorAction SilentlyContinue
 Push-Location $Root
 try {
     docker compose -p $Project -f $ComposeFile up -d --wait postgres

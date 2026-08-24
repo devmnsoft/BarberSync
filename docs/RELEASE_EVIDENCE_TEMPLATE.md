@@ -66,3 +66,9 @@ Required POS lines: `EVIDENCE:AUTH_SMOKE_SERVICE_ORDER:PASS`, `EVIDENCE:AUTH_SMO
 - `EVIDENCE:AUTH_SMOKE_CASH_REGISTER:PASS`
 
 Every exact PASS marker and its log is mandatory. Missing logs, `SKIPPED`, and environment errors never qualify as GO.
+
+## Contratos estáticos de readiness
+
+- Comando: `./scripts/validate-readiness-contracts.sh`
+- Evidência obrigatória: `EVIDENCE:READINESS_CONTRACTS_STATIC:PASS`
+- Resultado: `AUSENTE/REPROVADO` até execução bem-sucedida. A validação textual não substitui build .NET ou PostgreSQL real.

@@ -261,3 +261,10 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
 - [ ] `authenticated-production-smoke.log` contains every required PASS marker.
 - [ ] POS evidence contains exact PASS markers for service order, payment, stock movement, cash movement, financial entry, commission and aggregate POS; absent or skipped markers fail the gate.
 - [ ] POS is not SKIPPED before declaring GO.
+
+## Auditoria estática pré-gate
+
+- [ ] `validate-readiness-contracts` passa nas versões Bash e PowerShell disponíveis.
+- [ ] `READINESS_CONTRACTS_STATIC:PASS` consta no log do runner.
+- [ ] Contratos `PaymentId`/`payment_id`, POS, estoque, seed protegido e markers foram verificados.
+- [ ] Build .NET, schema PostgreSQL e smokes reais continuam obrigatórios; sem eles a decisão permanece **NO-GO**.
