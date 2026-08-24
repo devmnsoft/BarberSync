@@ -13,6 +13,61 @@ namespace BarberSync.Api.Controllers;
 [ApiController, Authorize, Route("api/mobile")]
 public sealed class MobileSelfServiceController(IAppointmentService appointments, EnterpriseDataService data, ICurrentUserContext currentUser, ILogger<MobileSelfServiceController> logger) : ControllerBase
 {
+    [HttpGet("summary")]
+    public async Task<IActionResult> Summary(CancellationToken ct)
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+        var professional = role.Equals("Professional", StringComparison.OrdinalIgnoreCase);
+        var allAppointments = await appointments.ListAsync(new(null, null, null, null, null, null), ct);
+        var ownedAppointments = professional
+            ? allAppointments.Where(item => item.ProfessionalId == currentUser.UserId).ToArray()
+            : allAppointments.Where(item => item.ClientId == ClientId()).ToArray();
+
+        var profile = new
+        {
+            id = currentUser.UserId,
+            role = professional ? "Professional" : "Client",
+            name = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "",
+            firstName = User.FindFirstValue(ClaimTypes.GivenName) ?? ""
+        };
+
+        if (professional)
+        {
+            var commissionRows = await OwnedRows("commissions", "professionalId", currentUser.UserId, ct);
+            return Ok(Envelope(new
+            {
+                role = "Professional",
+                profile,
+                appointments = ownedAppointments.Where(item => item.ScheduledStart.Date == DateTimeOffset.UtcNow.Date).OrderBy(item => item.ScheduledStart),
+                commissions = new
+                {
+                    items = commissionRows,
+                    expected = commissionRows.Where(item => !Value(item, "status").Equals("Paid", StringComparison.OrdinalIgnoreCase)).Sum(item => DecimalValue(item, "amount")),
+                    available = commissionRows.Where(item => Value(item, "status").Equals("Available", StringComparison.OrdinalIgnoreCase)).Sum(item => DecimalValue(item, "amount"))
+                },
+                blocks = await OwnedRows("professional_blocks", "professionalId", currentUser.UserId, ct)
+            }));
+        }
+
+        return Ok(Envelope(new
+        {
+            role = "Client",
+            profile,
+            appointments = ownedAppointments.Where(item => item.ScheduledStart >= DateTimeOffset.UtcNow).OrderBy(item => item.ScheduledStart),
+            history = ownedAppointments.Where(item => item.ScheduledStart < DateTimeOffset.UtcNow).OrderByDescending(item => item.ScheduledStart),
+            services = (await data.ListAsync("services", ct)).Where(Active),
+            professionals = (await data.ListAsync("professionals", ct)).Where(Active),
+            benefits = new
+            {
+                packages = await OwnedRows("packages", "clientId", ClientId(), ct),
+                subscriptions = await OwnedRows("subscriptions", "clientId", ClientId(), ct),
+                coupons = await OwnedRows("coupons", "clientId", ClientId(), ct),
+                loyalty = await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)
+            },
+            notifications = await OwnedRows("notifications", "userId", currentUser.UserId, ct)
+        }));
+    }
+
     [HttpGet("services")]
     public async Task<IActionResult> Services(CancellationToken ct) => Ok(Envelope((await data.ListAsync("services", ct)).Where(Active)));
 
@@ -97,6 +152,7 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
     private object Error(string message) => new { success = false, message, traceId = HttpContext.TraceIdentifier };
     private static object Envelope(object? value) => new { success = true, data = value };
     private static string Value(Dictionary<string, object?> row, string key) => row.TryGetValue(key, out var value) ? value?.ToString() ?? "" : "";
+    private static decimal DecimalValue(Dictionary<string, object?> row, string key) => row.TryGetValue(key, out var value) && value is not null && decimal.TryParse(value.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var result) ? result : 0;
     private static bool Active(Dictionary<string, object?> row) => !row.TryGetValue("isActive", out var value) || value is true || value?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
 }
 

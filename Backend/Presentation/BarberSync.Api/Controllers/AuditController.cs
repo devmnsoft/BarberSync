@@ -1,9 +1,10 @@
 using BarberSync.Api.Services.Enterprise;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/audit")]
 public sealed class AuditController(EnterpriseDataService data, ILogger<AuditController> logger) : EnterpriseCrudController(data, logger, "audit_logs")
 {

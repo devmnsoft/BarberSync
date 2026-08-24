@@ -1,11 +1,12 @@
 using System.Text.Json;
 using BarberSync.Api.Services.Enterprise;
 using BarberSync.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/notifications")]
 public class NotificationsController(EnterpriseDataService data, ILogger<NotificationsController> logger) : ControllerBase
 {

@@ -5,9 +5,7 @@ const requiredFiles = [
   'src/services/api.js',
   'src/theme/colors.js',
   'src/theme/spacing.js',
-  'src/screens/LoginScreen.js',
-  'src/screens/ScheduleScreen.js',
-  'src/screens/HistoryScreen.js'
+  'src/screens/LoginScreen.js'
 ];
 for (const file of requiredFiles) {
   if (!fs.existsSync(file)) {
@@ -27,6 +25,12 @@ for (const importPath of ["./src/theme/colors", "./src/theme/spacing", "./src/se
 for (const contract of ['mobileApi.slots', 'professionalId, serviceId, date', 'Confirmar agendamento']) {
   if (!appSource.includes(contract)) {
     console.error(`Mobile scheduling flow is missing contract: ${contract}`);
+    process.exit(1);
+  }
+}
+for (const forbidden of ['Agendamento demo', 'FullServiceFlow demo', 'mobile-demo-token']) {
+  if (appSource.includes(forbidden)) {
+    console.error(`Mobile contains forbidden fabricated runtime content: ${forbidden}`);
     process.exit(1);
   }
 }
