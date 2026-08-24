@@ -1,8 +1,24 @@
 # BarberSync 2.0 — status do release candidate
 
-Atualizado em 20 de agosto de 2026. Este documento registra somente verificações
+Atualizado em 24 de agosto de 2026. Este documento registra somente verificações
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
+
+## Sprint de Produção 22 — pacote de execução externa
+
+Foram versionadas pré-checagens equivalentes para Bash e PowerShell, coletores de
+evidência, parsers conservadores de GO/NO-GO, um runbook operacional e um
+template para publicação do resultado. O gate Docker agora acrescenta marcadores
+canônicos somente após cada etapa crítica terminar com sucesso. Os parsers não
+inferem aprovação por texto genérico: log ausente, marcador ausente, falha de
+Docker ou somente os checks frontend mantêm a decisão em **NO-GO**.
+
+O coletor cria arquivos ignorados em `artifacts/release-evidence/` para ambiente,
+Git, PRs, production readiness, frontend, scan e decisão. O PR #201 permanece com
+fechamento manual pendente neste executor, sem GitHub autenticado. Docker, .NET e
+PostgreSQL também não são aprovados localmente. Os checks disponíveis foram
+executados, sem reativar `BarberSync.Tests` ou `dotnet test`, e não substituem a
+evidência externa obrigatória.
 
 ## Sprint de Produção 16 — gate local versionado
 

@@ -9,6 +9,7 @@ node_modules/
 # Logs
 *.log
 artifacts/production-readiness/
+artifacts/release-evidence/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
