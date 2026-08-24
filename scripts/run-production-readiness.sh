@@ -50,6 +50,8 @@ run_logged sql-apply-2.log bash -c 'docker compose -p "$1" -f "$2" exec -T postg
 mark_pass SQL_APPLY_2 sql-apply-2.log
 docker compose -p "$project_name" -f "$compose_file" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 < "$root_dir/scripts/validate-production-schema.sql" 2>&1 | tee -a "$log_dir/sql-apply-2.log"
 mark_pass SCHEMA_VALIDATION sql-apply-2.log
+run_logged readiness-seed.log bash -c 'docker compose -p "$1" -f "$2" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres options=-cbarbersync.environment=ProductionReadiness" -v ON_ERROR_STOP=1 < "$3"' _ "$project_name" "$compose_file" "$root_dir/ScriptsSQL/production_readiness_seed.sql"
+mark_pass READINESS_SEED readiness-seed.log
 
 "${compose[@]}" up -d api
 ready=false
@@ -65,8 +67,15 @@ cat "$log_dir/health.log"
 
 run_logged production-smoke.log "${compose[@]}" run --rm --no-deps api bash -lc './scripts/production-smoke.sh http://api:5080'
 mark_pass PRODUCTION_SMOKE production-smoke.log
+export READINESS_ADMIN_EMAIL=${READINESS_ADMIN_EMAIL:-admin@readiness.local} READINESS_ADMIN_PASSWORD=${READINESS_ADMIN_PASSWORD:-ReadinessOnly\!2026}
+export READINESS_CASHIER_EMAIL=${READINESS_CASHIER_EMAIL:-cashier@readiness.local} READINESS_CASHIER_PASSWORD=${READINESS_CASHIER_PASSWORD:-ReadinessOnly\!2026}
+export READINESS_PROFESSIONAL_EMAIL=${READINESS_PROFESSIONAL_EMAIL:-professional@readiness.local} READINESS_PROFESSIONAL_PASSWORD=${READINESS_PROFESSIONAL_PASSWORD:-ReadinessOnly\!2026}
+export READINESS_CLIENT_EMAIL=${READINESS_CLIENT_EMAIL:-client@readiness.local} READINESS_CLIENT_PASSWORD=${READINESS_CLIENT_PASSWORD:-ReadinessOnly\!2026}
+export READINESS_TENANT_ID=${READINESS_TENANT_ID:-70000000-0000-4000-8000-000000000001} READINESS_BRANCH_ID=${READINESS_BRANCH_ID:-70000000-0000-4000-8000-000000000002} READINESS_KIOSK_DEVICE_CODE=${READINESS_KIOSK_DEVICE_CODE:-READINESS-KIOSK-001}
+run_logged authenticated-production-smoke.log "${compose[@]}" run --rm --no-deps -e READINESS_ADMIN_EMAIL -e READINESS_ADMIN_PASSWORD -e READINESS_CASHIER_EMAIL -e READINESS_CASHIER_PASSWORD -e READINESS_PROFESSIONAL_EMAIL -e READINESS_PROFESSIONAL_PASSWORD -e READINESS_CLIENT_EMAIL -e READINESS_CLIENT_PASSWORD -e READINESS_TENANT_ID -e READINESS_BRANCH_ID -e READINESS_KIOSK_DEVICE_CODE api bash -lc './scripts/authenticated-production-smoke.sh http://api:5080'
+mark_pass AUTHENTICATED_PRODUCTION_SMOKE authenticated-production-smoke.log
 run_logged frontend.log "${compose[@]}" --profile tools run --rm node 'find Web -name "*.js" -print0 | xargs -0 -r -n1 node --check'
-mark_pass NODE_CHECK frontend.log
+mark_pass FRONTEND_CHECKS frontend.log
 run_logged mobile-smoke.log "${compose[@]}" --profile tools run --rm node 'npm test --prefix MobileApp'
 mark_pass MOBILE_SMOKE mobile-smoke.log
 run_logged totem-smoke.log "${compose[@]}" --profile tools run --rm node 'npm test --prefix Totem'

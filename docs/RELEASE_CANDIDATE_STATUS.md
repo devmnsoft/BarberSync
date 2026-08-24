@@ -418,3 +418,7 @@ não possui autenticação; seu fechamento como superseded por #202 e #203 conti
 uma ação manual obrigatória. Docker, SDK .NET e `psql` também permanecem
 indisponíveis. Assim, build .NET, aplicação SQL e runtime da API continuam sem
 evidência local, e a decisão do release candidate permanece **NO-GO**.
+
+## Sprint 25 evidence status
+
+The repository now defines an isolated, guarded readiness seed and authenticated Admin/Cashier/Professional/Client/Kiosk smoke contracts. **Current decision remains NO-GO** until Docker executes the complete gate and all exact seed/authenticated markers are captured. In particular, `AUTH_SMOKE_POS:SKIPPED_CONTRACT_NOT_FOUND` is disclosure, not success, and cannot be promoted to GO.
