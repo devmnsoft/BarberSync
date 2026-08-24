@@ -118,3 +118,14 @@ usuário autenticado, e as demais operações do Copilot também confiavam no es
 recebido. Todas as entradas com tenant agora precisam coincidir com a claim
 assinada `tenant_id`; conversas e mensagens também são verificadas contra o
 tenant da sessão. Rejeições preservam `traceId` e `X-Trace-Id`, sem fallback.
+
+## Sprint de Produção 22 — scan do pacote de release
+
+A mesma busca literal obrigatória foi reexecutada em 24 de agosto de 2026 e
+permaneceu em 161 linhas, excluindo `node_modules` e `dist`. As ocorrências seguem
+nas categorias já auditadas acima (laboratórios dev-only, testes browser-side,
+lockfiles, textos legacy, UUIDs técnicos e tratamento de erro sem sucesso
+fabricado). Os scripts de pré-checagem, coleta e resumo não alteram superfícies
+operacionais e não reintroduziram `DemoStore`, configuração pública removida,
+mock ou fallback de sucesso. A decisão permanece **NO-GO** até existir evidência
+externa de todo o gate.

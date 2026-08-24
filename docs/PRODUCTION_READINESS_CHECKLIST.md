@@ -239,3 +239,15 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
   tenant/unidade executados. Até essa evidência, a decisão permanece **NO-GO**.
 - [x] Endpoint legado de configuração pública estática removido; Copilot exige
   tenant explícito e devolve somente sugestões do serviço real, inclusive vazio.
+
+## Sprint de Produção 22 — execução externa assistida
+
+- [x] Pré-checagens Bash e PowerShell verificam ferramentas, autenticação e variáveis sem exibir segredos, avaliam as rotas Docker, host e GitHub Actions e não param no primeiro requisito ausente.
+- [x] Coletores Bash e PowerShell registram Git/PR, ambiente, gate, logs, checks frontend e scan em `artifacts/release-evidence/`, que permanece ignorado pelo Git.
+- [x] O gate grava marcadores de sucesso somente depois de cada comando crítico concluir com código zero; os parsers exigem todos os marcadores e o fechamento do PR #201.
+- [x] Runbook de execução externa e template de evidência foram versionados.
+- [x] Production smoke continua exigindo `/health` 200, status 401 exato nas onze rotas protegidas, login inválido 400/401 e correlação nos erros aplicáveis.
+- [ ] PR #201 fechado: pendência manual, pois este executor não possui GitHub CLI autenticado.
+- [ ] Gate real completo: **NO-GO** até a coleta de evidência em máquina Docker/.NET/PostgreSQL ou em GitHub Actions autenticado.
+- [x] Checks disponíveis da Sprint 22 foram executados: sintaxe Bash/JavaScript, Mobile smoke, Totem smoke, Totem build e integridade do diff.
+- [x] `BarberSync.Tests` permanece fora e `dotnet test` continua reservado para a fase final.
