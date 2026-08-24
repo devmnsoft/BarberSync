@@ -37,7 +37,7 @@ try {
         $Code = $LASTEXITCODE; "``````" | Add-Content $Frontend
         if ($Code -eq 0) { "EVIDENCE:${Marker}:PASS" | Add-Content $Frontend } else { "EVIDENCE:${Marker}:FAIL (exit $Code)" | Add-Content $Frontend }
     }
-    Run-Frontend "node --check" "NODE_CHECK" { $NodeExit = 0; Get-ChildItem Web,MobileApp,Totem -Recurse -Filter *.js | Where-Object { $_.FullName -notmatch '[\\/](node_modules|dist)[\\/]' } | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE -ne 0) { $NodeExit = $LASTEXITCODE } }; $global:LASTEXITCODE = $NodeExit }
+    Run-Frontend "node --check" "FRONTEND_CHECKS" { $NodeExit = 0; Get-ChildItem Web,MobileApp,Totem -Recurse -Filter *.js | Where-Object { $_.FullName -notmatch '[\\/](node_modules|dist)[\\/]' } | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE -ne 0) { $NodeExit = $LASTEXITCODE } }; $global:LASTEXITCODE = $NodeExit }
     Run-Frontend "Mobile smoke" "MOBILE_SMOKE" { npm test --prefix MobileApp }
     Run-Frontend "Totem smoke" "TOTEM_SMOKE" { npm test --prefix Totem }
     Run-Frontend "Totem build" "TOTEM_BUILD" { npm run build --prefix Totem }

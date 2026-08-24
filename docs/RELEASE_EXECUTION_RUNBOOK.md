@@ -77,3 +77,11 @@ Execute o parser isoladamente quando os logs já estiverem presentes:
 ```
 
 Ausência de log, falha de ferramenta, `Docker is required` ou apenas checks frontend resultam em `NO-GO`. Revise `artifacts/release-evidence/go-no-go.md` e copie o resultado para o template de evidência.
+
+## ProductionReadiness authenticated smoke
+
+The gate replays the canonical schema twice, validates it, and then applies `ScriptsSQL/production_readiness_seed.sql` with the PostgreSQL session setting `barbersync.environment=ProductionReadiness`. The seed refuses every other environment. It creates only the isolated `production-readiness` tenant and fixed readiness identifiers.
+
+Local-only accounts are `admin@readiness.local`, `cashier@readiness.local`, `professional@readiness.local`, and `client@readiness.local`; their disposable password is `ReadinessOnly!2026`. Override it together with the matching seed when operating a private readiness environment. Required variables are `READINESS_ADMIN_EMAIL`, `READINESS_ADMIN_PASSWORD`, `READINESS_CASHIER_EMAIL`, `READINESS_CASHIER_PASSWORD`, `READINESS_PROFESSIONAL_EMAIL`, `READINESS_PROFESSIONAL_PASSWORD`, `READINESS_CLIENT_EMAIL`, `READINESS_CLIENT_PASSWORD`, `READINESS_TENANT_ID`, `READINESS_BRANCH_ID`, and `READINESS_KIOSK_DEVICE_CODE`.
+
+Run `scripts/authenticated-production-smoke.sh http://localhost:5080` or `scripts/authenticated-production-smoke.ps1 -BaseUrl http://localhost:5080`. Password values are never logged. A POS marker of `SKIPPED_CONTRACT_NOT_FOUND` remains NO-GO evidence until an end-to-end contract is stable.

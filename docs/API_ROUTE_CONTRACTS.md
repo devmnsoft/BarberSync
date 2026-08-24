@@ -58,3 +58,7 @@ indica também a declaração explícita no controller.
 - O smoke HTTP passou a exigir `401`, sem faixa de status permissiva, também em `GET /api/mobile/summary`, e exige correlação do erro.
 - `CopilotController` agora declara `Authorize` localmente, sem depender apenas da política fallback do host.
 - O Totem publicado deixou de inventar `KIOSK-001`: o código do dispositivo deve vir da query string provisionada ou de `VITE_KIOSK_DEVICE_CODE`. Tenant e unidade continuam vindo de `BarberSync:DefaultTenantId` e `BarberSync:DefaultBranchId` no host API.
+
+## Authenticated production-readiness contract
+
+`POST /api/auth/login` returns the real JWT in `data.accessToken`; readiness clients send it as `Authorization: Bearer`. The smoke verifies an invalid login has `traceId`, then exercises `/api/dashboard/summary`, role-scoped `/api/mobile/summary`, persistent notification read-all, stock and current cash-register data. Client responses must omit professional commissions/blocks; professional responses must include those owned collections. Kiosk discovery requires the explicit `READINESS-KIOSK-001` query value and omission returns 400. No 404 or 500 is accepted.

@@ -14,11 +14,20 @@ $Criteria = @(
     @{ Label="API runtime"; Marker="API_RUNTIME"; File=(Join-Path $Production "api-run.log") },
     @{ Label="/health"; Marker="HEALTH"; File=(Join-Path $Production "health.log") },
     @{ Label="production-smoke"; Marker="PRODUCTION_SMOKE"; File=(Join-Path $Production "production-smoke.log") },
-    @{ Label="node --check"; Marker="NODE_CHECK"; File=(Join-Path $Evidence "frontend-checks.md") },
+    @{ Label="node --check"; Marker="FRONTEND_CHECKS"; File=(Join-Path $Evidence "frontend-checks.md") },
     @{ Label="Mobile smoke"; Marker="MOBILE_SMOKE"; File=(Join-Path $Evidence "frontend-checks.md") },
     @{ Label="Totem smoke"; Marker="TOTEM_SMOKE"; File=(Join-Path $Evidence "frontend-checks.md") },
     @{ Label="Totem build"; Marker="TOTEM_BUILD"; File=(Join-Path $Evidence "frontend-checks.md") },
-    @{ Label="PR #201 fechado ou inexistente"; Marker="PR_201_RESOLVED"; File=(Join-Path $Evidence "pr-status.md") }
+    @{ Label="PR #201 fechado ou inexistente"; Marker="PR_201_RESOLVED"; File=(Join-Path $Evidence "pr-status.md") },
+    @{ Label="readiness seed"; Marker="READINESS_SEED"; File=(Join-Path $Production "readiness-seed.log") },
+    @{ Label="authenticated smoke"; Marker="AUTHENTICATED_PRODUCTION_SMOKE"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="auth login"; Marker="AUTH_SMOKE_LOGIN"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="auth dashboard"; Marker="AUTH_SMOKE_DASHBOARD"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="mobile client"; Marker="AUTH_SMOKE_MOBILE_CLIENT"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="mobile professional"; Marker="AUTH_SMOKE_MOBILE_PROFESSIONAL"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="notifications"; Marker="AUTH_SMOKE_NOTIFICATIONS"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="stock"; Marker="AUTH_SMOKE_STOCK"; File=(Join-Path $Production "authenticated-production-smoke.log") },
+    @{ Label="cash register"; Marker="AUTH_SMOKE_CASH_REGISTER"; File=(Join-Path $Production "authenticated-production-smoke.log") }
 )
 $Missing = 0; $Rows = @()
 foreach ($Criterion in $Criteria) {

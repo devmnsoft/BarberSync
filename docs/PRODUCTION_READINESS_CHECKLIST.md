@@ -251,3 +251,12 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
 - [ ] Gate real completo: **NO-GO** até a coleta de evidência em máquina Docker/.NET/PostgreSQL ou em GitHub Actions autenticado.
 - [x] Checks disponíveis da Sprint 22 foram executados: sintaxe Bash/JavaScript, Mobile smoke, Totem smoke, Totem build e integridade do diff.
 - [x] `BarberSync.Tests` permanece fora e `dotnet test` continua reservado para a fase final.
+
+## Authenticated readiness additions
+
+- [ ] Isolated seed ran with `EVIDENCE:READINESS_SEED:PASS`.
+- [ ] All four real JWT logins and ownership assertions passed.
+- [ ] Dashboard, notifications, stock, and current cash register returned scoped persisted data.
+- [ ] Explicit kiosk device succeeded and missing deviceCode failed clearly.
+- [ ] `authenticated-production-smoke.log` contains every required PASS marker.
+- [ ] POS is not SKIPPED before declaring GO.

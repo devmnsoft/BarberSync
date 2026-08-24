@@ -61,7 +61,7 @@ run_frontend() {
   echo '```' >> "$frontend"
   if [[ $rc -eq 0 ]]; then echo "EVIDENCE:${marker}:PASS" >> "$frontend"; else echo "EVIDENCE:${marker}:FAIL (exit $rc)" >> "$frontend"; fi
 }
-run_frontend 'node --check' NODE_CHECK bash -c 'find Web MobileApp Totem -name "*.js" -not -path "*/node_modules/*" -not -path "*/dist/*" -print0 | xargs -0 -r -n1 node --check'
+run_frontend 'node --check' FRONTEND_CHECKS bash -c 'find Web MobileApp Totem -name "*.js" -not -path "*/node_modules/*" -not -path "*/dist/*" -print0 | xargs -0 -r -n1 node --check'
 run_frontend 'Mobile smoke' MOBILE_SMOKE npm test --prefix MobileApp
 run_frontend 'Totem smoke' TOTEM_SMOKE npm test --prefix Totem
 run_frontend 'Totem build' TOTEM_BUILD npm run build --prefix Totem

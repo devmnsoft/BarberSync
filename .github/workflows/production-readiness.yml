@@ -18,6 +18,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run the versioned production-readiness gate
+        env:
+          READINESS_ADMIN_EMAIL: admin@readiness.local
+          READINESS_ADMIN_PASSWORD: ReadinessOnly!2026
+          READINESS_CASHIER_EMAIL: cashier@readiness.local
+          READINESS_CASHIER_PASSWORD: ReadinessOnly!2026
+          READINESS_PROFESSIONAL_EMAIL: professional@readiness.local
+          READINESS_PROFESSIONAL_PASSWORD: ReadinessOnly!2026
+          READINESS_CLIENT_EMAIL: client@readiness.local
+          READINESS_CLIENT_PASSWORD: ReadinessOnly!2026
+          READINESS_TENANT_ID: 70000000-0000-4000-8000-000000000001
+          READINESS_BRANCH_ID: 70000000-0000-4000-8000-000000000002
+          READINESS_KIOSK_DEVICE_CODE: READINESS-KIOSK-001
         run: ./scripts/run-production-readiness.sh
 
       - name: Upload API log on failure
