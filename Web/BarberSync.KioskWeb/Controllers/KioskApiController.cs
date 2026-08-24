@@ -104,7 +104,7 @@ public sealed class KioskApiController(IHttpClientFactory httpClientFactory, ICo
     }
 
     private string RequiredDevice(string? value) => string.IsNullOrWhiteSpace(value)
-        ? configuration["Kiosk:DeviceCode"] ?? "KIOSK-001"
+        ? configuration["Kiosk:DeviceCode"] ?? throw new InvalidOperationException("Kiosk:DeviceCode não foi configurado.")
         : value.Trim();
 
     private static string Encode(string? value) => Uri.EscapeDataString(value ?? string.Empty);

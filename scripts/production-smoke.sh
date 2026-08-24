@@ -69,8 +69,9 @@ request purchases GET /api/purchases 401
 request service_recognition GET /api/service-recognition/suggestions 401
 request ai_settings GET /api/system/ai-settings 401
 request copilot_suggestions GET '/api/copilot/suggestions?tenantId=11111111-1111-1111-1111-111111111111' 401
+request mobile_summary GET /api/mobile/summary 401
 
-for name in protected notifications finance stock cash_registers service_orders purchases service_recognition ai_settings copilot_suggestions; do
+for name in protected notifications finance stock cash_registers service_orders purchases service_recognition ai_settings copilot_suggestions mobile_summary; do
   require_trace "$name"
 done
 

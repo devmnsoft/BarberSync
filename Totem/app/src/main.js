@@ -4,13 +4,14 @@ import App from '../../App.jsx';
 import './totem.css';
 
 export const API_PREFIX = import.meta.env.VITE_KIOSK_API_PREFIX || '/KioskApi';
-export const DEVICE_CODE = new URLSearchParams(location.search).get('deviceCode') || 'KIOSK-001';
+export const DEVICE_CODE = new URLSearchParams(location.search).get('deviceCode') || import.meta.env.VITE_KIOSK_DEVICE_CODE || '';
 
 export class KioskError extends Error {
   constructor(message, traceId) { super(message); this.traceId = traceId; }
 }
 
 export async function kioskRequest(path, { method = 'GET', body, signal } = {}) {
+  if (!DEVICE_CODE) throw new KioskError('Totem sem DeviceCode configurado. Chame um atendente.');
   let response;
   try {
     response = await fetch(`${API_PREFIX}${path}`, {

@@ -19,6 +19,11 @@ if (!main.includes('/KioskApi')) {
   process.exit(1);
 }
 
+if (main.includes("|| 'KIOSK-001'") || !main.includes('VITE_KIOSK_DEVICE_CODE')) {
+  console.error('Totem must require a query-string or deployment-configured device code.');
+  process.exit(1);
+}
+
 const app = fs.readFileSync('App.jsx', 'utf8');
 for (const contract of ["setStep(saved.step)", "api.flow('DELETE')", 'Confirmar check-in e pré-comanda']) {
   if (!app.includes(contract)) {

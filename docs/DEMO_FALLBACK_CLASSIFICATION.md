@@ -140,3 +140,8 @@ pelo aplicativo publicado, agora retorna somente dados pertencentes ao cliente
 ou profissional da sessão. O smoke Mobile passa também a rejeitar conteúdo de
 runtime fabricado. As ferramentas Admin dev-only classificadas acima não foram
 promovidas. O estado continua **NO-GO** até build .NET, SQL e API runtime.
+
+
+## Sprint de Produção 24 — configuração operacional do Totem
+
+O fallback de runtime `KIOSK-001` foi removido do Totem publicado. O device code agora precisa ser provisionado na URL do dispositivo ou em `VITE_KIOSK_DEVICE_CODE`; sua ausência interrompe o fluxo com mensagem explícita em vez de operar sob uma identidade inventada. O smoke contratual impede a reintrodução desse default. Nenhuma superfície dev-only foi promovida, e o estado permanece **NO-GO** sem evidência de .NET, SQL e API runtime.

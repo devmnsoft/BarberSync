@@ -4,11 +4,11 @@ namespace BarberSync.KioskWeb.Controllers;
 
 public class KioskController(IConfiguration configuration) : Controller
 {
-    private const string DefaultDeviceCode = "KIOSK-001";
-
     public IActionResult Index(string? deviceCode)
     {
-        ViewData["DeviceCode"] = string.IsNullOrWhiteSpace(deviceCode) ? DefaultDeviceCode : deviceCode.Trim();
+        ViewData["DeviceCode"] = string.IsNullOrWhiteSpace(deviceCode)
+            ? configuration["Kiosk:DeviceCode"] ?? string.Empty
+            : deviceCode.Trim();
         return View();
     }
 

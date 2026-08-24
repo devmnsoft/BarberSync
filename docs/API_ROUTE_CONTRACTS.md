@@ -1,4 +1,4 @@
-# Contratos de rotas da API — Sprint de Produção 23
+# Contratos de rotas da API — Sprint de Produção 24
 
 Auditoria estática concluída em 24 de agosto de 2026 sobre **294 actions HTTP** em
 `BarberSync.Api`. A tabela registra os contratos operacionais consumidos pelas
@@ -31,8 +31,9 @@ indica também a declaração explícita no controller.
 | Audit | GET | `/api/audit`, `/events`, `/{id}` | Audit | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
 | ServiceRecognition | GET/POST | `/api/service-recognition/*` | ServiceRecognition | Sim (`Authorize`) | Owner a Reception | Admin | confirmação humana |
 | AiSettings | GET/POST | `/api/system/ai-settings`, `/test` | AiSettings | Sim (`Authorize`) | Owner/Admin | Admin | OK |
-| Copilot | GET/POST | `/api/copilot/{conversations\|messages\|ask\|suggestions\|actions\|feedback}` | Copilot | Sim (fallback) | tenant da sessão | Admin | isolamento preservado |
-| Totem/Public | GET/POST | `/api/kiosk/*` | Kiosk | Pública controlada | device + escopo configurado | Totem | justificada |
+| Copilot | GET/POST | `/api/copilot/{conversations\|messages\|ask\|suggestions\|actions\|feedback}` | Copilot | Sim (`Authorize`) | tenant da sessão | Admin | isolamento preservado |
+| Totem/Public | GET | `/api/kiosk/branches`, `/services`, `/professionals`, `/availability` | Kiosk | Pública controlada | device + tenant/branch configurados | Totem | métodos e queries conferidos |
+| Totem/Public | POST | `/api/kiosk/client/find-by-phone`, `/client/quick-register`, `/check-in`, `/pre-orders` | Kiosk | Pública controlada | device + tenant/branch configurados | Totem | payloads conferidos |
 | Mobile Client | GET | `/api/mobile/summary` | MobileSelfService/Summary | Sim (`Authorize`) | ownership | Mobile | **rota ausente corrigida** |
 | Mobile Client | GET/POST | `/api/mobile/appointments/*`, `/client/*`, `/notifications/*` | MobileSelfService | Sim (`Authorize`) | ownership | Mobile | OK |
 | Mobile Professional | GET/POST | `/api/mobile/professional/*` | MobileSelfService | Sim (`Authorize`) | agenda/comissão próprias | Mobile | OK |
@@ -50,3 +51,10 @@ indica também a declaração explícita no controller.
   `ConfigurationService` nos consumidores publicados.
 - Pendente: build .NET, aplicação SQL e smoke autenticado/runtime no gate externo;
   a auditoria estática não promove o candidato a GO.
+
+
+## Sprint de Produção 24
+
+- O smoke HTTP passou a exigir `401`, sem faixa de status permissiva, também em `GET /api/mobile/summary`, e exige correlação do erro.
+- `CopilotController` agora declara `Authorize` localmente, sem depender apenas da política fallback do host.
+- O Totem publicado deixou de inventar `KIOSK-001`: o código do dispositivo deve vir da query string provisionada ou de `VITE_KIOSK_DEVICE_CODE`. Tenant e unidade continuam vindo de `BarberSync:DefaultTenantId` e `BarberSync:DefaultBranchId` no host API.
