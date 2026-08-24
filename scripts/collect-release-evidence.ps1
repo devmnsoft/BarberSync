@@ -10,6 +10,8 @@ function Invoke-Captured([string]$File, [scriptblock]$Command) {
     $Code = $LASTEXITCODE; "```````n`nExit code: $Code" | Add-Content $File; return $Code
 }
 try {
+    $Static = Join-Path $Evidence "readiness-contracts-static.md"; "# Validação estática de contratos de readiness" | Set-Content $Static
+    Invoke-Captured $Static { & (Join-Path $PSScriptRoot "validate-readiness-contracts.ps1") } | Out-Null
     $Branch = git branch --show-current; $Commit = git rev-parse HEAD
     "# Estado Git`n`n- Branch: $Branch`n- Commit: $Commit`n`n## git status" | Set-Content (Join-Path $Evidence "git-status.md")
     Invoke-Captured (Join-Path $Evidence "git-status.md") { git status --short --branch } | Out-Null

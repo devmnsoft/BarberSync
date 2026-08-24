@@ -5,6 +5,7 @@ $Production = Join-Path $Root "artifacts/production-readiness"
 $Evidence = Join-Path $Root "artifacts/release-evidence"
 New-Item -ItemType Directory -Force -Path $Evidence | Out-Null
 $Criteria = @(
+    @{ Label="contratos estáticos de readiness"; Marker="READINESS_CONTRACTS_STATIC"; File=(Join-Path $Production "readiness-contracts-static.log") },
     @{ Label="dotnet restore"; Marker="DOTNET_RESTORE"; File=(Join-Path $Production "dotnet-restore.log") },
     @{ Label="build Debug"; Marker="BUILD_DEBUG"; File=(Join-Path $Production "dotnet-build-debug.log") },
     @{ Label="build Release"; Marker="BUILD_RELEASE"; File=(Join-Path $Production "dotnet-build-release.log") },

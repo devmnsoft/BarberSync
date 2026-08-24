@@ -422,3 +422,7 @@ evidência local, e a decisão do release candidate permanece **NO-GO**.
 ## Sprint 25 evidence status
 
 The repository now defines an isolated, guarded readiness seed and authenticated Admin/Cashier/Professional/Client/Kiosk/POS smoke contracts. **Current decision remains NO-GO** until Docker executes the complete gate and all exact seed/authenticated markers are captured. The former POS skip was removed: only exact PASS markers for service order, payment, stock/cash movements, financial entry, commission and aggregate POS satisfy the parser.
+
+## Sprint 28 — auditoria pós-POS
+
+A validação estática de contratos C#/SQL/POS foi incorporada como pré-condição e produz `READINESS_CONTRACTS_STATIC`. Ela reduz risco antes do executor real, mas não altera o estado atual: sem build .NET, PostgreSQL e gate integral comprovados, a decisão permanece **NO-GO**.

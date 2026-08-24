@@ -152,3 +152,7 @@ the PostgreSQL repositories and authenticated controllers, and verifies persiste
 cash, financial, stock, commission and audit records. The earlier contract-not-found skip is
 historical only and has been removed from executable scripts. No runtime fixture or successful
 fallback response is permitted.
+
+## Validação estática de readiness
+
+`validate-readiness-contracts` é uma checagem determinística de código e schema, não um fallback, mock ou substituto de infraestrutura. Seu `PASS` apenas desbloqueia a tentativa do gate real. Referências históricas a demo/fallback continuam classificadas; nenhum caminho operacional ausente pode ser convertido em sucesso.

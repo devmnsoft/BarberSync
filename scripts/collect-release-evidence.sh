@@ -8,6 +8,10 @@ cd "$root_dir"
 
 capture() { local file="$1"; shift; { echo '```text'; "$@"; local rc=$?; echo '```'; echo; echo "Exit code: $rc"; return "$rc"; } >> "$file" 2>&1; }
 
+static="$evidence/readiness-contracts-static.md"
+echo '# Validação estática de contratos de readiness' > "$static"
+capture "$static" "$root_dir/scripts/validate-readiness-contracts.sh" || true
+
 cat > "$evidence/git-status.md" <<EOF_GIT
 # Estado Git
 

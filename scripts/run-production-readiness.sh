@@ -7,12 +7,15 @@ log_dir="$root_dir/artifacts/production-readiness"
 project_name="barbersync-production-readiness"
 compose=(docker compose -p "$project_name" -f "$compose_file")
 
+mkdir -p "$log_dir"
+rm -f "$log_dir"/*.log
+"$root_dir/scripts/validate-readiness-contracts.sh" 2>&1 | tee "$log_dir/readiness-contracts-static.log"
+printf 'EVIDENCE:READINESS_CONTRACTS_STATIC:PASS\n' | tee -a "$log_dir/readiness-contracts-static.log"
+
 command -v docker >/dev/null 2>&1 || { echo "ERROR: Docker is required." >&2; exit 1; }
 docker info >/dev/null 2>&1 || { echo "ERROR: the Docker daemon is unavailable." >&2; exit 1; }
 docker compose version >/dev/null 2>&1 || { echo "ERROR: Docker Compose v2 is required." >&2; exit 1; }
 
-mkdir -p "$log_dir"
-rm -f "$log_dir"/*.log
 cd "$root_dir"
 
 cleanup() {
