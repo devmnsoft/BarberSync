@@ -36,7 +36,7 @@ try {
 
     Invoke-Checked "dotnet-info.log" { docker compose -p $Project -f $ComposeFile run --rm --no-deps api dotnet --info }
     Invoke-Checked "dotnet-restore.log" { docker compose -p $Project -f $ComposeFile run --rm --no-deps api dotnet restore BarberSync.sln }
-    Add-PassMarker "DOTNET_RESTORE" "dotnet-restore.log"
+    Add-PassMarker "RESTORE" "dotnet-restore.log"
     Invoke-Checked "dotnet-build-debug.log" { docker compose -p $Project -f $ComposeFile run --rm --no-deps api dotnet build BarberSync.sln --configuration Debug --no-restore }
     Add-PassMarker "BUILD_DEBUG" "dotnet-build-debug.log"
     Invoke-Checked "dotnet-build-release.log" { docker compose -p $Project -f $ComposeFile run --rm --no-deps api dotnet build BarberSync.sln --configuration Release --no-restore }
@@ -46,9 +46,9 @@ try {
     Add-PassMarker "SQL_APPLY_1" "sql-apply-1.log"
     Invoke-Checked "sql-apply-2.log" { Get-Content -Raw "ScriptsSQL/script_completo.sql" | docker compose -p $Project -f $ComposeFile exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 }
     Add-PassMarker "SQL_APPLY_2" "sql-apply-2.log"
-    Get-Content -Raw "scripts/validate-production-schema.sql" | docker compose -p $Project -f $ComposeFile exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 2>&1 | Tee-Object -FilePath (Join-Path $LogDir "sql-apply-2.log") -Append
-    if ($LASTEXITCODE -ne 0) { throw "Critical schema validation failed. See sql-apply-2.log." }
-    Add-PassMarker "SCHEMA_VALIDATION" "sql-apply-2.log"
+    Get-Content -Raw "scripts/validate-production-schema.sql" | docker compose -p $Project -f $ComposeFile exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 2>&1 | Tee-Object -FilePath (Join-Path $LogDir "schema-validation.log")
+    if ($LASTEXITCODE -ne 0) { throw "Critical schema validation failed. See schema-validation.log." }
+    Add-PassMarker "SCHEMA_VALIDATION" "schema-validation.log"
     Invoke-Checked "readiness-seed.log" { Get-Content -Raw "ScriptsSQL/production_readiness_seed.sql" | docker compose -p $Project -f $ComposeFile exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres options=-cbarbersync.environment=ProductionReadiness" -v ON_ERROR_STOP=1 }
     Add-PassMarker "READINESS_SEED" "readiness-seed.log"
 

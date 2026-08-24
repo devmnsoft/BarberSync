@@ -269,3 +269,10 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
 - [ ] Contratos `PaymentId`/`payment_id`, POS, estoque, seed protegido e markers foram verificados.
 - [ ] Consultas filhas de caixa e listagens enterprise mantêm escopo explícito de tenant/unidade, e os índices de idempotência do financeiro e das comissões foram verificados.
 - [ ] Build .NET, schema PostgreSQL e smokes reais continuam obrigatórios; sem eles a decisão permanece **NO-GO**.
+
+## Sprint de Produção 29 — evidência oficial no GitHub Actions
+
+- [x] `Production Readiness` executa em pull requests e pushes para `main`, além de execução manual, com concorrência, timeout e permissões mínimas.
+- [x] Logs do gate e evidências de release são publicados por `if: always()` e o Step Summary mostra markers passados, ausentes e falhos.
+- [x] Ausência de log, artifact ou marker PASS resulta em **NO-GO**; o summarizer mantém código de saída não zero mesmo que etapas anteriores falhem.
+- [ ] Todos os markers foram produzidos pelo gate Docker real no GitHub Actions. Até essa execução terminar com PASS integral, o estado permanece **NO-GO**.

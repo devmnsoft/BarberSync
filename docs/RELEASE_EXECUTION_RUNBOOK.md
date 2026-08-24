@@ -16,6 +16,14 @@ Alternativa manual:
 2. Comente: `Fechado como obsoleto/superseded. As mudanças de escopo explícito, classificação demo/fallback, remoção dos fallbacks operacionais e isolamento do Copilot foram absorvidas e superadas pelos PRs #202, #203 e #204.`
 3. Confirme que o estado é `Closed` antes de coletar evidências.
 
+Antes de declarar GO, verifique os PRs abertos e feche o PR #201 como superseded pelos PRs #202 a #211:
+
+```bash
+gh pr close 201 -R devmnsoft/BarberSync --comment "Fechado como obsoleto/superseded. As mudanças de escopo explícito, classificação demo/fallback, remoção dos fallbacks operacionais, isolamento do Copilot, readiness seed, smoke autenticado, POS PASS markers e validação estática foram absorvidas e superadas pelos PRs #202 a #211."
+```
+
+A indisponibilidade ou falta de autenticação do `gh` não falha o workflow, mas permanece pendência manual antes do GO.
+
 ## 2. Rodar o gate Docker local
 
 Linux/macOS/Git Bash:
@@ -34,7 +42,7 @@ Windows PowerShell:
 .\scripts\collect-release-evidence.ps1
 ```
 
-A coleta executa novamente o gate para registrar a execução. Se não for desejada uma execução duplicada, rode apenas a pré-checagem e a coleta; a coleta já chama `run-production-readiness`. Preserve `artifacts/production-readiness/` até o resumo ser criado. Não versione `artifacts/release-evidence/`.
+O coletor não repete o gate: ele preserva os logs da execução anterior, registra ambiente/Git/PRs/markers e inclui as últimas linhas dos logs críticos. Depois da coleta, execute o summarizer. Preserve `artifacts/production-readiness/` até o resumo ser criado. Não versione `artifacts/release-evidence/`.
 
 ## 3. Rodar GitHub Actions
 
@@ -44,7 +52,7 @@ gh run list -R devmnsoft/BarberSync --workflow "Production Readiness" --limit 10
 gh run view -R devmnsoft/BarberSync --log
 ```
 
-No último comando, informe o run quando houver mais de um candidato, por exemplo `gh run view <run-id> -R devmnsoft/BarberSync --log`. Baixe e preserve os artefatos do run. Em seguida execute o coletor local em um checkout do mesmo commit ou preencha `docs/RELEASE_EVIDENCE_TEMPLATE.md`, anexando o link e os logs da execução hospedada.
+No último comando, informe o run quando houver mais de um candidato, por exemplo `gh run view <run-id> -R devmnsoft/BarberSync --log`. Abra o run em `Actions > Production Readiness`, selecione **Artifacts** e baixe `production-readiness-<run-id>`; alternativamente use `gh run download <run-id> -n production-readiness-<run-id>`. O artifact e o Step Summary são a fonte oficial para diagnosticar a primeira falha. Baixe e preserve os artefatos do run. Em seguida execute o coletor local em um checkout do mesmo commit ou preencha `docs/RELEASE_EVIDENCE_TEMPLATE.md`, anexando o link e os logs da execução hospedada.
 
 ## 4. Critério de GO
 
