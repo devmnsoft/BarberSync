@@ -129,3 +129,14 @@ fabricado). Os scripts de pré-checagem, coleta e resumo não alteram superfíci
 operacionais e não reintroduziram `DemoStore`, configuração pública removida,
 mock ou fallback de sucesso. A decisão permanece **NO-GO** até existir evidência
 externa de todo o gate.
+
+## Sprint de Produção 23 — contrato Mobile real
+
+A auditoria encontrou um controller mobile público com token de login fabricado
+e coleções em memória, além de duas telas nativas não publicadas que simulavam
+agendamento, pagamento e histórico. O controller, seus DTOs exclusivos e as
+telas foram removidos. O contrato autenticado `/api/mobile/summary`, já chamado
+pelo aplicativo publicado, agora retorna somente dados pertencentes ao cliente
+ou profissional da sessão. O smoke Mobile passa também a rejeitar conteúdo de
+runtime fabricado. As ferramentas Admin dev-only classificadas acima não foram
+promovidas. O estado continua **NO-GO** até build .NET, SQL e API runtime.

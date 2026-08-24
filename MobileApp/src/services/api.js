@@ -13,14 +13,13 @@ async function request(path, { method = 'GET', body, signal } = {}) {
 const query = values => new URLSearchParams(Object.entries(values).filter(([, value]) => value !== undefined && value !== null).map(([key, value]) => [key, String(value)])).toString();
 export const mobileApi = {
   setAccessToken(token) { accessToken = token || null; }, logout() { accessToken = null; },
-  login: input => request('/api/auth/login', { method: 'POST', body: input }), register: input => request('/api/mobile/client/register', { method: 'POST', body: input }),
+  login: input => request('/api/auth/login', { method: 'POST', body: input }),
   getMobileSummary: signal => request('/api/mobile/summary', { signal }), services: signal => request('/api/mobile/services', { signal }),
   slots: values => request(`/api/mobile/appointments/availability?${query(values)}`), createAppointment: input => request('/api/mobile/appointments', { method: 'POST', body: { ...input, origin: 'Mobile' } }),
   reschedule: (id, startsAt, reason) => request(`/api/mobile/appointments/${id}/reschedule`, { method: 'POST', body: { startsAt, reason } }),
   cancel: (id, reason) => request(`/api/mobile/appointments/${id}/cancel`, { method: 'POST', body: { reason } }),
   history: signal => request('/api/mobile/client/history', { signal }), benefits: signal => request('/api/mobile/client/benefits', { signal }),
   notifications: signal => request('/api/mobile/notifications', { signal }), readNotification: id => request(`/api/mobile/notifications/${id}/read`, { method: 'POST' }),
-  profile: signal => request('/api/mobile/client/profile', { signal }), updateProfile: input => request('/api/mobile/client/profile', { method: 'PUT', body: input }),
   professionalDay: signal => request('/api/mobile/professional/day', { signal }), start: id => request(`/api/mobile/professional/appointments/${id}/start`, { method: 'POST' }),
   finish: id => request(`/api/mobile/professional/appointments/${id}/finish`, { method: 'POST' }), commissions: signal => request('/api/mobile/professional/commissions', { signal }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })

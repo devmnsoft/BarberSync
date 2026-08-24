@@ -1,9 +1,10 @@
 using BarberSync.Api.Services.Enterprise;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/dashboard")]
 public sealed class DashboardController(EnterpriseDataService data, ILogger<DashboardController> logger) : ControllerBase
 {

@@ -4,6 +4,24 @@ Atualizado em 24 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 23 — auditoria funcional de contratos
+
+O inventário de 294 actions está em `API_ROUTE_CONTRACTS.md`. A auditoria
+corrigiu a rota `/api/mobile/summary`, que era consumida pelo aplicativo mas não
+existia, removeu três chamadas Mobile sem action correspondente e eliminou um
+controller público que devolvia token e coleções fabricadas. O resumo novo
+separa cliente e profissional e filtra agenda, histórico, notificações,
+benefícios, comissões e bloqueios pela identidade autenticada. Dashboard,
+pagamentos CRUD, notificações e auditoria passaram a declarar `Authorize`
+explicitamente; a política fallback autenticada continua ativa.
+
+Os checks Bash, JavaScript, Mobile e Totem passaram, inclusive o bundle Vite.
+O scan literal retornou 161 linhas, ainda classificadas entre laboratórios
+dev-only, testes e referências técnicas/legadas; os artefatos Mobile operacionais
+encontrados foram removidos. Docker, .NET e `psql` não estão instalados neste
+executor e não foram simulados. Portanto build, SQL, API runtime e a decisão de
+produção permanecem **NO-GO**.
+
 ## Sprint de Produção 22 — pacote de execução externa
 
 Foram versionadas pré-checagens equivalentes para Bash e PowerShell, coletores de

@@ -1,10 +1,11 @@
 using System.Text.Json;
 using BarberSync.Api.Services.Enterprise;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/payments")]
 public sealed class PaymentsController(EnterpriseDataService data, ILogger<PaymentsController> logger) : EnterpriseCrudController(data, logger, "payments")
 {
