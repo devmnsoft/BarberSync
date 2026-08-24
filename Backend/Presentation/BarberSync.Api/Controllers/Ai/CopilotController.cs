@@ -1,11 +1,12 @@
 using BarberSync.Application.Abstractions;
 using BarberSync.Application.Abstractions.Ai;
 using BarberSync.Application.DTOs.Ai;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers.Ai;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/copilot")]
 public class CopilotController(ICopilotService copilotService, ICurrentUserContext currentUser) : ControllerBase
 {

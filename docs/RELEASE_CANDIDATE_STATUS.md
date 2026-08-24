@@ -4,6 +4,12 @@ Atualizado em 24 de agosto de 2026. Este documento registra somente verificaçõ
 executadas nesta revisão; ausência de ferramenta ou infraestrutura não é tratada
 como aprovação.
 
+## Sprint de Produção 24 — contratos Admin/Totem/API
+
+O inventário operacional foi reconferido e detalha os contratos públicos do Totem. O Totem publicado não assume mais um device code fixo: implantação ou URL deve provisioná-lo, enquanto tenant e unidade permanecem obrigatoriamente configurados no host API. O Copilot passou a declarar autorização no próprio controller e o smoke de produção agora verifica `GET /api/mobile/summary` sem token como `401`, inclusive com correlação do erro.
+
+Os resultados locais desta sprint não substituem build .NET, aplicação SQL nem execução da API. A decisão segue **NO-GO** até que o gate Docker completo produza essas evidências.
+
 ## Sprint de Produção 23 — auditoria funcional de contratos
 
 O inventário de 294 actions está em `API_ROUTE_CONTRACTS.md`. A auditoria

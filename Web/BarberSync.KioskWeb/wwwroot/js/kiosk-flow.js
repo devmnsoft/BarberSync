@@ -12,7 +12,7 @@
   };
 
   window.KioskFlow = {
-    deviceCode: window.BarberSyncKiosk?.deviceCode || new URLSearchParams(location.search).get('deviceCode') || 'KIOSK-001',
+    deviceCode: window.BarberSyncKiosk?.deviceCode || new URLSearchParams(location.search).get('deviceCode') || '',
     get state() { return state; },
     async initialize() {
       state = await requestState('GET');
