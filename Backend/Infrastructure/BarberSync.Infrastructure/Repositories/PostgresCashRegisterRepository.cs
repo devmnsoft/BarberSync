@@ -103,9 +103,10 @@ public sealed class PostgresCashRegisterRepository(IDbConnectionFactory connecti
             expected=reader.GetDecimal(4); actual=reader.IsDBNull(5)?null:reader.GetDecimal(5); opened=reader.GetFieldValue<DateTimeOffset>(6); closed=reader.IsDBNull(7)?null:reader.GetFieldValue<DateTimeOffset>(7);
         }
         var movements = new List<CashMovementResponse>();
-        await using (var command = Command(connection, "SELECT id,type,amount,COALESCE(description,''),created_at,payment_id FROM barber.cash_movements WHERE cash_register_id=@id ORDER BY created_at DESC"))
+        await using (var command = Command(connection, "SELECT id,type,amount,COALESCE(description,''),created_at,payment_id FROM barber.cash_movements WHERE cash_register_id=@id AND tenant_id=@tenant AND branch_id=@branch ORDER BY created_at DESC"))
         {
-            Add(command, "id", id); await using var reader = await command.ExecuteReaderAsync(ct);
+            Add(command, "id", id); Add(command, "tenant", tenant); Add(command, "branch", branch);
+            await using var reader = await command.ExecuteReaderAsync(ct);
             while(await reader.ReadAsync(ct)) movements.Add(new(reader.GetGuid(0),reader.GetString(1),reader.GetDecimal(2),reader.GetString(3),reader.GetFieldValue<DateTimeOffset>(4),reader.IsDBNull(5)?null:reader.GetGuid(5)));
         }
         return new(id,status,opening,inflows,outflows,expected,actual,actual is null?0:actual.Value-expected,opened,closed,movements);

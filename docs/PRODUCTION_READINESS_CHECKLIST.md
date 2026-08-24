@@ -267,4 +267,5 @@ tiverem evidência anexada ao registro do candidato. O estado atual é **NO-GO**
 - [ ] `validate-readiness-contracts` passa nas versões Bash e PowerShell disponíveis.
 - [ ] `READINESS_CONTRACTS_STATIC:PASS` consta no log do runner.
 - [ ] Contratos `PaymentId`/`payment_id`, POS, estoque, seed protegido e markers foram verificados.
+- [ ] Consultas filhas de caixa e listagens enterprise mantêm escopo explícito de tenant/unidade, e os índices de idempotência do financeiro e das comissões foram verificados.
 - [ ] Build .NET, schema PostgreSQL e smokes reais continuam obrigatórios; sem eles a decisão permanece **NO-GO**.

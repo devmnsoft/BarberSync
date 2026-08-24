@@ -79,4 +79,4 @@ product 25.00).
 
 ### Correlação POS de estoque e caixa
 
-`GET /api/stock/movements` é autenticado, exige `Stock.View` e aplica o tenant/branch dos claims. Cada movimento inclui `id`, `tenantId`, `branchId`, `productId`, `serviceOrderId`, `type`, `quantity`, `balanceAfter`, `reason`, `status` e `createdAt`. Em `GET /api/cash-registers/current`, cada item de `movements` inclui `paymentId` anulável (`Guid?`): movimentos manuais ou históricos podem não estar associados a pagamento, enquanto vendas POS devem carregar a correlação.
+`GET /api/stock/movements` é autenticado, exige `Stock.View` e aplica o tenant/branch dos claims. Cada movimento inclui `id`, `tenantId`, `branchId`, `productId`, `serviceOrderId`, `type`, `quantity`, `balanceAfter`, `reason`, `status` e `createdAt`. Em `GET /api/cash-registers/current`, cada item de `movements` inclui `paymentId` anulável (`Guid?`): movimentos manuais ou históricos podem não estar associados a pagamento, enquanto vendas POS devem carregar a correlação. A leitura dos movimentos de caixa reaplica `tenant_id` e `branch_id` além do identificador do caixa, mantendo a fronteira multi-tenant também na consulta filha.
