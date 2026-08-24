@@ -426,3 +426,9 @@ The repository now defines an isolated, guarded readiness seed and authenticated
 ## Sprint 28 — auditoria pós-POS
 
 A validação estática de contratos C#/SQL/POS foi incorporada como pré-condição e produz `READINESS_CONTRACTS_STATIC`. Ela reduz risco antes do executor real, mas não altera o estado atual: sem build .NET, PostgreSQL e gate integral comprovados, a decisão permanece **NO-GO**.
+
+## Sprint 29 — GitHub Actions como fonte oficial
+
+O workflow `Production Readiness` agora é o caminho oficial de diagnóstico: executa o gate integral, coleta evidências sem repetir o gate, publica sempre os diretórios `artifacts/production-readiness/` e `artifacts/release-evidence/` e gera um GitHub Step Summary com markers passados, ausentes e falhos. O summarizer retorna falha em qualquer NO-GO, inclusive quando um log ou artifact está ausente. A decisão atual continua **NO-GO** até um run real do GitHub Actions produzir todos os markers PASS.
+
+O scan ampliado da Sprint 29 também removeu o último `KIOSK-001` operacional de `Web/BarberSync.KioskWeb/appsettings.Docker.json`; o container agora precisa receber `Kiosk__DeviceCode`. As demais correspondências do scan permanecem classificadas em `DEMO_FALLBACK_CLASSIFICATION.md` como laboratórios protegidos por Development + SuperAdmin, testes, texto histórico, validações negativas ou fixtures efêmeras de readiness; nenhuma nova pendência operacional foi aceita.

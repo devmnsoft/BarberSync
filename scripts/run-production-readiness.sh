@@ -41,7 +41,7 @@ echo "Starting PostgreSQL 16..."
 "${compose[@]}" up -d --wait postgres
 run_logged dotnet-info.log "${compose[@]}" run --rm --no-deps api dotnet --info
 run_logged dotnet-restore.log "${compose[@]}" run --rm --no-deps api dotnet restore BarberSync.sln
-mark_pass DOTNET_RESTORE dotnet-restore.log
+mark_pass RESTORE dotnet-restore.log
 run_logged dotnet-build-debug.log "${compose[@]}" run --rm --no-deps api dotnet build BarberSync.sln --configuration Debug --no-restore
 mark_pass BUILD_DEBUG dotnet-build-debug.log
 run_logged dotnet-build-release.log "${compose[@]}" run --rm --no-deps api dotnet build BarberSync.sln --configuration Release --no-restore
@@ -51,8 +51,8 @@ run_logged sql-apply-1.log bash -c 'docker compose -p "$1" -f "$2" exec -T postg
 mark_pass SQL_APPLY_1 sql-apply-1.log
 run_logged sql-apply-2.log bash -c 'docker compose -p "$1" -f "$2" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 < "$3"' _ "$project_name" "$compose_file" "$root_dir/ScriptsSQL/script_completo.sql"
 mark_pass SQL_APPLY_2 sql-apply-2.log
-docker compose -p "$project_name" -f "$compose_file" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 < "$root_dir/scripts/validate-production-schema.sql" 2>&1 | tee -a "$log_dir/sql-apply-2.log"
-mark_pass SCHEMA_VALIDATION sql-apply-2.log
+docker compose -p "$project_name" -f "$compose_file" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres" -v ON_ERROR_STOP=1 < "$root_dir/scripts/validate-production-schema.sql" 2>&1 | tee "$log_dir/schema-validation.log"
+mark_pass SCHEMA_VALIDATION schema-validation.log
 run_logged readiness-seed.log bash -c 'docker compose -p "$1" -f "$2" exec -T postgres psql "host=localhost port=5432 dbname=barber user=postgres password=postgres options=-cbarbersync.environment=ProductionReadiness" -v ON_ERROR_STOP=1 < "$3"' _ "$project_name" "$compose_file" "$root_dir/ScriptsSQL/production_readiness_seed.sql"
 mark_pass READINESS_SEED readiness-seed.log
 

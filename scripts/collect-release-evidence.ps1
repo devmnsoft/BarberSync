@@ -28,10 +28,16 @@ try {
         else { "`nPR #201: $(if ($State) {$State} else {'sem confirmação; validação manual necessária'})" | Add-Content $PrFile }
     } else { "GitHub CLI não autenticado; PR #201 permanece sem evidência de fechamento." | Add-Content $PrFile }
 
-    $Ready = Join-Path $Evidence "production-readiness-summary.md"; "# Production readiness`n`n## Execução" | Set-Content $Ready
-    Invoke-Captured $Ready { & (Join-Path $PSScriptRoot "run-production-readiness.ps1") } | Out-Null
-    "`n## Logs disponíveis" | Add-Content $Ready
+    $Ready = Join-Path $Evidence "production-readiness-summary.md"; "# Production readiness`n`nO coletor preserva o gate já executado e não o executa novamente.`n`n## Logs disponíveis" | Set-Content $Ready
     if (Test-Path $Production) { Get-ChildItem $Production -File | Sort-Object Name | Select-Object -ExpandProperty Name | Add-Content $Ready } else { "Nenhum diretório de logs encontrado." | Add-Content $Ready }
+    $Markers = Join-Path $Evidence "markers.txt"; "# Markers encontrados" | Set-Content $Markers
+    if (Test-Path $Production) { Get-ChildItem $Production -File | Select-String 'EVIDENCE:' | ForEach-Object Line | Sort-Object -Unique | Add-Content $Markers }
+    $Tails = Join-Path $Evidence "critical-log-tails.md"; "# Caudas dos logs críticos" | Set-Content $Tails
+    @('dotnet-restore.log','dotnet-build-debug.log','dotnet-build-release.log','sql-apply-1.log','sql-apply-2.log','schema-validation.log','readiness-seed.log','api-run.log','health.log','production-smoke.log','authenticated-production-smoke.log','frontend.log','mobile-smoke.log','totem-smoke.log','totem-build.log') | ForEach-Object {
+        "`n## $_`n`n``````text" | Add-Content $Tails
+        $Log = Join-Path $Production $_; if (Test-Path $Log) { Get-Content $Log -Tail 80 | Add-Content $Tails } else { 'LOG AUSENTE' | Add-Content $Tails }
+        "``````" | Add-Content $Tails
+    }
 
     $Frontend = Join-Path $Evidence "frontend-checks.md"; "# Checks frontend" | Set-Content $Frontend
     function Run-Frontend([string]$Label, [string]$Marker, [scriptblock]$Command) {
@@ -47,6 +53,5 @@ try {
     $Scan = Join-Path $Evidence "demo-fallback-scan.md"
     "# Scan demo/fallback`n`nResultados literais devem ser confrontados com docs/DEMO_FALLBACK_CLASSIFICATION.md; ocorrência não é aprovada automaticamente." | Set-Content $Scan
     Invoke-Captured $Scan { rg -n 'DemoStore|localStorage|sessionStorage|mock|fake|fallback|TODO|NotImplementedException|throw new NotImplementedException|em breve|coming soon|href="#"|onclick=""|00000000|11111111|22222222|PublicConfigController|ConfigurationService' Backend Web MobileApp Totem --glob '!**/node_modules/**' --glob '!**/dist/**' } | Out-Null
-    & (Join-Path $PSScriptRoot "summarize-release-evidence.ps1")
     Write-Host "Evidências coletadas em $Evidence"
 } finally { Pop-Location }

@@ -72,3 +72,15 @@ Every exact PASS marker and its log is mandatory. Missing logs, `SKIPPED`, and e
 - Comando: `./scripts/validate-readiness-contracts.sh`
 - Evidência obrigatória: `EVIDENCE:READINESS_CONTRACTS_STATIC:PASS`
 - Resultado: `AUSENTE/REPROVADO` até execução bem-sucedida. A validação textual não substitui build .NET ou PostgreSQL real.
+
+## Evidência hospedada — Sprint 29
+
+- URL do run de `Production Readiness`:
+- artifact `production-readiness-<run-id>` baixado: sim/não
+- `artifacts/release-evidence/go-no-go.md` presente: sim/não
+- GitHub Step Summary presente: sim/não
+- markers passados:
+- markers ausentes:
+- markers falhos:
+
+O Step Summary e o artifact publicado mesmo em falha são o caminho oficial de diagnóstico. Artifact, resumo ou log obrigatório ausente implica **NO-GO**. O estado permanece **NO-GO** até GitHub Actions ou outro executor Docker real produzir todos os markers PASS.

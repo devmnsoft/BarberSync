@@ -3,10 +3,17 @@ name: Production Readiness
 on:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: production-readiness-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   production-readiness:
@@ -16,6 +23,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Run the versioned production-readiness gate
         env:
@@ -30,12 +47,51 @@ jobs:
           READINESS_TENANT_ID: 70000000-0000-4000-8000-000000000001
           READINESS_BRANCH_ID: 70000000-0000-4000-8000-000000000002
           READINESS_KIOSK_DEVICE_CODE: READINESS-KIOSK-001
+          BarberSync__DefaultTenantId: 70000000-0000-4000-8000-000000000001
+          BarberSync__DefaultBranchId: 70000000-0000-4000-8000-000000000002
+          Kiosk__DeviceCode: READINESS-KIOSK-001
         run: ./scripts/run-production-readiness.sh
 
-      - name: Upload API log on failure
-        if: failure()
+      - name: Collect release evidence
+        if: always()
+        run: ./scripts/collect-release-evidence.sh
+
+      - name: Summarize GO/NO-GO
+        if: always()
+        run: ./scripts/summarize-release-evidence.sh
+
+      - name: Write GO/NO-GO step summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "# BarberSync Production Readiness"
+            echo
+            echo "## Run"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Ref: $GITHUB_REF"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo
+            if [[ -f artifacts/release-evidence/go-no-go.md ]]; then
+              cat artifacts/release-evidence/go-no-go.md
+            else
+              echo "## GO/NO-GO"
+              echo "Status: NO-GO"
+              echo
+              echo "O resumo obrigatório artifacts/release-evidence/go-no-go.md não foi gerado."
+            fi
+            echo
+            echo "## Markers encontrados"
+            grep -R --no-filename 'EVIDENCE:' artifacts/production-readiness artifacts/release-evidence 2>/dev/null | sort -u || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload production readiness logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: production-readiness-logs
-          path: artifacts/production-readiness/
-          if-no-files-found: ignore
+          name: production-readiness-${{ github.run_id }}
+          path: |
+            artifacts/production-readiness/**
+            artifacts/release-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
