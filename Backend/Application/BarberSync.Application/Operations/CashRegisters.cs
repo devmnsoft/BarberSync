@@ -3,7 +3,7 @@ namespace BarberSync.Application.Operations;
 public sealed record OpenCashRegisterRequest(decimal OpeningBalance, string? Note = null);
 public sealed record CashMovementRequest(decimal Amount, string Reason, string? Category = null);
 public sealed record CloseCashRegisterRequest(decimal ActualBalance, string? Note = null);
-public sealed record CashMovementResponse(Guid Id, string Type, decimal Amount, string Description, DateTimeOffset CreatedAt);
+public sealed record CashMovementResponse(Guid Id, string Type, decimal Amount, string Description, DateTimeOffset CreatedAt, Guid? PaymentId = null);
 public sealed record CashRegisterResponse(Guid Id, string Status, decimal OpeningBalance, decimal Inflows, decimal Outflows,
     decimal ExpectedBalance, decimal? ActualBalance, decimal Difference, DateTimeOffset OpenedAt,
     DateTimeOffset? ClosedAt, IReadOnlyList<CashMovementResponse> Movements);

@@ -15,7 +15,7 @@ public abstract class CommercialModuleController(EnterpriseDataService data, ILo
     [HttpDelete("{id:guid}")] [Authorize(Roles = "SuperAdmin,Owner,Admin")] public Task<IActionResult> Remove(Guid id, CancellationToken ct) => Delete(id, ct);
 }
 
-[ApiController, Route("api/commissions"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager,Professional")]
+[ApiController, Route("api/commissions"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
 public sealed class CommissionsController(EnterpriseDataService data, ILogger<CommissionsController> log) : CommercialModuleController(data, log, "commissions");
 [ApiController, Route("api/packages"), Authorize]
 public sealed class PackagesController(EnterpriseDataService data, ILogger<PackagesController> log) : CommercialModuleController(data, log, "packages");
@@ -56,7 +56,7 @@ public sealed class PurchasesController(EnterpriseDataService data, ILogger<Purc
     public async Task<IActionResult> Receive(Guid id, [FromBody] PurchaseReceiptRequest request, CancellationToken ct)
         => Ok(await data.ReceivePurchaseAsync(id, request.InvoiceNumber, request.DueDate, request.Items, ct));
 }
-[ApiController, Route("api/finance"), Authorize]
+[ApiController, Route("api/finance"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
 public sealed class FinanceController(EnterpriseDataService data, ILogger<FinanceController> log) : CommercialModuleController(data, log, "financial-entries");
 
 public sealed record PackageSaleRequest(Guid PackageId, Guid ClientId, bool Paid);

@@ -145,3 +145,10 @@ promovidas. O estado continua **NO-GO** até build .NET, SQL e API runtime.
 ## Sprint de Produção 24 — configuração operacional do Totem
 
 O fallback de runtime `KIOSK-001` foi removido do Totem publicado. O device code agora precisa ser provisionado na URL do dispositivo ou em `VITE_KIOSK_DEVICE_CODE`; sua ausência interrompe o fluxo com mensagem explícita em vez de operar sob uma identidade inventada. O smoke contratual impede a reintrodução desse default. Nenhuma superfície dev-only foi promovida, e o estado permanece **NO-GO** sem evidência de .NET, SQL e API runtime.
+# Sprint 26 POS classification
+
+The production-readiness POS path is operational production code, not demo/fallback. It uses
+the PostgreSQL repositories and authenticated controllers, and verifies persisted payment,
+cash, financial, stock, commission and audit records. The earlier contract-not-found skip is
+historical only and has been removed from executable scripts. No runtime fixture or successful
+fallback response is permitted.
