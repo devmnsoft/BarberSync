@@ -254,6 +254,9 @@ INSERT INTO barber.permissions(id,code,description) VALUES
  ,('10000000-0000-4000-8000-000000000035','Client.Update','Atualizar perfil de cliente')
  ,('10000000-0000-4000-8000-000000000036','Campaign.Read','Visualizar campanhas internas')
  ,('10000000-0000-4000-8000-000000000037','Campaign.Create','Criar campanhas internas')
+ ,('10000000-0000-4000-8000-000000000038','Finance.Read','Visualizar financeiro da unidade')
+ ,('10000000-0000-4000-8000-000000000039','Finance.Manage','Gerenciar lançamentos financeiros')
+ ,('10000000-0000-4000-8000-000000000040','Finance.Export','Exportar relatórios financeiros')
 ON CONFLICT(id) DO UPDATE SET code=excluded.code,description=excluded.description;
 INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
 ('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
@@ -484,4 +487,67 @@ CREATE TABLE IF NOT EXISTS barber.professional_performance_snapshots (
 );
 CREATE INDEX IF NOT EXISTS ix_performance_snapshots_scope ON barber.professional_performance_snapshots(tenant_id,branch_id,professional_id,period_start,period_end);
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('018','Equipe, RH, metas e repasses','team-hr-20260825') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
+
+-- Financeiro avancado (Sprint 37). Objetos aditivos, isolados por tenant/filial.
+CREATE TABLE IF NOT EXISTS barber.financial_categories (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), name varchar(120) NOT NULL,
+ type varchar(20) NOT NULL, parent_id uuid REFERENCES barber.financial_categories(id), color varchar(20), icon varchar(40), status varchar(20) NOT NULL DEFAULT 'Active',
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz,
+ CONSTRAINT ck_financial_category_type CHECK(type IN ('Revenue','Expense','Transfer','Adjustment'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_financial_categories_name ON barber.financial_categories(tenant_id,branch_id,lower(name)) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_financial_categories_scope ON barber.financial_categories(tenant_id,branch_id,status);
+CREATE TABLE IF NOT EXISTS barber.suppliers (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), name varchar(160) NOT NULL,
+ document_number varchar(30), email varchar(160), phone varchar(30), address_json jsonb NOT NULL DEFAULT '{}', notes text, status varchar(20) NOT NULL DEFAULT 'Active',
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz
+);
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS document_number varchar(30);
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS email varchar(160);
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS phone varchar(30);
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS address_json jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS notes text;
+ALTER TABLE barber.suppliers ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+CREATE INDEX IF NOT EXISTS ix_suppliers_scope ON barber.suppliers(tenant_id,branch_id,status);
+CREATE TABLE IF NOT EXISTS barber.accounts_payable (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), supplier_id uuid REFERENCES barber.suppliers(id),
+ category_id uuid NOT NULL REFERENCES barber.financial_categories(id), description varchar(240) NOT NULL, amount numeric(14,2) NOT NULL, due_date date NOT NULL, paid_at timestamptz,
+ status varchar(20) NOT NULL DEFAULT 'Open', payment_method varchar(30), reference varchar(120), source_purchase_id uuid, source_cash_movement_id uuid,
+ notes text, cancellation_reason text, created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz,
+ CONSTRAINT ck_accounts_payable_amount CHECK(amount>0), CONSTRAINT ck_accounts_payable_status CHECK(status IN ('Open','Paid','Overdue','Cancelled'))
+);
+CREATE INDEX IF NOT EXISTS ix_accounts_payable_scope ON barber.accounts_payable(tenant_id,branch_id,status,due_date);
+CREATE TABLE IF NOT EXISTS barber.accounts_receivable (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), client_id uuid REFERENCES barber.clients(id),
+ category_id uuid NOT NULL REFERENCES barber.financial_categories(id), description varchar(240) NOT NULL, amount numeric(14,2) NOT NULL, due_date date NOT NULL, received_at timestamptz,
+ status varchar(20) NOT NULL DEFAULT 'Open', payment_method varchar(30), reference varchar(120), source_service_order_id uuid, source_payment_id uuid, source_cash_movement_id uuid,
+ notes text, cancellation_reason text, created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz,
+ CONSTRAINT ck_accounts_receivable_amount CHECK(amount>0), CONSTRAINT ck_accounts_receivable_status CHECK(status IN ('Open','Received','Overdue','Cancelled'))
+);
+CREATE INDEX IF NOT EXISTS ix_accounts_receivable_scope ON barber.accounts_receivable(tenant_id,branch_id,status,due_date);
+CREATE TABLE IF NOT EXISTS barber.recurring_financial_rules (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), category_id uuid NOT NULL REFERENCES barber.financial_categories(id),
+ supplier_id uuid REFERENCES barber.suppliers(id), type varchar(20) NOT NULL, description varchar(240) NOT NULL, amount numeric(14,2) NOT NULL, frequency varchar(20) NOT NULL,
+ day_of_month integer, starts_at date NOT NULL, ends_at date, next_run_at date NOT NULL, status varchar(20) NOT NULL DEFAULT 'Active', created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_recurring_type CHECK(type IN ('Payable','Receivable')), CONSTRAINT ck_recurring_frequency CHECK(frequency IN ('Monthly','Weekly','Yearly')), CONSTRAINT ck_recurring_amount CHECK(amount>0)
+);
+CREATE INDEX IF NOT EXISTS ix_recurring_financial_scope ON barber.recurring_financial_rules(tenant_id,branch_id,status,next_run_at);
+CREATE TABLE IF NOT EXISTS barber.financial_reconciliations (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), cash_register_id uuid NOT NULL REFERENCES barber.cash_registers(id),
+ period_start timestamptz NOT NULL, period_end timestamptz NOT NULL, expected_amount numeric(14,2) NOT NULL, actual_amount numeric(14,2) NOT NULL,
+ difference_amount numeric(14,2) NOT NULL, status varchar(20) NOT NULL DEFAULT 'Draft', closed_by uuid REFERENCES barber.users(id), closed_at timestamptz,
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, CONSTRAINT ck_financial_reconciliation_period CHECK(period_end>=period_start), CONSTRAINT ck_financial_reconciliation_status CHECK(status IN ('Draft','Closed','Cancelled'))
+);
+CREATE INDEX IF NOT EXISTS ix_financial_reconciliations_scope ON barber.financial_reconciliations(tenant_id,branch_id,status,period_start,period_end);
+CREATE TABLE IF NOT EXISTS barber.financial_reconciliation_items (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), reconciliation_id uuid NOT NULL REFERENCES barber.financial_reconciliations(id),
+ financial_entry_id uuid, cash_movement_id uuid, payment_id uuid, amount numeric(14,2) NOT NULL, status varchar(20) NOT NULL DEFAULT 'Matched', created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_financial_reconciliation_items_scope ON barber.financial_reconciliation_items(tenant_id,branch_id,reconciliation_id,status);
+CREATE TABLE IF NOT EXISTS barber.financial_exports (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), report_type varchar(40) NOT NULL,
+ period_start date NOT NULL, period_end date NOT NULL, requested_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_financial_exports_scope ON barber.financial_exports(tenant_id,branch_id,created_at);
+INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('019','Financeiro avancado','finance-20260825') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;

@@ -11,6 +11,16 @@
   const text = value => value == null ? '—' : Array.isArray(value) ? value.join(', ') : String(value);
   const safe = value => { const node = document.createElement('span'); node.textContent = text(value); return node.innerHTML; };
   const status = item => item.status || (item.isActive === false ? 'Inactive' : 'Active');
+  async function loadReferences() {
+    const endpoints = { professional: 'professionals', client: 'clients', package: 'packages', membership: 'memberships', supplier: 'suppliers', product: 'products', service: 'services' };
+    await Promise.all([...drawer.querySelectorAll('[data-reference-select]')].map(async select => {
+      const resource = endpoints[select.dataset.referenceSelect];
+      if (!resource) { select.innerHTML = '<option value="">Nenhuma opção configurada</option>'; return; }
+      const response = await window.adminGet(`/api/${resource}`);
+      const rows = response.success ? (Array.isArray(response.data) ? response.data : response.data?.items || []) : [];
+      select.innerHTML = `<option value="">Selecione</option>${rows.map(row => `<option value="${safe(row.id)}">${safe(row.name || row.fullName || row.description)}</option>`).join('')}`;
+    }));
+  }
   function render(filter = '') {
     const visible = items.filter(x => JSON.stringify(x).toLowerCase().includes(filter.toLowerCase()));
     tbody.innerHTML = visible.map(item => {
@@ -34,7 +44,7 @@
     render(document.querySelector('#commercial-search').value);
   }
   const close = () => { drawer.hidden = true; document.body.classList.remove('drawer-open'); };
-  document.querySelector('#commercial-new').onclick = () => { drawer.hidden = false; document.body.classList.add('drawer-open'); };
+  document.querySelector('#commercial-new').onclick = () => { drawer.hidden = false; document.body.classList.add('drawer-open'); loadReferences(); };
   drawer.querySelectorAll('.drawer-close,.drawer-scrim').forEach(x => x.onclick = close);
   document.querySelector('#commercial-refresh').onclick = load;
   document.querySelector('#commercial-search').oninput = e => render(e.target.value);
