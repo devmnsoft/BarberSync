@@ -84,3 +84,14 @@ Every exact PASS marker and its log is mandatory. Missing logs, `SKIPPED`, and e
 - markers falhos:
 
 O Step Summary e o artifact publicado mesmo em falha são o caminho oficial de diagnóstico. Artifact, resumo ou log obrigatório ausente implica **NO-GO**. O estado permanece **NO-GO** até GitHub Actions ou outro executor Docker real produzir todos os markers PASS.
+
+## Pacote local de evidência
+
+- Arquivo ZIP:
+- Máquina:
+- Data/hora:
+- Branch:
+- Commit:
+- Resultado:
+- Primeiro marker ausente/falho:
+- Próxima correção:

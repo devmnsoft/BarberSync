@@ -30,14 +30,19 @@ try {
 
     $Ready = Join-Path $Evidence "production-readiness-summary.md"; "# Production readiness`n`nO coletor preserva o gate já executado e não o executa novamente.`n`n## Logs disponíveis" | Set-Content $Ready
     if (Test-Path $Production) { Get-ChildItem $Production -File | Sort-Object Name | Select-Object -ExpandProperty Name | Add-Content $Ready } else { "Nenhum diretório de logs encontrado." | Add-Content $Ready }
-    $Markers = Join-Path $Evidence "markers.txt"; "# Markers encontrados" | Set-Content $Markers
+    $Markers = Join-Path $Evidence "markers.md"; "# Markers encontrados" | Set-Content $Markers
     if (Test-Path $Production) { Get-ChildItem $Production -File | Select-String 'EVIDENCE:' | ForEach-Object Line | Sort-Object -Unique | Add-Content $Markers }
+    Copy-Item $Markers (Join-Path $Evidence "markers.txt") -Force
     $Tails = Join-Path $Evidence "critical-log-tails.md"; "# Caudas dos logs críticos" | Set-Content $Tails
     @('dotnet-restore.log','dotnet-build-debug.log','dotnet-build-release.log','sql-apply-1.log','sql-apply-2.log','schema-validation.log','readiness-seed.log','api-run.log','health.log','production-smoke.log','authenticated-production-smoke.log','frontend.log','mobile-smoke.log','totem-smoke.log','totem-build.log') | ForEach-Object {
         "`n## $_`n`n``````text" | Add-Content $Tails
         $Log = Join-Path $Production $_; if (Test-Path $Log) { Get-Content $Log -Tail 80 | Add-Content $Tails } else { 'LOG AUSENTE' | Add-Content $Tails }
         "``````" | Add-Content $Tails
     }
+    $Tooling = Join-Path $Evidence "tooling-status.md"; "# Status das ferramentas`n" | Set-Content $Tooling
+    @('git','docker','dotnet','node','npm','psql') | ForEach-Object { "- ${_}: $(if (Get-Command $_ -ErrorAction SilentlyContinue) {'disponível'} else {'indisponível'})" | Add-Content $Tooling }
+    $GoNoGo = Join-Path $Evidence "go-no-go.md"
+    if (-not (Test-Path $GoNoGo)) { "# GO/NO-GO`n`nStatus: NO-GO`n`nExecute summarize-release-evidence.ps1 para avaliar todos os markers obrigatórios." | Set-Content $GoNoGo }
 
     $Frontend = Join-Path $Evidence "frontend-checks.md"; "# Checks frontend" | Set-Content $Frontend
     function Run-Frontend([string]$Label, [string]$Marker, [scriptblock]$Command) {
