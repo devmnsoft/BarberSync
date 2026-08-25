@@ -59,10 +59,12 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
             professionals = (await data.ListAsync("professionals", ct)).Where(Active),
             benefits = new
             {
-                packages = await OwnedRows("packages", "clientId", ClientId(), ct),
-                subscriptions = await OwnedRows("subscriptions", "clientId", ClientId(), ct),
-                coupons = await OwnedRows("coupons", "clientId", ClientId(), ct),
-                loyalty = await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)
+                packages = await OwnedRows("client-packages", "clientId", ClientId(), ct),
+                subscriptions = await OwnedRows("client-memberships", "clientId", ClientId(), ct),
+                coupons = (await data.ListAsync("coupons", ct)).Where(Active),
+                loyalty = await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct),
+                points = (await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)).Sum(x => DecimalValue(x, "pointsBalance")),
+                cashback = (await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)).Sum(x => DecimalValue(x, "cashbackBalance"))
             },
             notifications = await OwnedRows("notifications", "userId", currentUser.UserId, ct)
         }));
@@ -102,8 +104,8 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
     [HttpGet("client/benefits")]
     public async Task<IActionResult> Benefits(CancellationToken ct) => Ok(Envelope(new
     {
-        packages = await OwnedRows("packages", "clientId", ClientId(), ct), subscriptions = await OwnedRows("subscriptions", "clientId", ClientId(), ct),
-        coupons = await OwnedRows("coupons", "clientId", ClientId(), ct), loyalty = await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)
+        packages = await OwnedRows("client-packages", "clientId", ClientId(), ct), subscriptions = await OwnedRows("client-memberships", "clientId", ClientId(), ct),
+        coupons = (await data.ListAsync("coupons", ct)).Where(Active), loyalty = await OwnedRows("loyalty_accounts", "clientId", ClientId(), ct)
     }));
 
     [HttpGet("notifications")]

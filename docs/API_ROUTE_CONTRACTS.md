@@ -85,3 +85,20 @@ product 25.00).
 ### Correlação POS de estoque e caixa
 
 `GET /api/stock/movements` é autenticado, exige `Stock.View` e aplica o tenant/branch dos claims. Cada movimento inclui `id`, `tenantId`, `branchId`, `productId`, `serviceOrderId`, `type`, `quantity`, `balanceAfter`, `reason`, `status` e `createdAt`. Em `GET /api/cash-registers/current`, cada item de `movements` inclui `paymentId` anulável (`Guid?`): movimentos manuais ou históricos podem não estar associados a pagamento, enquanto vendas POS devem carregar a correlação. A leitura dos movimentos de caixa reaplica `tenant_id` e `branch_id` além do identificador do caixa, mantendo a fronteira multi-tenant também na consulta filha.
+# Relacionamento (Sprint 35)
+
+| Método | Rota | Contrato |
+|---|---|---|
+| GET | `/api/relationship/dashboard` | KPIs do tenant/unidade autenticados. |
+| GET/PUT | `/api/clients/{id}/profile` | Perfil 360 real e permissões de cliente. |
+| GET | `/api/clients/{id}/timeline` | Agendamentos, comandas e fidelidade. |
+| GET | `/api/relationship/segments` | Segmentos determinísticos. |
+| GET | `/api/relationship/segments/{key}/clients` | Clientes calculados na unidade. |
+| GET/POST | `/api/relationship/campaigns` | Campanhas internas, sem envio externo. |
+| GET/POST/PUT | `/api/packages` | Catálogo de pacotes. |
+| POST | `/api/client-packages/sell` | Venda transacional. |
+| POST | `/api/client-packages/{id}/use` | Consumo com vigência e saldo. |
+| GET/POST/PUT | `/api/coupons` | Administração de cupons. |
+| POST | `/api/service-orders/{id}/coupon` | Valida e aplica cupom. |
+| POST | `/api/service-orders/{id}/cashback` | Resgata cashback. |
+| GET | `/api/mobile/summary` | Benefícios com ownership do cliente. |

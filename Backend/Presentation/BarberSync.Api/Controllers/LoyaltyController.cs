@@ -1,10 +1,11 @@
 using System.Text.Json;
 using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/loyalty")]
 public sealed class LoyaltyController(EnterpriseDataService data, ILogger<LoyaltyController> logger) : EnterpriseCrudController(data, logger, "loyalty")
 {
