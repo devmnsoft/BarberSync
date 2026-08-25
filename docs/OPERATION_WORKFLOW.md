@@ -68,3 +68,7 @@ usando a mesma chave de idempotência quando aplicável.
 - Execução com banco real e evidência autenticada continua pertencendo ao gate externo de
   production readiness. Nenhum modo alternativo, armazenamento de navegador ou dado de
   demonstração é usado por este fluxo.
+
+## Benefícios no fechamento
+
+Antes do pagamento, o PDV pode aplicar cupom validado, consumir sessão de pacote ou resgatar cashback. O fechamento mantém essas alterações e o acúmulo de fidelidade no contrato transacional do pagamento. Consulte `docs/RELATIONSHIP_WORKFLOW.md` para vigência, saldo, ownership e auditoria.

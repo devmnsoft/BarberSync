@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/campaigns")]
 public sealed class CampaignsController(EnterpriseDataService data, GrowthService growth, ICurrentUserContext currentUser, ILogger<CampaignsController> logger) : EnterpriseCrudController(data, logger, "campaigns")
 {

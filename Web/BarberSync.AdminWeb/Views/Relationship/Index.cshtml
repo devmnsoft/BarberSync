@@ -1,0 +1,14 @@
+@{ ViewData["Title"] = "Relacionamento"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<main class="relationship" data-relationship-root>
+  <header class="relationship-hero"><div><p class="pos-eyebrow">Relacionamento</p><h1>Clientes que voltam, valor que permanece</h1><p>Visão executiva de recorrência, benefícios e campanhas internas.</p></div><button class="btn btn-light" data-relationship-refresh>Atualizar</button></header>
+  <section class="relationship-state" data-relationship-loading>Consolidando os indicadores da unidade…</section>
+  <section class="bs-premium-error" data-relationship-error hidden><h2>Não foi possível carregar o relacionamento</h2><p data-error-message></p><small>Trace ID: <span data-error-trace>não informado</span></small></section>
+  <section class="relationship-kpis" data-relationship-kpis hidden></section>
+  <section class="relationship-grid">
+    <article class="relationship-panel"><header><h2>Segmentos acionáveis</h2><span>calculados</span></header><div data-relationship-segments class="relationship-list"></div></article>
+    <article class="relationship-panel"><header><h2>Campanhas recentes</h2><a href="/Relationship/Campaigns">Gerenciar</a></header><div data-relationship-campaigns class="relationship-list"></div></article>
+  </section>
+  <nav class="relationship-actions" aria-label="Módulos de relacionamento"><a href="/Relationship/Clients">Clientes</a><a href="/Relationship/Packages">Pacotes</a><a href="/Relationship/Coupons">Cupons</a><a href="/Relationship/Loyalty">Fidelidade</a><a href="/Relationship/Campaigns">Campanhas</a></nav>
+</main>
+@section Styles { <link rel="stylesheet" href="~/css/relationship.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/relationship.js" asp-append-version="true"></script> }

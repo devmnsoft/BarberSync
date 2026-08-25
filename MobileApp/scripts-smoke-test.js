@@ -34,6 +34,12 @@ for (const forbidden of ['Agendamento demo', 'FullServiceFlow demo', 'mobile-dem
     process.exit(1);
   }
 }
+for (const benefitContract of ['benefits.packages', 'benefits.coupons', 'benefits.cashback']) {
+  if (!appSource.includes(benefitContract)) {
+    console.error(`Mobile relationship summary is missing: ${benefitContract}`);
+    process.exit(1);
+  }
+}
 if (/availableSlots\?\.\[0\]|professionals\?\.\[0\]/.test(appSource)) {
   console.error('Mobile must not silently select the first professional or slot.');
   process.exit(1);

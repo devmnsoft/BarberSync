@@ -1,10 +1,12 @@
 using System.Text.Json;
 using BarberSync.Api.Services.Enterprise;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using BarberSync.Api.Security;
 
 namespace BarberSync.Api.Controllers;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/clients")]
 public sealed class ClientsController(EnterpriseDataService data, ILogger<ClientsController> logger) : EnterpriseCrudController(data, logger, "clients")
 {
@@ -15,4 +17,10 @@ public sealed class ClientsController(EnterpriseDataService data, ILogger<Client
     [HttpPost] public Task<IActionResult> CreateClient([FromBody] JsonElement payload, CancellationToken cancellationToken) => Create(payload, cancellationToken);
     [HttpPut("{id:guid}")] public Task<IActionResult> UpdateClient(Guid id, [FromBody] JsonElement payload, CancellationToken cancellationToken) => Update(id, payload, cancellationToken);
     [HttpDelete("{id:guid}")] public Task<IActionResult> DeleteClient(Guid id, CancellationToken cancellationToken) => Delete(id, cancellationToken);
+    [HttpGet("{id:guid}/profile"), Authorize, RequirePermission("Client.Read")]
+    public Task<IActionResult> Profile(Guid id, CancellationToken ct) => Safe(async () => (await data.ClientRelationshipAsync(id, ct)) is { } value ? Ok(Envelope(value, "Perfil completo carregado.")) : NotFound(Envelope(null, "Cliente não encontrado.", false)));
+    [HttpPut("{id:guid}/profile"), Authorize, RequirePermission("Client.Update")]
+    public Task<IActionResult> UpdateProfile(Guid id, [FromBody] JsonElement payload, CancellationToken ct) => Safe(async () => Ok(Envelope(await data.UpsertClientProfileAsync(id, payload, ct), "Perfil atualizado.")));
+    [HttpGet("{id:guid}/timeline"), Authorize, RequirePermission("Client.Read")]
+    public Task<IActionResult> Timeline(Guid id, CancellationToken ct) => Safe(async () => Ok(Envelope(await data.ClientTimelineAsync(id, ct), "Linha do tempo carregada.")));
 }

@@ -67,6 +67,37 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_coupons_tenant_code ON barber.coupons(tenan
 CREATE TABLE IF NOT EXISTS barber.coupon_redemptions (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), coupon_id uuid NOT NULL REFERENCES barber.coupons(id), service_order_id uuid NOT NULL REFERENCES barber.service_orders(id), client_id uuid REFERENCES barber.clients(id), discount_amount numeric(14,2) NOT NULL, redeemed_by uuid REFERENCES barber.users(id), redeemed_at timestamptz NOT NULL DEFAULT now());
 CREATE UNIQUE INDEX IF NOT EXISTS ux_coupon_redemptions_order ON barber.coupon_redemptions(service_order_id);
 CREATE TABLE IF NOT EXISTS barber.campaigns (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), name varchar(180), channel varchar(40), starts_at timestamptz, ends_at timestamptz, status varchar(30) NOT NULL DEFAULT 'Draft', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
+-- Relationship/CRM is additive so existing commercial records remain intact.
+CREATE TABLE IF NOT EXISTS barber.client_profiles (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),client_id uuid NOT NULL REFERENCES barber.clients(id),birth_date date,gender varchar(40),phone varchar(30),email varchar(254),notes text,preferences_json jsonb NOT NULL DEFAULT '{}'::jsonb,last_visit_at timestamptz,total_spent numeric(14,2) NOT NULL DEFAULT 0,visit_count integer NOT NULL DEFAULT 0,no_show_count integer NOT NULL DEFAULT 0,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_client_profiles_scope ON barber.client_profiles(tenant_id,branch_id,client_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_client_profiles_behavior ON barber.client_profiles(tenant_id,branch_id,last_visit_at,total_spent);
+ALTER TABLE barber.loyalty_accounts ADD COLUMN IF NOT EXISTS points_balance numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_accounts ADD COLUMN IF NOT EXISTS cashback_balance numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_accounts ADD COLUMN IF NOT EXISTS lifetime_points numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_accounts ADD COLUMN IF NOT EXISTS lifetime_cashback numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS client_id uuid REFERENCES barber.clients(id);
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS service_order_id uuid REFERENCES barber.service_orders(id);
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS points_delta numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS cashback_delta numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE barber.loyalty_transactions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES barber.users(id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_loyalty_accounts_client_scope ON barber.loyalty_accounts(tenant_id,branch_id,client_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_loyalty_transactions_client_scope ON barber.loyalty_transactions(tenant_id,branch_id,client_id,created_at DESC);
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS name varchar(180);
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS discount_type varchar(20) NOT NULL DEFAULT 'Percentage';
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS discount_value numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS min_order_value numeric(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS max_discount_value numeric(14,2);
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS usage_limit integer;
+ALTER TABLE barber.coupons ADD COLUMN IF NOT EXISTS usage_per_client integer;
+ALTER TABLE barber.coupon_redemptions ADD COLUMN IF NOT EXISTS payment_id uuid REFERENCES barber.payments(id);
+ALTER TABLE barber.coupon_redemptions ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES barber.users(id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_coupons_branch_code ON barber.coupons(tenant_id,branch_id,lower(code)) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_coupon_redemptions_client_scope ON barber.coupon_redemptions(tenant_id,branch_id,client_id,redeemed_at DESC);
+CREATE TABLE IF NOT EXISTS barber.client_segments(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),key varchar(80) NOT NULL,name varchar(160) NOT NULL,criteria_json jsonb NOT NULL DEFAULT '{}'::jsonb,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz);
+CREATE TABLE IF NOT EXISTS barber.client_campaign_recipients(id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),campaign_id uuid NOT NULL REFERENCES barber.campaigns(id),client_id uuid NOT NULL REFERENCES barber.clients(id),status varchar(30) NOT NULL DEFAULT 'Prepared',prepared_at timestamptz NOT NULL DEFAULT now(),marked_sent_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(campaign_id,client_id));
+CREATE INDEX IF NOT EXISTS ix_campaign_recipients_scope ON barber.client_campaign_recipients(tenant_id,branch_id,client_id);
 CREATE TABLE IF NOT EXISTS barber.reviews (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), client_id uuid REFERENCES barber.clients(id), appointment_id uuid REFERENCES barber.appointments(id), professional_id uuid REFERENCES barber.professionals(id), rating smallint, comment text, status varchar(30) NOT NULL DEFAULT 'Pending', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
 CREATE TABLE IF NOT EXISTS barber.notifications (id uuid PRIMARY KEY, tenant_id uuid REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), user_id uuid REFERENCES barber.users(id), title varchar(160) NOT NULL, message text NOT NULL, read_at timestamptz, status varchar(30) NOT NULL DEFAULT 'Unread', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
 ALTER TABLE barber.notifications ADD COLUMN IF NOT EXISTS entity_name varchar(120);
@@ -219,6 +250,10 @@ INSERT INTO barber.permissions(id,code,description) VALUES
  ,('10000000-0000-4000-8000-000000000031','Professional.Read','Visualizar profissionais da unidade')
  ,('10000000-0000-4000-8000-000000000032','Professional.Update','Alterar cadastro, serviços e escala profissional')
  ,('10000000-0000-4000-8000-000000000033','Appointment.Block','Criar bloqueios na agenda profissional')
+ ,('10000000-0000-4000-8000-000000000034','Client.Read','Visualizar CRM e perfis de clientes')
+ ,('10000000-0000-4000-8000-000000000035','Client.Update','Atualizar perfil de cliente')
+ ,('10000000-0000-4000-8000-000000000036','Campaign.Read','Visualizar campanhas internas')
+ ,('10000000-0000-4000-8000-000000000037','Campaign.Create','Criar campanhas internas')
 ON CONFLICT(id) DO UPDATE SET code=excluded.code,description=excluded.description;
 INSERT INTO barber.roles(id,tenant_id,name,code,is_system) VALUES
 ('20000000-0000-4000-8000-000000000001',NULL,'Owner','Owner',true),('20000000-0000-4000-8000-000000000002',NULL,'Manager','Manager',true),
