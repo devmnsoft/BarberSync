@@ -1,4 +1,4 @@
-# Contratos de rotas da API — Sprint de Produção 24
+# Contratos de rotas da API — Sprint Funcional 34
 
 Auditoria estática concluída em 24 de agosto de 2026 sobre **294 actions HTTP** em
 `BarberSync.Api`. A tabela registra os contratos operacionais consumidos pelas
@@ -11,7 +11,10 @@ indica também a declaração explícita no controller.
 | Auth | POST | `/api/auth/login` | Auth/Login | Pública | — | Admin/Mobile | OK |
 | Dashboard | GET | `/api/dashboard/summary` | Dashboard/Summary | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
 | Appointments | GET/POST | `/api/appointments` | Appointments/List/Create | Sim (`Authorize`) | `Appointment.Read/Create` | Admin | OK |
+| Appointments | POST | `/api/appointments/{id}/check-in` | Appointments/CheckIn | Sim (`Authorize`) | `Attendance.CheckIn` | Operação do Dia | transição idempotente por estado; duplicação rejeitada |
+| Appointments | POST | `/api/appointments/{id}/start`, `/{id}/finish` | Appointments/Start/Finish | Sim (`Authorize`) | `Attendance.Start/Finish` | Operação do Dia | início abre/vincula comanda pelo consumidor antes da transição |
 | Appointments | POST | `/api/appointments/{id}/cancel` | Appointments/Cancel | Sim | `Appointment.Cancel` | Admin | motivo no DTO |
+| Appointments | POST | `/api/appointments/{id}/no-show` | Appointments/NoShow | Sim | `Appointment.Update` | Operação do Dia | motivo obrigatório |
 | Appointments | GET | `/api/appointments/smart-slots` | Appointments/SmartSlots | Sim | `Appointment.Read` | Admin | OK |
 | Clients | CRUD | `/api/clients[/{id}]` | Clients | Sim (fallback) | sessão | Admin | OK |
 | Professionals | CRUD | `/api/professionals[/{id}]` | Professionals | Sim (fallback) | sessão | Admin | OK |
@@ -20,10 +23,12 @@ indica também a declaração explícita no controller.
 | Stock | GET/POST | `/api/stock`, `/api/stock/movements`, `/api/stock/{entry\|exit\|adjustment}` | Stock | Sim (`Authorize`) | `Stock.*` | Admin | produto e movimentos reais |
 | Purchases | CRUD/POST | `/api/purchases[/{id}]`, `/{id}/receive` | Purchases | Sim (`Authorize`) | Manager+ na escrita | Admin | OK |
 | ServiceOrders | POST | `/api/service-orders/open` | ServiceOrders/Open | Sim (`Authorize`) | `ServiceOrder.Create` | Admin | OK |
+| ServiceOrders | GET | `/api/service-orders[/{id}]` | ServiceOrders/List/Get | Sim (`Authorize`) | `ServiceOrder.Read` | Operação/PDV | somente tenant e unidade dos claims |
 | ServiceOrders | POST/DELETE | `/api/service-orders/{id}/items/{services\|products\|{itemId}}` | ServiceOrders items | Sim | `ServiceOrder.Update` | Admin | motivo exigido na remoção |
 | Payments | POST | `/api/service-orders/{id}/payments` | ServiceOrders/Pay | Sim | `Payment.Create` | Admin PDV | contrato canônico |
 | Payments | CRUD | `/api/payments[/{id}]` | Payments | Sim (`Authorize`) | sessão | Admin | Proteção explícita corrigida |
 | CashRegisters | GET/POST | `/api/cash-registers/current`, `/open`, `/{id}/{supply\|withdrawal\|expense\|close}` | CashRegisters | Sim (`Authorize`) | `Cash.*` | Admin | OK |
+| CashRegisters | GET | `/api/cash-registers/history` | CashRegisters/History | Sim (`Authorize`) | `Cash.View` | Operação/Caixa | turnos da unidade; movimentos expõem `paymentId` |
 | Financial | GET | `/api/finance` | Finance/GetAll | Sim (`Authorize`) | sessão | Admin | OK |
 | Commissions | GET | `/api/commissions` | Commissions/GetAll | Sim (`Authorize`) | Manager+ | Admin | visão financeira geral; profissional usa `/api/mobile/professional/commissions` com ownership |
 | Reports | GET | `/api/executive/{owner\|reception\|export.csv}` | Executive | Sim (`Authorize`) | roles por action | Admin | período compartilhado |
