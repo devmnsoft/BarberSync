@@ -40,6 +40,12 @@ call dashboard GET /api/dashboard/summary "$admin" 200; contains dashboard "$REA
 call team_dashboard GET /api/team/dashboard "$admin" 200; contains team_dashboard active_professionals
 call team_professionals GET /api/professionals "$admin" 200; contains team_professionals Readiness
 echo EVIDENCE:AUTH_SMOKE_TEAM:PASS
+call finance_dashboard GET /api/finance/dashboard "$admin" 200; contains finance_dashboard revenue_month
+call finance_categories GET /api/finance/categories "$admin" 200; contains finance_categories 'Readiness Expense'
+call finance_suppliers GET /api/suppliers "$admin" 200; contains finance_suppliers 'Readiness Supplier'
+call finance_payables GET /api/finance/payables "$admin" 200; contains finance_payables 'Readiness payable'
+call finance_receivables GET /api/finance/receivables "$admin" 200; contains finance_receivables 'Readiness receivable'
+echo EVIDENCE:AUTH_SMOKE_FINANCE:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks

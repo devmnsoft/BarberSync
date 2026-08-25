@@ -76,3 +76,7 @@ Antes do pagamento, o PDV pode aplicar cupom validado, consumir sessão de pacot
 ## Integração com Equipe
 
 A seleção do atendimento consulta a escala e os bloqueios persistidos do profissional, mostra alerta de indisponibilidade, ocupação e link para o perfil 360. A estimativa exibida usa o serviço vinculado; a comissão definitiva continua surgindo apenas na confirmação transacional do pagamento. A agenda rejeita profissional inativo, serviço não vinculado, horário fora da vigência/pausa, conflito, bloqueio, folga ou férias. Consulte `docs/TEAM_WORKFLOW.md`.
+
+## Integração financeira
+
+O fechamento à vista permanece registrado em pagamentos/movimentos de caixa. Vendas a prazo são representadas em `accounts_receivable`; seu recebimento guarda meio e referência. Compras recebidas podem originar `accounts_payable` vinculada ao fornecedor/categoria selecionados. O módulo Financeiro reconcilia esses efeitos sem alterar marcadores do PDV. Consulte [FINANCE_WORKFLOW.md](FINANCE_WORKFLOW.md).

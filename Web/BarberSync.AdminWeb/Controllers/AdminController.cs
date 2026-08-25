@@ -33,9 +33,9 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("ClientPackages")] public IActionResult ClientPackages() => Commercial("Pacotes de clientes", "client-packages", "clientId", "Cliente", "packageId", "Pacote", "remainingSessions", "Sessões restantes");
     [HttpGet("Memberships")] public IActionResult Memberships() => Commercial("Assinaturas", "memberships", "name", "Plano", "monthlyPrice", "Mensalidade", "usageLimit", "Limite mensal");
     [HttpGet("ClientMemberships")] public IActionResult ClientMemberships() => Commercial("Assinaturas de clientes", "client-memberships", "clientId", "Cliente", "membershipId", "Plano", "billingDay", "Dia de cobrança");
-    [HttpGet("Suppliers")] public IActionResult Suppliers() => Commercial("Fornecedores", "suppliers", "name", "Nome / razão social", "document", "CPF / CNPJ", "phone", "Telefone");
+    [HttpGet("Suppliers")] public IActionResult Suppliers() => Redirect("/Finance/Suppliers");
     [HttpGet("Purchases")] public IActionResult Purchases() => Commercial("Compras", "purchases", "supplierId", "Fornecedor", "invoiceNumber", "Nota fiscal", "items", "Itens (produto:quantidade:custo)");
-    [HttpGet("Finance")] public IActionResult Finance() => Commercial("Financeiro gerencial", "finance", "description", "Descrição", "amount", "Valor", "category", "Categoria");
+    [HttpGet("Finance")] public IActionResult Finance() => Redirect("/Finance");
     [HttpGet("ServiceRecognition")] public IActionResult ServiceRecognition() => Render("ServiceRecognition");
     [HttpGet("System/AiSettings"), Authorize(Roles = "Owner,SuperAdmin,Admin")] public IActionResult AiSettings() => Render("AiSettings");
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
@@ -44,7 +44,7 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Attendance")] public IActionResult Attendance() => Redirect("/Operation/Today");
     [HttpGet("Cash")] public IActionResult Cash() => Render("Cash");
     [HttpGet("Payments")] public IActionResult Payments() => RedirectToAction(nameof(ServiceOrders));
-    [HttpGet("Financial")] public IActionResult Financial() => Render("Financial");
+    [HttpGet("Financial")] public IActionResult Financial() => Redirect("/Finance");
     [HttpGet("Products")] public IActionResult Products() => Render("Products");
     [HttpGet("Stock")] public IActionResult Stock() => Render("Stock");
     [HttpGet("Loyalty")] public IActionResult Loyalty() => Render("Loyalty");

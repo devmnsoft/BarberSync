@@ -43,8 +43,6 @@ public sealed class ClientMembershipsController(EnterpriseDataService data, ILog
     [HttpPost("{id:guid}/cancel"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] ReasonRequest request, CancellationToken ct) => Ok(await data.CancelMembershipAsync(id, request.Reason, ct));
 }
-[ApiController, Route("api/suppliers"), Authorize]
-public sealed class SuppliersController(EnterpriseDataService data, ILogger<SuppliersController> log) : CommercialModuleController(data, log, "suppliers");
 [ApiController, Route("api/purchases"), Authorize]
 public sealed class PurchasesController(EnterpriseDataService data, ILogger<PurchasesController> log) : CommercialModuleController(data, log, "purchases")
 {
@@ -56,9 +54,6 @@ public sealed class PurchasesController(EnterpriseDataService data, ILogger<Purc
     public async Task<IActionResult> Receive(Guid id, [FromBody] PurchaseReceiptRequest request, CancellationToken ct)
         => Ok(await data.ReceivePurchaseAsync(id, request.InvoiceNumber, request.DueDate, request.Items, ct));
 }
-[ApiController, Route("api/finance"), Authorize(Roles = "SuperAdmin,Owner,Admin,Manager")]
-public sealed class FinanceController(EnterpriseDataService data, ILogger<FinanceController> log) : CommercialModuleController(data, log, "financial-entries");
-
 public sealed record PackageSaleRequest(Guid PackageId, Guid ClientId, bool Paid);
 public sealed record MembershipActivationRequest(Guid MembershipId, Guid ClientId, bool Paid);
 public sealed record BenefitUseRequest(Guid ServiceOrderId, Guid? ServiceId);

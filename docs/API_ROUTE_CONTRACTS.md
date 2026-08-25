@@ -123,3 +123,7 @@ Todas as rotas abaixo exigem JWT, permissão `Professional.Read` ou `Professiona
 | GET/POST/PUT | `/api/professional-goals[/{id}]` | Meta por tipo/período e progresso. |
 | GET/POST | `/api/professional-payouts` | Extrato e pagamento por settlement. |
 | GET | `/api/mobile/summary` | Para `Professional`, somente agenda, produção, comissões, metas, ocupação e indisponibilidades próprias. |
+
+## Financeiro avançado
+
+Todos exigem autenticação, contexto de tenant/filial e permissões financeiras: `GET /api/finance/dashboard`, `GET|POST|PUT /api/finance/categories`, `GET|POST|PUT /api/suppliers`, CRUD e ações em `/api/finance/payables` e `/api/finance/receivables`, regras em `/api/finance/recurring-rules`, conciliações em `/api/finance/reconciliations`, `GET /api/finance/cash-flow`, `GET /api/finance/dre` e `GET /api/finance/reports/export?type=&from=&to=`. Erros de validação retornam `message`, `traceId` e `errors` por campo. Veja [FINANCE_WORKFLOW.md](FINANCE_WORKFLOW.md).

@@ -23,7 +23,13 @@
     <form class="drawer-sheet">
         <header><div><span class="eyebrow">CADASTRO</span><h2>Novo registro</h2></div><button type="button" class="drawer-close">×</button></header>
         <div class="drawer-body">
-            @foreach (var field in Model.Fields) { <label for="commercial-@field.Name">@field.Label<input id="commercial-@field.Name" name="@field.Name" required aria-describedby="commercial-error" /></label> }
+            @foreach (var field in Model.Fields) {
+                <label for="commercial-@field.Name">@field.Label
+                    @if (field.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase)) {
+                        <select id="commercial-@field.Name" name="@field.Name" data-reference-select="@field.Name[..^2]" required aria-describedby="commercial-error"><option value="">Carregando opções…</option></select>
+                    } else { <input id="commercial-@field.Name" name="@field.Name" required aria-describedby="commercial-error" /> }
+                </label>
+            }
             <label for="commercial-status">Status<select id="commercial-status" name="status"><option value="Active">Ativo</option><option value="Pending">Pendente</option><option value="Paused">Pausado</option></select></label>
             <div class="bs-error-state" id="commercial-error" role="alert" hidden></div>
         </div>
