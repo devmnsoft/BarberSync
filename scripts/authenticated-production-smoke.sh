@@ -37,13 +37,17 @@ contains invalid_login traceId
 admin=$(login admin_login "$READINESS_ADMIN_EMAIL" "$READINESS_ADMIN_PASSWORD"); [[ -n $admin ]]
 echo EVIDENCE:AUTH_SMOKE_LOGIN:PASS
 call dashboard GET /api/dashboard/summary "$admin" 200; contains dashboard "$READINESS_TENANT_ID"; echo EVIDENCE:AUTH_SMOKE_DASHBOARD:PASS
+call team_dashboard GET /api/team/dashboard "$admin" 200; contains team_dashboard active_professionals
+call team_professionals GET /api/professionals "$admin" 200; contains team_professionals Readiness
+echo EVIDENCE:AUTH_SMOKE_TEAM:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks
 echo EVIDENCE:AUTH_SMOKE_MOBILE_CLIENT:PASS
 professional=$(login professional_login "$READINESS_PROFESSIONAL_EMAIL" "$READINESS_PROFESSIONAL_PASSWORD")
-call mobile_professional GET /api/mobile/summary "$professional" 200; contains mobile_professional '"role":"Professional"'; contains mobile_professional commissions; contains mobile_professional blocks; not_contains mobile_professional history
+call mobile_professional GET /api/mobile/summary "$professional" 200; contains mobile_professional '"role":"Professional"'; contains mobile_professional appointments; contains mobile_professional commissions; contains mobile_professional goals; contains mobile_professional blocks; not_contains mobile_professional history
 echo EVIDENCE:AUTH_SMOKE_MOBILE_PROFESSIONAL:PASS
+echo EVIDENCE:AUTH_SMOKE_PROFESSIONAL_MOBILE:PASS
 
 call notifications_before GET /api/notifications "$admin" 200; contains notifications_before 'Readiness notification'
 call notifications_read POST /api/notifications/read-all "$admin" 200,204

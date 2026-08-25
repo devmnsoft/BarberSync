@@ -4,7 +4,7 @@
   if (!root) return;
   const q = selector => document.querySelector(selector);
   const qa = selector => [...document.querySelectorAll(selector)];
-  const state = { appointments: [], orders: [], professionals: [], cash: null, selected: null, busy: false };
+  const state = { appointments: [], orders: [], professionals: [], cash: null, selected: null, professionalOperations: null, busy: false };
   const esc = value => String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
   const list = payload => { const value = payload?.data ?? payload; return Array.isArray(value) ? value : value?.items ?? []; };
   const money = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
@@ -59,7 +59,10 @@
     const action = item.status === 'Scheduled' || item.status === 'Confirmed' ? '<button class="btn btn-primary" data-action="check-in">Fazer check-in</button>' : item.status === 'CheckedIn' ? '<button class="btn btn-primary" data-action="start">Iniciar atendimento</button>' : item.status === 'InService' ? '<button class="btn btn-primary" data-action="finish">Finalizar serviço</button>' : '';
     const exceptions = ['Scheduled','Confirmed','CheckedIn'].includes(item.status) ? '<button class="btn btn-light" data-action="no-show">Não compareceu</button><button class="btn btn-light" data-action="cancel">Cancelar</button>' : '';
     const orderAction = order ? `<a class="btn btn-light" href="/Operation/ServiceOrders/${esc(order.id)}">Comanda ${esc(order.number)}</a>` : `<button class="btn btn-light" data-action="open-order">Abrir comanda</button>`;
-    q('#operationDetail').innerHTML = `<span class="operation-kicker">Detalhes do atendimento</span><h2 id="detailTitle">${esc(item.clientName)}</h2><span class="operation-badge">${esc(statusName[item.status] || item.status)}</span><dl><div><dt>Horário</dt><dd>${new Date(item.scheduledStart).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</dd></div><div><dt>Duração</dt><dd>${esc(item.durationMinutes)} min</dd></div><div><dt>Serviço</dt><dd>${esc(item.serviceName)}</dd></div><div><dt>Profissional</dt><dd>${esc(item.professionalName)}</dd></div><div><dt>Origem</dt><dd>${esc(item.origin)}</dd></div><div><dt>Comanda</dt><dd>${order ? esc(statusName[order.status] || order.status) : 'Ainda não aberta'}</dd></div></dl>${item.cancellationReason ? `<p><strong>Motivo:</strong> ${esc(item.cancellationReason)}</p>` : ''}<div class="operation-detail-actions">${action}${orderAction}${exceptions}</div>`;
+    const operations = state.professionalOperations; const start = new Date(item.scheduledStart); const end = new Date(item.scheduledEnd || start.getTime() + Number(item.durationMinutes || 30) * 60000);
+    const blocked = operations?.blocks?.some(block => new Date(block.start_at) < end && new Date(block.end_at) > start); const schedule = operations?.schedules?.find(row => Number(row.day_of_week) === (start.getDay() || 7)); const scheduleAlert = blocked ? 'Bloqueio/folga conflitante' : operations && !schedule ? 'Profissional fora da escala' : 'Escala validada';
+    const service = operations?.services?.find(row => row.id === item.serviceId); const expectedCommission = service ? Number(service.price || 0) * Number(service.commission_percent || 0) / 100 : null;
+    q('#operationDetail').innerHTML = `<span class="operation-kicker">Detalhes do atendimento</span><h2 id="detailTitle">${esc(item.clientName)}</h2><span class="operation-badge">${esc(statusName[item.status] || item.status)}</span><p><strong>Disponibilidade:</strong> ${esc(scheduleAlert)}</p><dl><div><dt>Horário</dt><dd>${start.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</dd></div><div><dt>Duração</dt><dd>${esc(item.durationMinutes)} min</dd></div><div><dt>Serviço</dt><dd>${esc(item.serviceName)}</dd></div><div><dt>Profissional</dt><dd><a href="/Team/Professionals/${esc(item.professionalId)}">${esc(item.professionalName)}</a></dd></div><div><dt>Comissão prevista</dt><dd>${expectedCommission === null ? 'Calculada na confirmação do pagamento' : money(expectedCommission)}</dd></div><div><dt>Comanda</dt><dd>${order ? esc(statusName[order.status] || order.status) : 'Ainda não aberta'}</dd></div></dl>${item.cancellationReason ? `<p><strong>Motivo:</strong> ${esc(item.cancellationReason)}</p>` : ''}<div class="operation-detail-actions">${action}${orderAction}${exceptions}</div>`;
   }
   function renderOrders() {
     const orders = state.orders.filter(order => ['Open','PartiallyPaid'].includes(order.status));
@@ -96,7 +99,7 @@
   q('#operationDate').textContent = new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(new Date());
   q('#operationRefresh').addEventListener('click',load); q('#operationRetry').addEventListener('click',load);
   qa('#operationProfessional,#operationStatus,#operationPeriod').forEach(control=>control.addEventListener('change',renderTimeline));
-  q('#operationTimeline').addEventListener('click',event=>{const card=event.target.closest('[data-appointment-id]');if(!card)return;state.selected=state.appointments.find(x=>x.id===card.dataset.appointmentId);renderTimeline();renderDetail();});
+  q('#operationTimeline').addEventListener('click',async event=>{const card=event.target.closest('[data-appointment-id]');if(!card)return;state.selected=state.appointments.find(x=>x.id===card.dataset.appointmentId);state.professionalOperations=null;renderTimeline();renderDetail();try{state.professionalOperations=await api(`professionals/${state.selected.professionalId}/operations`);renderDetail();}catch(error){showError(error);}});
   q('#operationTimeline').addEventListener('keydown',event=>{if(event.key==='Enter')event.target.click();});
   q('#operationDetail').addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button)act(button.dataset.action);});
   load();

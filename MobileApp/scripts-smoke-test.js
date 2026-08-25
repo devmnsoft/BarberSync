@@ -40,6 +40,12 @@ for (const benefitContract of ['benefits.packages', 'benefits.coupons', 'benefit
     process.exit(1);
   }
 }
+for (const professionalContract of ['commissions?.open', 'commissions?.paid', "tab === 'Metas'", 'production?.revenue', 'occupancy?.scheduledToday']) {
+  if (!appSource.includes(professionalContract)) {
+    console.error(`Professional mobile summary is missing: ${professionalContract}`);
+    process.exit(1);
+  }
+}
 if (/availableSlots\?\.\[0\]|professionals\?\.\[0\]/.test(appSource)) {
   console.error('Mobile must not silently select the first professional or slot.');
   process.exit(1);

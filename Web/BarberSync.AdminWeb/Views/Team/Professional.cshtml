@@ -1,0 +1,4 @@
+@model Guid
+@{ViewData["Title"]="Perfil profissional";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+<main class="team" data-team-page="professional" data-professional-id="@Model"><header class="team-hero"><div><small>Equipe</small><h1>Perfil 360 do profissional</h1><p>Cadastro, serviços, escala, folgas, produção, comissões, metas e timeline.</p></div></header><div class="team-error" data-team-error hidden></div><section class="team-grid" data-team-content></section></main>
+@section Styles{<link rel="stylesheet" href="~/css/team.css" asp-append-version="true"/>}@section Scripts{<script src="~/js/team.js" asp-append-version="true"></script>}

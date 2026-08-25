@@ -102,3 +102,24 @@ product 25.00).
 | POST | `/api/service-orders/{id}/coupon` | Valida e aplica cupom. |
 | POST | `/api/service-orders/{id}/cashback` | Resgata cashback. |
 | GET | `/api/mobile/summary` | Benefícios com ownership do cliente. |
+
+# Equipe/RH (Sprint 36)
+
+Todas as rotas abaixo exigem JWT, permissão `Professional.Read` ou `Professional.Update` e usam exclusivamente `tenant_id`/`branch_id` dos claims. Erros retornam `traceId`.
+
+| Método | Rota | Contrato |
+|---|---|---|
+| GET | `/api/team/dashboard` | KPIs reais de profissionais, faturamento, comissões e metas da unidade. |
+| GET | `/api/professionals` e `/{id}` | Cadastro-base ativo e tenant-scoped. |
+| GET/PUT | `/api/professionals/{id}/profile` | Perfil, vínculo, especialidades e status. |
+| GET/POST/PUT | `/api/professionals/{id}/services[/{serviceId}]` | Serviços, preço/duração e comissão sobrescritos. |
+| GET/PUT | `/api/professionals/{id}/schedule` | Escala semanal, pausa e vigência. |
+| GET/POST/PUT | `/api/professionals/{id}/time-off[/{timeOffId}]` | Bloqueio, folga, férias e indisponibilidade. |
+| GET | `/api/professionals/{id}/performance` | Produção calculada de agenda, comandas e comissões. |
+| GET/POST/PUT | `/api/commissions/rules[/{id}]` | Regras percentuais/fixas por profissional, serviço, produto ou pacote. |
+| GET/POST | `/api/commissions/settlements` | Consulta e fechamento atômico das comissões abertas. |
+| POST | `/api/commissions/settlements/{id}/approve` | Aprova settlement fechado. |
+| POST | `/api/commissions/settlements/{id}/mark-paid` | Paga settlement aprovado e cria payout. |
+| GET/POST/PUT | `/api/professional-goals[/{id}]` | Meta por tipo/período e progresso. |
+| GET/POST | `/api/professional-payouts` | Extrato e pagamento por settlement. |
+| GET | `/api/mobile/summary` | Para `Professional`, somente agenda, produção, comissões, metas, ocupação e indisponibilidades próprias. |

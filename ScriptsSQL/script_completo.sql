@@ -414,3 +414,74 @@ INSERT INTO barber.schema_versions(version,description,checksum) VALUES
 ('001','Core organizacional','core-20260809'),('002','Agenda relacional','agenda-20260809'),('003','Financeiro e caixa','finance-20260809'),('004','Estoque e comissões','stock-20260809'),('005','Atendimento e relacionamento','attendance-20260809'),('006','Segurança e governança','security-20260809'),('007','Reconhecimento de serviços','recognition-20260809'),('008','Crescimento e retenção fase 4','growth-20260809'),('009','BarberSync 2.0 SaaS e operação assistida','saas2-20260811'),('010','First-run seguro e role SuperAdmin','security-first-admin-20260811'),('011','Caixa operacional transacional','cash-register-20260813'),('012','Módulos comerciais avançados','commercial-modules-20260813'),('013','Integração transacional PDV, comissões e financeiro','pos-commercial-integration-20260813'),('014','Compras, recebimentos, estoque e contas a pagar','purchase-receipts-20260814'),('015','Escalas, pausas e disponibilidade profissional','professional-schedules-20260815'),('016','Razão canônico de movimentos de caixa','cash-movements-20260819')
 ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;
+
+-- 018: equipe/RH operacional, metas e fechamento de comissões.
+BEGIN;
+CREATE TABLE IF NOT EXISTS barber.professional_profiles (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ professional_id uuid NOT NULL REFERENCES barber.professionals(id), display_name varchar(180) NOT NULL, document_number varchar(30), phone varchar(30), email varchar(180),
+ bio text, photo_url text, hire_date date, termination_date date, status varchar(30) NOT NULL DEFAULT 'Active', employment_type varchar(30) NOT NULL DEFAULT 'Partner',
+ specialties_json jsonb NOT NULL DEFAULT '[]', settings_json jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_professional_profiles_scope ON barber.professional_profiles(tenant_id,branch_id,professional_id) WHERE deleted_at IS NULL;
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS tenant_id uuid REFERENCES barber.tenants(id);
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS branch_id uuid REFERENCES barber.branches(id);
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS price_override numeric(14,2);
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS duration_override_minutes integer;
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS status varchar(30) NOT NULL DEFAULT 'Active';
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE barber.professional_services ADD COLUMN IF NOT EXISTS updated_at timestamptz;
+UPDATE barber.professional_services ps SET tenant_id=p.tenant_id,branch_id=p.branch_id FROM barber.professionals p WHERE p.id=ps.professional_id AND (ps.tenant_id IS NULL OR ps.branch_id IS NULL);
+CREATE INDEX IF NOT EXISTS ix_professional_services_scope ON barber.professional_services(tenant_id,branch_id,professional_id,status);
+ALTER TABLE barber.professional_working_hours ADD COLUMN IF NOT EXISTS effective_from date NOT NULL DEFAULT current_date;
+ALTER TABLE barber.professional_working_hours ADD COLUMN IF NOT EXISTS effective_to date;
+CREATE TABLE IF NOT EXISTS barber.professional_time_off (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid NOT NULL REFERENCES barber.professionals(id),
+ type varchar(30) NOT NULL, starts_at timestamptz NOT NULL, ends_at timestamptz NOT NULL, reason text NOT NULL, status varchar(30) NOT NULL DEFAULT 'Approved',
+ approved_by uuid REFERENCES barber.users(id), approved_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_professional_time_off_period CHECK(ends_at>starts_at)
+);
+CREATE INDEX IF NOT EXISTS ix_professional_time_off_scope ON barber.professional_time_off(tenant_id,branch_id,professional_id,starts_at,ends_at,status);
+CREATE TABLE IF NOT EXISTS barber.professional_goals (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid NOT NULL REFERENCES barber.professionals(id),
+ period_type varchar(20) NOT NULL, period_start date NOT NULL, period_end date NOT NULL, goal_type varchar(30) NOT NULL, target_value numeric(14,2) NOT NULL,
+ current_value numeric(14,2) NOT NULL DEFAULT 0, status varchar(30) NOT NULL DEFAULT 'Active', created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_professional_goal_period CHECK(period_end>=period_start), CONSTRAINT ck_professional_goal_target CHECK(target_value>=0)
+);
+CREATE INDEX IF NOT EXISTS ix_professional_goals_scope ON barber.professional_goals(tenant_id,branch_id,professional_id,period_start,period_end,status);
+ALTER TABLE barber.commission_rules ADD COLUMN IF NOT EXISTS product_id uuid REFERENCES barber.products(id);
+ALTER TABLE barber.commission_rules ADD COLUMN IF NOT EXISTS package_id uuid;
+ALTER TABLE barber.commission_rules ADD COLUMN IF NOT EXISTS rule_type varchar(20) NOT NULL DEFAULT 'Percent';
+ALTER TABLE barber.commission_rules ADD COLUMN IF NOT EXISTS fixed_value numeric(14,2);
+ALTER TABLE barber.commission_rules ADD COLUMN IF NOT EXISTS updated_at timestamptz;
+CREATE TABLE IF NOT EXISTS barber.commission_settlements (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid NOT NULL REFERENCES barber.professionals(id),
+ period_start date NOT NULL, period_end date NOT NULL, gross_amount numeric(14,2) NOT NULL, discount_amount numeric(14,2) NOT NULL DEFAULT 0, net_amount numeric(14,2) NOT NULL,
+ adjustment_reason text, status varchar(30) NOT NULL DEFAULT 'Closed', approved_by uuid REFERENCES barber.users(id), approved_at timestamptz, paid_at timestamptz,
+ created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz,
+ CONSTRAINT ck_commission_settlement_period CHECK(period_end>=period_start), CONSTRAINT ck_commission_settlement_amounts CHECK(gross_amount>=0 AND discount_amount>=0 AND net_amount>=0)
+);
+CREATE INDEX IF NOT EXISTS ix_commission_settlements_scope ON barber.commission_settlements(tenant_id,branch_id,professional_id,period_start,period_end,status);
+CREATE TABLE IF NOT EXISTS barber.commission_settlement_items (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), settlement_id uuid NOT NULL REFERENCES barber.commission_settlements(id),
+ commission_id uuid NOT NULL REFERENCES barber.commissions(id), service_order_id uuid REFERENCES barber.service_orders(id), payment_id uuid REFERENCES barber.payments(id), amount numeric(14,2) NOT NULL,
+ description text, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(commission_id)
+);
+CREATE INDEX IF NOT EXISTS ix_commission_settlement_items ON barber.commission_settlement_items(tenant_id,branch_id,settlement_id);
+CREATE TABLE IF NOT EXISTS barber.professional_payouts (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid NOT NULL REFERENCES barber.professionals(id),
+ settlement_id uuid NOT NULL REFERENCES barber.commission_settlements(id), amount numeric(14,2) NOT NULL, payment_method varchar(30) NOT NULL, reference varchar(120) NOT NULL,
+ status varchar(30) NOT NULL DEFAULT 'Paid', paid_at timestamptz NOT NULL, created_by uuid REFERENCES barber.users(id), created_at timestamptz NOT NULL DEFAULT now(),
+ CONSTRAINT ck_professional_payout_amount CHECK(amount>0), UNIQUE(settlement_id)
+);
+CREATE INDEX IF NOT EXISTS ix_professional_payouts_scope ON barber.professional_payouts(tenant_id,branch_id,professional_id,paid_at,status);
+CREATE TABLE IF NOT EXISTS barber.professional_performance_snapshots (
+ id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid NOT NULL REFERENCES barber.branches(id), professional_id uuid NOT NULL REFERENCES barber.professionals(id),
+ period_start date NOT NULL, period_end date NOT NULL, revenue numeric(14,2) NOT NULL DEFAULT 0, appointments_count integer NOT NULL DEFAULT 0, average_ticket numeric(14,2) NOT NULL DEFAULT 0,
+ products_sold numeric(14,3) NOT NULL DEFAULT 0, commissions_generated numeric(14,2) NOT NULL DEFAULT 0, commissions_paid numeric(14,2) NOT NULL DEFAULT 0,
+ return_rate numeric(5,2) NOT NULL DEFAULT 0, no_show_rate numeric(5,2) NOT NULL DEFAULT 0, occupancy_rate numeric(5,2) NOT NULL DEFAULT 0, created_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE(tenant_id,branch_id,professional_id,period_start,period_end)
+);
+CREATE INDEX IF NOT EXISTS ix_performance_snapshots_scope ON barber.professional_performance_snapshots(tenant_id,branch_id,professional_id,period_start,period_end);
+INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('018','Equipe, RH, metas e repasses','team-hr-20260825') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
+COMMIT;

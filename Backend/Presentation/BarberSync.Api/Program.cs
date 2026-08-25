@@ -93,6 +93,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
+builder.Services.AddScoped<BarberSync.Api.Services.Team.TeamDataService>();
 builder.Services.AddScoped<ExecutiveInsightsService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Onboarding.BranchOnboardingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.GrowthService>();
