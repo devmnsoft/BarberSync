@@ -97,3 +97,21 @@ Run `scripts/authenticated-production-smoke.sh http://localhost:5080` or `script
 ## Bloqueio estático antecipado
 
 Execute `./scripts/validate-readiness-contracts.sh` (ou `scripts/validate-readiness-contracts.ps1`) antes de Docker, SQL e API. O runner faz isso automaticamente e grava `EVIDENCE:READINESS_CONTRACTS_STATIC:PASS` em `artifacts/production-readiness/readiness-contracts-static.log`. O coletor também registra a saída textual `OK`/`FAIL`. Além dos DTOs, schema, rota e markers POS, o validador confirma escopo tenant/branch nas leituras, campos de correlação do movimento de estoque, escrita de caixa ligada ao pagamento e índices de idempotência dos efeitos financeiro e de comissão. Esta auditoria de contratos C#/SQL/rotas/markers é somente um bloqueio antecipado: não substitui restore/build .NET, PostgreSQL real, smoke autenticado nem o gate completo.
+
+## Execução local assistida quando Codex não tem acesso ao GitHub Actions
+
+Quando o executor Codex não tiver acesso ao run, artifact e log reais, ele não deve criar PR alegando readiness. Um operador deve executar em uma máquina Windows com os pré-requisitos reais e anexar o ZIP para análise:
+
+```powershell
+.\scripts\run-local-production-readiness.cmd -OnlyPreflight
+.\scripts\run-local-production-readiness.cmd
+.\scripts\package-release-evidence.ps1
+```
+
+O arquivo final fica em `artifacts/release-evidence-package/`. Consulte `docs/LOCAL_PRODUCTION_READINESS_GUIDE.md` para diagnóstico, segurança e envio. O fluxo local preserva o gate e os markers oficiais; ferramenta ou evidência ausente resulta em **NO-GO**.
+
+Para encerrar o PR #201 obsoleto pela interface, use **GitHub > Pull Requests > PR #201 > Close pull request**. Alternativamente, em um ambiente autenticado:
+
+```bash
+gh pr close 201 -R devmnsoft/BarberSync --comment "Fechado como obsoleto/superseded. As mudanças de escopo explícito, classificação demo/fallback, remoção dos fallbacks operacionais, isolamento do Copilot, readiness seed, smoke autenticado, POS PASS markers, validação estática e workflow oficial de evidência foram absorvidas e superadas pelos PRs #202 a #212."
+```

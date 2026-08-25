@@ -42,6 +42,7 @@ fi
     echo 'Nenhum diretório de logs encontrado.'
   fi
 } > "$evidence/markers.txt"
+cp "$evidence/markers.txt" "$evidence/markers.md"
 
 {
   echo '# Caudas dos logs críticos'; echo
@@ -51,5 +52,23 @@ fi
     echo '```'; echo
   done
 } > "$evidence/critical-log-tails.md"
+
+{
+  echo '# Status das ferramentas'; echo
+  for tool in git docker dotnet node npm psql; do
+    if command -v "$tool" >/dev/null 2>&1; then echo "- $tool: disponível"; else echo "- $tool: indisponível"; fi
+  done
+} > "$evidence/tooling-status.md"
+
+{
+  echo '# Production readiness'; echo
+  echo 'O coletor preserva o gate já executado e não o executa novamente.'; echo
+  echo '## Logs disponíveis'
+  if [[ -d "$production" ]]; then find "$production" -maxdepth 1 -type f -printf '%f\n' | sort; else echo 'Nenhum diretório de logs encontrado.'; fi
+} > "$evidence/production-readiness-summary.md"
+
+if [[ ! -f "$evidence/go-no-go.md" ]]; then
+  printf '# GO/NO-GO\n\nStatus: NO-GO\n\nExecute summarize-release-evidence.sh para avaliar todos os markers obrigatórios.\n' > "$evidence/go-no-go.md"
+fi
 
 echo "Evidências coletadas em $evidence"
