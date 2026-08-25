@@ -1,0 +1,32 @@
+@{ ViewData["Title"] = "Operação do dia"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+@section Styles { <link rel="stylesheet" href="~/css/operation.css" asp-append-version="true" /> }
+
+<main class="operation" id="operationWorkspace" aria-busy="true">
+    <header class="operation-hero">
+        <div><span class="operation-kicker">Central operacional</span><h1>Operação do dia</h1><p><time id="operationDate"></time> · <span id="operationBranch">Unidade da sessão autenticada</span></p></div>
+        <div class="operation-actions"><button class="btn btn-light" id="operationRefresh" type="button">Atualizar</button><a class="btn btn-primary" href="/Operation/ServiceOrders">Abrir comanda avulsa</a></div>
+    </header>
+
+    <div class="operation-alert" id="operationAlert" role="alert" hidden><strong id="operationAlertTitle"></strong><span id="operationAlertMessage"></span><code id="operationTrace"></code><button type="button" id="operationRetry">Tentar novamente</button></div>
+
+    <section class="operation-metrics" id="operationMetrics" aria-label="Resumo do dia">
+        <article><span>Agendados</span><strong data-metric="scheduled">—</strong></article><article><span>Em atendimento</span><strong data-metric="serving">—</strong></article><article><span>Aguardando pagamento</span><strong data-metric="waiting">—</strong></article><article><span>Pagos</span><strong data-metric="paid">—</strong></article><article><span>Caixa atual</span><strong data-metric="cash">—</strong><small data-cash-status>Consultando</small></article>
+    </section>
+
+    <section class="operation-filters" aria-label="Filtros da agenda">
+        <label>Profissional<select id="operationProfessional"><option value="">Todos</option></select></label>
+        <label>Status<select id="operationStatus"><option value="">Todos</option><option value="Scheduled">Agendado</option><option value="Confirmed">Confirmado</option><option value="CheckedIn">Check-in</option><option value="InService">Em atendimento</option><option value="Finished">Aguardando pagamento</option><option value="Cancelled">Cancelado</option><option value="NoShow">Não compareceu</option></select></label>
+        <label>Período<select id="operationPeriod"><option value="day">Dia inteiro</option><option value="morning">Manhã</option><option value="afternoon">Tarde/noite</option></select></label>
+    </section>
+
+    <div class="operation-grid">
+        <section class="operation-board" aria-labelledby="agendaTitle"><header><div><span>Agenda</span><h2 id="agendaTitle">Linha do tempo</h2></div><small id="agendaCount"></small></header><div id="operationTimeline"><div class="operation-loading"><i></i><span>Carregando agenda real…</span></div></div></section>
+        <aside class="operation-detail" id="operationDetail" aria-labelledby="detailTitle"><div class="operation-empty"><span>◎</span><h2 id="detailTitle">Selecione um atendimento</h2><p>Consulte dados, execute o check-in e siga para a comanda.</p></div></aside>
+    </div>
+
+    <section class="operation-orders"><header><div><span>Comandas</span><h2>Atendimentos abertos</h2></div><a href="/Operation/ServiceOrders">Ver PDV completo</a></header><div id="operationOrders"><div class="operation-loading"><i></i><span>Consultando comandas…</span></div></div></section>
+</main>
+
+<dialog id="reasonDialog"><form method="dialog" id="reasonForm"><h2 id="reasonTitle">Informe o motivo</h2><p>Esta justificativa ficará registrada no histórico.</p><textarea id="reasonText" maxlength="300" required></textarea><small id="reasonError"></small><div><button class="btn btn-light" value="cancel">Cancelar</button><button class="btn btn-primary" id="reasonConfirm" value="default">Confirmar</button></div></form></dialog>
+
+@section Scripts { <script src="~/js/operation.js" asp-append-version="true"></script> }

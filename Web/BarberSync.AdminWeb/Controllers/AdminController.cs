@@ -12,7 +12,7 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("ChannelManager")] public IActionResult ChannelManager() => Render("ChannelManager");
     [HttpGet("LeadToCash")] public IActionResult LeadToCash() => DevelopmentOnly("LeadToCash");
     [HttpGet("SaasControlCenter")] public IActionResult SaasControlCenter() => DevelopmentOnly("SaasControlCenter");
-    [HttpGet("Operations")] public IActionResult Operations() => Render("Operations");
+    [HttpGet("Operations")] public IActionResult Operations() => Redirect("/Operation/Today");
     [HttpGet("FullServiceFlow")] public IActionResult FullServiceFlow() => DevelopmentOnly("FullServiceFlow");
     [HttpGet("CommercialFlow")] public IActionResult CommercialFlow() => DevelopmentOnly("CommercialFlow");
     [HttpGet("DemoCenter")] public IActionResult DemoCenter() => DevelopmentOnly("DemoCenter");
@@ -41,7 +41,7 @@ public class AdminController(IWebHostEnvironment environment) : Controller
     [HttpGet("Services")] public IActionResult Services() => Render("Services");
     [HttpGet("Appointments")] public IActionResult Appointments() => Render("Appointments");
     [HttpGet("ServiceOrders")] public IActionResult ServiceOrders() => Render("ServiceOrders");
-    [HttpGet("Attendance")] public IActionResult Attendance() => Render("Operations");
+    [HttpGet("Attendance")] public IActionResult Attendance() => Redirect("/Operation/Today");
     [HttpGet("Cash")] public IActionResult Cash() => Render("Cash");
     [HttpGet("Payments")] public IActionResult Payments() => RedirectToAction(nameof(ServiceOrders));
     [HttpGet("Financial")] public IActionResult Financial() => Render("Financial");

@@ -16,7 +16,8 @@
     const response = await fetch(`/AdminApi/${path}`, { ...options, headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers } });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      const error = new Error(payload?.detail || payload?.message || payload?.title || 'Não foi possível concluir a operação.');
+      const traceId = payload?.traceId || response.headers.get('X-Trace-Id');
+      const error = new Error(`${payload?.detail || payload?.message || payload?.title || (response.status === 401 ? 'Sua sessão expirou. Entre novamente.' : response.status === 403 ? 'Você não tem permissão para esta operação.' : 'Não foi possível concluir a operação.')}${traceId ? ` (traceId: ${traceId})` : ''}`);
       error.status = response.status; error.errors = payload?.errors; throw error;
     }
     return unwrap(payload);
@@ -35,8 +36,10 @@
       const results = await Promise.allSettled(['service-orders', 'services', 'products', 'clients', 'professionals', 'appointments'].map(path => api(path)));
       if (results[0].status === 'rejected') throw results[0].reason;
       [state.orders, state.services, state.products, state.clients, state.professionals, state.appointments] = results.map(result => result.status === 'fulfilled' ? list(result.value) : []);
+      q('#posProfessional').innerHTML = '<option value="">Selecione antes de adicionar um serviço</option>' + state.professionals.filter(item => item.status === 'Active' || item.isActive !== false).map(item => `<option value="${esc(item.id)}">${esc(item.name)}</option>`).join('');
       renderOrders(); renderCatalog();
-      const selected = state.order && state.orders.some(order => order.id === state.order.id) ? state.order.id : state.orders.find(order => ['Open', 'PartiallyPaid'].includes(order.status))?.id ?? state.orders[0]?.id;
+      const requestedOrder = new URLSearchParams(location.search).get('orderId');
+      const selected = requestedOrder && state.orders.some(order => String(order.id) === requestedOrder) ? requestedOrder : state.order && state.orders.some(order => order.id === state.order.id) ? state.order.id : state.orders.find(order => ['Open', 'PartiallyPaid'].includes(order.status))?.id ?? state.orders[0]?.id;
       if (selected) await selectOrder(selected); else { state.order = null; renderOrder(); }
     } catch (error) { q('#posAlert').hidden = false; q('#posAlert').textContent = error.message; handle(error); }
     finally { q('#posWorkspace').setAttribute('aria-busy', 'false'); }
@@ -80,7 +83,7 @@
     if (!editable(state.order)) return;
     const isService = state.kind === 'services'; const item = (isService ? state.services : state.products).find(entry => String(entry.id) === String(id));
     let professionalId = null;
-    if (isService) { professionalId = state.professionals[0]?.id; if (!professionalId) return toast('validation', 'Cadastre um profissional antes de adicionar serviços.'); }
+    if (isService) { professionalId = q('#posProfessional').value; if (!professionalId) return toast('validation', 'Selecione explicitamente o profissional responsável pelo serviço.'); }
     await mutate(`service-orders/${state.order.id}/items/${isService ? 'services' : 'products'}`, isService ? { serviceId: item.id, professionalId, quantity: 1 } : { productId: item.id, quantity: 1, professionalId }, `${item.name} adicionado à comanda.`);
   }
   function splitRow(amount = '') { return `<div class="pos-split"><label>Forma<select data-split-method><option value="Pix">PIX</option><option value="DebitCard">Débito</option><option value="CreditCard">Crédito</option><option value="Cash">Dinheiro</option></select></label><label>Valor<input data-split-amount inputmode="decimal" value="${esc(amount)}" /></label><label class="received" hidden>Valor recebido<input data-split-received inputmode="decimal" /></label><button type="button" data-remove-split aria-label="Remover forma">×</button><small class="field-error"></small></div>`; }

@@ -25,7 +25,7 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
     public Task<IActionResult> Patch(string path, [FromBody] JsonElement? body, CancellationToken ct) => Forward(HttpMethod.Patch, path, body, ct);
 
     [HttpDelete("{**path}")]
-    public Task<IActionResult> Delete(string path, CancellationToken ct) => Forward(HttpMethod.Delete, path, null, ct);
+    public Task<IActionResult> Delete(string path, [FromBody] JsonElement? body, CancellationToken ct) => Forward(HttpMethod.Delete, path, body, ct);
 
     private async Task<IActionResult> Forward(HttpMethod method, string path, JsonElement? body, CancellationToken ct)
     {
@@ -42,6 +42,8 @@ public sealed class AdminApiController(IHttpClientFactory clients, IConfiguratio
 
             using var response = await clients.CreateClient("BarberSyncApi").SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             var content = await response.Content.ReadAsStringAsync(ct);
+            if (response.Headers.TryGetValues("X-Trace-Id", out var traceIds))
+                Response.Headers["X-Trace-Id"] = traceIds.FirstOrDefault();
             return new ContentResult
             {
                 StatusCode = (int)response.StatusCode,
