@@ -72,3 +72,7 @@ usando a mesma chave de idempotência quando aplicável.
 ## Benefícios no fechamento
 
 Antes do pagamento, o PDV pode aplicar cupom validado, consumir sessão de pacote ou resgatar cashback. O fechamento mantém essas alterações e o acúmulo de fidelidade no contrato transacional do pagamento. Consulte `docs/RELATIONSHIP_WORKFLOW.md` para vigência, saldo, ownership e auditoria.
+
+## Integração com Equipe
+
+A seleção do atendimento consulta a escala e os bloqueios persistidos do profissional, mostra alerta de indisponibilidade, ocupação e link para o perfil 360. A estimativa exibida usa o serviço vinculado; a comissão definitiva continua surgindo apenas na confirmação transacional do pagamento. A agenda rejeita profissional inativo, serviço não vinculado, horário fora da vigência/pausa, conflito, bloqueio, folga ou férias. Consulte `docs/TEAM_WORKFLOW.md`.

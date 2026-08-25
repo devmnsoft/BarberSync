@@ -107,6 +107,7 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
                 SELECT 1 FROM barber.professional_working_hours h, local_slot l
                 WHERE h.tenant_id=@tenant AND h.branch_id=@branch AND h.professional_id=@professional AND h.is_active
                   AND h.day_of_week=EXTRACT(ISODOW FROM l.starts)::smallint
+                  AND l.starts::date>=h.effective_from AND (h.effective_to IS NULL OR l.starts::date<=h.effective_to)
                   AND l.starts::time>=h.start_time AND l.finishes::time<=h.end_time
                   AND (h.break_start IS NULL OR NOT (l.starts::time<h.break_end AND l.finishes::time>h.break_start)))
                 THEN 'Horário fora da escala ou durante a pausa do profissional.'
@@ -115,6 +116,11 @@ public sealed class PostgresAppointmentRepository(IDbConnectionFactory connectio
                 WHERE b.tenant_id=@tenant AND b.branch_id=@branch AND b.professional_id=@professional
                   AND b.start_at<@finish AND b.end_at>@start)
                 THEN 'Horário bloqueado na agenda do profissional.'
+              WHEN EXISTS (
+                SELECT 1 FROM barber.professional_time_off t
+                WHERE t.tenant_id=@tenant AND t.branch_id=@branch AND t.professional_id=@professional AND t.status='Approved'
+                  AND t.starts_at<@finish AND t.ends_at>@start)
+                THEN 'Profissional em folga, férias ou indisponibilidade aprovada.'
               ELSE NULL END
             """;
         Add(command,"tenant",tenantId); Add(command,"branch",branchId); Add(command,"professional",professionalId);

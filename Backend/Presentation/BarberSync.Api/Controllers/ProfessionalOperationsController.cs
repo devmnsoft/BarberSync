@@ -23,7 +23,7 @@ public sealed class ProfessionalOperationsController(IDbConnectionFactory connec
     [HttpPut("schedule"), RequirePermission("Professional.Update")]
     public async Task<IActionResult> ReplaceSchedule(Guid professionalId, IReadOnlyList<ScheduleRequest> schedule, CancellationToken ct)
     {
-        if (schedule.Count == 0 || schedule.GroupBy(x => x.DayOfWeek).Any(x => x.Count() > 1) || schedule.Any(x => x.DayOfWeek is < 1 or > 7 || x.End <= x.Start || ((x.BreakStart is null) != (x.BreakEnd is null)) || (x.BreakStart is not null && (x.BreakEnd <= x.BreakStart || x.BreakStart < x.Start || x.BreakEnd > x.End))))
+        if (schedule.Count == 0 || schedule.GroupBy(x => new { x.DayOfWeek, x.EffectiveFrom }).Any(x => x.Count() > 1) || schedule.Any(x => x.DayOfWeek is < 1 or > 7 || x.End <= x.Start || (x.EffectiveTo is not null && x.EffectiveTo < x.EffectiveFrom) || ((x.BreakStart is null) != (x.BreakEnd is null)) || (x.BreakStart is not null && (x.BreakEnd <= x.BreakStart || x.BreakStart < x.Start || x.BreakEnd > x.End))))
             return ValidationProblem("A escala contém dias, períodos ou pausas inválidos.");
         await using var connection = await connections.OpenConnectionAsync(ct);
         await using var transaction = await connection.BeginTransactionAsync(ct);
@@ -31,8 +31,8 @@ public sealed class ProfessionalOperationsController(IDbConnectionFactory connec
         await Execute(connection, transaction, "UPDATE barber.professional_working_hours SET is_active=false,updated_at=now() WHERE tenant_id=@tenant AND branch_id=@branch AND professional_id=@professional AND is_active", professionalId, ct);
         foreach (var item in schedule)
         {
-            await using var command = Command(connection, transaction, "INSERT INTO barber.professional_working_hours(id,tenant_id,branch_id,professional_id,day_of_week,start_time,end_time,break_start,break_end) VALUES(@id,@tenant,@branch,@professional,@day,@start,@end,@breakStart,@breakEnd)", professionalId);
-            Add(command,"id",Guid.NewGuid()); Add(command,"day",item.DayOfWeek); Add(command,"start",item.Start); Add(command,"end",item.End); Add(command,"breakStart",item.BreakStart); Add(command,"breakEnd",item.BreakEnd);
+            await using var command = Command(connection, transaction, "INSERT INTO barber.professional_working_hours(id,tenant_id,branch_id,professional_id,day_of_week,start_time,end_time,break_start,break_end,effective_from,effective_to) VALUES(@id,@tenant,@branch,@professional,@day,@start,@end,@breakStart,@breakEnd,@effectiveFrom,@effectiveTo)", professionalId);
+            Add(command,"id",Guid.NewGuid()); Add(command,"day",item.DayOfWeek); Add(command,"start",item.Start); Add(command,"end",item.End); Add(command,"breakStart",item.BreakStart); Add(command,"breakEnd",item.BreakEnd); Add(command,"effectiveFrom",item.EffectiveFrom); Add(command,"effectiveTo",item.EffectiveTo);
             await command.ExecuteNonQueryAsync(ct);
         }
         await Audit(connection, transaction, "Professional.ScheduleChanged", professionalId, ct);
@@ -84,7 +84,7 @@ public sealed class ProfessionalOperationsController(IDbConnectionFactory connec
     private DbCommand Command(DbConnection connection,DbTransaction? tx,string sql,Guid professional){var command=connection.CreateCommand();command.Transaction=tx;command.CommandText=sql;Add(command,"tenant",currentUser.TenantId);Add(command,"branch",currentUser.BranchId);Add(command,"professional",professional);return command;}
     private static void Add(DbCommand command,string name,object? value){var parameter=command.CreateParameter();parameter.ParameterName=name;parameter.Value=value??DBNull.Value;command.Parameters.Add(parameter);}
 
-    public sealed record ScheduleRequest(short DayOfWeek, TimeOnly Start, TimeOnly End, TimeOnly? BreakStart, TimeOnly? BreakEnd);
+    public sealed record ScheduleRequest(short DayOfWeek, TimeOnly Start, TimeOnly End, TimeOnly? BreakStart, TimeOnly? BreakEnd, DateOnly EffectiveFrom, DateOnly? EffectiveTo);
     public sealed record ServiceLinksRequest(IReadOnlyList<Guid> ServiceIds);
     public sealed record BlockRequest(DateTimeOffset Start, DateTimeOffset End, string Reason, string? Description);
 }

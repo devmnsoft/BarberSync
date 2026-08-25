@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using BarberSync.Api.Security;
 using BarberSync.Api.Services.Enterprise;
+using BarberSync.Api.Services.Team;
 using BarberSync.Application.Abstractions;
 using BarberSync.Application.Operations;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,7 @@ namespace BarberSync.Api.Controllers;
 
 /// <summary>Authenticated, ownership-scoped operations used by the customer and professional mobile experiences.</summary>
 [ApiController, Authorize, Route("api/mobile")]
-public sealed class MobileSelfServiceController(IAppointmentService appointments, EnterpriseDataService data, ICurrentUserContext currentUser, ILogger<MobileSelfServiceController> logger) : ControllerBase
+public sealed class MobileSelfServiceController(IAppointmentService appointments, EnterpriseDataService data, TeamDataService team, ICurrentUserContext currentUser, ILogger<MobileSelfServiceController> logger) : ControllerBase
 {
     [HttpGet("summary")]
     public async Task<IActionResult> Summary(CancellationToken ct)
@@ -34,6 +35,11 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
         if (professional)
         {
             var commissionRows = await OwnedRows("commissions", "professionalId", currentUser.UserId, ct);
+            var monthStart = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+            var goals = await team.QueryAsync("select id,goal_type,target_value,current_value,status,period_start,period_end from barber.professional_goals where tenant_id=@tenant and branch_id=@branch and professional_id=@professional and period_end>=current_date and status='Active' order by period_end", command => TeamDataService.Add(command, "professional", currentUser.UserId), ct);
+            var timeOff = await team.QueryAsync("select id,type,starts_at,ends_at,reason,status from barber.professional_time_off where tenant_id=@tenant and branch_id=@branch and professional_id=@professional and ends_at>=now() and status='Approved' order by starts_at", command => TeamDataService.Add(command, "professional", currentUser.UserId), ct);
+            var production = await team.QueryAsync("select count(*) filter(where status in ('Finished','Completed')) appointments,coalesce(sum(total),0) revenue,coalesce(avg(total),0) average_ticket from barber.service_orders where tenant_id=@tenant and branch_id=@branch and created_at::date between @from and current_date and (payload->>'professionalId')::uuid=@professional", command => { TeamDataService.Add(command, "professional", currentUser.UserId); TeamDataService.Add(command, "from", monthStart); }, ct);
+            var paid = await team.ScalarAsync("select coalesce(sum(amount),0) from barber.professional_payouts where tenant_id=@tenant and branch_id=@branch and professional_id=@professional and status='Paid'", command => TeamDataService.Add(command, "professional", currentUser.UserId), ct);
             return Ok(Envelope(new
             {
                 role = "Professional",
@@ -42,10 +48,15 @@ public sealed class MobileSelfServiceController(IAppointmentService appointments
                 commissions = new
                 {
                     items = commissionRows,
-                    expected = commissionRows.Where(item => !Value(item, "status").Equals("Paid", StringComparison.OrdinalIgnoreCase)).Sum(item => DecimalValue(item, "amount")),
-                    available = commissionRows.Where(item => Value(item, "status").Equals("Available", StringComparison.OrdinalIgnoreCase)).Sum(item => DecimalValue(item, "amount"))
+                    open = commissionRows.Where(item => Value(item, "status").Equals("Available", StringComparison.OrdinalIgnoreCase)).Sum(item => DecimalValue(item, "amount")),
+                    paid
                 },
-                blocks = await OwnedRows("professional_blocks", "professionalId", currentUser.UserId, ct)
+                production = production.SingleOrDefault(),
+                goals,
+                occupancy = new { scheduledToday = ownedAppointments.Count(item => item.ScheduledStart.Date == DateTimeOffset.UtcNow.Date) },
+                timeOff,
+                blocks = await OwnedRows("professional_blocks", "professionalId", currentUser.UserId, ct),
+                alerts = timeOff.Where(item => item["starts_at"] is not null).Select(item => new { type = item["type"], startsAt = item["starts_at"], message = item["reason"] })
             }));
         }
 
