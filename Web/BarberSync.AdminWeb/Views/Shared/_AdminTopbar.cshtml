@@ -1,8 +1,8 @@
-@{ var pageTitle = ViewData["Title"]?.ToString() ?? "Visão Geral"; }
+@{ var viewTitle = ViewData["Title"]?.ToString() ?? "Visão Geral"; }
 <header class="admin-topbar">
     <button class="icon-button" type="button" data-sidebar-toggle aria-label="Alternar menu"><svg><use href="#i-menu" /></svg></button>
     <div class="topbar-context">
-        <nav class="breadcrumb" aria-label="Navegação estrutural"><a href="/Admin/Dashboard">BarberSync</a><span>/</span><strong>@pageTitle</strong></nav>
+        <nav class="breadcrumb" aria-label="Navegação estrutural"><a href="/Admin/Dashboard">BarberSync</a><span>/</span><strong>@viewTitle</strong></nav>
         <span class="active-unit">Unidade <strong data-active-unit>Principal</strong></span>
     </div>
     <button class="global-search-trigger" type="button" data-command-open aria-label="Abrir busca global">

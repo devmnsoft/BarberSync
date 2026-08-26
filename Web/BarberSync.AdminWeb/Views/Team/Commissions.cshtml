@@ -1,3 +1,14 @@
-@{ViewData["Title"]="Comissões";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+@{
+    ViewData["Title"]="Comissões";
+    Layout="~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/team.css"/>
+}
+
 <main class="team" data-team-page="commissions"><header class="team-hero"><div><small>Equipe</small><h1>Comissões e fechamentos</h1><p>Regras e settlements originados exclusivamente de pagamentos confirmados.</p></div></header><div class="team-error" data-team-error hidden></div><section class="team-grid" data-team-content></section></main>
-@section Styles{<link rel="stylesheet" href="~/css/team.css"/>}@section Scripts{<script src="~/js/team.js"></script>}
+
+@section Scripts {
+    <script src="~/js/team.js"></script>
+}

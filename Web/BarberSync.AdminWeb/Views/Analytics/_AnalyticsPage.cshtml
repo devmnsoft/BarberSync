@@ -1,6 +1,6 @@
-@{var page=(string)(ViewData["AnalyticsPage"]??"Executive");var title=(string)(ViewData["Title"]??"BI Executivo");}
+@{var viewName=(string)(ViewData["AnalyticsPage"]??"Executive");var title=(string)(ViewData["Title"]??"BI Executivo");}
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true"/>
-<main class="analytics" data-analytics-page="@page.ToLowerInvariant()">
+<main class="analytics" data-analytics-page="@viewName.ToLowerInvariant()">
  <header class="analytics-hero"><div><small>BI Executivo</small><h1>@title</h1><p>Indicadores calculados nas fontes operacionais canônicas, com comparação auditável.</p></div><button class="analytics-button" type="button" data-refresh>Atualizar</button></header>
  <nav class="analytics-nav" aria-label="BI Executivo"><a href="/Analytics/Executive">Executivo</a><a href="/Analytics/Operations">Operação</a><a href="/Analytics/Finance">Financeiro</a><a href="/Analytics/Team">Equipe</a><a href="/Analytics/Relationship">Relacionamento</a><a href="/Analytics/Inventory">Estoque</a><a href="/Analytics/Reports">Relatórios</a><a href="/Analytics/Alerts">Alertas</a></nav>
  <form class="analytics-filters" data-filter-form novalidate>
