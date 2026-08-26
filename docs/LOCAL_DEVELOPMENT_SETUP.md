@@ -1,61 +1,59 @@
-# Execução local do BarberSync
+# Execução local ponta a ponta
 
-## Como rodar BarberSync local com API + Admin + Public + Kiosk
+Este fluxo é exclusivo para **Development**. Ele preserva autenticação, autorização, `ValidateOnStart` e dados reais do PostgreSQL. Não use as credenciais locais em produção, não versione segredos e não substitua as validações de segurança por valores padrão.
 
-Os gateways Web leem a API em `ApiSettings:BaseUrl`. O Kiosk também exige explicitamente
-`Kiosk:DeviceCode`; não existe identidade padrão em runtime. Os scripts abaixo armazenam os
-valores em **user-secrets**, nunca nos `appsettings` versionados.
+## Pré-requisitos
+
+- .NET SDK indicado pelo repositório, PostgreSQL 14+ e `psql` no `PATH`.
+- Banco vazio ou já inicializado (os scripts são aditivos e idempotentes).
+- Certificado local: `dotnet dev-certs https --trust`.
+
+## Fluxo único
 
 ```powershell
 cd C:\MNSOFT\BarberSync
+$env:ASPNETCORE_ENVIRONMENT = "Development"
 
 .\Scripts\setup-api-local-dev.ps1 -ConnectionString "Host=localhost;Port=5432;Database=barbersync;Username=postgres;Password=SUA_SENHA"
 .\Scripts\setup-web-local-dev.ps1 -ApiBaseUrl "https://localhost:7088" -KioskDeviceCode "KIOSK-LOCAL-001"
-
-.\Scripts\check-api-config.ps1
-.\Scripts\check-web-config.ps1
+.\Scripts\apply-local-database.ps1 -ValidateIdempotency
+.\Scripts\seed-local-dev.ps1
+.\Scripts\run-local-stack.ps1 -NoBrowser
+# Em outro terminal:
+.\Scripts\check-local-stack.ps1
 ```
 
-Abra quatro terminais e execute:
+`apply-local-database.ps1` e `seed-local-dev.ps1` leem `ConnectionStrings:DefaultConnection` dos user-secrets da API quando o parâmetro é omitido. Senhas e connection strings nunca são impressas. O hash da senha local é produzido pelo formato ASP.NET Identity V3 usado pelo backend, e não por SQL ou por um hash inventado.
 
-```powershell
-dotnet run --project .\Backend\Presentation\BarberSync.Api\BarberSync.Api.csproj --launch-profile https
-dotnet run --project .\Web\BarberSync.AdminWeb\BarberSync.AdminWeb.csproj
-dotnet run --project .\Web\BarberSync.PublicWeb\BarberSync.PublicWeb.csproj
-dotnet run --project .\Web\BarberSync.KioskWeb\BarberSync.KioskWeb.csproj
-```
+## URLs oficiais
 
-URLs previsíveis dos perfis locais:
+| Aplicação | HTTPS | HTTP alternativo |
+|---|---|---|
+| API / health | `https://localhost:7088/health` | `http://localhost:5080/health` |
+| AdminWeb / login | `https://localhost:7188/Account/Login` | `http://localhost:5081/Account/Login` |
+| PublicWeb | `https://localhost:7288` | `http://localhost:5082` |
+| KioskWeb | `https://localhost:7388/Kiosk?deviceCode=KIOSK-LOCAL-001` | `http://localhost:5083/Kiosk` |
 
-| Projeto | URL |
+A chave canônica dos três gateways é `ApiSettings:BaseUrl`. A query string do Kiosk vale somente para a requisição e não persiste configuração; o user-secret `Kiosk:DeviceCode` é a configuração normal.
+
+## Dados locais
+
+| Item | Valor |
 |---|---|
-| API | `https://localhost:7088` ou `http://localhost:5080` |
-| Admin | `http://localhost:5081` |
-| Public | `http://localhost:5082` |
-| Kiosk | `http://localhost:5083/Kiosk` |
+| Tenant | BarberSync Local (`barbersync-local`) |
+| Branch | Unidade Local (`LOCAL`) |
+| Admin | `admin@barbersync.local` / `Dev@123456` |
+| Caixa | `caixa@barbersync.local` / `Dev@123456` |
+| Profissional | `profissional@barbersync.local` / `Dev@123456` |
+| Cliente | `cliente@barbersync.local` |
+| Totem | `KIOSK-LOCAL-001` |
 
-O certificado HTTPS local pode ser confiado com `dotnet dev-certs https --trust`. Se o Visual
-Studio iniciar a API em uma porta dinâmica (por exemplo, `https://localhost:59932`), execute
-novamente `setup-web-local-dev.ps1` com essa URL real. Não misture a porta do Admin com a da API.
+Esses valores existem apenas no seed local explicitamente marcado como Development. O script redefine somente as três contas locais de UUID reservado, não remove dados e não toca no `production_readiness_seed.sql`.
 
-### Configurar somente o totem
+## Comportamento degradado
 
-```powershell
-.\Scripts\setup-kiosk-local-dev.ps1 -DeviceCode "KIOSK-LOCAL-001" -ApiBaseUrl "https://localhost:7088"
-```
+- Sem API, Admin informa indisponibilidade no login e Public/Kiosk exibem erro operacional amigável.
+- Sem `Kiosk:DeviceCode`, o Kiosk mostra **Totem não configurado**, sem identidade implícita.
+- Um `401` no Admin informa que a sessão expirou ou que as credenciais são inválidas; `503` informa que a API/banco deve ser iniciado.
 
-Também é possível provisionar o código por `Kiosk__DeviceCode` ou
-`BARBERSYNC_Kiosk__DeviceCode`. Uma query string `deviceCode` válida prevalece apenas naquela
-requisição, é registrada como origem `QueryString` e não é persistida. São aceitos de 5 a 64
-caracteres alfanuméricos, ponto, hífen e sublinhado, sem espaços.
-
-Sem configuração, o Kiosk mostra **Totem não configurado** e a API do gateway retorna um erro
-controlado com `KIOSK_DEVICE_NOT_CONFIGURED` e `traceId`. Se a API operacional estiver offline,
-Admin, Public e Kiosk retornam erro operacional explícito; nenhum deles fabrica dados ou sucesso.
-
-### Diagnóstico
-
-`check-web-config.ps1` confirma a chave da API nos três projetos, oculta o DeviceCode e consulta
-`/health`. Se falhar, confira primeiro a URL/porta apresentada e mantenha o processo
-`BarberSync.Api` aberto. O `localhost:5080` é a porta HTTP fixa do launch profile e também é usado
-pelos contratos de readiness; `https://localhost:7088` é a alternativa HTTPS recomendada.
+Consulte [LOCAL_TROUBLESHOOTING.md](LOCAL_TROUBLESHOOTING.md) para diagnósticos detalhados.

@@ -19,7 +19,7 @@ foreach ($entry in $projects.GetEnumerator()) {
 & "$PSScriptRoot\setup-kiosk-local-dev.ps1" -ProjectPath $projects.KioskWeb -DeviceCode $KioskDeviceCode -ApiBaseUrl $ApiBaseUrl
 
 Write-Host "API........: $($ApiBaseUrl.TrimEnd('/'))"
-Write-Host "AdminWeb...: configurado para API $($ApiBaseUrl.TrimEnd('/')) (http://localhost:5081)"
-Write-Host "PublicWeb..: configurado para API $($ApiBaseUrl.TrimEnd('/')) (http://localhost:5082)"
-Write-Host "KioskWeb...: DeviceCode configurado (http://localhost:5083/Kiosk)"
+Write-Host "AdminWeb...: configurado para API $($ApiBaseUrl.TrimEnd('/')) (https://localhost:7188)"
+Write-Host "PublicWeb..: configurado para API $($ApiBaseUrl.TrimEnd('/')) (https://localhost:7288)"
+Write-Host "KioskWeb...: DeviceCode configurado (https://localhost:7388/Kiosk)"
 Write-Host "Diagnóstico: .\Scripts\check-web-config.ps1"
