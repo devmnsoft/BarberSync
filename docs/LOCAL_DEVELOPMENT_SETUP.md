@@ -32,9 +32,28 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 | API / health | `https://localhost:7088/health` | `http://localhost:5080/health` |
 | AdminWeb / login | `https://localhost:7188/Account/Login` | `http://localhost:5081/Account/Login` |
 | PublicWeb | `https://localhost:7288` | `http://localhost:5082` |
-| KioskWeb | `https://localhost:7388/Kiosk?deviceCode=KIOSK-LOCAL-001` | `http://localhost:5083/Kiosk` |
+| KioskWeb | `https://localhost:7388/Kiosk` | `http://localhost:5083/Kiosk` |
 
-A chave canônica dos três gateways é `ApiSettings:BaseUrl`. A query string do Kiosk vale somente para a requisição e não persiste configuração; o user-secret `Kiosk:DeviceCode` é a configuração normal.
+A chave canônica dos três gateways é `ApiSettings:BaseUrl`. O Kiosk obtém sua identidade exclusivamente do user-secret `Kiosk:DeviceCode`; o runner não injeta código de dispositivo por query string nem mantém fallback implícito.
+
+## Fluxo validado em máquina com .NET SDK + PostgreSQL
+
+Em uma máquina que tenha PowerShell 7, .NET SDK e PostgreSQL/`psql`, execute cada gate abaixo na ordem. As duas execuções de schema e seed são intencionais e validam a idempotência real antes de iniciar os processos:
+
+```powershell
+dotnet restore .\BarberSync.sln
+dotnet build .\BarberSync.sln --configuration Debug
+dotnet build .\BarberSync.sln --configuration Release
+.\Scripts\apply-local-database.ps1
+.\Scripts\apply-local-database.ps1
+.\Scripts\seed-local-dev.ps1
+.\Scripts\seed-local-dev.ps1
+.\Scripts\run-local-stack.ps1 -NoBrowser
+# Em outro terminal:
+.\Scripts\check-local-stack.ps1
+```
+
+O runner só abre o navegador depois que os endpoints básicos respondem, informa o PID de cada aplicação e grava stdout/stderr em `artifacts/local-stack/logs`. Para validação parcial, use `-ApiOnly` ou `-WebOnly`.
 
 ## Dados locais
 

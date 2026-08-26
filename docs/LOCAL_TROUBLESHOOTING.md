@@ -29,7 +29,7 @@ Execute primeiro `.\Scripts\check-local-stack.ps1`. O verificador não mostra se
 ## API sobe, mas Admin não abre
 - **Sintoma:** API saudável e porta 7188 indisponível.
 - **Causa provável:** processo Admin encerrou ou porta ocupada.
-- **Diagnóstico:** `Get-NetTCPConnection -LocalPort 7188`; consulte `.local-logs\AdminWeb.error.log`.
+- **Diagnóstico:** `Get-NetTCPConnection -LocalPort 7188`; consulte `artifacts\local-stack\logs\AdminWeb.error.log`.
 - **Correção:** libere a porta e reinicie a stack.
 
 ## Admin retorna 401
@@ -73,3 +73,9 @@ Execute primeiro `.\Scripts\check-local-stack.ps1`. O verificador não mostra se
 - **Causa provável:** execução anterior ainda ativa.
 - **Diagnóstico:** `Get-NetTCPConnection -LocalPort 7088,7188,7288,7388`.
 - **Correção:** encerre somente o processo local conflitante e execute novamente `run-local-stack.ps1`.
+
+## Runner encerra antes de abrir o navegador
+- **Sintoma:** `run-local-stack.ps1` informa que um endpoint não ficou pronto em 45 segundos.
+- **Causa provável:** erro de startup, resposta HTTP 4xx/5xx, banco indisponível ou configuração inválida.
+- **Diagnóstico:** use o PID exibido pelo runner e consulte os arquivos de stdout/stderr em `artifacts\local-stack\logs`; depois execute `check-local-stack.ps1` para obter uma ação sugerida por componente.
+- **Correção:** corrija a primeira exceção do componente. O runner deliberadamente não abre o navegador nem apresenta sucesso quando o health básico falha.

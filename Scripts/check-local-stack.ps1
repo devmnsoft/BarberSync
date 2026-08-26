@@ -8,10 +8,19 @@ param(
 
 $ErrorActionPreference = 'Continue'; $failed = $false
 $apiProject = Join-Path $PSScriptRoot '..\Backend\Presentation\BarberSync.Api\BarberSync.Api.csproj'
-function Fail([string]$Message,[string]$Action) { $script:failed=$true; Write-Host "FALHA: $Message" -ForegroundColor Red; Write-Host "Ação sugerida: $Action" -ForegroundColor Yellow }
+function Fail([string]$Message,[string]$Action) { $script:failed=$true; Write-Host "[FAIL] $Message" -ForegroundColor Red; Write-Host "Ação sugerida: $Action" -ForegroundColor Yellow }
 function Secrets([string]$Project) { @(dotnet user-secrets list --project $Project 2>$null) }
 function SecretValue($Lines,[string]$Key) { $line=$Lines | Where-Object { $_ -match "^$([regex]::Escape($Key))\s*=" } | Select-Object -First 1; if ($line) { ($line -split '=',2)[1].Trim() } }
-function Check-Url([string]$Name,[string]$Url) { try { $r=Invoke-WebRequest $Url -TimeoutSec 8 -SkipCertificateCheck -MaximumRedirection 5; Write-Host "OK: $Name HTTP $($r.StatusCode)" } catch { Fail "$Name não respondeu em $Url." '.\Scripts\run-local-stack.ps1 -NoBrowser' } }
+function Check-Url([string]$Name,[string]$Url,[string]$Action) {
+  try {
+    $r=Invoke-WebRequest $Url -TimeoutSec 8 -SkipCertificateCheck -MaximumRedirection 5
+    if ($r.StatusCode -lt 200 -or $r.StatusCode -ge 400) { throw "HTTP $($r.StatusCode)" }
+    Write-Host "[OK] $Name HTTP $($r.StatusCode)" -ForegroundColor Green
+  } catch {
+    $status = if ($_.Exception.Response.StatusCode) { " HTTP $([int]$_.Exception.Response.StatusCode)" } else { '' }
+    Fail "$Name não respondeu com sucesso em $Url.$status" $Action
+  }
+}
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { Fail 'dotnet SDK ausente.' 'Instale o SDK indicado em global.json.' }
 else {
@@ -24,9 +33,9 @@ else {
   $web=@{AdminWeb='BarberSync.AdminWeb';PublicWeb='BarberSync.PublicWeb';KioskWeb='BarberSync.KioskWeb'}
   foreach($name in $web.Keys) { $project=Join-Path $PSScriptRoot "..\Web\$($web[$name])\$($web[$name]).csproj"; $secrets=Secrets $project; $base=SecretValue $secrets 'ApiSettings:BaseUrl'; if (-not $base) { Fail "$name não possui ApiSettings:BaseUrl." '.\Scripts\setup-web-local-dev.ps1 -ApiBaseUrl "https://localhost:7088"' } elseif ($base.TrimEnd('/') -ne $ApiUrl.TrimEnd('/')) { Fail "$name está configurado para API $base, mas a URL esperada é $ApiUrl." ".\Scripts\setup-web-local-dev.ps1 -ApiBaseUrl `"$ApiUrl`"" }; if ($name -eq 'KioskWeb' -and -not (SecretValue $secrets 'Kiosk:DeviceCode')) { Fail 'Kiosk:DeviceCode não foi configurado.' '.\Scripts\setup-web-local-dev.ps1 -KioskDeviceCode "KIOSK-LOCAL-001"' } }
 }
-Check-Url 'API health' "$ApiUrl/health"
-Check-Url 'API pública' "$ApiUrl/api/public/services"
-Check-Url 'AdminWeb/login' "$AdminUrl/Account/Login"
-Check-Url 'PublicWeb' $PublicUrl
-Check-Url 'KioskWeb' "$KioskUrl/Kiosk"
-if ($failed) { exit 1 }; Write-Host 'OK: stack local íntegra.' -ForegroundColor Green
+Check-Url 'API health' "$ApiUrl/health" 'Verifique os logs da API e a conexão PostgreSQL em artifacts/local-stack/logs.'
+Check-Url 'API pública' "$ApiUrl/api/public/services" 'Verifique os logs da API e o seed local.'
+Check-Url 'AdminWeb login' "$AdminUrl/Account/Login" 'Verifique os logs do AdminWeb e ApiSettings:BaseUrl.'
+Check-Url 'PublicWeb' $PublicUrl 'Verifique os logs do PublicWeb e ApiSettings:BaseUrl.'
+Check-Url 'KioskWeb' "$KioskUrl/Kiosk" 'Verifique os logs do KioskWeb, ApiSettings:BaseUrl e Kiosk:DeviceCode.'
+if ($failed) { exit 1 }; Write-Host '[OK] Stack local íntegra.' -ForegroundColor Green
