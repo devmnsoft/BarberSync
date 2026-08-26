@@ -138,3 +138,7 @@ Todos os contratos exigem autenticação, claims `tenant_id`/`branch_id` e a per
 # Comunicação (Sprint 40)
 
 Todos os contratos abaixo são autenticados, usam escopo das claims e retornam erro com `traceId`: `GET /api/communication/dashboard`, canais, templates, campanhas, automações, outbox, retry/cancel, `GET|POST /api/notifications/inbox`, `GET|PUT /api/notifications/preferences` e `GET /api/communication/reports/export`. Consulte [COMMUNICATION_WORKFLOW.md](COMMUNICATION_WORKFLOW.md) para consentimento e estados de entrega.
+
+## IA Operacional (Sprint 41)
+
+Contratos autenticados e tenant/branch-scoped: `GET /api/ai-operations/dashboard`, CRUD versionado de `cameras`, `zones` e `signal-rules`, `POST /detection-events`, `GET /review-queue`, `GET /suggestions`, ações `approve|correct|reject`, evidências, configurações e `GET /reports/export?type=&from=&to=`. Sugestões sempre exigem revisão humana; aprovação adiciona item à comanda, mas não confirma pagamento. Provider ausente retorna `ProviderNotConfigured` sem sucesso simulado. Veja [AI_OPERATIONS_WORKFLOW.md](AI_OPERATIONS_WORKFLOW.md).

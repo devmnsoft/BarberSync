@@ -102,5 +102,6 @@
   q('#operationTimeline').addEventListener('click',async event=>{const card=event.target.closest('[data-appointment-id]');if(!card)return;state.selected=state.appointments.find(x=>x.id===card.dataset.appointmentId);state.professionalOperations=null;renderTimeline();renderDetail();try{state.professionalOperations=await api(`professionals/${state.selected.professionalId}/operations`);renderDetail();}catch(error){showError(error);}});
   q('#operationTimeline').addEventListener('keydown',event=>{if(event.key==='Enter')event.target.click();});
   q('#operationDetail').addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button)act(button.dataset.action);});
+  fetch('/AdminApi/ai-operations/dashboard',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():Promise.reject()).then(x=>{const v=x.data||x;const el=document.getElementById('operationAiPending');if(el)el.textContent=v.pendingSuggestions??0;}).catch(()=>{const el=document.getElementById('operationAiPending');if(el)el.textContent='Indisponível';});
   load();
 })();

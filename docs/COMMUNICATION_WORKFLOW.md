@@ -20,3 +20,7 @@ Dashboard, Templates, Campanhas, Automações, Outbox, Inbox, Preferências e Re
 
 ## Relatórios e limitações conhecidas
 `GET /api/communication/reports/export?type=delivery&from=AAAA-MM-DD&to=AAAA-MM-DD` exporta CSV validado. Nesta entrega não há credenciais de provider externo nem alegação de envio externo; a habilitação exige implementação real do provider, configuração segura e confirmação positiva do fornecedor.
+
+## Alertas InApp da IA Operacional
+
+Câmera inativa, provider não configurado, fila acumulada e sugestão vencendo geram somente Inbox/InApp persistida para administradores/gerentes, com deduplicação e link para revisão. Nenhum provider externo é simulado.

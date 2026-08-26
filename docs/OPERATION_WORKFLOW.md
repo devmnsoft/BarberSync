@@ -90,3 +90,7 @@ Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em
 # Eventos de comunicação
 
 Eventos operacionais publicam chaves idempotentes em `communication_events`. Uma falha de notificação é registrada como `Failed`/`Skipped` e nunca desfaz a transação operacional concluída.
+
+## Sugestões da IA Operacional
+
+A Operação do Dia consulta a contagem de `PendingReview` e encaminha à fila. Aprovar/corrigir seleciona uma comanda e serviço reais, adicionando somente o item; rejeição/correção exigem motivo. Pagamento, comissão e estoque permanecem no fluxo canônico do PDV.

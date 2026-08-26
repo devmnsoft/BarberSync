@@ -24,3 +24,7 @@ Todos os endpoints exigem JWT, claims de tenant/filial e permissões `Analytics.
 # Métricas de comunicação
 
 O escopo Relationship agrega `communication_outbox`, campanhas e preferências para mensagens enviadas, falhas, opt-outs e providers não configurados. Alertas recomendados cobrem taxa de falha, pendência envelhecida e `ProviderNotConfigured`.
+
+## Indicadores de IA Operacional
+
+Analytics classifica sugestões por unidade, serviço, profissional, câmera/zona e período, incluindo aprovação, rejeição, correção, confiança e tempo de revisão. Alertas cobrem provider não configurado, câmera inativa, fila acumulada, rejeição alta e queda de confiança; ausência de provider nunca é tratada como dado bem-sucedido.
