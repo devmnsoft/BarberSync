@@ -26,3 +26,7 @@ Criação/alteração, liquidação, cancelamento, recorrência, conciliação e
 
 ## Integração com compras
 Recebimentos do Estoque podem gerar conta a pagar usando fornecedor e categoria financeira selecionados. `source_purchase_id` identifica o recebimento e o índice único impede duplicidade; consulte `INVENTORY_WORKFLOW.md`.
+
+## Integração com BI
+
+Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.

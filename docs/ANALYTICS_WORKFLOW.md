@@ -1,0 +1,23 @@
+# BI Executivo e Analytics
+
+## Dashboards e fontes
+
+O Admin publica `/Analytics/Executive`, `/Operations`, `/Finance`, `/Team`, `/Relationship` e `/Inventory`. Os cartões consultam a API autenticada e derivam indicadores diretamente de `payments`, `service_orders`, `appointments`, `clients`, contas financeiras, comissões, fidelidade, produtos, compras, recebimentos, inventários e reposição. Snapshots são opcionais para histórico: nunca substituem a fonte canônica nem autorizam valores fabricados. Indicadores indisponíveis devem ser `null` ou zero acompanhados de `sourceStatus`.
+
+O executivo compara a janela selecionada com a janela imediatamente anterior de igual duração. Rankings agregam comandas e pagamentos por profissional. Operação cobre agenda, check-in, conclusão, cancelamento, no-show, comandas e pagamentos; Financeiro cobre entradas, saídas, contas e conciliação; Equipe cobre comissões e metas; Relacionamento cobre clientes, cupons, pacotes e fidelidade; Estoque cobre mínimos, valor, compras, recebimentos, contagens e reposição.
+
+## Filtros e validação
+
+Unidade, profissional, cliente, serviço, produto, fornecedor e categoria são carregados como opções do tenant/filial autenticados. IDs existem somente em `option.value` e payloads. Períodos usam preset ou date picker, exigem início menor ou igual ao fim e limitam a janela a 366 dias. O Admin usa `form-validation.js`, validação inline, bloqueio de envio duplicado, skeleton, estado vazio e erro com `traceId`; o backend repete todas as regras e rejeita entidade fora do escopo.
+
+## Alertas por regra
+
+Regras persistidas usam escopo, métrica permitida, operador, limite, período e severidade. Eventos guardam valor, limite, mensagem e `source_json`, podendo passar de `Open` para `Acknowledged`, `Resolved` ou `Dismissed`; dispensa exige motivo. O mecanismo é determinístico e baseado em dados, sem alegação de IA.
+
+## Relatórios, exportações e visões
+
+`GET /api/analytics/reports/export` valida tipo, intervalo e escopo, produz CSV e registra a exportação. Os tipos incluem resumo executivo, operação diária, financeiro mensal, DRE, equipe/comissões, recorrência, estoque crítico, compras/fornecedores, pacotes/fidelidade e conciliação. Visões salvas pertencem ao usuário autenticado, armazenam apenas JSON produzido pelas seleções válidas e permitem uma visão padrão.
+
+## Segurança, efeitos e limitações
+
+Todos os endpoints exigem JWT, claims de tenant/filial e permissões `Analytics.Read`, `Analytics.Manage`, `Analytics.Export` ou `Analytics.Alerts`. Consultas são isoladas por tenant e filial; alterações geram auditoria. Exportar cria um registro, salvar visão persiste filtros e ações de alerta alteram o workflow do evento. Não há previsão estatística ou IA generativa; ocupação e recorrência avançada permanecem indisponíveis quando sua fonte canônica não oferece capacidade/segmentação suficiente.

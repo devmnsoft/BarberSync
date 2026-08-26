@@ -29,3 +29,7 @@ Todas as APIs exigem `[Authorize]` e `RequirePermission`. Tenant/unidade vêm de
 ## Limitações conhecidas
 
 O cálculo de retenção/no-show/ocupação histórico depende da materialização periódica de snapshots. Integrações bancárias externas não são simuladas: `mark-paid` registra a comprovação informada por usuário autorizado. Execução SQL e evidência autenticada permanecem no gate de production readiness.
+
+## Integração com BI
+
+Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.
