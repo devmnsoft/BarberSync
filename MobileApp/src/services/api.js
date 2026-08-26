@@ -20,6 +20,9 @@ export const mobileApi = {
   cancel: (id, reason) => request(`/api/mobile/appointments/${id}/cancel`, { method: 'POST', body: { reason } }),
   history: signal => request('/api/mobile/client/history', { signal }), benefits: signal => request('/api/mobile/client/benefits', { signal }),
   notifications: signal => request('/api/mobile/notifications', { signal }), readNotification: id => request(`/api/mobile/notifications/${id}/read`, { method: 'POST' }),
+  notificationInbox: signal => request('/api/notifications/inbox', { signal }), markInboxRead: id => request(`/api/notifications/inbox/${id}/read`, { method: 'POST' }),
+  markAllInboxRead: () => request('/api/notifications/inbox/read-all', { method: 'POST' }), notificationPreferences: signal => request('/api/notifications/preferences', { signal }),
+  updateNotificationPreferences: items => request('/api/notifications/preferences', { method: 'PUT', body: { items, source: 'Mobile' } }),
   professionalDay: signal => request('/api/mobile/professional/day', { signal }), start: id => request(`/api/mobile/professional/appointments/${id}/start`, { method: 'POST' }),
   finish: id => request(`/api/mobile/professional/appointments/${id}/finish`, { method: 'POST' }), commissions: signal => request('/api/mobile/professional/commissions', { signal }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })

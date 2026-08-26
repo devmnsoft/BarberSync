@@ -24,3 +24,6 @@ Não há envio externo de campanhas, IA em segmentos, token de demonstração, s
 ## Integração com BI
 
 Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.
+# Integração de comunicação
+
+Campanhas de relacionamento selecionam segmentos e templates reais. Preferências e suppression list são verificadas antes da fila; o operador nunca informa IDs técnicos. O histórico de entrega permanece auditável na outbox e suas tentativas.

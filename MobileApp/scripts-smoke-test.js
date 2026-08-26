@@ -40,6 +40,10 @@ for (const benefitContract of ['benefits.packages', 'benefits.coupons', 'benefit
     process.exit(1);
   }
 }
+const apiSource = fs.readFileSync('src/services/api.js', 'utf8');
+for (const contract of ['/notifications/inbox', '/notifications/preferences']) {
+  if (!apiSource.includes(contract)) { console.error(`Mobile notification contract is missing: ${contract}`); process.exit(1); }
+}
 for (const professionalContract of ['commissions?.open', 'commissions?.paid', "tab === 'Metas'", 'production?.revenue', 'occupancy?.scheduledToday']) {
   if (!appSource.includes(professionalContract)) {
     console.error(`Professional mobile summary is missing: ${professionalContract}`);

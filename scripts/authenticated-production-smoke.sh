@@ -56,6 +56,13 @@ call analytics_operations GET /api/analytics/operations "$admin" 200; contains a
 call analytics_finance GET /api/analytics/finance "$admin" 200; contains analytics_finance cash_in
 call analytics_alerts GET /api/analytics/alerts "$admin" 200; contains analytics_alerts 'Evento controlado de readiness'
 echo EVIDENCE:AUTH_SMOKE_ANALYTICS:PASS
+call communication_dashboard GET /api/communication/dashboard "$admin" 200; contains communication_dashboard activeTemplates
+call communication_templates GET /api/communication/templates "$admin" 200; contains communication_templates 'Template Readiness'
+call communication_campaigns GET /api/communication/campaigns "$admin" 200; contains communication_campaigns 'Campaign Readiness'
+call communication_outbox GET /api/communication/outbox "$admin" 200
+call communication_inbox GET /api/notifications/inbox "$admin" 200; contains communication_inbox 'Communication readiness'
+call communication_preferences GET /api/notifications/preferences "$admin" 200; contains communication_preferences AppointmentReminder
+echo EVIDENCE:AUTH_SMOKE_COMMUNICATION:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks
