@@ -23,6 +23,25 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 .\Scripts\check-local-stack.ps1
 ```
 
+## Fluxo validado em máquina com .NET SDK + PostgreSQL
+
+Em uma máquina que possua o SDK .NET 10, PowerShell 7 e PostgreSQL/`psql`, execute a sequência completa abaixo. As duas execuções de banco e seed são intencionais e validam a idempotência.
+
+```powershell
+dotnet restore .\BarberSync.sln
+dotnet build .\BarberSync.sln --configuration Debug
+dotnet build .\BarberSync.sln --configuration Release
+.\Scripts\apply-local-database.ps1
+.\Scripts\apply-local-database.ps1
+.\Scripts\seed-local-dev.ps1
+.\Scripts\seed-local-dev.ps1
+.\Scripts\run-local-stack.ps1 -NoBrowser
+# Em outro terminal:
+.\Scripts\check-local-stack.ps1
+```
+
+Credenciais exclusivas de Development: Admin `admin@barbersync.local`, senha `Dev@123456` e Kiosk `KIOSK-LOCAL-001`.
+
 `apply-local-database.ps1` e `seed-local-dev.ps1` leem `ConnectionStrings:DefaultConnection` dos user-secrets da API quando o parâmetro é omitido. Senhas e connection strings nunca são impressas. O hash da senha local é produzido pelo formato ASP.NET Identity V3 usado pelo backend, e não por SQL ou por um hash inventado.
 
 ## URLs oficiais
@@ -32,9 +51,9 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 | API / health | `https://localhost:7088/health` | `http://localhost:5080/health` |
 | AdminWeb / login | `https://localhost:7188/Account/Login` | `http://localhost:5081/Account/Login` |
 | PublicWeb | `https://localhost:7288` | `http://localhost:5082` |
-| KioskWeb | `https://localhost:7388/Kiosk?deviceCode=KIOSK-LOCAL-001` | `http://localhost:5083/Kiosk` |
+| KioskWeb | `https://localhost:7388/Kiosk` | `http://localhost:5083/Kiosk` |
 
-A chave canônica dos três gateways é `ApiSettings:BaseUrl`. A query string do Kiosk vale somente para a requisição e não persiste configuração; o user-secret `Kiosk:DeviceCode` é a configuração normal.
+A chave canônica dos três gateways é `ApiSettings:BaseUrl`. O user-secret `Kiosk:DeviceCode` é a única configuração normal do dispositivo; o runner não injeta identidade por query string nem possui fallback oculto.
 
 ## Dados locais
 
