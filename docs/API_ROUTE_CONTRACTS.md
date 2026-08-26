@@ -142,3 +142,6 @@ Todos os contratos abaixo são autenticados, usam escopo das claims e retornam e
 ## IA Operacional (Sprint 41)
 
 Contratos autenticados e tenant/branch-scoped: `GET /api/ai-operations/dashboard`, CRUD versionado de `cameras`, `zones` e `signal-rules`, `POST /detection-events`, `GET /review-queue`, `GET /suggestions`, ações `approve|correct|reject`, evidências, configurações e `GET /reports/export?type=&from=&to=`. Sugestões sempre exigem revisão humana; aprovação adiciona item à comanda, mas não confirma pagamento. Provider ausente retorna `ProviderNotConfigured` sem sucesso simulado. Veja [AI_OPERATIONS_WORKFLOW.md](AI_OPERATIONS_WORKFLOW.md).
+
+## Governança SaaS
+Todas as rotas abaixo são autenticadas, usam o escopo dos claims e retornam falhas com `traceId`: `GET /api/governance/dashboard|tenants|branches|users|roles|permissions/matrix|plans|subscription|modules|security/policies|security/events|privacy/requests|onboarding|exports`; `POST /branches|users/invite|roles|privacy/requests|exports`; `PUT /branches/{id}|roles/{id}|permissions/matrix|modules/{moduleKey}`; e os comandos de usuário, privacidade e onboarding. Limite retorna HTTP 409, `upgradeRequired: true` e `errors.plan`.

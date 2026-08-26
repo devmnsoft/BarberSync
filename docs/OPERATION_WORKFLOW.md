@@ -94,3 +94,6 @@ Eventos operacionais publicam chaves idempotentes em `communication_events`. Uma
 ## Sugestões da IA Operacional
 
 A Operação do Dia consulta a contagem de `PendingReview` e encaminha à fila. Aprovar/corrigir seleciona uma comanda e serviço reais, adicionando somente o item; rejeição/correção exigem motivo. Pagamento, comissão e estoque permanecem no fluxo canônico do PDV.
+
+## Governança SaaS
+O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).
