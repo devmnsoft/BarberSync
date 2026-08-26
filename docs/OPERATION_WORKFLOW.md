@@ -80,3 +80,6 @@ A seleção do atendimento consulta a escala e os bloqueios persistidos do profi
 ## Integração financeira
 
 O fechamento à vista permanece registrado em pagamentos/movimentos de caixa. Vendas a prazo são representadas em `accounts_receivable`; seu recebimento guarda meio e referência. Compras recebidas podem originar `accounts_payable` vinculada ao fornecedor/categoria selecionados. O módulo Financeiro reconcilia esses efeitos sem alterar marcadores do PDV. Consulte [FINANCE_WORKFLOW.md](FINANCE_WORKFLOW.md).
+
+## Alertas e insumos de estoque
+O dashboard de Estoque fornece alertas reais de produto/insumo crítico, compras abertas, inventários e transferências pendentes. No pagamento, a ficha técnica é baixada atomicamente e saldo insuficiente reverte a operação com erro rastreável; produtos explícitos não sofrem baixa dupla.

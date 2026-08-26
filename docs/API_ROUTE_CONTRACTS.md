@@ -127,3 +127,7 @@ Todas as rotas abaixo exigem JWT, permissão `Professional.Read` ou `Professiona
 ## Financeiro avançado
 
 Todos exigem autenticação, contexto de tenant/filial e permissões financeiras: `GET /api/finance/dashboard`, `GET|POST|PUT /api/finance/categories`, `GET|POST|PUT /api/suppliers`, CRUD e ações em `/api/finance/payables` e `/api/finance/receivables`, regras em `/api/finance/recurring-rules`, conciliações em `/api/finance/reconciliations`, `GET /api/finance/cash-flow`, `GET /api/finance/dre` e `GET /api/finance/reports/export?type=&from=&to=`. Erros de validação retornam `message`, `traceId` e `errors` por campo. Veja [FINANCE_WORKFLOW.md](FINANCE_WORKFLOW.md).
+
+## Estoque avançado (Sprint 38)
+
+Todos os contratos exigem autenticação, escopo tenant/filial e permissões `Inventory.*`: `GET /api/inventory/dashboard`, produtos, categorias, pedidos (aprovar/cancelar), recebimentos (postar), contagens (fechar), transferências (enviar/receber), fichas de insumos, reposição (converter/descartar) e `GET /api/inventory/reports/export`. POST/PUT retornam erros por campo e `traceId`.
