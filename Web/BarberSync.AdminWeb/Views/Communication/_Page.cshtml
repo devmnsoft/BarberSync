@@ -1,9 +1,7 @@
-@{ Layout = "~/Views/Shared/_AdminLayout.cshtml"; var page=(string?)ViewData["CommunicationPage"]??"Dashboard"; }
-@section Styles { <link rel="stylesheet" href="~/css/communication.css" asp-append-version="true" /> }
-<main class="communication" data-communication-page="@page">
- <header class="communication-hero"><div><p class="eyebrow">CENTRAL OMNICHANNEL</p><h1>@page</h1><p>Mensagens transacionais, consentimento e relacionamento em uma única operação auditável.</p></div><nav><a href="/Communication">Dashboard</a><a href="/Communication/Templates">Templates</a><a href="/Communication/Campaigns">Campanhas</a><a href="/Communication/Automations">Automações</a><a href="/Communication/Outbox">Outbox</a><a href="/Communication/Inbox">Inbox</a><a href="/Communication/Preferences">Preferências</a><a href="/Communication/Reports">Relatórios</a></nav></header>
+@{ var viewName=(string?)ViewData["CommunicationPage"]??"Dashboard"; }
+<main class="communication" data-communication-page="@viewName">
+ <header class="communication-hero"><div><p class="eyebrow">CENTRAL OMNICHANNEL</p><h1>@viewName</h1><p>Mensagens transacionais, consentimento e relacionamento em uma única operação auditável.</p></div><nav><a href="/Communication">Dashboard</a><a href="/Communication/Templates">Templates</a><a href="/Communication/Campaigns">Campanhas</a><a href="/Communication/Automations">Automações</a><a href="/Communication/Outbox">Outbox</a><a href="/Communication/Inbox">Inbox</a><a href="/Communication/Preferences">Preferências</a><a href="/Communication/Reports">Relatórios</a></nav></header>
  <section data-loading class="communication-skeleton" aria-label="Carregando"><i></i><i></i><i></i></section>
  <section data-error class="communication-error" hidden><strong>Não foi possível carregar.</strong><span data-error-message></span><small data-trace></small><button type="button" data-retry>Tentar novamente</button></section>
  <section data-content hidden></section>
 </main>
-@section Scripts { <script src="~/js/form-validation.js" asp-append-version="true"></script><script src="~/js/communication.js" asp-append-version="true"></script> }

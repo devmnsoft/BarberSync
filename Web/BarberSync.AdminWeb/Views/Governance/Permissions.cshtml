@@ -1,1 +1,14 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/governance.css" asp-append-version="true" />
+}
+
 @await Html.PartialAsync("_Page")
+
+@section Scripts {
+    <script src="~/js/form-validation.js" asp-append-version="true"></script>
+    <script src="~/js/governance.js" asp-append-version="true"></script>
+}

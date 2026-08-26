@@ -1,3 +1,14 @@
-@{ViewData["Title"]="Repasses";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+@{
+    ViewData["Title"]="Repasses";
+    Layout="~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/team.css"/>
+}
+
 <main class="team" data-team-page="payouts"><header class="team-hero"><div><small>Equipe</small><h1>Repasses pagos</h1><p>Extrato auditável por profissional, settlement, método e referência.</p></div></header><div class="team-error" data-team-error hidden></div><section class="team-grid" data-team-content></section></main>
-@section Styles{<link rel="stylesheet" href="~/css/team.css"/>}@section Scripts{<script src="~/js/team.js"></script>}
+
+@section Scripts {
+    <script src="~/js/team.js"></script>
+}

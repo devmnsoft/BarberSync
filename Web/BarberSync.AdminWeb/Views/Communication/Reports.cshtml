@@ -1,1 +1,14 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/communication.css" asp-append-version="true" />
+}
+
 <partial name="_Page" />
+
+@section Scripts {
+    <script src="~/js/form-validation.js" asp-append-version="true"></script>
+    <script src="~/js/communication.js" asp-append-version="true"></script>
+}
