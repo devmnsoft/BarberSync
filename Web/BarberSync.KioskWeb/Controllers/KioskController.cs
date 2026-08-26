@@ -6,9 +6,11 @@ public class KioskController(IConfiguration configuration) : Controller
 {
     public IActionResult Index(string? deviceCode)
     {
-        ViewData["DeviceCode"] = string.IsNullOrWhiteSpace(deviceCode)
+        var resolved = string.IsNullOrWhiteSpace(deviceCode)
             ? configuration["Kiosk:DeviceCode"] ?? string.Empty
             : deviceCode.Trim();
+        ViewData["DeviceCode"] = resolved;
+        ViewData["DeviceConfigured"] = !string.IsNullOrWhiteSpace(resolved);
         return View();
     }
 

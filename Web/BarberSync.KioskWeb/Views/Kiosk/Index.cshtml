@@ -1,1 +1,13 @@
-@{Layout="~/Views/Shared/_KioskLayout.cshtml";}<div class='text-center'><h1>Bem-vindo ao Totem Inteligente</h1><a class='btn btn-warning btn-lg' href='/Kiosk/Services'>Iniciar atendimento</a></div>
+@{Layout="~/Views/Shared/_KioskLayout.cshtml"; var configured = ViewData["DeviceConfigured"] as bool? == true;}
+@if (configured)
+{
+  <div class="kiosk-step"><h1>Bem-vindo ao Totem Inteligente</h1><a class="k-btn" href="/Kiosk/Services">Iniciar atendimento</a></div>
+}
+else
+{
+  <article class="k-card kiosk-error" role="alert">
+    <h1>Totem não configurado</h1>
+    <p>Configure <strong>Kiosk:DeviceCode</strong> para este dispositivo.</p>
+    <p>Um responsável pode executar <code>.\Scripts\setup-kiosk-local-dev.ps1</code> no ambiente local.</p>
+  </article>
+}

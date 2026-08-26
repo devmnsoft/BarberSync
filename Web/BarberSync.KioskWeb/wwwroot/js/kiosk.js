@@ -1,7 +1,7 @@
 (() => {
   const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   const money = value => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const showError = (host, message) => { host.innerHTML = `<article class="k-card kiosk-error" role="alert"><h3>Não foi possível carregar</h3><p>${escapeHtml(message)}</p><button class="k-btn" type="button" onclick="location.reload()">Tentar novamente</button></article>`; };
+  const showError = (host, message, errorCode) => { const kioskSetup = errorCode === 'KIOSK_DEVICE_NOT_CONFIGURED'; host.innerHTML = `<article class="k-card kiosk-error" role="alert"><h3>${kioskSetup ? 'Totem não configurado' : 'Não foi possível carregar'}</h3><p>${escapeHtml(kioskSetup ? 'Configure Kiosk:DeviceCode para este dispositivo.' : message)}</p><button class="k-btn" type="button" onclick="location.reload()">Tentar novamente</button></article>`; };
   const setBusy = (button, busy) => { button.disabled = busy; button.setAttribute('aria-busy', String(busy)); };
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -10,7 +10,7 @@
       await flow.initialize();
     } catch (error) {
       const host = document.querySelector('.kiosk-step, .kiosk-services-screen');
-      if (host) showError(host, error.message);
+      if (host) showError(host, error.message, error.errorCode);
       return;
     }
     const renderSummary = () => {
@@ -35,7 +35,7 @@
         const services = Array.isArray(payload.data) ? payload.data : [];
         servicesHost.innerHTML = services.length ? services.map(service => `<article class="k-card"><h3>${escapeHtml(service.name)}</h3><p>${escapeHtml(service.description || service.category || '')}</p><strong>${money(service.price)}</strong><span>${Number(service.durationMinutes || 30)} min</span><a class="k-btn" data-service="${escapeHtml(service.id)}" data-name="${escapeHtml(service.name)}" data-price="${Number(service.price || 0)}" href="/Kiosk/Client">Selecionar</a></article>`).join('') : '<article class="k-card"><h3>Nenhum serviço disponível</h3><p>Peça ajuda a um atendente.</p></article>';
         servicesHost.addEventListener('click', async event => { const target = event.target.closest('[data-service]'); if (!target) return; event.preventDefault(); await flow.setState({ serviceId: target.dataset.service, serviceName: target.dataset.name, amount: Number(target.dataset.price) }); location.href = target.href; });
-      } catch (error) { showError(servicesHost, error.message); }
+      } catch (error) { showError(servicesHost, error.message, error.errorCode); }
     }
 
     const professionalsHost = document.getElementById('kioskProfessionals');
@@ -45,7 +45,7 @@
         const professionals = Array.isArray(payload.data) ? payload.data : [];
         professionalsHost.innerHTML = professionals.length ? professionals.map(item => `<article class="k-card"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.specialty || 'Profissional')}</p><span>${item.estimatedWaitMinutes ? `Espera estimada: ${Number(item.estimatedWaitMinutes)} min` : 'Disponibilidade no caixa'}</span><a class="k-btn" data-professional="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" href="/Kiosk/Confirm">Escolher</a></article>`).join('') : '<article class="k-card"><h3>Nenhum profissional disponível</h3><p>Peça ajuda a um atendente.</p></article>';
         professionalsHost.addEventListener('click', async event => { const target = event.target.closest('[data-professional]'); if (!target) return; event.preventDefault(); await flow.setState({ professionalId: target.dataset.professional, professionalName: target.dataset.name }); location.href = target.href; });
-      } catch (error) { showError(professionalsHost, error.message); }
+      } catch (error) { showError(professionalsHost, error.message, error.errorCode); }
     }
 
     document.getElementById('kioskClientForm')?.addEventListener('submit', async event => {

@@ -26,7 +26,7 @@
     async request(url, options = {}) {
       const response = await fetch(url, { headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) }, ...options });
       const payload = await response.json().catch(() => ({ success: false, message: 'Resposta inválida do servidor.' }));
-      if (!response.ok || payload.success === false) throw new Error(payload.message || `Falha HTTP ${response.status}`);
+      if (!response.ok || payload.success === false) { const error = new Error(payload.message || `Falha HTTP ${response.status}`); error.errorCode = payload.errorCode; throw error; }
       return payload;
     },
     post(url, body) { return this.request(url, { method: 'POST', body: JSON.stringify(body) }); },

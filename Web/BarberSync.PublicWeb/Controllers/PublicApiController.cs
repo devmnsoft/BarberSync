@@ -40,7 +40,7 @@ public sealed class PublicApiController(IHttpClientFactory clients, IConfigurati
         catch (HttpRequestException ex)
         {
             logger.LogError(ex, "API operacional indisponível em {Path}.", path);
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("O agendamento está temporariamente indisponível. Tente novamente em alguns minutos."));
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("API operacional indisponível. Confirme se BarberSync.Api está rodando e se a URL configurada está correta."));
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
