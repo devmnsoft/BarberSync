@@ -21,3 +21,6 @@ Regras persistidas usam escopo, métrica permitida, operador, limite, período e
 ## Segurança, efeitos e limitações
 
 Todos os endpoints exigem JWT, claims de tenant/filial e permissões `Analytics.Read`, `Analytics.Manage`, `Analytics.Export` ou `Analytics.Alerts`. Consultas são isoladas por tenant e filial; alterações geram auditoria. Exportar cria um registro, salvar visão persiste filtros e ações de alerta alteram o workflow do evento. Não há previsão estatística ou IA generativa; ocupação e recorrência avançada permanecem indisponíveis quando sua fonte canônica não oferece capacidade/segmentação suficiente.
+# Métricas de comunicação
+
+O escopo Relationship agrega `communication_outbox`, campanhas e preferências para mensagens enviadas, falhas, opt-outs e providers não configurados. Alertas recomendados cobrem taxa de falha, pendência envelhecida e `ProviderNotConfigured`.

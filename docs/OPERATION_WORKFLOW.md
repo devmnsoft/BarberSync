@@ -87,3 +87,6 @@ O dashboard de Estoque fornece alertas reais de produto/insumo crítico, compras
 ## Integração com BI
 
 Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.
+# Eventos de comunicação
+
+Eventos operacionais publicam chaves idempotentes em `communication_events`. Uma falha de notificação é registrada como `Failed`/`Skipped` e nunca desfaz a transação operacional concluída.
