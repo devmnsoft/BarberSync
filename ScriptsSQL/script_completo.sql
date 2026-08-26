@@ -596,4 +596,35 @@ CREATE TABLE IF NOT EXISTS barber.replenishment_suggestions (id uuid PRIMARY KEY
 CREATE INDEX IF NOT EXISTS ix_replenishment_scope ON barber.replenishment_suggestions(tenant_id,branch_id,product_id,supplier_id,status);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_accounts_payable_receipt ON barber.accounts_payable(source_purchase_id) WHERE source_purchase_id IS NOT NULL AND deleted_at IS NULL;
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('020','Estoque avancado e compras','inventory-20260826') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
+
+-- BI Executivo e Analytics (Sprint 39). Persistência aditiva; KPIs continuam derivados das fontes canônicas.
+INSERT INTO barber.permissions(id,code,description) VALUES
+('02100000-0000-4000-8000-000000000001','Analytics.Read','Consultar BI Executivo e indicadores'),
+('02100000-0000-4000-8000-000000000002','Analytics.Manage','Gerenciar visões analíticas'),
+('02100000-0000-4000-8000-000000000003','Analytics.Export','Exportar relatórios gerenciais'),
+('02100000-0000-4000-8000-000000000004','Analytics.Alerts','Gerenciar alertas analíticos') ON CONFLICT(code) DO UPDATE SET description=excluded.description;
+CREATE TABLE IF NOT EXISTS barber.analytics_saved_views (
+ id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),user_id uuid NOT NULL REFERENCES barber.users(id),name varchar(120) NOT NULL,scope varchar(30) NOT NULL,filters_json jsonb NOT NULL DEFAULT '{}'::jsonb,is_default boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz,
+ CONSTRAINT ck_analytics_saved_view_scope CHECK(scope IN ('Executive','Operations','Finance','Team','Relationship','Inventory'))
+);
+CREATE INDEX IF NOT EXISTS ix_analytics_saved_views_scope ON barber.analytics_saved_views(tenant_id,branch_id,user_id,scope,created_at);
+CREATE TABLE IF NOT EXISTS barber.analytics_alert_rules (
+ id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),name varchar(140) NOT NULL,scope varchar(30) NOT NULL,metric_key varchar(80) NOT NULL,operator varchar(4) NOT NULL,threshold_value numeric(18,4) NOT NULL,period_type varchar(30) NOT NULL,severity varchar(20) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Active',created_by uuid NOT NULL REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz,
+ CONSTRAINT ck_analytics_alert_severity CHECK(severity IN ('Info','Warning','Critical')),CONSTRAINT ck_analytics_alert_operator CHECK(operator IN ('>','>=','<','<=','='))
+);
+CREATE INDEX IF NOT EXISTS ix_analytics_alert_rules_scope ON barber.analytics_alert_rules(tenant_id,branch_id,scope,metric_key,status,created_at);
+CREATE TABLE IF NOT EXISTS barber.analytics_alert_events (
+ id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),rule_id uuid REFERENCES barber.analytics_alert_rules(id),metric_key varchar(80) NOT NULL,metric_value numeric(18,4),threshold_value numeric(18,4) NOT NULL,severity varchar(20) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Open',message text NOT NULL,source_json jsonb NOT NULL DEFAULT '{}'::jsonb,acknowledged_by uuid REFERENCES barber.users(id),acknowledged_at timestamptz,resolved_by uuid REFERENCES barber.users(id),resolved_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),
+ CONSTRAINT ck_analytics_event_status CHECK(status IN ('Open','Acknowledged','Resolved','Dismissed'))
+);
+CREATE INDEX IF NOT EXISTS ix_analytics_alert_events_scope ON barber.analytics_alert_events(tenant_id,branch_id,metric_key,status,created_at);
+CREATE TABLE IF NOT EXISTS barber.analytics_kpi_snapshots (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),snapshot_date date NOT NULL,scope varchar(30) NOT NULL,metric_key varchar(80) NOT NULL,metric_value numeric(18,4),dimension_key varchar(80),dimension_value varchar(180),source_json jsonb NOT NULL DEFAULT '{}'::jsonb,created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_analytics_kpi_snapshots_scope ON barber.analytics_kpi_snapshots(tenant_id,branch_id,scope,metric_key,snapshot_date,created_at);
+CREATE TABLE IF NOT EXISTS barber.analytics_report_exports (
+ id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),user_id uuid NOT NULL REFERENCES barber.users(id),report_type varchar(60) NOT NULL,filters_json jsonb NOT NULL DEFAULT '{}'::jsonb,format varchar(12) NOT NULL,status varchar(20) NOT NULL,file_name varchar(240),created_at timestamptz NOT NULL DEFAULT now(),completed_at timestamptz
+);
+CREATE INDEX IF NOT EXISTS ix_analytics_report_exports_scope ON barber.analytics_report_exports(tenant_id,branch_id,report_type,status,created_at);
+INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('021','BI Executivo e Analytics','analytics-20260826') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 COMMIT;

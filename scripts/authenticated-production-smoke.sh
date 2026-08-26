@@ -51,6 +51,11 @@ call inventory_products GET /api/inventory/products "$admin" 200; contains inven
 call inventory_purchases GET /api/inventory/purchase-orders "$admin" 200; contains inventory_purchases 'PC-READINESS'
 call inventory_replenishment GET /api/inventory/replenishment "$admin" 200; contains inventory_replenishment 'ProductionReadiness replenishment'
 echo EVIDENCE:AUTH_SMOKE_INVENTORY:PASS
+call analytics_executive GET /api/analytics/executive "$admin" 200; contains analytics_executive revenue_total
+call analytics_operations GET /api/analytics/operations "$admin" 200; contains analytics_operations scheduled
+call analytics_finance GET /api/analytics/finance "$admin" 200; contains analytics_finance cash_in
+call analytics_alerts GET /api/analytics/alerts "$admin" 200; contains analytics_alerts 'Evento controlado de readiness'
+echo EVIDENCE:AUTH_SMOKE_ANALYTICS:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks

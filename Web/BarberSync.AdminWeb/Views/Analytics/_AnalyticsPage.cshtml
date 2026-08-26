@@ -1,0 +1,19 @@
+@{var page=(string)(ViewData["AnalyticsPage"]??"Executive");var title=(string)(ViewData["Title"]??"BI Executivo");}
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true"/>
+<main class="analytics" data-analytics-page="@page.ToLowerInvariant()">
+ <header class="analytics-hero"><div><small>BI Executivo</small><h1>@title</h1><p>Indicadores calculados nas fontes operacionais canônicas, com comparação auditável.</p></div><button class="analytics-button" type="button" data-refresh>Atualizar</button></header>
+ <nav class="analytics-nav" aria-label="BI Executivo"><a href="/Analytics/Executive">Executivo</a><a href="/Analytics/Operations">Operação</a><a href="/Analytics/Finance">Financeiro</a><a href="/Analytics/Team">Equipe</a><a href="/Analytics/Relationship">Relacionamento</a><a href="/Analytics/Inventory">Estoque</a><a href="/Analytics/Reports">Relatórios</a><a href="/Analytics/Alerts">Alertas</a></nav>
+ <form class="analytics-filters" data-filter-form novalidate>
+  <label>Unidade<select name="branchId" required data-options="branches"><option value="">Carregando unidades…</option></select><small data-error-for="branchId"></small></label>
+  <label>Período<select name="preset" required><option value="today">Hoje</option><option value="last7days">Últimos 7 dias</option><option value="last30days" selected>Últimos 30 dias</option><option value="month">Mês atual</option><option value="custom">Personalizado</option></select></label>
+  <label>De<input type="date" name="from" data-date-start required></label><label>Até<input type="date" name="to" data-date-end required></label>
+  <label>Profissional<select name="professionalId" data-options="professionals"><option value="">Todos</option></select></label>
+  <label>Cliente<select name="clientId" data-options="clients"><option value="">Todos</option></select></label>
+  <label>Serviço<select name="serviceId" data-options="services"><option value="">Todos</option></select></label>
+  <button class="analytics-button" type="submit">Aplicar filtros</button>
+ </form>
+ <section class="analytics-panel analytics-saved"><label>Visão salva<select data-saved-views><option value="">Selecione uma visão</option></select></label><label>Nome da nova visão<input data-view-name maxlength="120" placeholder="Ex.: Fechamento mensal"></label><label><input type="checkbox" data-view-default> Usar como padrão</label><button type="button" class="analytics-button" data-save-view>Salvar filtros</button><button type="button" data-delete-view>Excluir selecionada</button></section>
+ <div class="analytics-error" role="alert" hidden></div>
+ <section data-analytics-content aria-live="polite"><div class="analytics-skeleton"><i></i><i></i><i></i><i></i></div></section>
+</main>
+<script defer src="~/js/form-validation.js" asp-append-version="true"></script><script defer src="~/js/analytics.js" asp-append-version="true"></script>

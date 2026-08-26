@@ -131,3 +131,7 @@ Todos exigem autenticação, contexto de tenant/filial e permissões financeiras
 ## Estoque avançado (Sprint 38)
 
 Todos os contratos exigem autenticação, escopo tenant/filial e permissões `Inventory.*`: `GET /api/inventory/dashboard`, produtos, categorias, pedidos (aprovar/cancelar), recebimentos (postar), contagens (fechar), transferências (enviar/receber), fichas de insumos, reposição (converter/descartar) e `GET /api/inventory/reports/export`. POST/PUT retornam erros por campo e `traceId`.
+
+## BI Executivo / Analytics
+
+Todos os contratos exigem autenticação, claims `tenant_id`/`branch_id` e a permissão indicada. `GET /api/analytics/{executive|operations|finance|team|relationship|inventory}` (`Analytics.Read`) retorna `period`, indicadores de fontes canônicas, `sourceStatus` e, no executivo, comparação com período anterior. `GET /api/analytics/kpis`, `/rankings` e `/filter-options` complementam dashboards sem aceitar IDs digitados. Alertas usam `GET /api/analytics/alerts`, `POST|PUT /api/analytics/alerts/rules[/{id}]` e `POST /api/analytics/alerts/{id}/{acknowledge|resolve|dismiss}` (`Analytics.Alerts`). Visões usam CRUD em `/api/analytics/saved-views` (`Analytics.Read`/`Analytics.Manage`). `GET /api/analytics/reports/export?type=...&from=...&to=...` (`Analytics.Export`) entrega CSV e registra a exportação. Erros de filtro retornam `message`, `traceId` e `errors` por campo.

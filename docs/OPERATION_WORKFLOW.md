@@ -83,3 +83,7 @@ O fechamento à vista permanece registrado em pagamentos/movimentos de caixa. Ve
 
 ## Alertas e insumos de estoque
 O dashboard de Estoque fornece alertas reais de produto/insumo crítico, compras abertas, inventários e transferências pendentes. No pagamento, a ficha técnica é baixada atomicamente e saldo insuficiente reverte a operação com erro rastreável; produtos explícitos não sofrem baixa dupla.
+
+## Integração com BI
+
+Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.

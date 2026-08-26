@@ -20,3 +20,7 @@ CRM exige `Client.Read`/`Client.Update`; campanhas exigem `Campaign.Read`/`Campa
 
 ## Limitações
 Não há envio externo de campanhas, IA em segmentos, token de demonstração, sucesso artificial ou persistência local alternativa nesta sprint.
+
+## Integração com BI
+
+Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.

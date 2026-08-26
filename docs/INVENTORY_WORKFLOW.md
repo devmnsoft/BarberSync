@@ -20,3 +20,7 @@ O PDV bloqueia venda e consumo sem saldo. Dashboard e Operação consomem indica
 
 ## Limitações conhecidas
 O crédito de transferência requer produto compatível já cadastrado na filial destino, conforme o contrato multi-filial existente; não há criação implícita ou resultado fictício. Recebimentos são sempre orientados pelos itens pendentes do pedido.
+
+## Integração com BI
+
+Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.
