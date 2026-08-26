@@ -46,6 +46,11 @@ call finance_suppliers GET /api/suppliers "$admin" 200; contains finance_supplie
 call finance_payables GET /api/finance/payables "$admin" 200; contains finance_payables 'Readiness payable'
 call finance_receivables GET /api/finance/receivables "$admin" 200; contains finance_receivables 'Readiness receivable'
 echo EVIDENCE:AUTH_SMOKE_FINANCE:PASS
+call inventory_dashboard GET /api/inventory/dashboard "$admin" 200; contains inventory_dashboard active_products
+call inventory_products GET /api/inventory/products "$admin" 200; contains inventory_products 'Readiness Pomade'
+call inventory_purchases GET /api/inventory/purchase-orders "$admin" 200; contains inventory_purchases 'PC-READINESS'
+call inventory_replenishment GET /api/inventory/replenishment "$admin" 200; contains inventory_replenishment 'ProductionReadiness replenishment'
+echo EVIDENCE:AUTH_SMOKE_INVENTORY:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks

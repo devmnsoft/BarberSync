@@ -23,3 +23,6 @@ Pagamentos à vista continuam originados no PDV, movimentos no caixa continuam n
 ## Auditoria e limites conhecidos
 
 Criação/alteração, liquidação, cancelamento, recorrência, conciliação e exportação usam o contrato de auditoria existente. Não há execução automática de recorrências nesta sprint: ela é disparada pelo endpoint autenticado. Conciliação não modifica movimentos históricos; registra apenas a comparação e seu fechamento.
+
+## Integração com compras
+Recebimentos do Estoque podem gerar conta a pagar usando fornecedor e categoria financeira selecionados. `source_purchase_id` identifica o recebimento e o índice único impede duplicidade; consulte `INVENTORY_WORKFLOW.md`.
