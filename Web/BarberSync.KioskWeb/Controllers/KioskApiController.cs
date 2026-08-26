@@ -1,30 +1,29 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarberSync.KioskWeb.Controllers;
 
 /// <summary>Same-origin gateway for the kiosk. It never invents operational data.</summary>
 [Route("KioskApi")]
-public sealed class KioskApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<KioskApiController> logger) : Controller
+public sealed partial class KioskApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<KioskApiController> logger) : Controller
 {
     private const string FlowStateKey = "KioskFlow.State";
 
     [HttpGet("branches")]
-    public Task<IActionResult> Branches([FromQuery] string? deviceCode) =>
-        ProxyGet($"/api/kiosk/branches?deviceCode={Encode(RequiredDevice(deviceCode))}");
+    public Task<IActionResult> Branches([FromQuery] string? deviceCode) => ProxyGetWithDevice("/api/kiosk/branches", deviceCode);
 
     [HttpGet("services")]
-    public Task<IActionResult> Services([FromQuery] string? deviceCode) =>
-        ProxyGet($"/api/kiosk/services?deviceCode={Encode(RequiredDevice(deviceCode))}");
+    public Task<IActionResult> Services([FromQuery] string? deviceCode) => ProxyGetWithDevice("/api/kiosk/services", deviceCode);
 
     [HttpGet("professionals")]
     public Task<IActionResult> Professionals([FromQuery] string? serviceId, [FromQuery] string? deviceCode) =>
-        ProxyGet($"/api/kiosk/professionals?serviceId={Encode(serviceId)}&deviceCode={Encode(RequiredDevice(deviceCode))}");
+        ProxyGetWithDevice($"/api/kiosk/professionals?serviceId={Encode(serviceId)}", deviceCode, true);
 
     [HttpGet("availability")]
     public Task<IActionResult> Availability([FromQuery] string? branchId, [FromQuery] string? serviceId, [FromQuery] string? professionalId, [FromQuery] DateOnly date, [FromQuery] string? deviceCode) =>
-        ProxyGet($"/api/kiosk/availability?branchId={Encode(branchId)}&serviceId={Encode(serviceId)}&professionalId={Encode(professionalId)}&date={date:yyyy-MM-dd}&deviceCode={Encode(RequiredDevice(deviceCode))}");
+        ProxyGetWithDevice($"/api/kiosk/availability?branchId={Encode(branchId)}&serviceId={Encode(serviceId)}&professionalId={Encode(professionalId)}&date={date:yyyy-MM-dd}", deviceCode, true);
 
     [HttpPost("session")]
     public Task<IActionResult> Session([FromBody] JsonElement payload) => ProxyPost("/api/kiosk/session", payload);
@@ -71,8 +70,18 @@ public sealed class KioskApiController(IHttpClientFactory httpClientFactory, ICo
         catch (Exception ex)
         {
             logger.LogError(ex, "API indisponível durante GET {Path}.", path);
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("O totem está temporariamente sem conexão. Chame um atendente."));
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("API operacional indisponível. Confirme se BarberSync.Api está rodando e se a URL configurada está correta."));
         }
+    }
+
+    private Task<IActionResult> ProxyGetWithDevice(string path, string? queryDeviceCode, bool hasQuery = false)
+    {
+        var device = ResolveDevice(queryDeviceCode);
+        if (!device.IsValid)
+            return Task.FromResult<IActionResult>(DeviceProblem(device.ErrorCode!));
+
+        logger.LogInformation("Totem usando DeviceCode originado de {DeviceCodeSource}.", device.Source);
+        return ProxyGet($"{path}{(hasQuery ? "&" : "?")}deviceCode={Encode(device.Value)}");
     }
 
     private async Task<IActionResult> ProxyPost(string path, JsonElement payload)
@@ -86,7 +95,7 @@ public sealed class KioskApiController(IHttpClientFactory httpClientFactory, ICo
         catch (Exception ex)
         {
             logger.LogError(ex, "API indisponível durante POST {Path}.", path);
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("Não foi possível concluir a operação. Nenhum dado ou pagamento foi registrado."));
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, Error("API operacional indisponível. Confirme se BarberSync.Api está rodando e se a URL configurada está correta. Nenhum dado ou pagamento foi registrado."));
         }
     }
 
@@ -103,9 +112,47 @@ public sealed class KioskApiController(IHttpClientFactory httpClientFactory, ICo
         return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 
-    private string RequiredDevice(string? value) => string.IsNullOrWhiteSpace(value)
-        ? configuration["Kiosk:DeviceCode"] ?? throw new InvalidOperationException("Kiosk:DeviceCode não foi configurado.")
-        : value.Trim();
+    private DeviceResolution ResolveDevice(string? queryValue)
+    {
+        var configured = configuration["Kiosk:DeviceCode"];
+        var value = string.IsNullOrWhiteSpace(queryValue) ? configured : queryValue;
+        var source = string.IsNullOrWhiteSpace(queryValue) ? "Configuration" : "QueryString";
+        if (string.IsNullOrWhiteSpace(value)) return new(null, source, "KIOSK_DEVICE_NOT_CONFIGURED");
+
+        value = value.Trim();
+        return DeviceCodePattern().IsMatch(value)
+            ? new(value, source, null)
+            : new(null, source, "KIOSK_DEVICE_INVALID");
+    }
+
+    private ObjectResult DeviceProblem(string errorCode)
+    {
+        var missing = errorCode == "KIOSK_DEVICE_NOT_CONFIGURED";
+        var status = missing && HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+            ? StatusCodes.Status400BadRequest
+            : StatusCodes.Status503ServiceUnavailable;
+        var message = missing ? "Totem não configurado." : "O código informado para o totem é inválido.";
+        return StatusCode(status, new
+        {
+            success = false,
+            message,
+            errorCode,
+            traceId = HttpContext.TraceIdentifier,
+            setup = new
+            {
+                requiredKey = "Kiosk:DeviceCode",
+                example = "dotnet user-secrets set \"Kiosk:DeviceCode\" \"KIOSK-LOCAL-001\" --project .\\Web\\BarberSync.KioskWeb\\BarberSync.KioskWeb.csproj"
+            }
+        });
+    }
+
+    [GeneratedRegex("^[A-Za-z0-9][A-Za-z0-9._-]{4,63}$", RegexOptions.CultureInvariant)]
+    private static partial Regex DeviceCodePattern();
+
+    private sealed record DeviceResolution(string? Value, string Source, string? ErrorCode)
+    {
+        public bool IsValid => ErrorCode is null;
+    }
 
     private static string Encode(string? value) => Uri.EscapeDataString(value ?? string.Empty);
     private object Error(string message) => new { success = false, message, traceId = HttpContext.TraceIdentifier, data = (object?)null, errors = Array.Empty<object>() };
