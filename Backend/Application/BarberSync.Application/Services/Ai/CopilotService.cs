@@ -1,5 +1,6 @@
 using BarberSync.Application.Abstractions.Ai;
 using BarberSync.Application.DTOs.Ai;
+using Microsoft.Extensions.Logging;
 
 namespace BarberSync.Application.Services.Ai;
 
