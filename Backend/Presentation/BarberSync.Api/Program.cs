@@ -19,6 +19,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
+using BarberSync.Api.Services.Governance;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<GovernanceStore>();
+builder.Services.AddScoped<IPlanLimitService, PlanLimitService>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddScoped<IValidator<LoginRequestDto>, LoginRequestValidator>();
 builder.Services.AddScoped<IValidator<FirstAdminRequestDto>, FirstAdminRequestValidator>();

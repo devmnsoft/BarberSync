@@ -28,3 +28,6 @@ O escopo Relationship agrega `communication_outbox`, campanhas e preferências p
 ## Indicadores de IA Operacional
 
 Analytics classifica sugestões por unidade, serviço, profissional, câmera/zona e período, incluindo aprovação, rejeição, correção, confiança e tempo de revisão. Alertas cobrem provider não configurado, câmera inativa, fila acumulada, rejeição alta e queda de confiança; ausência de provider nunca é tratada como dado bem-sucedido.
+
+## Governança SaaS
+O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).

@@ -1,0 +1,9 @@
+@{ Layout = "~/Views/Shared/_AdminLayout.cshtml"; var page=(string?)ViewData["GovernancePage"]??"Dashboard"; }
+@section Styles { <link rel="stylesheet" href="~/css/governance.css" asp-append-version="true" /> }
+<main class="governance" data-governance-page="@page">
+<header class="governance-hero"><div><p class="eyebrow">CENTRAL ADMINISTRATIVA SAAS</p><h1>@page</h1><p>Empresas, assinatura, acesso, segurança e privacidade em fluxos reais e auditáveis.</p></div><nav><a href="/Governance">Dashboard</a><a href="/Governance/Tenants">Empresas</a><a href="/Governance/Branches">Filiais</a><a href="/Governance/Users">Usuários</a><a href="/Governance/Roles">Perfis</a><a href="/Governance/Permissions">Permissões</a><a href="/Governance/Plans">Planos</a><a href="/Governance/Subscription">Assinatura</a><a href="/Governance/Modules">Módulos</a><a href="/Governance/Audit">Auditoria</a><a href="/Governance/Security">Segurança</a><a href="/Governance/Privacy">LGPD</a><a href="/Governance/Onboarding">Onboarding</a><a href="/Governance/Settings">Configurações</a></nav></header>
+<section data-loading class="governance-skeleton" aria-label="Carregando"><i></i><i></i><i></i></section>
+<section data-error class="governance-error" hidden><strong>Não foi possível carregar.</strong><span data-error-message></span><small data-trace></small><button type="button" data-retry>Tentar novamente</button></section>
+<section data-content hidden></section>
+</main>
+@section Scripts { <script src="~/js/form-validation.js" asp-append-version="true"></script><script src="~/js/governance.js" asp-append-version="true"></script> }

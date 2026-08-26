@@ -19,3 +19,6 @@ Toda correspondência nasce em `PendingReview`, com confiança, regra e expiraç
 ## Segurança, permissões e limitações
 
 Todos os endpoints usam autenticação, claims de tenant/filial e papéis operacionais; o catálogo inclui `AiOperations.Read`, `Manage`, `Review`, `Export` e `Settings`. Evidências e exportações dependem da permissão correspondente. A versão atual processa regras sobre metadados; provider visual externo e download de snapshots permanecem indisponíveis até configuração segura e avaliação LGPD.
+
+## Governança SaaS
+O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).

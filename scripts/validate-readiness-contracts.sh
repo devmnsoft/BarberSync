@@ -46,5 +46,10 @@ for smoke in "$root_dir"/scripts/*.sh "$root_dir"/scripts/*.ps1; do
   check "$(basename "$smoke") has no obsolete POS skip path" bash -c "! grep -Fq '$forbidden' \"$smoke\""
 done
 
+check 'governance API contract exists' contains "$root_dir/Backend/Presentation/BarberSync.Api/Controllers/GovernanceController.cs" 'api/governance'
+check 'governance smoke marker exists' contains "$root_dir/scripts/authenticated-production-smoke.sh" 'EVIDENCE:AUTH_SMOKE_GOVERNANCE:PASS'
+check 'governance schema exists' contains "$schema" 'barber.tenant_subscriptions'
+check 'governance workflow documents no-ID rule' contains "$root_dir/docs/GOVERNANCE_WORKFLOW.md" 'UUIDs existem'
+
 if (( failures > 0 )); then printf 'FAIL: %d readiness contract(s) failed.\n' "$failures" >&2; exit 1; fi
 printf 'OK: all readiness contracts passed static validation.\n'

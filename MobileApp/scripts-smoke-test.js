@@ -59,3 +59,4 @@ for (const jsFile of ['App.js', 'src/services/api.js', 'src/theme/colors.js', 's
   require('child_process').execFileSync(process.execPath, ['--check', jsFile], { stdio: 'inherit' });
 }
 console.log('Mobile smoke test passed.');
+if (!(fs.readFileSync(require('path').join(__dirname,'../docs/GOVERNANCE_WORKFLOW.md'),'utf8').includes('UUIDs existem'))) throw new Error('governance no-ID contract missing');

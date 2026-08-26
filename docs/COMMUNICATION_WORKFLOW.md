@@ -24,3 +24,6 @@ Dashboard, Templates, Campanhas, Automações, Outbox, Inbox, Preferências e Re
 ## Alertas InApp da IA Operacional
 
 Câmera inativa, provider não configurado, fila acumulada e sugestão vencendo geram somente Inbox/InApp persistida para administradores/gerentes, com deduplicação e link para revisão. Nenhum provider externo é simulado.
+
+## Governança SaaS
+O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).

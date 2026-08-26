@@ -68,6 +68,8 @@ call ai_cameras GET /api/ai-operations/cameras "$admin" 200
 call ai_review_queue GET /api/ai-operations/review-queue "$admin" 200
 call ai_settings GET /api/ai-operations/settings "$admin" 200; contains ai_settings automaticCharge
 echo EVIDENCE:AUTH_SMOKE_AI_OPERATIONS:PASS
+for route in dashboard users roles permissions/matrix modules onboarding; do call "governance_${route//\//_}" GET "/api/governance/$route" "$admin" 200; done
+echo EVIDENCE:AUTH_SMOKE_GOVERNANCE:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks

@@ -33,3 +33,4 @@ for (const contract of ["setStep(saved.step)", "api.flow('DELETE')", 'Confirmar 
 }
 
 console.log('Totem smoke test passed.');
+if (!(fs.readFileSync(require('path').join(__dirname,'../docs/GOVERNANCE_WORKFLOW.md'),'utf8').includes('MFA permanece'))) throw new Error('governance module contract missing');

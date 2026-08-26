@@ -40,5 +40,9 @@ $Forbidden = "SKIPPED_CONTRACT_" + "NOT_FOUND"
 foreach ($ScriptFile in Get-ChildItem (Join-Path $Root "scripts") -File | Where-Object { $_.Extension -in ".sh", ".ps1" -and $_.BaseName -ne "validate-readiness-contracts" }) {
     Test-Contract "$($ScriptFile.Name) has no obsolete POS skip path" { -not (Has $ScriptFile.FullName ([regex]::Escape($Forbidden))) }
 }
+Test-Contract "governance API contract exists" { Has (Join-Path $Root 'Backend/Presentation/BarberSync.Api/Controllers/GovernanceController.cs') 'api/governance' }
+Test-Contract "governance smoke marker exists" { Has (Join-Path $Root 'scripts/authenticated-production-smoke.ps1') 'EVIDENCE:AUTH_SMOKE_GOVERNANCE:PASS' }
+Test-Contract "governance schema exists" { Has $Schema 'barber.tenant_subscriptions' }
+Test-Contract "governance workflow exists" { Has (Join-Path $Root 'docs/GOVERNANCE_WORKFLOW.md') 'UUIDs existem' }
 if ($script:Failures -gt 0) { Write-Error "FAIL: $($script:Failures) readiness contract(s) failed."; exit 1 }
 Write-Host "OK: all readiness contracts passed static validation."
