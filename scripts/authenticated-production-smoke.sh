@@ -63,6 +63,11 @@ call communication_outbox GET /api/communication/outbox "$admin" 200
 call communication_inbox GET /api/notifications/inbox "$admin" 200; contains communication_inbox 'Communication readiness'
 call communication_preferences GET /api/notifications/preferences "$admin" 200; contains communication_preferences AppointmentReminder
 echo EVIDENCE:AUTH_SMOKE_COMMUNICATION:PASS
+call ai_dashboard GET /api/ai-operations/dashboard "$admin" 200; contains ai_dashboard requiresHumanReview
+call ai_cameras GET /api/ai-operations/cameras "$admin" 200
+call ai_review_queue GET /api/ai-operations/review-queue "$admin" 200
+call ai_settings GET /api/ai-operations/settings "$admin" 200; contains ai_settings automaticCharge
+echo EVIDENCE:AUTH_SMOKE_AI_OPERATIONS:PASS
 
 client=$(login client_login "$READINESS_CLIENT_EMAIL" "$READINESS_CLIENT_PASSWORD")
 call mobile_client GET /api/mobile/summary "$client" 200; contains mobile_client '"role":"Client"'; not_contains mobile_client commissions; not_contains mobile_client blocks

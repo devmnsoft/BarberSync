@@ -1,0 +1,7 @@
+@{ var page=(string?)ViewData["AiPage"]??"Dashboard"; }
+<main class="ai-operations" data-ai-operations data-page="@page">
+<header class="ai-hero"><div><span>IA assistiva · revisão humana</span><h1>IA Operacional</h1><p>As sugestões da IA são apoio operacional e exigem revisão humana. A IA não identifica pessoas e não cobra serviços automaticamente.</p></div><button type="button" data-retry>Atualizar</button></header>
+<nav class="ai-nav" aria-label="IA Operacional"><a href="/AiOperations">Dashboard</a><a href="/AiOperations/Cameras">Câmeras</a><a href="/AiOperations/Zones">Zonas</a><a href="/AiOperations/Rules">Regras de sinais</a><a href="/AiOperations/ReviewQueue">Fila de revisão</a><a href="/AiOperations/Evidence">Evidências</a><a href="/AiOperations/Reports">Relatórios</a><a href="/AiOperations/Settings">Configurações</a></nav>
+<section class="ai-privacy"><strong>Privacidade por padrão:</strong> somente metadados operacionais; sem reconhecimento facial, biometria, inferência de atributos pessoais ou cobrança automática.</section>
+<div class="ai-skeleton" data-loading><i></i><i></i><i></i></div><section data-error hidden><strong data-error-message></strong><code data-trace></code><button type="button" data-retry>Tentar novamente</button></section><section data-content hidden></section>
+</main>
