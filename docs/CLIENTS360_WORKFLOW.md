@@ -60,3 +60,7 @@ As permissões complementam autenticação e escopo; não há fallback administr
 
 ## Integração Clube & Vendas
 Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.
+
+## Integração — Portal do Cliente (Sprint 51)
+
+O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem provider estão documentados em [CLIENT_PORTAL_WORKFLOW.md](CLIENT_PORTAL_WORKFLOW.md). A integração não aceita identificadores técnicos digitados e não transforma intenção de pagamento em liquidação.

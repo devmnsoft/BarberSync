@@ -29,5 +29,12 @@ export const mobileApi = {
   clubSummary: signal => request('/api/mobile/club/summary', { signal }), clubWallet: signal => request('/api/mobile/club/wallet', { signal }),
   clubMemberships: signal => request('/api/mobile/club/memberships', { signal }), clubGiftCards: signal => request('/api/mobile/club/gift-cards', { signal }),
   clubVouchers: signal => request('/api/mobile/club/vouchers', { signal }), redeemClubVoucher: code => request('/api/mobile/club/vouchers/redeem', { method: 'POST', body: { code } }),
+  clientPortalRequestCode: input => request('/api/client-portal/auth/request-code', { method: 'POST', body: input }),
+  clientPortalVerifyCode: input => request('/api/client-portal/auth/verify-code', { method: 'POST', body: input }),
+  clientPortalHome: signal => request('/api/client-portal/home', { signal }), clientPortalAppointments: signal => request('/api/client-portal/appointments', { signal }),
+  clientPortalHistory: signal => request('/api/client-portal/history', { signal }), clientPortalConsents: signal => request('/api/client-portal/consents', { signal }),
+  clientPortalBudgets: signal => request('/api/client-portal/budgets', { signal }), clientPortalPayments: signal => request('/api/client-portal/payments', { signal }),
+  clientPortalBenefits: signal => request('/api/client-portal/benefits', { signal }), clientPortalReviews: input => request('/api/client-portal/reviews', { method: 'POST', body: input }),
+  clientPortalSupport: signal => request('/api/client-portal/support', { signal }), openClientPortalSupport: input => request('/api/client-portal/support', { method: 'POST', body: input }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };

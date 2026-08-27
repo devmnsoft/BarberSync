@@ -153,3 +153,7 @@ Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, re
 Todos os contratos administrativos exigem autenticação, escopo de tenant/unidade e a permissão `Club.*` correspondente. Dashboard e opções usam `GET /dashboard` e `GET /filter-options`. Planos usam `GET|POST /plans`, `PUT /plans/{id}`, e transições `activate|archive`. Assinaturas usam `GET|POST /memberships`, transições `activate|suspend|cancel` e `GET /memberships/{id}/usage`. Carteiras usam `GET /wallets`, `GET /wallets/{clientId}` e mutações `credit|debit|adjust`. Gift cards usam `GET|POST /gift-cards`, `activate|cancel` e `POST /gift-cards/redeem`. Catálogos incluem `/vouchers`, `/combos` e `/online-sales`; exportação exige `Club.Reports.Export` em `GET /reports/export`. Erros retornam ProblemDetails com `traceId` e falhas de regra não produzem sucesso simulado.
 
 Contratos Mobile: `GET /api/mobile/club/summary|wallet|memberships|gift-cards|vouchers` e `POST /api/mobile/club/vouchers/redeem`. Códigos são dados comerciais informados pelo cliente, não IDs técnicos.
+
+## Integração — Portal do Cliente (Sprint 51)
+
+O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem provider estão documentados em [CLIENT_PORTAL_WORKFLOW.md](CLIENT_PORTAL_WORKFLOW.md). A integração não aceita identificadores técnicos digitados e não transforma intenção de pagamento em liquidação.
