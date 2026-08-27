@@ -30,3 +30,6 @@ Recebimentos do Estoque podem gerar conta a pagar usando fornecedor e categoria 
 ## Integração com BI
 
 Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em `docs/ANALYTICS_WORKFLOW.md`, sem duplicar a fonte operacional canônica.
+
+## Integração Clube & Vendas
+Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.

@@ -57,3 +57,6 @@ Cliente é escolhido por busca; profissional, serviço, produto e termo usam sel
 - `Clients360.Export`
 
 As permissões complementam autenticação e escopo; não há fallback administrativo, dados demonstrativos em runtime ou sucesso falso.
+
+## Integração Clube & Vendas
+Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.
