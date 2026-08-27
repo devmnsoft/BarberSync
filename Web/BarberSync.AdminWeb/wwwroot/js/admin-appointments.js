@@ -33,7 +33,7 @@
     const permitted = { Scheduled:['confirm','check-in','cancel','no-show'], Confirmed:['check-in','cancel','no-show'], CheckedIn:['start','cancel'], InService:['finish'] }[item.status] || [];
     const names = {'confirm':'Confirmar','check-in':'Cliente chegou','start':'Iniciar','finish':'Finalizar','cancel':'Cancelar','no-show':'Marcar no-show'};
     return permitted.map(action => `<button class="btn btn-light btn-sm" data-action="${action}" data-id="${escape(item.id)}">${names[action]}</button>`).join('') +
-      `<a class="btn btn-light btn-sm" href="/Admin/ServiceOrders?appointmentId=${escape(item.id)}">Abrir comanda</a><a class="btn btn-light btn-sm" href="/Admin/Clients/${escape(item.clientId)}">Ver cliente</a>`;
+      `<a class="btn btn-light btn-sm" href="/Admin/ServiceOrders?appointmentId=${escape(item.id)}">Abrir comanda</a><a class="btn btn-light btn-sm" href="/Clients360/Profile/${escape(item.clientId)}">Cliente 360</a>`;
   }
 
   function render() {

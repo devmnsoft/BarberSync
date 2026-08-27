@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = "Clientes 360"; Layout = "~/Views/Shared/_AdminLayout.cshtml"; }
+<main class="c360-page" data-c360-search>
+ <header class="c360-hero"><div><p class="c360-eyebrow">Relacionamento premium</p><h1>Clientes 360</h1><p>Ficha técnica, riscos, consentimentos e jornada em um único perfil seguro.</p></div><span class="c360-shield">LGPD • acesso auditado</span></header>
+ <section class="c360-search-card"><label for="client-search">Encontre um cliente</label><div class="c360-search-row"><input id="client-search" type="search" autocomplete="off" placeholder="Nome, telefone ou e-mail" data-client-search><button class="btn btn-primary" type="button" data-search-button>Buscar</button></div><p class="field-hint">Selecione um resultado; nenhum código interno precisa ser digitado.</p></section>
+ <section class="c360-summary" data-dashboard aria-label="Indicadores"><span class="c360-skeleton"></span><span class="c360-skeleton"></span><span class="c360-skeleton"></span></section>
+ <section class="c360-results" data-results><div class="c360-empty"><strong>Comece pela busca</strong><span>Os perfis permitidos para sua unidade aparecerão aqui.</span></div></section>
+ <section class="c360-error" data-error hidden><strong>Não foi possível consultar os clientes.</strong><span data-error-message></span><small>traceId: <b data-trace-id>não informado</b></small></section>
+</main>
+@section Styles { <link rel="stylesheet" href="~/css/clients360.css" asp-append-version="true" /> }
+@section Scripts { <script src="~/js/form-validation.js" asp-append-version="true"></script><script src="~/js/clients360.js" asp-append-version="true"></script> }
