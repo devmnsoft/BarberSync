@@ -41,7 +41,7 @@ for (const benefitContract of ['benefits.packages', 'benefits.coupons', 'benefit
   }
 }
 const apiSource = fs.readFileSync('src/services/api.js', 'utf8');
-for (const contract of ['/notifications/inbox', '/notifications/preferences']) {
+for (const contract of ['/notifications/inbox', '/notifications/preferences', "request('/api/mobile/appointments'", '/api/mobile/appointments/availability', '/cancel', '/reschedule']) {
   if (!apiSource.includes(contract)) { console.error(`Mobile notification contract is missing: ${contract}`); process.exit(1); }
 }
 for (const professionalContract of ['commissions?.open', 'commissions?.paid', "tab === 'Metas'", 'production?.revenue', 'occupancy?.scheduledToday']) {

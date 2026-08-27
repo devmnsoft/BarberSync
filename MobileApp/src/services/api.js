@@ -15,6 +15,7 @@ export const mobileApi = {
   setAccessToken(token) { accessToken = token || null; }, logout() { accessToken = null; },
   login: input => request('/api/auth/login', { method: 'POST', body: input }),
   getMobileSummary: signal => request('/api/mobile/summary', { signal }), services: signal => request('/api/mobile/services', { signal }),
+  appointments: signal => request('/api/mobile/appointments', { signal }),
   slots: values => request(`/api/mobile/appointments/availability?${query(values)}`), createAppointment: input => request('/api/mobile/appointments', { method: 'POST', body: { ...input, origin: 'Mobile' } }),
   reschedule: (id, startsAt, reason) => request(`/api/mobile/appointments/${id}/reschedule`, { method: 'POST', body: { startsAt, reason } }),
   cancel: (id, reason) => request(`/api/mobile/appointments/${id}/cancel`, { method: 'POST', body: { reason } }),

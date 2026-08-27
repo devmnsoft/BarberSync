@@ -1,0 +1,59 @@
+(() => {
+  'use strict';
+  const root = document.querySelector('[data-scheduling-root]');
+  const unwrap = value => value?.data?.items ?? value?.data ?? value?.items ?? value ?? [];
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const request = async (path, options = {}) => {
+    const response = await fetch(`/AdminApi/${path}`, { headers: {'Content-Type':'application/json'}, ...options });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { const error = new Error(data.detail || data.message || 'Não foi possível concluir a operação.'); error.traceId = data.traceId || response.headers.get('X-Trace-Id'); error.status = response.status; throw error; }
+    return data;
+  };
+  const notify = (kind, message) => window.AdminToast?.[kind]?.(message) ?? window.AdminToast?.show?.(message);
+  if (!root) { initializeSecondaryPages(); return; }
+
+  const state = { view:'day', date:new Date(), appointments:[], clients:[], services:[], professionals:[], step:0, draft:{} };
+  const dateInput = root.querySelector('[data-date]');
+  const isoDate = date => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,10);
+  dateInput.value = isoDate(state.date);
+  const range = () => {
+    const start = new Date(`${dateInput.value}T00:00:00`); const end = new Date(start);
+    if (state.view === 'week') { const monday = (start.getDay() + 6) % 7; start.setDate(start.getDate() - monday); end.setTime(start.getTime()); end.setDate(end.getDate() + 7); }
+    else if (state.view === 'month') { start.setDate(1); end.setMonth(start.getMonth() + 1, 1); }
+    else end.setDate(end.getDate() + 1);
+    return { start, end };
+  };
+  const option = (x, fallback) => `<option value="${esc(x.id)}">${esc(x.name || x.fullName || x.title || fallback)}</option>`;
+  async function references() {
+    const results = await Promise.all([request('clients'), request('services'), request('professionals')]);
+    [state.clients,state.services,state.professionals] = results.map(unwrap);
+    root.querySelector('[data-professional]').insertAdjacentHTML('beforeend',state.professionals.map(x=>option(x,'Profissional')).join(''));
+    root.querySelector('[data-service]').insertAdjacentHTML('beforeend',state.services.map(x=>option(x,'Serviço')).join(''));
+  }
+  async function load() {
+    const {start,end}=range(); const params=new URLSearchParams({from:start.toISOString(),to:end.toISOString()});
+    [['professionalId','[data-professional]'],['serviceId','[data-service]'],['status','[data-status]']].forEach(([key,sel])=>{const value=root.querySelector(sel).value;if(value)params.set(key,value);});
+    root.querySelector('[data-calendar]').innerHTML='<div class="calendar-loading">Atualizando disponibilidade…</div>'; hideError();
+    try { state.appointments=unwrap(await request(`appointments?${params}`)); renderCalendar(start,end); renderKpis(); }
+    catch(error){ showError(error); }
+  }
+  function renderKpis(){ const today=state.appointments.filter(x=>isoDate(new Date(x.scheduledStart))===isoDate(new Date())); const counts=[today.length,today.filter(x=>x.status==='Confirmed').length,today.filter(x=>x.status==='Scheduled').length,today.filter(x=>x.status==='CheckedIn').length,today.filter(x=>x.status==='NoShow').length,'—','—',new Set(today.map(x=>x.professionalId)).size]; root.querySelectorAll('.schedule-kpi').forEach((card,i)=>{card.classList.remove('skeleton');card.querySelector('strong').textContent=counts[i];}); }
+  function daysBetween(start,end){const days=[];for(let date=new Date(start);date<end;date.setDate(date.getDate()+1))days.push(new Date(date));return days;}
+  function renderCalendar(start,end){ const days=daysBetween(start,end); if(state.view==='month'){renderMonth(days);return;} const hours=Array.from({length:12},(_,i)=>i+8); let html=`<div class="calendar-grid" style="--columns:${days.length}"><div class="calendar-heading"></div>${days.map(d=>`<div class="calendar-heading"><strong>${d.toLocaleDateString('pt-BR',{weekday:'short'})}</strong><br><small>${d.toLocaleDateString('pt-BR')}</small></div>`).join('')}`; hours.forEach(hour=>{html+=`<div class="time-label">${String(hour).padStart(2,'0')}:00</div>`;days.forEach(day=>{const items=state.appointments.filter(x=>{const d=new Date(x.scheduledStart);return isoDate(d)===isoDate(day)&&d.getHours()===hour;});html+=`<div class="calendar-cell">${items.length?items.map(card).join(''):`<button class="slot-button" type="button" data-slot="${isoDate(day)}T${String(hour).padStart(2,'0')}:00">＋ adicionar</button>`}</div>`;});}); root.querySelector('[data-calendar]').innerHTML=html+'</div>'; }
+  function renderMonth(days){root.querySelector('[data-calendar]').innerHTML=`<div class="choice-grid" style="padding:1rem">${days.map(day=>{const items=state.appointments.filter(x=>isoDate(new Date(x.scheduledStart))===isoDate(day));return `<button class="choice-card" type="button" data-day="${isoDate(day)}"><strong>${day.toLocaleDateString('pt-BR',{day:'2-digit',weekday:'short'})}</strong><small>${items.length} agendamento(s)</small></button>`;}).join('')}</div>`;}
+  function card(item){const time=new Date(item.scheduledStart).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return `<button class="appointment-card status-${esc(item.status).toLowerCase()}" type="button" data-appointment="${esc(item.id)}"><small>${time} · ${esc(item.status)}</small><strong>${esc(item.clientName)}</strong><small>${esc(item.serviceName)} · ${esc(item.professionalName)}</small></button>`;}
+  function showError(error){const box=root.querySelector('[data-error]');box.hidden=false;box.querySelector('[data-error-message]').textContent=error.message;box.querySelector('[data-trace]').textContent=error.traceId?`TraceId: ${error.traceId}`:'';root.querySelector('[data-calendar]').innerHTML='';} function hideError(){root.querySelector('[data-error]').hidden=true;}
+
+  const booking=document.querySelector('[data-booking-dialog]'); const body=booking.querySelector('[data-wizard-body]');
+  function openBooking(slot){state.step=0;state.draft={};if(slot){const d=new Date(slot);state.draft.date=isoDate(d);state.draft.time=d.toTimeString().slice(0,5);}renderStep();booking.showModal();}
+  function choices(items,key,fallback){return `<div class="choice-grid">${items.map(x=>`<button class="choice-card ${state.draft[key]===x.id?'selected':''}" type="button" data-choice="${key}" data-value="${esc(x.id)}"><strong>${esc(x.name||x.fullName||x.title||fallback)}</strong><small>${esc(x.phone||x.durationMinutes?`${x.durationMinutes||''} min`:'Selecionar')}</small></button>`).join('')}</div>`;}
+  async function renderStep(){booking.querySelectorAll('.wizard-steps li').forEach((x,i)=>x.classList.toggle('active',i===state.step));const titles=['Escolha o cliente','Escolha o serviço','Escolha o profissional','Escolha um horário livre','Revise os dados'];booking.querySelector('[data-modal-title]').textContent=titles[state.step];if(state.step===0)body.innerHTML=`<label>Buscar cliente<input type="search" data-client-search placeholder="Nome ou telefone" autocomplete="off"></label>${choices(state.clients,'clientId','Cliente')}`;if(state.step===1)body.innerHTML=choices(state.services,'serviceId','Serviço');if(state.step===2)body.innerHTML=choices(state.professionals,'professionalId','Profissional');if(state.step===3){body.innerHTML=`<label>Data<input type="date" data-booking-date min="${isoDate(new Date())}" value="${state.draft.date||isoDate(new Date())}"></label><div data-slots class="choice-grid"><div class="calendar-loading">Selecione a data para consultar horários.</div></div>`;await loadSlots();}if(state.step===4){const find=(xs,id)=>xs.find(x=>x.id===id)||{};body.innerHTML=`<div class="waitlist-card"><p><strong>Cliente:</strong> ${esc(find(state.clients,state.draft.clientId).name||find(state.clients,state.draft.clientId).fullName)}</p><p><strong>Serviço:</strong> ${esc(find(state.services,state.draft.serviceId).name)}</p><p><strong>Profissional:</strong> ${esc(find(state.professionals,state.draft.professionalId).name||find(state.professionals,state.draft.professionalId).fullName)}</p><p><strong>Horário:</strong> ${esc(state.draft.date)} às ${esc(state.draft.time)}</p><label>Observações<textarea data-notes placeholder="Preferências do cliente"></textarea></label></div>`;}booking.querySelector('[data-next-step]').textContent=state.step===4?'Confirmar agendamento':'Continuar';booking.querySelector('[data-back]').hidden=state.step===0;}
+  async function loadSlots(){const date=body.querySelector('[data-booking-date]');if(!date||!state.draft.professionalId||!state.draft.serviceId)return;state.draft.date=date.value;const slots=body.querySelector('[data-slots]');slots.innerHTML='<div class="calendar-loading">Consultando agenda real…</div>';try{const values=unwrap(await request(`appointments/smart-slots?professionalId=${encodeURIComponent(state.draft.professionalId)}&serviceId=${encodeURIComponent(state.draft.serviceId)}&date=${date.value}`));slots.innerHTML=values.length?values.map(value=>{const d=new Date(value);const time=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return `<button class="time-slot ${state.draft.time===d.toTimeString().slice(0,5)?'selected':''}" type="button" data-time="${d.toTimeString().slice(0,5)}">${time}</button>`;}).join(''):'<p>Nenhum horário disponível nesta data.</p>';}catch(error){slots.innerHTML=`<p>${esc(error.message)}</p>`;}}
+  function valid(){return [state.draft.clientId,state.draft.serviceId,state.draft.professionalId,state.draft.time][state.step]||state.step===4;}
+  async function finish(){const submit=booking.querySelector('[data-next-step]');submit.disabled=true;try{await request('appointments',{method:'POST',body:JSON.stringify({clientId:state.draft.clientId,serviceId:state.draft.serviceId,professionalId:state.draft.professionalId,scheduledStart:`${state.draft.date}T${state.draft.time}:00-03:00`,origin:'Admin',notes:body.querySelector('[data-notes]')?.value||null})});booking.close();notify('created','Agendamento criado e disponibilidade atualizada.');await load();}catch(error){notify('error',`${error.message}${error.traceId?` (TraceId: ${error.traceId})`:''}`);}finally{submit.disabled=false;}}
+  document.addEventListener('click',event=>{const view=event.target.closest('[data-view]');if(view){state.view=view.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('is-active',x===view));load();}if(event.target.closest('[data-open-booking]'))openBooking();const slot=event.target.closest('[data-slot]');if(slot)openBooking(slot.dataset.slot);const day=event.target.closest('[data-day]');if(day){dateInput.value=day.dataset.day;state.view='day';load();}const choice=event.target.closest('[data-choice]');if(choice){state.draft[choice.dataset.choice]=choice.dataset.value;renderStep();}const time=event.target.closest('[data-time]');if(time){state.draft.time=time.dataset.time;renderStep();}if(event.target.closest('[data-close]'))booking.close();if(event.target.closest('[data-back]')){state.step=Math.max(0,state.step-1);renderStep();}if(event.target.closest('[data-next-step]')){if(!valid())return notify('validation','Faça uma seleção para continuar.');if(state.step===4)finish();else{state.step++;renderStep();}}if(event.target.closest('[data-retry]'))load();});
+  document.addEventListener('change',event=>{if(event.target.matches('[data-date],[data-professional],[data-service],[data-status]'))load();if(event.target.matches('[data-booking-date]'))loadSlots();});
+  Promise.resolve(references()).then(load).catch(showError);
+
+  function initializeSecondaryPages(){ /* Secondary pages intentionally use the same authenticated API; no local fallback data. */ }
+})();
