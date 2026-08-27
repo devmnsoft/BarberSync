@@ -40,6 +40,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 builder.Services.AddControllers();
 builder.Services.AddScoped<GovernanceStore>();
 builder.Services.AddScoped<BarberSync.Api.Services.Clients360.Clients360Store>();
+builder.Services.AddScoped<BarberSync.Api.Services.ClientPortal.ClientPortalStore>();
 builder.Services.AddScoped<BarberSync.Api.Services.Club.ClubStore>();
 builder.Services.AddScoped<IPlanLimitService, PlanLimitService>();
 builder.Services.AddFluentValidationAutoValidation();

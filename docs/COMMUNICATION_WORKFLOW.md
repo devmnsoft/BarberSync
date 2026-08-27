@@ -27,3 +27,7 @@ Câmera inativa, provider não configurado, fila acumulada e sugestão vencendo 
 
 ## Governança SaaS
 O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).
+
+## Integração — Portal do Cliente (Sprint 51)
+
+O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem provider estão documentados em [CLIENT_PORTAL_WORKFLOW.md](CLIENT_PORTAL_WORKFLOW.md). A integração não aceita identificadores técnicos digitados e não transforma intenção de pagamento em liquidação.

@@ -63,3 +63,7 @@ for (const jsFile of ['App.js', 'src/services/api.js', 'src/theme/colors.js', 's
 }
 console.log('Mobile smoke test passed.');
 if (!(fs.readFileSync(require('path').join(__dirname,'../docs/GOVERNANCE_WORKFLOW.md'),'utf8').includes('UUIDs existem'))) throw new Error('governance no-ID contract missing');
+
+const portalSource = fs.readFileSync('src/services/api.js', 'utf8');
+['clientPortalRequestCode','clientPortalVerifyCode','clientPortalHome','clientPortalAppointments','clientPortalHistory','clientPortalConsents','clientPortalBudgets','clientPortalPayments','clientPortalBenefits','clientPortalReviews','clientPortalSupport','openClientPortalSupport'].forEach(contract => { if (!portalSource.includes(contract)) { console.error(`Contrato do Portal ausente: ${contract}`); process.exit(1); } });
+console.log('CLIENT_PORTAL_MOBILE_CONTRACTS_OK');

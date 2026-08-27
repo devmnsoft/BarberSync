@@ -43,3 +43,7 @@ O BI agrega criados, confirmados, cancelamentos, no-show rate, ocupação por pr
 ## Validação
 
 Cliente, serviço, data e horário são obrigatórios; o profissional é obrigatório quando a política assim define. Datas passadas e slots indisponíveis são rejeitados no navegador para feedback e novamente na API por segurança. Motivos são obrigatórios para cancelamento, no-show, reagendamento e encaixe excepcional. O gate `scripts/validate-ui-contracts.sh` bloqueia âncoras vazias, handlers vazios, `@page` em Views MVC, inputs ou placeholders de ID e texto operacional inacabado nas novas superfícies.
+
+## Integração — Portal do Cliente (Sprint 51)
+
+O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem provider estão documentados em [CLIENT_PORTAL_WORKFLOW.md](CLIENT_PORTAL_WORKFLOW.md). A integração não aceita identificadores técnicos digitados e não transforma intenção de pagamento em liquidação.

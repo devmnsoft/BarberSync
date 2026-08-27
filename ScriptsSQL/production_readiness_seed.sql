@@ -137,3 +137,23 @@ BEGIN
  INSERT INTO barber.vouchers(tenant_id,branch_id,code_hash,display_code_masked,name,voucher_type,amount,max_uses,valid_from,valid_until,status,created_by) VALUES(t,b,encode(digest('readiness-voucher-'||t::text,'sha256'),'hex'),'****-TEST','Readiness Voucher','FixedAmount',10,1,now(),now()+interval '30 days','Active',u) ON CONFLICT DO NOTHING;
  INSERT INTO barber.online_sales_orders(tenant_id,branch_id,client_id,buyer_name,buyer_email,order_type,status,subtotal,total,expires_at) SELECT t,b,c,name,email,'Membership','PendingPayment',100,100,now()+interval '1 day' FROM barber.clients WHERE id=c;
 END $$;
+
+-- Portal do Cliente: evidências determinísticas e idempotentes, vinculadas ao cliente readiness canônico.
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_portal_access_codes(id,tenant_id,branch_id,client_id,destination_type,destination_masked,code_hash,purpose,status,expires_at,used_at)
+SELECT '51000000-0000-4000-8000-000000000001',tenant_id,branch_id,client_id,'Email','r***@barbersync.local',encode(digest('readiness-expired-code','sha256'),'hex'),'Login','Used',now()-interval '1 hour',now()-interval '2 hours' FROM scope ON CONFLICT(id) DO NOTHING;
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_portal_sessions(id,tenant_id,branch_id,client_id,session_hash,status,expires_at,revoked_at)
+SELECT '51000000-0000-4000-8000-000000000002',tenant_id,branch_id,client_id,encode(digest('readiness-revoked-session','sha256'),'hex'),'Revoked',now()-interval '1 hour',now()-interval '1 hour' FROM scope ON CONFLICT(id) DO NOTHING;
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_portal_events(id,tenant_id,branch_id,client_id,event_type,source_type,description)
+SELECT '51000000-0000-4000-8000-000000000003',tenant_id,branch_id,client_id,'ReadinessChecked','Readiness','Evidência do portal sem envio externo' FROM scope ON CONFLICT(id) DO NOTHING;
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_public_preferences(id,tenant_id,branch_id,client_id,preference_key,preference_value)
+SELECT '51000000-0000-4000-8000-000000000004',tenant_id,branch_id,client_id,'appointmentReminders','true' FROM scope ON CONFLICT(id) DO NOTHING;
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_support_requests(id,tenant_id,branch_id,client_id,subject,category,priority,status)
+SELECT '51000000-0000-4000-8000-000000000005',tenant_id,branch_id,client_id,'Readiness do portal','Other','Low','Resolved' FROM scope ON CONFLICT(id) DO NOTHING;
+WITH scope AS (SELECT c.tenant_id,c.branch_id,c.id client_id FROM barber.clients c WHERE c.email='client@readiness.local' ORDER BY c.created_at LIMIT 1)
+INSERT INTO barber.client_payment_requests(id,tenant_id,branch_id,client_id,source_type,amount,status,expires_at)
+SELECT '51000000-0000-4000-8000-000000000006',tenant_id,branch_id,client_id,'Manual',0,'Expired',now()-interval '1 day' FROM scope ON CONFLICT(id) DO NOTHING;
