@@ -1,0 +1,15 @@
+@{ var clientId = ViewData["ClientId"]; var section = ViewData["Section"]?.ToString() ?? "Profile"; }
+<main class="c360-page" data-c360-workspace data-client-id="@clientId" data-section="@section">
+ <header class="c360-client-header"><div class="c360-avatar" data-avatar>··</div><div><a href="/Clients360" class="c360-back">← Clientes 360</a><h1 data-client-name>Carregando perfil…</h1><p data-client-contact>Dados protegidos e limitados à unidade atual.</p></div><span class="c360-shield">Visualização auditada</span></header>
+ <section class="c360-alerts" data-risk-alerts hidden></section>
+ <nav class="c360-tabs" aria-label="Áreas do Cliente 360">
+  <a data-tab="Profile" href="/Clients360/Profile/@clientId">Perfil</a><a data-tab="TechnicalSheet" href="/Clients360/TechnicalSheet/@clientId">Ficha técnica</a><a data-tab="Anamnesis" href="/Clients360/Anamnesis/@clientId">Anamnese</a><a data-tab="VisualHistory" href="/Clients360/VisualHistory/@clientId">Antes/depois</a><a data-tab="Consents" href="/Clients360/Consents/@clientId">Consentimentos</a><a data-tab="Budgets" href="/Clients360/Budgets/@clientId">Orçamentos</a><a data-tab="TreatmentPlans" href="/Clients360/TreatmentPlans/@clientId">Tratamentos</a><a data-tab="FollowUps" href="/Clients360/FollowUps/@clientId">Follow-ups</a>
+ </nav>
+ <section class="c360-loading" data-loading><span class="c360-skeleton"></span><span class="c360-skeleton"></span><span class="c360-skeleton"></span></section>
+ <section class="c360-error" data-error hidden><strong>Não foi possível carregar esta área.</strong><span data-error-message></span><small>traceId: <b data-trace-id>não informado</b></small><button type="button" class="btn btn-light" data-retry>Tentar novamente</button></section>
+ <div data-content hidden>
+  <section class="c360-profile-grid" data-profile-section><article class="c360-card"><h2>Preferências</h2><div data-preferences class="c360-empty">Nenhuma preferência registrada.</div></article><article class="c360-card"><h2>Restrições e alertas</h2><div data-restrictions class="c360-empty">Nenhuma restrição ativa.</div></article><article class="c360-card c360-wide"><h2>Linha do tempo</h2><div data-timeline class="c360-timeline"></div></article></section>
+  <section class="c360-module" data-module-section hidden><header><div><p class="c360-eyebrow" data-module-eyebrow>Prontuário</p><h2 data-module-title></h2></div><button type="button" class="btn btn-primary" data-open-form>Novo registro</button></header><div class="c360-card-grid" data-records></div></section>
+ </div>
+ <dialog class="c360-dialog" data-record-dialog><form method="dialog" data-record-form novalidate><header><h2 data-form-title>Novo registro</h2><button type="button" data-close-form aria-label="Fechar">×</button></header><div data-dynamic-fields></div><p class="form-error" data-form-error hidden></p><footer><button type="button" class="btn btn-light" data-close-form>Cancelar</button><button type="submit" class="btn btn-primary">Salvar com auditoria</button></footer></form></dialog>
+</main>
