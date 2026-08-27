@@ -97,3 +97,6 @@ A Operação do Dia consulta a contagem de `PendingReview` e encaminha à fila. 
 
 ## Governança SaaS
 O acesso ao módulo e seus limites são definidos pela assinatura e por `tenant_module_settings`; módulo desabilitado deve falhar claramente, sem fallback. Consulte [GOVERNANCE_WORKFLOW.md](GOVERNANCE_WORKFLOW.md).
+
+## Integração Clube & Vendas
+Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.

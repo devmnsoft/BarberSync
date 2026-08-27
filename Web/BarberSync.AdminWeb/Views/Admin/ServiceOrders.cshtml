@@ -61,4 +61,10 @@
     <aside class="pos-drawer bs-drawer-scroll" role="dialog" aria-modal="true" aria-labelledby="openOrderTitle"><header><div><span class="pos-eyebrow">Nova venda</span><h2 id="openOrderTitle">Abrir comanda</h2></div><button class="pos-close" type="button" data-close-drawer>×</button></header><form id="openOrderForm" novalidate><label>Cliente<select id="openClient" required></select><small class="field-error" data-error-for="openClient"></small></label><label>Agendamento (opcional)<select id="openAppointment"><option value="">Sem vínculo</option></select></label><label>Observações<textarea id="openNotes" rows="3" maxlength="500"></textarea></label><div class="pos-drawer-actions"><button class="btn btn-light" type="button" data-close-drawer>Cancelar</button><button class="btn btn-primary" type="submit">Abrir comanda</button></div></form></aside>
 </div>
 
+<section class="enterprise-card" data-club-redemptions>
+<h2>Clube &amp; Vendas</h2><p>Selecione um cliente para consultar assinatura ativa, benefícios disponíveis, carteira e cashback.</p>
+<div data-club-benefits><span>Os benefícios aparecem após a seleção real do cliente.</span></div>
+<div class="commercial-actions"><button type="button" data-apply-club-benefit>Aplicar benefício</button><button type="button" data-apply-voucher>Aplicar voucher</button><button type="button" data-redeem-gift>Resgatar gift card</button><button type="button" data-use-wallet>Usar carteira</button></div>
+<small>O cálculo e a origem do resgate serão exibidos antes da confirmação.</small>
+</section>
 @section Scripts { <script src="~/js/admin-service-orders.js" asp-append-version="true"></script> }

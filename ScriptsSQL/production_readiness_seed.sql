@@ -116,3 +116,24 @@ INSERT INTO barber.client_follow_ups(id,tenant_id,branch_id,client_id,profession
 INSERT INTO barber.client_timeline_events(id,tenant_id,branch_id,client_id,event_type,event_title,event_description,source_type,source_id) VALUES ('49490000-0000-4000-8000-000000000010','70000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000002','70000000-0000-4000-8000-000000000013','TechnicalSheet','Ficha técnica criada','Evento controlado readiness.','TechnicalSheet','49490000-0000-4000-8000-000000000001') ON CONFLICT(id) DO NOTHING;
 
 COMMIT;
+
+-- Clube & Vendas readiness: referências reais do tenant/unidade readiness; nenhuma liberação fictícia.
+DO $$
+DECLARE t uuid; b uuid; u uuid; c uuid; p uuid; m uuid; cy uuid; be uuid; w uuid; co uuid;
+BEGIN
+ SELECT tenant_id,branch_id,user_id INTO t,b,u FROM barber.governance_audit_events ORDER BY created_at LIMIT 1;
+ SELECT id INTO c FROM barber.clients WHERE tenant_id=t AND branch_id=b AND deleted_at IS NULL ORDER BY created_at LIMIT 1;
+ IF t IS NULL OR b IS NULL OR c IS NULL THEN RAISE NOTICE 'Club readiness skipped: tenant, branch or client unavailable'; RETURN; END IF;
+ INSERT INTO barber.club_plans(tenant_id,branch_id,name,description,billing_cycle,price,status,allow_auto_renew,created_by) VALUES(t,b,'Readiness Club Plan','Registro determinístico para validar contratos','Monthly',100,'Active',false,u) ON CONFLICT DO NOTHING RETURNING id INTO p;
+ IF p IS NULL THEN SELECT id INTO p FROM barber.club_plans WHERE tenant_id=t AND branch_id=b AND name='Readiness Club Plan' LIMIT 1; END IF;
+ INSERT INTO barber.club_plan_benefits(tenant_id,branch_id,club_plan_id,benefit_type,monthly_limit,validity_days,status) VALUES(t,b,p,'GiftCredit',1,30,'Active') RETURNING id INTO be;
+ INSERT INTO barber.client_memberships(tenant_id,branch_id,client_id,club_plan_id,status,starts_at,ends_at,auto_renew,created_by) VALUES(t,b,c,p,'Active',now(),now()+interval '30 days',false,u) RETURNING id INTO m;
+ INSERT INTO barber.membership_cycles(tenant_id,branch_id,membership_id,cycle_start,cycle_end,status,expected_amount,paid_amount) VALUES(t,b,m,now(),now()+interval '30 days','Paid',100,100) RETURNING id INTO cy;
+ INSERT INTO barber.membership_usage(tenant_id,branch_id,membership_id,cycle_id,benefit_id,client_id,quantity_used,amount_applied) VALUES(t,b,m,cy,be,c,1,10);
+ INSERT INTO barber.client_wallets(tenant_id,branch_id,client_id,credit_balance) VALUES(t,b,c,25) ON CONFLICT(tenant_id,branch_id,client_id) DO UPDATE SET updated_at=now() RETURNING id INTO w;
+ INSERT INTO barber.wallet_transactions(tenant_id,branch_id,wallet_id,client_id,transaction_type,amount,balance_after,source_type,reason,created_by) VALUES(t,b,w,c,'Credit',25,25,'Readiness','Validação de prontidão',u);
+ INSERT INTO barber.gift_cards(tenant_id,branch_id,code_hash,display_code_masked,buyer_client_id,initial_amount,remaining_amount,status,valid_from,valid_until,created_by) VALUES(t,b,encode(digest('readiness-gift-'||t::text,'sha256'),'hex'),'****-****-TEST',c,50,50,'Active',now(),now()+interval '30 days',u) ON CONFLICT DO NOTHING;
+ INSERT INTO barber.commercial_combos(tenant_id,branch_id,name,description,price,status,created_by) VALUES(t,b,'Readiness Combo','Validação de prontidão',80,'Active',u) RETURNING id INTO co;
+ INSERT INTO barber.vouchers(tenant_id,branch_id,code_hash,display_code_masked,name,voucher_type,amount,max_uses,valid_from,valid_until,status,created_by) VALUES(t,b,encode(digest('readiness-voucher-'||t::text,'sha256'),'hex'),'****-TEST','Readiness Voucher','FixedAmount',10,1,now(),now()+interval '30 days','Active',u) ON CONFLICT DO NOTHING;
+ INSERT INTO barber.online_sales_orders(tenant_id,branch_id,client_id,buyer_name,buyer_email,order_type,status,subtotal,total,expires_at) SELECT t,b,c,name,email,'Membership','PendingPayment',100,100,now()+interval '1 day' FROM barber.clients WHERE id=c;
+END $$;

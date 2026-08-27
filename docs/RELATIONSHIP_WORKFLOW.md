@@ -27,3 +27,6 @@ Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em
 # Integração de comunicação
 
 Campanhas de relacionamento selecionam segmentos e templates reais. Preferências e suppression list são verificadas antes da fila; o operador nunca informa IDs técnicos. O histórico de entrega permanece auditável na outbox e suas tentativas.
+
+## Integração Clube & Vendas
+Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.

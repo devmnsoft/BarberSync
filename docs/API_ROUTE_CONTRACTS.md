@@ -145,3 +145,11 @@ Contratos autenticados e tenant/branch-scoped: `GET /api/ai-operations/dashboard
 
 ## Governança SaaS
 Todas as rotas abaixo são autenticadas, usam o escopo dos claims e retornam falhas com `traceId`: `GET /api/governance/dashboard|tenants|branches|users|roles|permissions/matrix|plans|subscription|modules|security/policies|security/events|privacy/requests|onboarding|exports`; `POST /branches|users/invite|roles|privacy/requests|exports`; `PUT /branches/{id}|roles/{id}|permissions/matrix|modules/{moduleKey}`; e os comandos de usuário, privacidade e onboarding. Limite retorna HTTP 409, `upgradeRequired: true` e `errors.plan`.
+
+## Integração Clube & Vendas
+Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.
+
+### Clube & Vendas (`/api/club`)
+Todos os contratos administrativos exigem autenticação, escopo de tenant/unidade e a permissão `Club.*` correspondente. Dashboard e opções usam `GET /dashboard` e `GET /filter-options`. Planos usam `GET|POST /plans`, `PUT /plans/{id}`, e transições `activate|archive`. Assinaturas usam `GET|POST /memberships`, transições `activate|suspend|cancel` e `GET /memberships/{id}/usage`. Carteiras usam `GET /wallets`, `GET /wallets/{clientId}` e mutações `credit|debit|adjust`. Gift cards usam `GET|POST /gift-cards`, `activate|cancel` e `POST /gift-cards/redeem`. Catálogos incluem `/vouchers`, `/combos` e `/online-sales`; exportação exige `Club.Reports.Export` em `GET /reports/export`. Erros retornam ProblemDetails com `traceId` e falhas de regra não produzem sucesso simulado.
+
+Contratos Mobile: `GET /api/mobile/club/summary|wallet|memberships|gift-cards|vouchers` e `POST /api/mobile/club/vouchers/redeem`. Códigos são dados comerciais informados pelo cliente, não IDs técnicos.

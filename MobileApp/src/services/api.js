@@ -26,5 +26,8 @@ export const mobileApi = {
   updateNotificationPreferences: items => request('/api/notifications/preferences', { method: 'PUT', body: { items, source: 'Mobile' } }),
   professionalDay: signal => request('/api/mobile/professional/day', { signal }), start: id => request(`/api/mobile/professional/appointments/${id}/start`, { method: 'POST' }),
   finish: id => request(`/api/mobile/professional/appointments/${id}/finish`, { method: 'POST' }), commissions: signal => request('/api/mobile/professional/commissions', { signal }),
+  clubSummary: signal => request('/api/mobile/club/summary', { signal }), clubWallet: signal => request('/api/mobile/club/wallet', { signal }),
+  clubMemberships: signal => request('/api/mobile/club/memberships', { signal }), clubGiftCards: signal => request('/api/mobile/club/gift-cards', { signal }),
+  clubVouchers: signal => request('/api/mobile/club/vouchers', { signal }), redeemClubVoucher: code => request('/api/mobile/club/vouchers/redeem', { method: 'POST', body: { code } }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };
