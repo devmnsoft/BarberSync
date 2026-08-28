@@ -67,3 +67,6 @@ if (!(fs.readFileSync(require('path').join(__dirname,'../docs/GOVERNANCE_WORKFLO
 const portalSource = fs.readFileSync('src/services/api.js', 'utf8');
 ['clientPortalRequestCode','clientPortalVerifyCode','clientPortalHome','clientPortalAppointments','clientPortalHistory','clientPortalConsents','clientPortalBudgets','clientPortalPayments','clientPortalBenefits','clientPortalReviews','clientPortalSupport','openClientPortalSupport'].forEach(contract => { if (!portalSource.includes(contract)) { console.error(`Contrato do Portal ausente: ${contract}`); process.exit(1); } });
 console.log('CLIENT_PORTAL_MOBILE_CONTRACTS_OK');
+
+['qualitySummary','qualityReviews','submitQualityReview','qualityFollowUps','completeQualityFollowUp'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Quality ausente: ${contract}`); process.exit(1); } });
+console.log('QUALITY_MOBILE_CONTRACTS_OK');

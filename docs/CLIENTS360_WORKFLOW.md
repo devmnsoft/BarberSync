@@ -64,3 +64,7 @@ Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, re
 ## Integração — Portal do Cliente (Sprint 51)
 
 O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem provider estão documentados em [CLIENT_PORTAL_WORKFLOW.md](CLIENT_PORTAL_WORKFLOW.md). A integração não aceita identificadores técnicos digitados e não transforma intenção de pagamento em liquidação.
+
+## Integração Qualidade & Retenção — Sprint 52
+
+O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND_RETENTION_WORKFLOW.md](QUALITY_AND_RETENTION_WORKFLOW.md). Os dados permanecem tenant/branch scoped; indisponibilidade não produz resultado fictício, e nenhuma integração usa biometria ou inferência de emoção.
