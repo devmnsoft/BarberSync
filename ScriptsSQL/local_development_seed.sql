@@ -82,6 +82,10 @@ ON CONFLICT (id) DO UPDATE SET name=excluded.name,status='Active';
 INSERT INTO barber.tenant_subscriptions(id,tenant_id,plan_id,status,billing_cycle,starts_at)
 VALUES ('10000000-0000-0000-0000-000000000142','10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000141','Active','Monthly',TIMESTAMPTZ '2026-01-01 00:00:00+00')
 ON CONFLICT (id) DO UPDATE SET status='Active',updated_at=now();
+-- Quality local seed: registros determinísticos para desenvolvimento, não fallback de runtime.
+INSERT INTO barber.client_reviews(id,tenant_id,branch_id,client_id,professional_id,rating,nps_score,comment,status,submitted_at) VALUES ('10000000-0000-0000-0000-000000000151','10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000131','10000000-0000-0000-0000-000000000132',5,10,'Avaliação local controlada','Submitted',now()) ON CONFLICT(id) DO NOTHING;
+INSERT INTO barber.quality_service_return_rules(id,tenant_id,branch_id,service_id,min_days,max_days,recommended_days,message,status,created_by) VALUES ('10000000-0000-0000-0000-000000000152','10000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000133',20,35,28,'Agende seu retorno quando for conveniente.','Active','10000000-0000-0000-0000-000000000122') ON CONFLICT(id) DO NOTHING;
+
 COMMIT;
 
 SELECT 'tenant='||name FROM barber.tenants WHERE id='10000000-0000-0000-0000-000000000001';

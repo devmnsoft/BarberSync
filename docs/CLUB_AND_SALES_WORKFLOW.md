@@ -15,3 +15,7 @@ O PDV consulta resumo comercial antes de calcular descontos e grava a origem do 
 
 ## Operação e segurança
 Permissões `Club.Read`, `Club.*.Manage` e `Club.Reports.Export` separam leitura, gestão e exportação. Erros usam ProblemDetails e `traceId`. Comprador e beneficiário são dados pessoais sujeitos a retenção, minimização, auditoria e solicitações LGPD. Nenhuma interface solicita UUID; seleções usam opções carregadas da unidade, enquanto códigos comerciais permanecem campos textuais legítimos.
+
+## Integração Qualidade & Retenção — Sprint 52
+
+O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND_RETENTION_WORKFLOW.md](QUALITY_AND_RETENTION_WORKFLOW.md). Os dados permanecem tenant/branch scoped; indisponibilidade não produz resultado fictício, e nenhuma integração usa biometria ou inferência de emoção.

@@ -30,3 +30,7 @@ Falhas usam `ProblemDetails`, texto humanizado e `traceId`. Não há dados demon
 * **Financeiro:** `client_payment_requests` referencia a origem e um pagamento real opcional; intenção não liquida saldo.
 * **BI:** métricas devem agregar `client_portal_events` e avaliações. Em indisponibilidade, publicar `sourceStatus: unavailable`.
 * **Mobile/Kiosk:** Mobile compartilha contratos REST; Kiosk continua condicionado a `Kiosk:DeviceCode` e pode adotar as ações client-scoped sem query string de dispositivo.
+
+## Integração Qualidade & Retenção — Sprint 52
+
+O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND_RETENTION_WORKFLOW.md](QUALITY_AND_RETENTION_WORKFLOW.md). Os dados permanecem tenant/branch scoped; indisponibilidade não produz resultado fictício, e nenhuma integração usa biometria ou inferência de emoção.
