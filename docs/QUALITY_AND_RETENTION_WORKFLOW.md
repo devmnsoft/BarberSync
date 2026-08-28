@@ -35,3 +35,7 @@ Rotas Admin usam `/api/quality`, `[Authorize]`, permissões `Quality.*`, Problem
 ## Operação sem comunicação falsa
 
 A criação de caso ou follow-up não afirma que mensagem externa foi enviada. O operador deve escolher uma automação/configuração válida em Comunicação. Falhas preservam o registro e o `traceId`; não há fallback demo ou sucesso sintético.
+
+## Integração Marketing Studio
+
+O contrato de integração, atribuição e segurança está documentado em [MARKETING_STUDIO_WORKFLOW.md](MARKETING_STUDIO_WORKFLOW.md). Esta integração usa apenas dados persistidos, preserva o escopo tenant/unidade e não simula provider, pagamento ou conversão.

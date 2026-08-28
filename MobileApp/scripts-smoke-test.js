@@ -70,3 +70,6 @@ console.log('CLIENT_PORTAL_MOBILE_CONTRACTS_OK');
 
 ['qualitySummary','qualityReviews','submitQualityReview','qualityFollowUps','completeQualityFollowUp'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Quality ausente: ${contract}`); process.exit(1); } });
 console.log('QUALITY_MOBILE_CONTRACTS_OK');
+
+['marketingOffers','marketingCampaigns','trackMarketing','/api/mobile/marketing/offers','/api/mobile/marketing/campaigns','/api/mobile/marketing/track'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Marketing ausente: ${contract}`); process.exit(1); } });
+console.log('MARKETING_MOBILE_CONTRACTS_OK');

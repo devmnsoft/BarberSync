@@ -161,3 +161,9 @@ O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem 
 ## Integração Qualidade & Retenção — Sprint 52
 
 O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND_RETENTION_WORKFLOW.md](QUALITY_AND_RETENTION_WORKFLOW.md). Os dados permanecem tenant/branch scoped; indisponibilidade não produz resultado fictício, e nenhuma integração usa biometria ou inferência de emoção.
+
+## Marketing Studio
+
+Admin autenticado: `GET /api/marketing/dashboard`, CRUD e transições em `/segments`, `/campaigns`, `/journeys`, `/landing-pages`, `/promo-links`, `/qr-codes`, `/calendar`, `/experiments`, além de `GET /api/marketing/reports/export` e `/filter-options`. Erros incluem `traceId`; início externo sem provider retorna `409 ProviderNotConfigured`.
+
+Público: `GET /api/marketing/public/landing/{slug}`, `GET /api/marketing/public/go/{publicSlug}` e `POST /api/marketing/public/track`. Mobile autenticado: `GET /api/mobile/marketing/offers`, `GET /api/mobile/marketing/campaigns` e `POST /api/mobile/marketing/track`.
