@@ -1,0 +1,7 @@
+@{var type=ViewData["MarketplaceType"]?.ToString()??"Index";var slug=ViewData["PartnerSlug"]?.ToString();}
+<link rel="stylesheet" href="~/css/marketplace.css" />
+<main class="market" data-marketplace data-type="@type" data-partner-slug="@slug">
+ <header class="market-hero"><nav><a href="/">BarberSync</a><div><a href="/marketplace/services">Serviços</a><a href="/marketplace/products">Produtos</a><a href="/marketplace/packages">Pacotes</a><a href="/ClientPortal">Entrar no portal</a></div></nav><div class="market-hero-copy"><span>CURADORIA LOCAL • EXPERIÊNCIAS REAIS</span><h1>Seu estilo encontra uma rede de benefícios.</h1><p>Descubra serviços, produtos e pacotes publicados por unidades e parceiros verificados.</p><a class="market-cta" href="/Booking">Agendar agora</a></div></header>
+ <section class="market-filter"><label>Categoria<select data-category><option value="">Tudo</option><option value="Service">Serviços</option><option value="Product">Produtos</option><option value="Package">Pacotes</option><option value="Combo">Combos</option><option value="ClubPlan">Clube</option></select></label><a href="/Store">Ir para a loja</a></section>
+ <section class="market-loading" data-loading><i></i><i></i><i></i></section><section class="market-grid" data-items></section><section class="market-unavailable" data-unavailable hidden><b>Seleção em atualização</b><p>Nenhuma oferta ativa está disponível para este filtro. Explore a agenda ou volte mais tarde.</p><a href="/Booking">Ver horários</a></section>
+</main><script src="~/js/marketplace.js"></script>

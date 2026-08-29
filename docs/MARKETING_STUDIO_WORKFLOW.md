@@ -30,3 +30,7 @@ As telas administrativas exigem autenticação e permissões `Marketing.*`. Clie
 ## Operação e LGPD
 
 Dados de IP e user-agent servem apenas à atribuição e antifraude e devem seguir retenção e anonimização definidas pelo controlador. URLs públicas não expõem IDs. A autenticação administrativa não pode ser desativada. Relatórios CSV obedecem `Marketing.Reports.Export`.
+
+## Integração com Marketplace & Parceiros
+
+A atribuição comercial usa referências rastreáveis e escopo tenant/unidade. Eventos pendentes ou cancelados não confirmam comissão/payout; detalhes e contratos estão em `docs/PARTNERS_MARKETPLACE_WORKFLOW.md`.

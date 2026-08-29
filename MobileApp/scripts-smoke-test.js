@@ -73,3 +73,5 @@ console.log('QUALITY_MOBILE_CONTRACTS_OK');
 
 ['marketingOffers','marketingCampaigns','trackMarketing','/api/mobile/marketing/offers','/api/mobile/marketing/campaigns','/api/mobile/marketing/track'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Marketing ausente: ${contract}`); process.exit(1); } });
 console.log('MARKETING_MOBILE_CONTRACTS_OK');
+['partnersMarketplace','partnerOffers','trackPartner','/api/mobile/partners/marketplace','/api/mobile/partners/offers','/api/mobile/partners/track'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Partners ausente: ${contract}`); process.exit(1); } });
+console.log('PARTNERS_MOBILE_CONTRACTS_OK');
