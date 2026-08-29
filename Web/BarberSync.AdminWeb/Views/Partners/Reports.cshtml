@@ -1,0 +1,12 @@
+@{ var section=ViewData["PartnersPage"]?.ToString()??"Index"; }
+<link rel="stylesheet" href="~/css/partners.css" />
+<main class="partners-shell" data-partners-page="@section">
+ <header class="partners-hero"><div><span class="eyebrow">ECOSSISTEMA COMERCIAL</span><h1>Marketplace &amp; Parceiros</h1><p>Indicações rastreáveis, vitrine pública e comissionamento conectado a eventos reais.</p></div><a class="partner-primary" href="/Partners/Directory">Gerenciar parceiros</a></header>
+ <nav class="partner-tabs" aria-label="Áreas de parceiros"><a href="/Partners">Visão geral</a><a href="/Partners/Directory">Diretório</a><a href="/Partners/Affiliates">Afiliados</a><a href="/Partners/Referrals">Indicações</a><a href="/Partners/Commissions">Comissões</a><a href="/Partners/Payouts">Payouts</a><a href="/Partners/Contracts">Contratos</a><a href="/Partners/Links">Links</a><a href="/Partners/Marketplace">Vitrine</a><a href="/Partners/Suppliers">Fornecedores</a><a href="/Partners/Reports">Relatórios</a></nav>
+ <section class="partner-filters"><label>Período<input type="date" data-filter-from /></label><label>Status<select data-filter-status><option value="">Todos</option><option>Active</option><option>Draft</option><option>Suspended</option></select></label><label>Parceiro<select data-partner-filter><option value="">Todos os parceiros</option></select></label></section>
+ <section data-partner-loading class="partner-skeleton"><i></i><i></i><i></i><i></i></section>
+ <section data-partner-error class="partner-error" hidden><strong>Não foi possível carregar os dados.</strong><p data-error-message></p><small>Trace ID: <span data-trace-id>não informado</span></small><button type="button" data-retry>Recarregar</button></section>
+ <section data-partner-content aria-live="polite"></section>
+ <dialog data-partner-dialog><form method="dialog" class="partner-dialog"><header><h2 data-dialog-title>Novo registro</h2><button value="cancel" aria-label="Fechar">×</button></header><div data-dialog-fields></div><p class="partner-form-error" data-form-error hidden></p><footer><button value="cancel">Cancelar</button><button type="submit" value="default" data-save>Salvar</button></footer></form></dialog>
+</main>
+<script src="~/js/form-validation.js"></script><script src="~/js/partners.js"></script>

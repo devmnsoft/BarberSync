@@ -167,3 +167,7 @@ O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND
 Admin autenticado: `GET /api/marketing/dashboard`, CRUD e transições em `/segments`, `/campaigns`, `/journeys`, `/landing-pages`, `/promo-links`, `/qr-codes`, `/calendar`, `/experiments`, além de `GET /api/marketing/reports/export` e `/filter-options`. Erros incluem `traceId`; início externo sem provider retorna `409 ProviderNotConfigured`.
 
 Público: `GET /api/marketing/public/landing/{slug}`, `GET /api/marketing/public/go/{publicSlug}` e `POST /api/marketing/public/track`. Mobile autenticado: `GET /api/mobile/marketing/offers`, `GET /api/mobile/marketing/campaigns` e `POST /api/mobile/marketing/track`.
+
+## Marketplace & Parceiros
+
+Admin autenticado: `GET /api/partners/dashboard|profiles|affiliates|links|referrals|commission-rules|commissions|payouts|contracts|marketplace-items|supplier-terms|filter-options`, seus comandos de criação/transição e `GET /api/partners/reports/export`. Público: `GET /api/partners/public/marketplace`, `GET /api/partners/public/partner/{slug}` e `POST /api/partners/public/track`. Mobile autenticado: `GET /api/mobile/partners/marketplace`, `GET /api/mobile/partners/offers` e `POST /api/mobile/partners/track`. Consulte `PARTNERS_MARKETPLACE_WORKFLOW.md` para invariantes de pagamento, comissão e privacidade.

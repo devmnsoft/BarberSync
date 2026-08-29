@@ -108,3 +108,7 @@ O fluxo client-scoped, seus limites de privacidade, eventos e comportamento sem 
 ## Integração Qualidade & Retenção — Sprint 52
 
 O contrato de integração, escopo, eventos e restrições está em [QUALITY_AND_RETENTION_WORKFLOW.md](QUALITY_AND_RETENTION_WORKFLOW.md). Os dados permanecem tenant/branch scoped; indisponibilidade não produz resultado fictício, e nenhuma integração usa biometria ou inferência de emoção.
+
+## Integração com Marketplace & Parceiros
+
+A atribuição comercial usa referências rastreáveis e escopo tenant/unidade. Eventos pendentes ou cancelados não confirmam comissão/payout; detalhes e contratos estão em `docs/PARTNERS_MARKETPLACE_WORKFLOW.md`.

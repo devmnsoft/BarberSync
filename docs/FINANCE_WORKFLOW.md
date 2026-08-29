@@ -33,3 +33,7 @@ Os indicadores gerenciais deste domínio são agregados pelo módulo descrito em
 
 ## Integração Clube & Vendas
 Consulte `CLUB_AND_SALES_WORKFLOW.md` para contratos de assinatura, carteira, resgate, venda pendente, auditoria e regras de origem.
+
+## Integração com Marketplace & Parceiros
+
+A atribuição comercial usa referências rastreáveis e escopo tenant/unidade. Eventos pendentes ou cancelados não confirmam comissão/payout; detalhes e contratos estão em `docs/PARTNERS_MARKETPLACE_WORKFLOW.md`.
