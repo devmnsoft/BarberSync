@@ -80,3 +80,6 @@ console.log('PARTNERS_MOBILE_CONTRACTS_OK');
 console.log('CATALOG_MOBILE_CONTRACTS_OK');
 ['serviceExecutionToday','serviceExecutionOrders','serviceExecutionCheckIn','completeServiceOrder','previewServiceCheckout','/api/mobile/service-execution/today','/api/mobile/service-execution/orders','/api/mobile/service-execution/check-in','/complete-service','/api/mobile/service-execution/checkout/preview'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Atendimento 360 ausente: ${contract}`); process.exit(1); } });
 console.log('SERVICE_EXECUTION_MOBILE_CONTRACTS_OK');
+
+['team360Me','team360Schedule','team360Productivity','team360Commissions','team360Goals','team360Trainings','completeTeam360Training','/api/mobile/team360/'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Team360 ausente: ${contract}`); process.exit(1); } });
+console.log('TEAM360_MOBILE_CONTRACTS_OK');

@@ -53,5 +53,9 @@ export const mobileApi = {
   submitQualityReview: input => request('/api/mobile/quality/reviews', { method: 'POST', body: input }), qualityFollowUps: signal => request('/api/mobile/quality/follow-ups', { signal }),
   completeQualityFollowUp: id => request(`/api/mobile/quality/follow-ups/${id}/complete`, { method: 'POST' }),
   clientPortalSupport: signal => request('/api/client-portal/support', { signal }), openClientPortalSupport: input => request('/api/client-portal/support', { method: 'POST', body: input }),
+  team360Me: signal => request('/api/mobile/team360/me', { signal }), team360Schedule: signal => request('/api/mobile/team360/schedule', { signal }),
+  team360Productivity: signal => request('/api/mobile/team360/productivity', { signal }), team360Commissions: signal => request('/api/mobile/team360/commissions', { signal }),
+  team360Goals: signal => request('/api/mobile/team360/goals', { signal }), team360Trainings: signal => request('/api/mobile/team360/trainings', { signal }),
+  completeTeam360Training: id => request(`/api/mobile/team360/trainings/${id}/complete`, { method: 'POST' }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };

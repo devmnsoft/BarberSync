@@ -200,3 +200,7 @@ O contrato integrado, estados, transações e responsabilidades deste módulo es
 - `POST /api/service-execution/cashier/open|close|adjust|commissions/preview|commissions/reverse|inventory-consumption/preview|inventory-consumption/reverse`
 - `GET /api/service-execution/reports/export`
 - Mobile: `GET /api/mobile/service-execution/today|orders`; `POST /api/mobile/service-execution/check-in|orders/{id}/complete-service|checkout/preview`.
+
+## Integração Sprint 60 — Equipe & RH 360
+
+O contrato canônico e as regras de isolamento, disponibilidade, produtividade, comissão, qualidade, alertas e relatórios estão descritos em [TEAM360_WORKFLOW.md](TEAM360_WORKFLOW.md). A integração preserva a origem real e publica `sourceStatus` quando uma fonte não está disponível.

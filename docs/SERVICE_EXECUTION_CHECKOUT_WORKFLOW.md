@@ -33,3 +33,7 @@ As rotas estão em `docs/API_ROUTE_CONTRACTS.md`. O Admin `/ServiceExecution` of
 ## Readiness
 
 O seed cria apenas uma comanda aberta, evento, snapshot, checkout cancelado e auditoria vinculados a registros canônicos existentes. Não cria allocation confirmada, pagamento confirmado, baixa de estoque ou comissão. Assim, readiness cobre schema sem fabricar evento de negócio.
+
+## Integração Sprint 60 — Equipe & RH 360
+
+O contrato canônico e as regras de isolamento, disponibilidade, produtividade, comissão, qualidade, alertas e relatórios estão descritos em [TEAM360_WORKFLOW.md](TEAM360_WORKFLOW.md). A integração preserva a origem real e publica `sourceStatus` quando uma fonte não está disponível.

@@ -34,5 +34,11 @@ for route in dashboard executive operations health alerts incidents tasks integr
 if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/ServiceExecution Backend/Presentation/BarberSync.Api/Controllers/ServiceExecutionControllers.cs; then report 'double/float no fluxo financeiro Atendimento 360'; fi
 if rg -ni 'fake(payment| checkout| commission| stock)|fakePayment|fakeCheckout|fakeCommission|fakeStock' Backend/Presentation/BarberSync.Api/Services/ServiceExecution Backend/Presentation/BarberSync.Api/Controllers/ServiceExecutionControllers.cs Web/BarberSync.AdminWeb/Views/ServiceExecution Web/BarberSync.AdminWeb/wwwroot/js/service-execution.js; then report 'resultado fabricado no Atendimento 360'; fi
 
+# Team360 rejects fabricated workforce outcomes, binary money and manually typed technical identifiers.
+team_paths=(Backend/Presentation/BarberSync.Api/Services/Team360 Backend/Presentation/BarberSync.Api/Controllers/Team360Controller.cs Web/BarberSync.AdminWeb/Views/Team360 Web/BarberSync.AdminWeb/wwwroot/js/team360.js)
+if rg -ni 'fake(payroll| commission| schedule| productivity)|fakePayroll|fakeCommission|fakeSchedule|fakeProductivity' "${team_paths[@]}"; then report 'resultado fabricado no Team360'; fi
+if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Team360 Backend/Presentation/BarberSync.Api/Controllers/Team360Controller.cs; then report 'double/float financeiro no Team360'; fi
+if rg -ni 'type="text"[^>]+name="[^"]*(tenant|branch|user|employee|professional|role|permission|shift|schedule|goal|commission|payroll|training|absence|vacation|service)[Ii]d' Web/BarberSync.AdminWeb/Views/Team360; then report 'ID técnico digitável no Team360'; fi
+
 (( fail == 0 )) || exit 1
 echo 'EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS'
