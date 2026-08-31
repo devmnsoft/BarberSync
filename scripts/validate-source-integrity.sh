@@ -30,5 +30,9 @@ if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Catal
 if rg -n 'fake (price|commission|payment)|fakePrice|fakeCommission|fakePayment' Backend/Presentation/BarberSync.Api/Services/Catalog Backend/Presentation/BarberSync.Api/Controllers/CatalogControllers.cs Web/BarberSync.AdminWeb/Views/Catalog Web/BarberSync.AdminWeb/wwwroot/js/catalog.js -i; then report 'simulação falsa no catálogo'; fi
 # Command Center contract is deliberately checked both ways.
 for route in dashboard executive operations health alerts incidents tasks integrations reports/export filter-options; do if [[ "$route" == 'reports/export' ]]; then rg -Fq 'HttpGet("export")' Backend/Presentation/BarberSync.Api/Controllers/CommandCenterControllers.cs; else rg -Fq "$route" Backend/Presentation/BarberSync.Api/Controllers/CommandCenterControllers.cs; fi || report "rota Command Center ausente: $route"; rg -Fq "$route" docs/API_ROUTE_CONTRACTS.md || report "rota Command Center não documentada: $route"; done
+# Atendimento 360: dinheiro decimal, sem fabricação e sem campo de ID técnico.
+if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/ServiceExecution Backend/Presentation/BarberSync.Api/Controllers/ServiceExecutionControllers.cs; then report 'double/float no fluxo financeiro Atendimento 360'; fi
+if rg -ni 'fake(payment| checkout| commission| stock)|fakePayment|fakeCheckout|fakeCommission|fakeStock' Backend/Presentation/BarberSync.Api/Services/ServiceExecution Backend/Presentation/BarberSync.Api/Controllers/ServiceExecutionControllers.cs Web/BarberSync.AdminWeb/Views/ServiceExecution Web/BarberSync.AdminWeb/wwwroot/js/service-execution.js; then report 'resultado fabricado no Atendimento 360'; fi
+
 (( fail == 0 )) || exit 1
 echo 'EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS'

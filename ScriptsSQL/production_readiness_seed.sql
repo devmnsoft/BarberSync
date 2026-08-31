@@ -241,3 +241,17 @@ BEGIN
  INSERT INTO barber.catalog_price_simulations(id,tenant_id,branch_id,simulation_type,input_json,result_json,created_by) VALUES('57570000-0000-4000-8000-000000000013',t,b,'Price','{"basePrice":40,"estimatedCost":10}','{"basePrice":40,"discountAmount":0,"increaseAmount":0,"finalPrice":40,"estimatedCost":10,"marginPercent":75,"warnings":[],"requiresApproval":false,"sourceStatus":"calculated"}',u) ON CONFLICT(id) DO NOTHING;
  INSERT INTO barber.catalog_audit_events(id,tenant_id,branch_id,event_type,item_type,item_id,description,metadata_json,created_by) VALUES('57570000-0000-4000-8000-000000000014',t,b,'ReadinessChecked','Catalog',NULL,'Contratos de catálogo validados sem pagamento ou comissão paga','{"readiness":true}',u) ON CONFLICT(id) DO NOTHING;
 END $$;
+
+-- Sprint 58: readiness operacional real, sem confirmar pagamento, estoque ou comissão.
+DO $$ DECLARE t uuid:='70000000-0000-4000-8000-000000000001'; b uuid:='70000000-0000-4000-8000-000000000002'; u uuid:='70000000-0000-4000-8000-000000000010'; a uuid; o uuid; c uuid;
+BEGIN
+ SELECT id,client_id INTO a,c FROM barber.appointments WHERE tenant_id=t AND branch_id=b AND status NOT IN ('Cancelled','NoShow') ORDER BY created_at LIMIT 1;
+ IF a IS NULL THEN RAISE NOTICE 'Service execution readiness skipped: appointment unavailable'; RETURN; END IF;
+ SELECT id INTO o FROM barber.service_orders WHERE appointment_id=a AND tenant_id=t AND deleted_at IS NULL LIMIT 1;
+ IF o IS NULL THEN o:='58580000-0000-4000-8000-000000000001'; INSERT INTO barber.service_orders(id,tenant_id,branch_id,appointment_id,client_id,number,status) VALUES(o,t,b,a,c,'AT-READINESS','Open') ON CONFLICT(id) DO NOTHING; END IF;
+ INSERT INTO barber.service_execution_events(id,tenant_id,branch_id,service_order_id,appointment_id,client_id,event_type,status,description,metadata_json,created_by) VALUES('58580000-0000-4000-8000-000000000002',t,b,o,a,c,'OrderOpened','Completed','Evidência readiness de origem real','{"readiness":true}',u) ON CONFLICT(id) DO NOTHING;
+ INSERT INTO barber.service_order_pricing_snapshots(id,tenant_id,branch_id,service_order_id,source_type,source_id,base_price,final_price,cost_amount,margin_percent,pricing_breakdown_json) SELECT '58580000-0000-4000-8000-000000000003',t,b,o,'Service',service_id,40,40,10,75,'{"readiness":true}' FROM barber.appointments WHERE id=a AND service_id IS NOT NULL ON CONFLICT(id) DO NOTHING;
+ INSERT INTO barber.checkout_sessions(id,tenant_id,branch_id,service_order_id,client_id,status,subtotal,total,created_by) VALUES('58580000-0000-4000-8000-000000000004',t,b,o,c,'Cancelled',40,40,u) ON CONFLICT(id) DO NOTHING;
+ INSERT INTO barber.service_order_audit_events(id,tenant_id,branch_id,service_order_id,event_type,description,new_status,metadata_json,created_by) VALUES('58580000-0000-4000-8000-000000000005',t,b,o,'ReadinessChecked','Contrato operacional verificado','Open','{"readiness":true}',u) ON CONFLICT(id) DO NOTHING;
+ -- allocations, movements, consumption and accrual remain deliberately absent until their real origin event exists.
+END $$;
