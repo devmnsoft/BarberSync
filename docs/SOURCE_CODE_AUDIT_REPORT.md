@@ -50,3 +50,20 @@ Foram executadas as três buscas obrigatórias por preço/total/desconto/comiss�
 ### Pendências controladas
 
 Agenda, PDV, PublicWeb, Kiosk e BI ainda possuem contratos legados que não podem ser removidos de modo destrutivo. A migração progressiva deve trocar suas leituras pelo catálogo central, mantendo compatibilidade até todas as instalações aplicarem a versão de schema 033. Cashback legado não possui uma coluna universal de expiração; novos benefícios devem usar validade explícita e essa migração permanece registrada para sprint de dados dedicada. Nenhum pagamento, comissão paga ou fallback foi fabricado para encobrir essas pendências.
+
+## Sprint 58 — Auditoria operacional, checkout, comanda, pagamento, estoque e comissão
+
+Foram executadas as quatro varreduras obrigatórias de regras operacionais, tipos/conversões, integridade de UI/fallbacks e DI/autorização (1.036, 331, 210 e 1.345 ocorrências brutas, respectivamente). A revisão confirmou módulos legados de `ServiceOrders`, caixa, pagamentos, estoque e catálogo, mas não encontrou uma orquestração única de execução/checkout.
+
+### Inconsistências confirmadas e correções
+
+- Não existiam serviços explícitos para check-in idempotente, checkout consultivo/transacional, allocation/reversão, consumo/reversão, accrual idempotente e sessão de caixa. Foram consolidados em serviços scoped.
+- O fluxo legado não possuía snapshots operacionais próprios. O schema agora preserva preço, consumo, accrual, checkout, caixa e eventos sem `DROP`, `TRUNCATE` ou exclusão do movimento original.
+- O risco de `Pending` fechar comanda foi bloqueado: confirmação resolve o estado persistido do pagamento e aceita apenas `Confirmed`.
+- Concorrência de check-in, checkout ativo, intenção, caixa aberto e comissão agora possui condições/índices únicos; saldo insuficiente bloqueia consumo.
+- A UI nova usa selects originados de opções reais, nunca IDs técnicos digitáveis, e contém loading, vazio e ProblemDetails/traceId.
+- Valores novos usam `decimal`/`numeric`; dados externos chegam tipados pelo model binding, sem `Guid.Parse`.
+
+### Pendências/sourceStatus
+
+Wallet, gift card, voucher, coupon, cashback, pacote e clube têm origem validada e deduplicação por sessão, mas o débito atômico de cada ledger continua pertencendo aos stores de Clube & Vendas; a integração deve ocorrer antes de ativar cada benefício em produção. Gateway continua externo e nenhum endpoint converte intenção `Pending` em confirmada. Workflow Studio consome eventos persistidos quando instalado (`persisted-awaiting-consumer`). Kiosk não foi relaxado: `DeviceCode` permanece obrigatório na fronteira existente. O seed não fabrica payment/allocation, baixa de estoque ou comissão.

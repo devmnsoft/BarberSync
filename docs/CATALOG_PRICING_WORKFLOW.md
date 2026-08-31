@@ -26,3 +26,7 @@ O módulo da Sprint 57 consolida o perfil comercial de serviços e produtos, com
 ## Contrato de segurança e UX
 
 Nenhum formulário pede UUID/ID técnico digitável. IDs aparecem apenas em valores de opções obtidas de `/api/catalog/filter-options`. Erros usam ProblemDetails e `traceId`; estados vazios não fabricam registros e falhas não retornam sucesso. Seeds são evidências controladas, idempotentes, e não simulam pagamento nem comissão paga.
+
+## Sprint 58 · Atendimento 360
+
+O contrato integrado, estados, transações e responsabilidades deste módulo estão documentados em [SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md](SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md). Eventos reais são correlacionados por `service_order_id`; preview não altera ledger e estados pendentes não são tratados como receita, consumo ou comissão paga.

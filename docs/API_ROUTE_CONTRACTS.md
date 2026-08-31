@@ -187,3 +187,16 @@ Erros usam `ProblemDetails` com `traceId`; fontes sem medição não são conver
 Admin autenticado: `GET /api/catalog/dashboard`, `GET|POST|PUT /api/catalog/services[/profile|/{id}/profile]`, `GET|POST|PUT /api/catalog/products[/profile|/{id}/profile]`, CRUD e transições em `/api/catalog/combos`, `/packages`, `/pricing-rules`, CRUD em `/margin-rules` e `/commission-rules`, `POST /api/catalog/simulate-price`, `POST /api/catalog/simulate-commission`, `GET /api/catalog/audit`, `GET /api/catalog/reports/export` e `GET /api/catalog/filter-options`. Todos são tenant/branch scoped, protegidos por `Catalog.*`, ProblemDetails e traceId.
 
 Mobile autenticado: `GET /api/mobile/catalog/services`, `GET /api/mobile/catalog/products`, `GET /api/mobile/catalog/combos` e `POST /api/mobile/catalog/simulate-price`. Listagens retornam apenas itens ativos, visíveis e comercialmente disponíveis.
+
+## Sprint 58 · Atendimento 360
+
+O contrato integrado, estados, transações e responsabilidades deste módulo estão documentados em [SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md](SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md). Eventos reais são correlacionados por `service_order_id`; preview não altera ledger e estados pendentes não são tratados como receita, consumo ou comissão paga.
+
+### Atendimento 360 (`ServiceExecution.*`, autenticado e scoped)
+
+- `GET /api/service-execution/dashboard|today|orders|orders/{id}|cashier/current|commissions|inventory-consumption|audit|filter-options`
+- `POST /api/service-execution/check-in|orders/from-appointment|orders/{id}/services|orders/{id}/products|orders/{id}/start-service|orders/{id}/complete-service|orders/{id}/cancel-service`
+- `POST /api/service-execution/checkout/preview|apply-discount|apply-benefit|create-payment-intent|confirm|cancel`
+- `POST /api/service-execution/cashier/open|close|adjust|commissions/preview|commissions/reverse|inventory-consumption/preview|inventory-consumption/reverse`
+- `GET /api/service-execution/reports/export`
+- Mobile: `GET /api/mobile/service-execution/today|orders`; `POST /api/mobile/service-execution/check-in|orders/{id}/complete-service|checkout/preview`.

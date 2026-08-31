@@ -78,3 +78,5 @@ console.log('PARTNERS_MOBILE_CONTRACTS_OK');
 
 ['catalogServices','catalogProducts','catalogCombos','simulateCatalogPrice','/api/mobile/catalog/services','/api/mobile/catalog/products','/api/mobile/catalog/combos','/api/mobile/catalog/simulate-price'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Catalog ausente: ${contract}`); process.exit(1); } });
 console.log('CATALOG_MOBILE_CONTRACTS_OK');
+['serviceExecutionToday','serviceExecutionOrders','serviceExecutionCheckIn','completeServiceOrder','previewServiceCheckout','/api/mobile/service-execution/today','/api/mobile/service-execution/orders','/api/mobile/service-execution/check-in','/complete-service','/api/mobile/service-execution/checkout/preview'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Atendimento 360 ausente: ${contract}`); process.exit(1); } });
+console.log('SERVICE_EXECUTION_MOBILE_CONTRACTS_OK');

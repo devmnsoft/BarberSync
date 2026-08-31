@@ -6,3 +6,4 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "Source integrity failed ($LASTEXITCODE)." }
   Write-Output 'EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS'
 } finally { Pop-Location }
+# Sprint 58 parity: Atendimento 360 is covered by the shell gate for fake financial/stock outcomes and binary money types.
