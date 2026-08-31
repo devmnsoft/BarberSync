@@ -18,3 +18,7 @@ Agenda, PDV, financeiro, estoque, equipe, Clientes 360, Portal, Clube, Qualidade
 ## Segurança e relatórios
 
 As permissões `CommandCenter.*` são seedadas de forma idempotente. O CSV contém somente snapshots do tenant e filial da sessão. Metadados devem evitar dados pessoais desnecessários e seguir a política LGPD existente.
+
+## Integração Sprint 57 — Catálogo & Precificação
+
+A operação consome a fonte central de preço, custo, margem, duração, visibilidade e breakdown descrita em [CATALOG_PRICING_WORKFLOW.md](CATALOG_PRICING_WORKFLOW.md). Benefícios e comissões permanecem pendentes até o evento comercial real; escopo de tenant/unidade e trilha de auditoria são obrigatórios.

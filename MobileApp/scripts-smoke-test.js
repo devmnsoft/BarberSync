@@ -75,3 +75,6 @@ console.log('QUALITY_MOBILE_CONTRACTS_OK');
 console.log('MARKETING_MOBILE_CONTRACTS_OK');
 ['partnersMarketplace','partnerOffers','trackPartner','/api/mobile/partners/marketplace','/api/mobile/partners/offers','/api/mobile/partners/track'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Partners ausente: ${contract}`); process.exit(1); } });
 console.log('PARTNERS_MOBILE_CONTRACTS_OK');
+
+['catalogServices','catalogProducts','catalogCombos','simulateCatalogPrice','/api/mobile/catalog/services','/api/mobile/catalog/products','/api/mobile/catalog/combos','/api/mobile/catalog/simulate-price'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Catalog ausente: ${contract}`); process.exit(1); } });
+console.log('CATALOG_MOBILE_CONTRACTS_OK');

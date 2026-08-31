@@ -21,3 +21,7 @@ Tracking público grava `marketing_tracking_events` com janela de deduplicação
 ## Operação e LGPD
 
 Dados de contato aparecem apenas no Admin autorizado. A vitrine expõe nome, descrição e preço público. Erros seguem ProblemDetails com `traceId`. O seed de readiness é determinístico, identificado e não marca payout como pago.
+
+## Integração Sprint 57 — Catálogo & Precificação
+
+A operação consome a fonte central de preço, custo, margem, duração, visibilidade e breakdown descrita em [CATALOG_PRICING_WORKFLOW.md](CATALOG_PRICING_WORKFLOW.md). Benefícios e comissões permanecem pendentes até o evento comercial real; escopo de tenant/unidade e trilha de auditoria são obrigatórios.

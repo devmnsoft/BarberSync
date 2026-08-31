@@ -31,3 +31,22 @@ Foram executados `git status --short --branch`, os cinco levantamentos obrigató
 ## Evidências
 
 O gate produz `EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS`; o contrato UI preserva `EVIDENCE:UI_CONTRACTS_STATIC:PASS`. Builds e resultados finais são registrados no resumo da sprint/PR. Nenhum arquivo em `Backend/Tests/BarberSync.Tests` foi alterado e `dotnet test` não foi executado.
+
+## Sprint 57 — Auditoria de consistência comercial, preço, margem, desconto, comissão e catálogo
+
+### Evidência executada
+
+Foram executadas as três buscas obrigatórias por preço/total/desconto/comissão/benefícios, conversões numéricas e padrões inseguros em `Backend`, `Web`, `MobileApp`, `Totem`, `ScriptsSQL` e `docs` (excluindo artefatos). Resultado bruto: 3.708 referências comerciais, 346 referências numéricas e 167 referências para triagem de padrões/fallbacks.
+
+### Constatações e correções
+
+- A base já protege gift card e wallet contra saldo negativo, deduplica comissões de parceiro por origem, confirma payout com pagamento real e valida igualdade entre subtotal, desconto e total de orçamento. Esses controles foram preservados.
+- Preço de serviço/produto estava disperso entre entidades operacionais, estoque, site público e marketplace, sem perfil comercial único. Foram adicionados perfis tenant/branch scoped, custo, margem, duração/estoque e visibilidades.
+- Não havia breakdown central versionável. `CatalogPricingService` passou a calcular com `decimal`, arredondamento monetário explícito, prioridade, preço mínimo e alerta/aprovação de margem.
+- Combos/pacotes legados não ofereciam snapshots comerciais completos. As novas definições exigem itens e quantidades positivas, preço não negativo, validade positiva e bloqueio de ativação de combo vazio.
+- Comissão de catálogo agora retorna `Pending` para origem sem evento real e só prevê `Payable` nos gatilhos aceitos; unicidade SQL evita cálculo duplicado.
+- Publicação Mobile filtra status, visibilidade e estoque. Admin usa somente opções reais; nenhum ID técnico é digitável.
+
+### Pendências controladas
+
+Agenda, PDV, PublicWeb, Kiosk e BI ainda possuem contratos legados que não podem ser removidos de modo destrutivo. A migração progressiva deve trocar suas leituras pelo catálogo central, mantendo compatibilidade até todas as instalações aplicarem a versão de schema 033. Cashback legado não possui uma coluna universal de expiração; novos benefícios devem usar validade explícita e essa migração permanece registrada para sprint de dados dedicada. Nenhum pagamento, comissão paga ou fallback foi fabricado para encobrir essas pendências.
