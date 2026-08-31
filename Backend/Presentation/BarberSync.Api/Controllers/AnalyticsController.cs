@@ -113,6 +113,17 @@ from barber.clients where tenant_id=@tenant and branch_id=@branch and deleted_at
  (select count(*) from barber.replenishment_suggestions where tenant_id=@tenant and branch_id=@branch and status='Open') replenishment_suggestions
 from barber.products where tenant_id=@tenant and branch_id=@branch and deleted_at is null", filter, ct);
 
+    [HttpGet("catalog"), RequirePermission("Analytics.Read")]
+    public Task<IActionResult> Catalog([FromQuery] AnalyticsFilter filter, CancellationToken ct) => Scope("Catalog", @"select
+ (select coalesce(avg(estimated_margin_percent),0) from barber.catalog_service_profiles where tenant_id=@tenant and branch_id=@branch and status='Active' and deleted_at is null) average_service_margin,
+ (select coalesce(avg(margin_percent),0) from barber.catalog_product_profiles where tenant_id=@tenant and branch_id=@branch and status='Active' and deleted_at is null) average_product_margin,
+ (select count(*) from barber.catalog_service_profiles where tenant_id=@tenant and branch_id=@branch and estimated_margin_percent<(select coalesce(max(minimum_margin_percent),0) from barber.catalog_margin_rules where tenant_id=@tenant and branch_id=@branch and status='Active') and deleted_at is null) services_below_margin,
+ (select count(*) from barber.catalog_product_profiles where tenant_id=@tenant and branch_id=@branch and margin_percent<(select coalesce(max(minimum_margin_percent),0) from barber.catalog_margin_rules where tenant_id=@tenant and branch_id=@branch and status='Active') and deleted_at is null) products_below_margin,
+ (select coalesce(sum(base_total-combo_price),0) from barber.catalog_combo_definitions where tenant_id=@tenant and branch_id=@branch and status='Active') combo_discount_value,
+ (select count(*) from barber.catalog_package_definitions where tenant_id=@tenant and branch_id=@branch and status='Active') active_packages,
+ (select coalesce(sum(commission_amount),0) from barber.catalog_commission_events where tenant_id=@tenant and branch_id=@branch and status in('Payable','Paid') and created_at::date between @from and @to) commissions_generated,
+ (select coalesce(sum((result_json->>'discountAmount')::numeric),0) from barber.catalog_price_simulations where tenant_id=@tenant and branch_id=@branch and simulation_type='Price' and created_at::date between @from and @to) simulated_discounts", filter, ct);
+
     [HttpGet("kpis"), RequirePermission("Analytics.Read")] public Task<IActionResult> Kpis([FromQuery] AnalyticsFilter filter, CancellationToken ct) => Executive(filter, ct);
 
     [HttpGet("rankings"), RequirePermission("Analytics.Read")]

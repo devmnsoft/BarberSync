@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using BarberSync.Api.Services.Governance;
+using BarberSync.Api.Services.Catalog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,10 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<GovernanceStore>();
+builder.Services.AddScoped<CatalogMarginService>();
+builder.Services.AddScoped<CatalogPricingService>();
+builder.Services.AddScoped<CatalogCommissionService>();
+builder.Services.AddScoped<CatalogSimulationService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Clients360.Clients360Store>();
 builder.Services.AddScoped<BarberSync.Api.Services.ClientPortal.ClientPortalStore>();
 builder.Services.AddScoped<BarberSync.Api.Services.Club.ClubStore>();

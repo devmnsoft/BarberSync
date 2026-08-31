@@ -25,6 +25,9 @@ PYASSET
 while IFS= read -r permission; do rg -Fq "$permission" ScriptsSQL/script_completo.sql || report "permissão sem seed: $permission"; done < <(rg -o 'RequirePermission\("[^"]+"' Backend/Presentation/BarberSync.Api | cut -d'"' -f2 | sort -u)
 # Core JavaScript must parse.
 if command -v node >/dev/null; then find Web MobileApp Totem -name '*.js' -not -path '*/node_modules/*' -not -path '*/dist/*' -print0 | xargs -0 -r -n1 node --check || report 'node --check'; fi
+# Catalog financial contracts reject binary floating-point and manual technical IDs.
+if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Catalog Backend/Presentation/BarberSync.Api/Controllers/CatalogControllers.cs; then report 'double/float no catálogo financeiro'; fi
+if rg -n 'fake (price|commission|payment)|fakePrice|fakeCommission|fakePayment' Backend/Presentation/BarberSync.Api/Services/Catalog Backend/Presentation/BarberSync.Api/Controllers/CatalogControllers.cs Web/BarberSync.AdminWeb/Views/Catalog Web/BarberSync.AdminWeb/wwwroot/js/catalog.js -i; then report 'simulação falsa no catálogo'; fi
 # Command Center contract is deliberately checked both ways.
 for route in dashboard executive operations health alerts incidents tasks integrations reports/export filter-options; do if [[ "$route" == 'reports/export' ]]; then rg -Fq 'HttpGet("export")' Backend/Presentation/BarberSync.Api/Controllers/CommandCenterControllers.cs; else rg -Fq "$route" Backend/Presentation/BarberSync.Api/Controllers/CommandCenterControllers.cs; fi || report "rota Command Center ausente: $route"; rg -Fq "$route" docs/API_ROUTE_CONTRACTS.md || report "rota Command Center não documentada: $route"; done
 (( fail == 0 )) || exit 1

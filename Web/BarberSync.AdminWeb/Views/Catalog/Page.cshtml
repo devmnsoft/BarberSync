@@ -1,0 +1,10 @@
+@{ Layout="_AdminLayout"; var page=Convert.ToString(ViewData["CatalogPage"])??"Dashboard"; }
+@section Styles { <link rel="stylesheet" href="~/css/catalog.css" asp-append-version="true" /> }
+<div class="catalog" data-catalog-page="@page">
+ <header class="catalog-hero"><div><span>INTELIGÊNCIA COMERCIAL</span><h1>Catálogo &amp; Precificação</h1><p>Preço, margem e comissão com rastreabilidade do catálogo à venda.</p></div><a class="catalog-export" href="/AdminApi/catalog/reports/export">Exportar histórico</a></header>
+ <nav class="catalog-tabs" aria-label="Áreas do catálogo"><a href="/Catalog">Visão geral</a><a href="/Catalog/Services">Serviços</a><a href="/Catalog/Products">Produtos</a><a href="/Catalog/Combos">Combos</a><a href="/Catalog/Packages">Pacotes</a><a href="/Catalog/PricingRules">Preços</a><a href="/Catalog/Margins">Margens</a><a href="/Catalog/Commissions">Comissões</a><a href="/Catalog/Simulator">Simuladores</a><a href="/Catalog/Audit">Auditoria</a></nav>
+ <div class="catalog-skeleton" data-loading aria-live="polite"><i></i><i></i><i></i><span>Consolidando dados comerciais reais…</span></div>
+ <section class="catalog-error" data-error hidden><strong>Não foi possível consultar o catálogo.</strong><p data-error-message></p><code data-trace></code><button type="button" data-retry>Tentar novamente</button></section>
+ <main data-content hidden></main>
+</div>
+@section Scripts { <script src="~/js/catalog.js" asp-append-version="true"></script> }
