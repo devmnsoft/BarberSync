@@ -171,3 +171,13 @@ Público: `GET /api/marketing/public/landing/{slug}`, `GET /api/marketing/public
 ## Marketplace & Parceiros
 
 Admin autenticado: `GET /api/partners/dashboard|profiles|affiliates|links|referrals|commission-rules|commissions|payouts|contracts|marketplace-items|supplier-terms|filter-options`, seus comandos de criação/transição e `GET /api/partners/reports/export`. Público: `GET /api/partners/public/marketplace`, `GET /api/partners/public/partner/{slug}` e `POST /api/partners/public/track`. Mobile autenticado: `GET /api/mobile/partners/marketplace`, `GET /api/mobile/partners/offers` e `POST /api/mobile/partners/track`. Consulte `PARTNERS_MARKETPLACE_WORKFLOW.md` para invariantes de pagamento, comissão e privacidade.
+
+## Central de Controle (`CommandCenter.Read` por padrão)
+
+- `GET /api/command-center/dashboard`, `/executive`, `/operations`, `/health` — snapshots, operação e matriz de saúde reais.
+- `GET /api/command-center/alerts`; `POST /alerts/{id}/acknowledge|resolve|dismiss` — ciclo de alertas.
+- `GET|POST /api/command-center/incidents`; `PUT /incidents/{id}`; `POST /incidents/{id}/resolve` — incidentes.
+- `GET|POST /api/command-center/tasks`; `PUT /tasks/{id}`; `POST /tasks/{id}/complete` — fila operacional.
+- `GET /api/command-center/integrations`, `/filter-options`, `/reports/export` — integrações, opções tenant-scoped e CSV.
+
+Erros usam `ProblemDetails` com `traceId`; fontes sem medição não são convertidas em `Healthy`.

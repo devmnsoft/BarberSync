@@ -1,0 +1,9 @@
+@{ Layout="_AdminLayout"; var page=Convert.ToString(ViewData["CommandCenterPage"])??"Dashboard"; }
+@section Styles { <link rel="stylesheet" href="~/css/command-center.css" asp-append-version="true" /> }
+<div class="cc" data-command-center-page="@page">
+ <header class="cc-hero"><div><span class="cc-eyebrow">COMMAND CENTER</span><h1>Central de Controle</h1><p>Decisões executivas e operação crítica em um único cockpit.</p></div><nav aria-label="Seções"><a href="/CommandCenter">Visão geral</a><a href="/CommandCenter/Executive">Executivo</a><a href="/CommandCenter/Operations">Operação</a><a href="/CommandCenter/Health">Saúde</a><a href="/CommandCenter/Incidents">Incidentes</a><a href="/CommandCenter/Tasks">Tarefas</a><a href="/CommandCenter/Reports">Relatórios</a></nav></header>
+ <div class="cc-loading" data-loading aria-live="polite"><i></i><i></i><i></i><span>Consultando fontes operacionais…</span></div>
+ <section class="cc-error" data-error hidden><strong>Não foi possível carregar a Central.</strong><p data-error-message></p><code data-trace></code><button type="button" data-retry>Tentar novamente</button></section>
+ <main data-content hidden></main>
+</div>
+@section Scripts { <script src="~/js/command-center.js" asp-append-version="true"></script> }
