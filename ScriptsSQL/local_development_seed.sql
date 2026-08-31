@@ -90,3 +90,9 @@ COMMIT;
 
 SELECT 'tenant='||name FROM barber.tenants WHERE id='10000000-0000-0000-0000-000000000001';
 SELECT 'users='||count(*) FROM barber.users WHERE tenant_id='10000000-0000-0000-0000-000000000001';
+
+-- A Central de Controle não fabrica KPIs locais. Registra apenas configuração desconhecida
+-- para que a UI mostre o sourceStatus correto até uma verificação real ser executada.
+INSERT INTO barber.command_center_integration_checks(tenant_id,branch_id,integration_key,source_module,status,message)
+SELECT b.tenant_id,b.id,'source-integrity','Readiness','Unknown','Execute scripts/validate-source-integrity.sh para produzir evidência.' FROM barber.branches b
+ON CONFLICT(tenant_id,branch_id,integration_key) DO NOTHING;
