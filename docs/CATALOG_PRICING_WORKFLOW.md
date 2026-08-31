@@ -30,3 +30,7 @@ Nenhum formulário pede UUID/ID técnico digitável. IDs aparecem apenas em valo
 ## Sprint 58 · Atendimento 360
 
 O contrato integrado, estados, transações e responsabilidades deste módulo estão documentados em [SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md](SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md). Eventos reais são correlacionados por `service_order_id`; preview não altera ledger e estados pendentes não são tratados como receita, consumo ou comissão paga.
+
+## Integração Sprint 60 — Equipe & RH 360
+
+O contrato canônico e as regras de isolamento, disponibilidade, produtividade, comissão, qualidade, alertas e relatórios estão descritos em [TEAM360_WORKFLOW.md](TEAM360_WORKFLOW.md). A integração preserva a origem real e publica `sourceStatus` quando uma fonte não está disponível.

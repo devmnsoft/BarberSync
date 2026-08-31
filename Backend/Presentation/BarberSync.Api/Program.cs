@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Authorization;
 using BarberSync.Api.Services.Governance;
 using BarberSync.Api.Services.Catalog;
 using BarberSync.Api.Services.ServiceExecution;
+using BarberSync.Api.Services.Team360;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,6 +115,12 @@ builder.Services.AddScoped<IBarberSchemaInitializer, BarberSchemaInitializer>();
 builder.Services.AddScoped<EnterpriseDataService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Communication.CommunicationService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Team.TeamDataService>();
+builder.Services.AddScoped<TeamProfileService>();
+builder.Services.AddScoped<TeamScheduleService>();
+builder.Services.AddScoped<TeamGoalService>();
+builder.Services.AddScoped<TeamProductivityService>();
+builder.Services.AddScoped<TeamCommissionSettlementService>();
+builder.Services.AddScoped<TeamTrainingService>();
 builder.Services.AddScoped<ExecutiveInsightsService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Onboarding.BranchOnboardingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Growth.GrowthService>();

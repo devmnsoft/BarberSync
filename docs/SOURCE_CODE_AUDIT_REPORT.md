@@ -67,3 +67,20 @@ Foram executadas as quatro varreduras obrigatórias de regras operacionais, tipo
 ### Pendências/sourceStatus
 
 Wallet, gift card, voucher, coupon, cashback, pacote e clube têm origem validada e deduplicação por sessão, mas o débito atômico de cada ledger continua pertencendo aos stores de Clube & Vendas; a integração deve ocorrer antes de ativar cada benefício em produção. Gateway continua externo e nenhum endpoint converte intenção `Pending` em confirmada. Workflow Studio consome eventos persistidos quando instalado (`persisted-awaiting-consumer`). Kiosk não foi relaxado: `DeviceCode` permanece obrigatório na fronteira existente. O seed não fabrica payment/allocation, baixa de estoque ou comissão.
+
+## Sprint 60 — Auditoria de equipe, RH, escala, comissão, permissão e produtividade
+
+A auditoria estática revisou ocorrências de profissionais, usuários, roles/permissões, escalas, disponibilidade, metas, produtividade, comissões, folha, ausências, férias e treinamentos; também revisou parse de identificadores, tipos monetários, rotas, autenticação, `traceId`, escopo de tenant/filial e padrões proibidos de UI.
+
+### Inconsistências encontradas e tratamento
+
+- O módulo legado `/Team` não consolidava perfis, escala, meta, produtividade, treinamento e auditoria sob um contrato único. Foi criada a superfície `/api/team360` e a área Admin `/Team360`.
+- O serviço de RH legado mantém coleção estática e recebe tenant em query string; ele permanece por compatibilidade, mas não é fonte do Team360. O novo ledger usa conexão relacional e claims autenticados.
+- Comissões existentes possuem cálculo no Catálogo e accrual no Atendimento. Team360 não recalcula eventos: preview e settlement consomem somente comissões `Available` originadas no fluxo confirmado.
+- A disponibilidade antiga e os bloqueios estavam separados. Team360 valida sobreposição de escala contra ausência/férias aprovadas e documenta a obrigação da Agenda de aplicar esse filtro.
+- Não havia contrato explícito para fonte de produtividade indisponível. Snapshots agora retornam `source_status` sem criar receita, atendimento, NPS ou comissão.
+- As permissões Team360 não existiam no conjunto seedado. Foram adicionadas idempotentemente, preservando as permissões anteriores.
+
+### Pendências controladas
+
+A geração automática de payable financeiro a partir de settlement aprovado depende do ledger Financeiro implantado e deve permanecer com `sourceStatus=Unavailable` quando a integração não estiver configurada. Não há baixa ou pagamento automático. A migração dos registros históricos legados para o novo ledger não é inferida nem fabricada.

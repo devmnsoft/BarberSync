@@ -1,0 +1,8 @@
+@{ var page=(string)(ViewData["Page"]??"dashboard"); var title=(string)(ViewData["Title"]??"Equipe & RH 360"); Layout="~/Views/Shared/_AdminLayout.cshtml"; }
+<link rel="stylesheet" href="~/css/team360.css" asp-append-version="true" />
+<main class="team360" data-team360-page="@page">
+ <header class="team360-hero"><div><span class="team360-eyebrow">PESSOAS • OPERAÇÃO • PERFORMANCE</span><h1>@title</h1><p>Decisões auditáveis com dados reais da filial autenticada.</p></div><button type="button" class="team360-button" data-refresh>Atualizar</button></header>
+ <nav class="team360-nav" aria-label="Equipe e RH 360"><a href="/Team360">Visão geral</a><a href="/Team360/Professionals">Profissionais</a><a href="/Team360/Schedules">Escalas</a><a href="/Team360/Goals">Metas</a><a href="/Team360/Productivity">Produtividade</a><a href="/Team360/Commissions">Comissões</a><a href="/Team360/Permissions">Permissões</a><a href="/Team360/Training">Treinamentos</a><a href="/Team360/Audit">Auditoria</a></nav>
+ <div class="team360-alert" data-error hidden></div><section class="team360-grid" data-content><div class="team360-skeleton"></div><div class="team360-skeleton"></div><div class="team360-skeleton"></div></section>
+</main>
+<script src="~/js/team360.js" asp-append-version="true"></script>
