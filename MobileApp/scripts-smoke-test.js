@@ -83,3 +83,5 @@ console.log('SERVICE_EXECUTION_MOBILE_CONTRACTS_OK');
 
 ['team360Me','team360Schedule','team360Productivity','team360Commissions','team360Goals','team360Trainings','completeTeam360Training','/api/mobile/team360/'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Team360 ausente: ${contract}`); process.exit(1); } });
 console.log('TEAM360_MOBILE_CONTRACTS_OK');
+['finance360Summary','finance360Receivables','finance360Payables','finance360Commissions','finance360Payroll','/api/mobile/finance360/'].forEach(contract => { if (!apiSource.includes(contract)) { console.error(`Contrato Financeiro 360 ausente: ${contract}`); process.exit(1); } });
+console.log('FINANCE360_MOBILE_CONTRACTS_OK');

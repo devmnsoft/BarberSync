@@ -35,3 +35,7 @@ A operação consome a fonte central de preço, custo, margem, duração, visibi
 ## Sprint 58 · Atendimento 360
 
 O contrato integrado, estados, transações e responsabilidades deste módulo estão documentados em [SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md](SERVICE_EXECUTION_CHECKOUT_WORKFLOW.md). Eventos reais são correlacionados por `service_order_id`; preview não altera ledger e estados pendentes não são tratados como receita, consumo ou comissão paga.
+
+## Integração Financeiro 360 — Sprint 61
+
+Este módulo publica/consome origens persistidas pelo razão Financeiro 360. Nenhum status pago é inferido: liquidação exige payment confirmado ou baixa manual autorizada; fontes indisponíveis retornam `sourceStatus` sem estimativa. Consulte `docs/FINANCE360_WORKFLOW.md`.

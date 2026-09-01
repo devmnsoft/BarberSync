@@ -19,3 +19,7 @@ Todas as consultas e mutações usam `tenant_id` e `branch_id` derivados dos cla
 ## Integrações e sourceStatus
 
 Agenda consome apenas profissionais ativos, visíveis, disponíveis e sem bloqueio. Atendimento/checkout originam produção e comissão; Catálogo fornece skills, certificações e regra de comissão; Qualidade fornece NPS; BI e Command Center leem snapshots e alertas. Quando uma fonte ainda não publicou snapshot, a API informa `Unavailable`, sem substituir por zero presumido. Mobile expõe somente os dados do perfil ligado ao usuário autenticado.
+
+## Integração Financeiro 360 — Sprint 61
+
+Este módulo publica/consome origens persistidas pelo razão Financeiro 360. Nenhum status pago é inferido: liquidação exige payment confirmado ou baixa manual autorizada; fontes indisponíveis retornam `sourceStatus` sem estimativa. Consulte `docs/FINANCE360_WORKFLOW.md`.

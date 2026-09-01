@@ -30,3 +30,7 @@ O contrato integrado, estados, transações e responsabilidades deste módulo es
 ## Integração Sprint 60 — Equipe & RH 360
 
 O contrato canônico e as regras de isolamento, disponibilidade, produtividade, comissão, qualidade, alertas e relatórios estão descritos em [TEAM360_WORKFLOW.md](TEAM360_WORKFLOW.md). A integração preserva a origem real e publica `sourceStatus` quando uma fonte não está disponível.
+
+## Integração Financeiro 360 — Sprint 61
+
+Este módulo publica/consome origens persistidas pelo razão Financeiro 360. Nenhum status pago é inferido: liquidação exige payment confirmado ou baixa manual autorizada; fontes indisponíveis retornam `sourceStatus` sem estimativa. Consulte `docs/FINANCE360_WORKFLOW.md`.
