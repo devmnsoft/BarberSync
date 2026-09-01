@@ -40,5 +40,11 @@ if rg -ni 'fake(payroll| commission| schedule| productivity)|fakePayroll|fakeCom
 if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Team360 Backend/Presentation/BarberSync.Api/Controllers/Team360Controller.cs; then report 'double/float financeiro no Team360'; fi
 if rg -ni 'type="text"[^>]+name="[^"]*(tenant|branch|user|employee|professional|role|permission|shift|schedule|goal|commission|payroll|training|absence|vacation|service)[Ii]d' Web/BarberSync.AdminWeb/Views/Team360; then report 'ID técnico digitável no Team360'; fi
 
+# Financeiro 360 never fabricates settlements, uses binary money, or exposes technical ID fields.
+finance_paths=(Backend/Presentation/BarberSync.Api/Services/Finance360 Backend/Presentation/BarberSync.Api/Controllers/Finance360Controllers.cs Web/BarberSync.AdminWeb/Views/Finance360 Web/BarberSync.AdminWeb/wwwroot/js/finance360.js)
+if rg -ni 'fake[ _-]?(payment|reconciliation|payout|payroll|dre|cash[ _-]?flow)' "${finance_paths[@]}"; then report 'resultado financeiro fabricado no Financeiro 360'; fi
+if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Finance360 Backend/Presentation/BarberSync.Api/Controllers/Finance360Controllers.cs; then report 'double/float no Financeiro 360'; fi
+if rg -ni 'type="text"[^>]+name="[^"]*(tenant|branch|payment|receivable|payable|cashSession|checkoutSession|serviceOrder|commission|settlement|payroll|payout|client|professional|partner|supplier|account|category|costCenter)[Ii]d' Web/BarberSync.AdminWeb/Views/Finance360; then report 'ID técnico digitável no Financeiro 360'; fi
+
 (( fail == 0 )) || exit 1
 echo 'EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS'

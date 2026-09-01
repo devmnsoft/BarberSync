@@ -5,3 +5,4 @@ if (-not $bash) { throw 'bash is required to run the canonical UI contract valid
 & $bash.Source (Join-Path $PSScriptRoot 'validate-ui-contracts.sh')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # Sprint 58 parity: ServiceExecution views must use selections, never visible technical-ID inputs.
+# Sprint 61 parity: Finance360 visible forms are checked for technical identifiers by the canonical shell validator.

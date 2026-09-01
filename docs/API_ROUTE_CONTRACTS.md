@@ -204,3 +204,7 @@ O contrato integrado, estados, transações e responsabilidades deste módulo es
 ## Integração Sprint 60 — Equipe & RH 360
 
 O contrato canônico e as regras de isolamento, disponibilidade, produtividade, comissão, qualidade, alertas e relatórios estão descritos em [TEAM360_WORKFLOW.md](TEAM360_WORKFLOW.md). A integração preserva a origem real e publica `sourceStatus` quando uma fonte não está disponível.
+
+## Sprint 61 — Financeiro 360
+
+A superfície autenticada `/api/finance360` inclui dashboard, filter-options, receivables (CRUD de estado e aging), payables (agendamento, baixa e aging), reconciliation (preview/reconcile/divergent/reverse), cash-flow (projection/realized/snapshot), DRE (snapshot/export), commissions, payroll, partner-payouts, delinquency, audit e reports. Mobile expõe somente leitura em `/api/mobile/finance360/{summary,receivables,payables,commissions,payroll}`. Todas as rotas exigem permissões `Finance360.*` e escopo dos claims.

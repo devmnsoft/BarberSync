@@ -57,5 +57,10 @@ export const mobileApi = {
   team360Productivity: signal => request('/api/mobile/team360/productivity', { signal }), team360Commissions: signal => request('/api/mobile/team360/commissions', { signal }),
   team360Goals: signal => request('/api/mobile/team360/goals', { signal }), team360Trainings: signal => request('/api/mobile/team360/trainings', { signal }),
   completeTeam360Training: id => request(`/api/mobile/team360/trainings/${id}/complete`, { method: 'POST' }),
+  finance360Summary: signal => request('/api/mobile/finance360/summary', { signal }),
+  finance360Receivables: signal => request('/api/mobile/finance360/receivables', { signal }),
+  finance360Payables: signal => request('/api/mobile/finance360/payables', { signal }),
+  finance360Commissions: signal => request('/api/mobile/finance360/commissions', { signal }),
+  finance360Payroll: signal => request('/api/mobile/finance360/payroll', { signal }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };

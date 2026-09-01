@@ -1,0 +1,10 @@
+@{ ViewData["Title"]="Relatórios financeiros"; Layout="~/Views/Shared/_AdminLayout.cshtml"; }
+@section Styles { <link rel="stylesheet" href="~/css/finance360.css" asp-append-version="true"/> }
+<main class="f360" data-finance360-page="Reports" data-endpoint="/api/finance360/reports/export">
+ <header class="f360-hero"><div><span class="f360-eyebrow">Financeiro 360</span><h1>Relatórios financeiros</h1><p>Visão auditável da filial autenticada, sem estimativas ou valores simulados.</p></div><button type="button" class="f360-refresh" data-refresh><i class="bi bi-arrow-clockwise"></i> Atualizar</button></header>
+ <nav class="f360-nav" aria-label="Financeiro 360"><a href="/Finance360">Dashboard</a><a href="/Finance360/Receivables">Recebíveis</a><a href="/Finance360/Payables">Pagáveis</a><a href="/Finance360/Reconciliation">Conciliação</a><a href="/Finance360/CashFlow">Fluxo de caixa</a><a href="/Finance360/Dre">DRE</a><a href="/Finance360/Delinquency">Inadimplência</a><a href="/Finance360/Audit">Auditoria</a></nav>
+ <section class="f360-filters"><label>Início<input type="date" data-from required/></label><label>Fim<input type="date" data-to required/></label><label>Status<select data-status><option value="">Todos</option><option>Open</option><option>Scheduled</option><option>PartiallyPaid</option><option>Paid</option><option>Overdue</option><option>Divergent</option></select></label></section>
+ <section class="f360-kpis" data-kpis aria-live="polite"><div class="f360-skeleton"></div><div class="f360-skeleton"></div><div class="f360-skeleton"></div><div class="f360-skeleton"></div></section>
+ <section class="f360-panel"><div class="f360-panel-head"><h2>Dados financeiros confirmados</h2><span class="f360-source">Fonte: razão financeiro</span></div><div class="f360-error" role="alert" hidden></div><div class="f360-table" data-content></div></section>
+</main>
+@section Scripts { <script src="~/js/finance360.js" asp-append-version="true"></script> }

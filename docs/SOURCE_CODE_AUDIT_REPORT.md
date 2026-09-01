@@ -84,3 +84,11 @@ A auditoria estática revisou ocorrências de profissionais, usuários, roles/pe
 ### Pendências controladas
 
 A geração automática de payable financeiro a partir de settlement aprovado depende do ledger Financeiro implantado e deve permanecer com `sourceStatus=Unavailable` quando a integração não estiver configurada. Não há baixa ou pagamento automático. A migração dos registros históricos legados para o novo ledger não é inferida nem fabricada.
+
+## Sprint 61 — Auditoria financeira definitiva: caixa, checkout, pagamentos, comissões, folha, repasses, DRE e fluxo de caixa
+
+A varredura obrigatória revisou ocorrências financeiras/operacionais, tipos numéricos e temporais, placeholders/fallbacks, DI, autorização, `traceId` e escopo tenant/filial. Foram identificados endpoints legados capazes de marcar recebível, pagável e settlement como liquidados usando somente texto de referência, além de DRE/fluxo legado misturando estados e tabelas sem razão financeiro. Eles permanecem documentados para migração compatível; a superfície `/api/finance360` não os reutiliza para baixa.
+
+O Financeiro 360 introduz razão idempotente e append-only, receivables/payables com saldo parcial, validação de payment confirmado ou baixa manual autorizada, conciliação não destrutiva, projeção separada do realizado, DRE derivada exclusivamente de postings e eventos de auditoria imutáveis. O seed só cria estados abertos; posting/reconciliation confirmado é condicional à existência de payment real confirmado.
+
+Pendências controladas: adaptadores automáticos dos módulos legados Atendimento, Clube, Estoque e Parceiros devem chamar os serviços de posting na mesma transação de origem em sprint de migração. Até isso ocorrer, a API expõe `sourceStatus` e não inventa valores. Os antigos `/api/finance` e `/api/commissions/.../mark-paid` devem ser descontinuados depois da migração dos consumidores.
