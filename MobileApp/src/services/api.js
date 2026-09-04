@@ -62,5 +62,10 @@ export const mobileApi = {
   finance360Payables: signal => request('/api/mobile/finance360/payables', { signal }),
   finance360Commissions: signal => request('/api/mobile/finance360/commissions', { signal }),
   finance360Payroll: signal => request('/api/mobile/finance360/payroll', { signal }),
+  inventory360Summary: signal => request('/api/mobile/inventory360/summary', { signal }),
+  inventory360Products: signal => request('/api/mobile/inventory360/products', { signal }),
+  inventory360Stock: signal => request('/api/mobile/inventory360/stock', { signal }),
+  inventory360Replenishment: signal => request('/api/mobile/inventory360/replenishment', { signal }),
+  registerInventory360CountItem: (id, input) => request(`/api/mobile/inventory360/counts/${id}/items`, { method: 'POST', body: input }),
   blocks: signal => request('/api/mobile/professional/blocks', { signal }), block: input => request('/api/mobile/professional/blocks', { method: 'POST', body: input })
 };

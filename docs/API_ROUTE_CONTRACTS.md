@@ -208,3 +208,13 @@ O contrato canônico e as regras de isolamento, disponibilidade, produtividade, 
 ## Sprint 61 — Financeiro 360
 
 A superfície autenticada `/api/finance360` inclui dashboard, filter-options, receivables (CRUD de estado e aging), payables (agendamento, baixa e aging), reconciliation (preview/reconcile/divergent/reverse), cash-flow (projection/realized/snapshot), DRE (snapshot/export), commissions, payroll, partner-payouts, delinquency, audit e reports. Mobile expõe somente leitura em `/api/mobile/finance360/{summary,receivables,payables,commissions,payroll}`. Todas as rotas exigem permissões `Finance360.*` e escopo dos claims.
+
+## Integração Inventory360 — Sprint 62
+
+O contrato canônico está em [INVENTORY360_WORKFLOW.md](INVENTORY360_WORKFLOW.md). Dados de estoque e CMV são tenant/branch scoped, derivados de movimentos reais e retornam `sourceStatus=Unavailable` quando a origem necessária não existir; integrações não podem fabricar saldo, compra ou custo.
+
+### Inventory360
+
+`GET /api/inventory360/dashboard`, `GET|POST /api/inventory360/products`, `PUT /api/inventory360/products/{id}`, `POST /api/inventory360/products/{id}/activate|suspend|archive`, `GET /api/inventory360/supplies`, `GET /api/inventory360/suppliers`, `GET|POST /api/inventory360/service-inputs`, `POST /api/inventory360/service-inputs/preview`, `GET /api/inventory360/stock`, `GET /api/inventory360/batches`, `POST /api/inventory360/stock/receive|consume|reserve|release-reservation|reverse`, `GET|POST /api/inventory360/purchases`, `POST /api/inventory360/purchases/{id}/approve|receive|cancel|return-to-supplier`, `GET /api/inventory360/counts`, `POST /api/inventory360/counts/open`, `POST /api/inventory360/counts/{id}/items|close|adjust`, `GET /api/inventory360/replenishment`, `POST /api/inventory360/replenishment/generate`, `POST /api/inventory360/replenishment/{id}/create-purchase`, `GET /api/inventory360/costing`, `GET /api/inventory360/audit`, `GET /api/inventory360/reports/export`, `GET /api/inventory360/filter-options`.
+
+Mobile: `GET /api/mobile/inventory360/summary|products|stock|replenishment` e `POST /api/mobile/inventory360/counts/{id}/items`. Todos exigem JWT, permission e escopo obtido dos claims.

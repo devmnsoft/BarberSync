@@ -19,3 +19,7 @@ O projetado soma saldos abertos de receivables/payables; o realizado soma soment
 ## Inadimplência e integrações
 
 Recebíveis vencidos podem originar casos únicos de inadimplência; atribuição, negociação e encerramento são auditados. Atendimento cria a origem de checkout/payment, Team360 e Parceiros geram pagáveis aprovados, Catálogo/Estoque fornecem custo e desconto, e Command Center/BI consomem alertas e métricas persistidas. Contratos Mobile são somente leitura e respeitam as mesmas permissões.
+
+## Integração Inventory360 — Sprint 62
+
+O contrato canônico está em [INVENTORY360_WORKFLOW.md](INVENTORY360_WORKFLOW.md). Dados de estoque e CMV são tenant/branch scoped, derivados de movimentos reais e retornam `sourceStatus=Unavailable` quando a origem necessária não existir; integrações não podem fabricar saldo, compra ou custo.

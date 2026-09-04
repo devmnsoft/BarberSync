@@ -24,6 +24,7 @@ using BarberSync.Api.Services.Catalog;
 using BarberSync.Api.Services.ServiceExecution;
 using BarberSync.Api.Services.Team360;
 using BarberSync.Api.Services.Finance360;
+using BarberSync.Api.Services.Inventory360;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,13 @@ builder.Services.AddScoped<ReconciliationService>();
 builder.Services.AddScoped<CashFlowService>();
 builder.Services.AddScoped<DreService>();
 builder.Services.AddScoped<FinanceAuditService>();
+builder.Services.AddScoped<InventoryProductService>();
+builder.Services.AddScoped<ServiceInputService>();
+builder.Services.AddScoped<StockMovementService>();
+builder.Services.AddScoped<PurchaseOrderService>();
+builder.Services.AddScoped<InventoryCountService>();
+builder.Services.AddScoped<ReplenishmentService>();
+builder.Services.AddScoped<InventoryCostingService>();
 builder.Services.AddScoped<BarberSync.Api.Services.Clients360.Clients360Store>();
 builder.Services.AddScoped<BarberSync.Api.Services.ClientPortal.ClientPortalStore>();
 builder.Services.AddScoped<BarberSync.Api.Services.Club.ClubStore>();
