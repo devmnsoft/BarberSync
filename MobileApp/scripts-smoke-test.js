@@ -41,6 +41,9 @@ for (const benefitContract of ['benefits.packages', 'benefits.coupons', 'benefit
   }
 }
 const apiSource = fs.readFileSync('src/services/api.js', 'utf8');
+for (const contract of ['inventory360Summary:', 'inventory360Products:', 'inventory360Stock:', 'inventory360Replenishment:', 'registerInventory360CountItem:']) {
+  if (!apiSource.includes(contract)) { console.error(`Mobile inventory contract is missing: ${contract}`); process.exit(1); }
+}
 for (const contract of ['clubSummary:', 'clubWallet:', 'clubMemberships:', 'clubGiftCards:', 'clubVouchers:', 'redeemClubVoucher:']) {
   if (!apiSource.includes(contract)) { console.error(`Mobile club contract is missing: ${contract}`); process.exit(1); }
 }

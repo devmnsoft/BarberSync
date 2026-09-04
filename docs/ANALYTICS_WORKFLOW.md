@@ -66,3 +66,7 @@ O contrato canônico e as regras de isolamento, disponibilidade, produtividade, 
 ## Integração Financeiro 360 — Sprint 61
 
 Este módulo publica/consome origens persistidas pelo razão Financeiro 360. Nenhum status pago é inferido: liquidação exige payment confirmado ou baixa manual autorizada; fontes indisponíveis retornam `sourceStatus` sem estimativa. Consulte `docs/FINANCE360_WORKFLOW.md`.
+
+## Integração Inventory360 — Sprint 62
+
+O contrato canônico está em [INVENTORY360_WORKFLOW.md](INVENTORY360_WORKFLOW.md). Dados de estoque e CMV são tenant/branch scoped, derivados de movimentos reais e retornam `sourceStatus=Unavailable` quando a origem necessária não existir; integrações não podem fabricar saldo, compra ou custo.

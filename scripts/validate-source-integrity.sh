@@ -46,5 +46,10 @@ if rg -ni 'fake[ _-]?(payment|reconciliation|payout|payroll|dre|cash[ _-]?flow)'
 if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Finance360 Backend/Presentation/BarberSync.Api/Controllers/Finance360Controllers.cs; then report 'double/float no Financeiro 360'; fi
 if rg -ni 'type="text"[^>]+name="[^"]*(tenant|branch|payment|receivable|payable|cashSession|checkoutSession|serviceOrder|commission|settlement|payroll|payout|client|professional|partner|supplier|account|category|costCenter)[Ii]d' Web/BarberSync.AdminWeb/Views/Finance360; then report 'ID técnico digitável no Financeiro 360'; fi
 
+# Inventory360 forbids fabricated operational values and binary monetary types.
+inventory_paths=(Backend/Presentation/BarberSync.Api/Services/Inventory360 Backend/Presentation/BarberSync.Api/Controllers/Inventory360Controllers.cs Backend/Presentation/BarberSync.Api/Controllers/MobileInventory360Controller.cs Web/BarberSync.AdminWeb/Views/Inventory360 Web/BarberSync.AdminWeb/wwwroot/js/inventory360.js)
+if rg -ni 'fake[ _-]?(stock|purchase|cogs|inventory|supplier)|mock[ _-]?(stock|purchase|cogs|inventory|supplier)' "${inventory_paths[@]}"; then report 'resultado fabricado no Inventory360'; fi
+if rg -n '\b(double|float)\b' Backend/Presentation/BarberSync.Api/Services/Inventory360 Backend/Presentation/BarberSync.Api/Controllers/Inventory360Controllers.cs; then report 'double/float financeiro no Inventory360'; fi
+
 (( fail == 0 )) || exit 1
 echo 'EVIDENCE:SOURCE_INTEGRITY_STATIC:PASS'

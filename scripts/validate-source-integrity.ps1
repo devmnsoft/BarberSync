@@ -8,3 +8,4 @@ try {
 } finally { Pop-Location }
 # Sprint 58 parity: Atendimento 360 is covered by the shell gate for fake financial/stock outcomes and binary money types.
 # Sprint 61 parity: Finance360 fake outcomes, binary money and technical-ID inputs are covered by the shell gate.
+# Sprint 62 parity: Inventory360 fabricated stock/purchase/COGS, binary costs and technical IDs are covered by the shell gate.
