@@ -62,4 +62,15 @@ document.addEventListener("DOMContentLoaded", function () {
         notificationCount.title = 'Notificações indisponíveis';
       });
   }
+
+  const groups = [...document.querySelectorAll('[data-menu-group]')];
+  const remembered = localStorage.getItem('barbersync.menu.group');
+  groups.forEach(group => {
+    if (remembered && group.dataset.menuGroup === remembered) group.open = true;
+    group.addEventListener('toggle', () => {
+      if (!group.open) return;
+      localStorage.setItem('barbersync.menu.group', group.dataset.menuGroup || '');
+      groups.filter(other => other !== group && !other.querySelector('[aria-current="page"]')).forEach(other => { other.open = false; });
+    });
+  });
 });

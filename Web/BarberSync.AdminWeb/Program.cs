@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using BarberSync.AdminWeb.Services.Navigation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<IModuleNavigationService,ModuleNavigationService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -13,7 +15,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.SlidingExpiration = false;
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options=>options.AddPolicy("PlatformAccess",policy=>policy.RequireClaim("platform_admin","true")));
 builder.Services.AddHttpClient("BarberSyncApi", c =>
     c.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5080"));
 

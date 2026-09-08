@@ -1,14 +1,21 @@
-@{ var viewTitle = ViewData["Title"]?.ToString() ?? "Visão Geral"; }
+@{
+    var viewTitle=ViewData["Title"]?.ToString()??"Visão Geral";
+    var isPlatform=User.HasClaim("platform_admin","true");
+    var isScoped=isPlatform&&User.HasClaim(claim=>claim.Type=="scope_session_id");
+    var tenantName=User.FindFirst("tenant_name")?.Value??"Cliente selecionado";
+    var branchName=User.FindFirst("branch_name")?.Value??"Unidade selecionada";
+}
 <header class="admin-topbar">
     <button class="icon-button" type="button" data-sidebar-toggle aria-label="Alternar menu"><svg><use href="#i-menu" /></svg></button>
     <div class="topbar-context">
-        <nav class="breadcrumb" aria-label="Navegação estrutural"><a href="/Admin/Dashboard">BarberSync</a><span>/</span><strong>@viewTitle</strong></nav>
-        <span class="active-unit">Unidade <strong data-active-unit>Principal</strong></span>
+        <nav class="breadcrumb" aria-label="Navegação estrutural"><a href="@(isPlatform?"/Platform":"/Admin/Dashboard")">@(isPlatform?"Plataforma BarberSync":"BarberSync")</a><span>/</span><strong>@viewTitle</strong></nav>
+        @if(isScoped){<span class="platform-scope-banner">Você está administrando: <strong>@tenantName / @branchName</strong><form method="post" action="/Platform/Scope/Exit">@Html.AntiForgeryToken()<button type="submit">Sair do contexto</button></form></span>}
+        else if(!isPlatform){<span class="active-unit">@tenantName <strong data-active-unit>@branchName</strong></span>}
     </div>
     <button class="global-search-trigger" type="button" data-command-open aria-label="Abrir busca global">
         <svg><use href="#i-search" /></svg><span>Buscar clientes, agenda, comandas...</span><kbd>Ctrl K</kbd>
     </button>
-    <span class="cash-indicator" data-cash-status><i></i> Caixa <strong>consultando</strong></span>
+    @if(!isPlatform||isScoped){<span class="cash-indicator" data-cash-status><i></i> Caixa <strong>consultando</strong></span>}
     <a class="icon-button notification-button" href="/Admin/Notifications" aria-label="Notificações"><svg><use href="#i-bell" /></svg><span class="notification-dot" data-topbar-notification-count>0</span></a>
     <a class="icon-button" href="/Admin/Help" aria-label="Central de ajuda"><svg><use href="#i-help" /></svg></a>
     <div class="user-menu-wrap">

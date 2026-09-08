@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS barber.schema_versions (
 CREATE TABLE IF NOT EXISTS barber.tenants (
  id uuid PRIMARY KEY, slug varchar(120) NOT NULL, name varchar(180) NOT NULL,
  document varchar(40), status varchar(30) NOT NULL DEFAULT 'Active', is_active boolean NOT NULL DEFAULT true,
- created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz,
+ document_type varchar(10), document_number varchar(20), document_number_normalized varchar(20),
+ institutional_email varchar(254), deleted_by uuid
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenants_slug ON barber.tenants(lower(slug));
 CREATE TABLE IF NOT EXISTS barber.branches (
@@ -28,9 +30,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_branches_tenant_code ON barber.branches(ten
 
 -- UUIDs comuns são produzidos pela aplicação. pgcrypto permanece uma dependência
 -- oficial somente para inserções runtime set-based (um UUID distinto por linha).
-CREATE TABLE IF NOT EXISTS barber.users (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), email varchar(254), password_hash text, full_name varchar(180), refresh_token_hash text, refresh_token_expires_at timestamptz, status varchar(30) NOT NULL DEFAULT 'Active', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
+CREATE TABLE IF NOT EXISTS barber.users (id uuid PRIMARY KEY, tenant_id uuid NOT NULL REFERENCES barber.tenants(id), branch_id uuid REFERENCES barber.branches(id), email varchar(254), password_hash text, full_name varchar(180), cpf_normalized varchar(11), refresh_token_hash text, refresh_token_expires_at timestamptz, status varchar(30) NOT NULL DEFAULT 'Active', is_active boolean NOT NULL DEFAULT true, last_login_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz, deleted_at timestamptz, deleted_by uuid, payload jsonb NOT NULL DEFAULT '{}'::jsonb);
 CREATE TABLE IF NOT EXISTS barber.roles (id uuid PRIMARY KEY, tenant_id uuid REFERENCES barber.tenants(id), name varchar(100) NOT NULL, code varchar(80) NOT NULL, is_system boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS barber.permissions (id uuid PRIMARY KEY, code varchar(120) NOT NULL, description varchar(240) NOT NULL);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_permissions_code ON barber.permissions(code);
 CREATE TABLE IF NOT EXISTS barber.user_roles (user_id uuid NOT NULL REFERENCES barber.users(id), role_id uuid NOT NULL REFERENCES barber.roles(id), PRIMARY KEY(user_id,role_id));
 CREATE TABLE IF NOT EXISTS barber.role_permissions (role_id uuid NOT NULL REFERENCES barber.roles(id), permission_id uuid NOT NULL REFERENCES barber.permissions(id), PRIMARY KEY(role_id,permission_id));
 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_tenant_email ON barber.users(tenant_id,lower(email)) WHERE deleted_at IS NULL;
@@ -308,8 +311,8 @@ CREATE TABLE IF NOT EXISTS barber.notification_outbox (id uuid PRIMARY KEY,tenan
 CREATE INDEX IF NOT EXISTS ix_notification_outbox_dispatch ON barber.notification_outbox(status,scheduled_at) WHERE status IN ('Pending','Failed');
 CREATE TABLE IF NOT EXISTS barber.automations (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid REFERENCES barber.branches(id),name varchar(180) NOT NULL,trigger_type varchar(80) NOT NULL,conditions jsonb NOT NULL DEFAULT '{}',channel varchar(20),template varchar(100),status varchar(20) NOT NULL DEFAULT 'Inactive',last_run_at timestamptz,next_run_at timestamptz,created_at timestamptz NOT NULL DEFAULT now());
 
-CREATE TABLE IF NOT EXISTS barber.saas_plans (id uuid PRIMARY KEY,code varchar(30) UNIQUE NOT NULL,name varchar(80) NOT NULL,limits jsonb NOT NULL,features jsonb NOT NULL DEFAULT '{}',is_active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE IF NOT EXISTS barber.tenant_subscriptions (id uuid PRIMARY KEY,tenant_id uuid UNIQUE NOT NULL REFERENCES barber.tenants(id),plan_id uuid NOT NULL REFERENCES barber.saas_plans(id),status varchar(20) NOT NULL DEFAULT 'Trial',period_start date NOT NULL,period_end date NOT NULL,pending_plan_id uuid REFERENCES barber.saas_plans(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,CHECK(period_end>=period_start));
+CREATE TABLE IF NOT EXISTS barber.saas_plans (id uuid PRIMARY KEY,code varchar(50) UNIQUE NOT NULL,name varchar(120) NOT NULL,description text,limits jsonb NOT NULL DEFAULT '{}',features jsonb NOT NULL DEFAULT '{}',monthly_price numeric(12,2),annual_price numeric(12,2),max_branches integer,max_users integer,max_professionals integer,max_clients integer,max_storage_mb integer,status varchar(20) NOT NULL DEFAULT 'Active',is_active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz);
+CREATE TABLE IF NOT EXISTS barber.tenant_subscriptions (id uuid PRIMARY KEY,tenant_id uuid UNIQUE NOT NULL REFERENCES barber.tenants(id),plan_id uuid NOT NULL REFERENCES barber.saas_plans(id),status varchar(20) NOT NULL DEFAULT 'Trial',billing_cycle varchar(20) NOT NULL DEFAULT 'Monthly',period_start date NOT NULL,period_end date NOT NULL,starts_at timestamptz NOT NULL DEFAULT now(),ends_at timestamptz,trial_ends_at timestamptz,cancelled_at timestamptz,cancel_reason text,pending_plan_id uuid REFERENCES barber.saas_plans(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,CHECK(period_end>=period_start));
 CREATE TABLE IF NOT EXISTS barber.usage_counters (tenant_id uuid NOT NULL REFERENCES barber.tenants(id),metric varchar(50) NOT NULL,period_start date NOT NULL,used bigint NOT NULL DEFAULT 0 CHECK(used>=0),updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(tenant_id,metric,period_start));
 CREATE TABLE IF NOT EXISTS barber.billing_accounts (id uuid PRIMARY KEY,tenant_id uuid UNIQUE NOT NULL REFERENCES barber.tenants(id),legal_name varchar(180),document varchar(30),billing_email varchar(254),address jsonb NOT NULL DEFAULT '{}',gateway_customer_id text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz);
 CREATE TABLE IF NOT EXISTS barber.billing_invoices (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),subscription_id uuid REFERENCES barber.tenant_subscriptions(id),number varchar(50) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Draft',currency char(3) NOT NULL DEFAULT 'BRL',total numeric(14,2) NOT NULL DEFAULT 0,due_at timestamptz,paid_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(tenant_id,number),CHECK(paid_at IS NULL OR status='Paid'));
@@ -440,8 +443,11 @@ CREATE TABLE IF NOT EXISTS barber.appointment_reschedule_requests(id uuid PRIMAR
 CREATE INDEX IF NOT EXISTS ix_appointment_reschedule_scope ON barber.appointment_reschedule_requests(tenant_id,branch_id,appointment_id,status,created_at);
 CREATE TABLE IF NOT EXISTS barber.appointment_cancellation_reasons(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),name varchar(120) NOT NULL,applies_to varchar(20) NOT NULL DEFAULT 'Both',requires_note boolean NOT NULL DEFAULT false,status varchar(20) NOT NULL DEFAULT 'Active',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz);
 CREATE INDEX IF NOT EXISTS ix_appointment_cancellation_reasons_scope ON barber.appointment_cancellation_reasons(tenant_id,branch_id,status);
-CREATE TABLE IF NOT EXISTS barber.professional_schedule_blocks(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),professional_id uuid NOT NULL REFERENCES barber.professionals(id),block_type varchar(30) NOT NULL,starts_at timestamptz NOT NULL,ends_at timestamptz NOT NULL,reason text NOT NULL,status varchar(20) NOT NULL DEFAULT 'Active',created_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz,CHECK(block_type IN ('Lunch','Break','Training','Personal','Maintenance','Other')),CHECK(ends_at>starts_at));
-CREATE INDEX IF NOT EXISTS ix_professional_schedule_blocks_scope ON barber.professional_schedule_blocks(tenant_id,branch_id,professional_id,starts_at,status);
+ALTER TABLE barber.professional_schedule_blocks ADD COLUMN IF NOT EXISTS block_type varchar(30) NOT NULL DEFAULT 'Other';
+ALTER TABLE barber.professional_schedule_blocks ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'Active';
+ALTER TABLE barber.professional_schedule_blocks ADD COLUMN IF NOT EXISTS updated_at timestamptz;
+ALTER TABLE barber.professional_schedule_blocks ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+CREATE INDEX IF NOT EXISTS ix_professional_schedule_blocks_scope ON barber.professional_schedule_blocks(tenant_id,branch_id,professional_id,start_at,status);
 INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('025','Agenda inteligente, recursos, confirmações e lista de espera','scheduling-20260827') ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
 
 -- Cliente 360 (Sprint 49): prontuário técnico, consentimento e jornada comercial auditável.
@@ -473,6 +479,8 @@ CREATE TABLE IF NOT EXISTS barber.client_treatment_plans(id uuid PRIMARY KEY DEF
 CREATE INDEX IF NOT EXISTS ix_client_treatment_plans_scope ON barber.client_treatment_plans(tenant_id,branch_id,client_id,status,created_at DESC);
 CREATE TABLE IF NOT EXISTS barber.client_treatment_plan_items(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),treatment_plan_id uuid NOT NULL REFERENCES barber.client_treatment_plans(id),service_id uuid REFERENCES barber.services(id),product_id uuid REFERENCES barber.products(id),title varchar(160) NOT NULL,description text,planned_date date,status varchar(20) NOT NULL DEFAULT 'Pending',appointment_id uuid REFERENCES barber.appointments(id),service_order_id uuid REFERENCES barber.service_orders(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,CHECK(status IN ('Pending','Scheduled','Completed','Skipped','Cancelled')));
 CREATE INDEX IF NOT EXISTS ix_client_treatment_items_scope ON barber.client_treatment_plan_items(tenant_id,branch_id,treatment_plan_id,status,planned_date);
+-- Declarada antes dos follow-ups porque estes possuem uma FK opcional para templates.
+CREATE TABLE IF NOT EXISTS barber.communication_templates(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),name varchar(140) NOT NULL,code varchar(80) NOT NULL,channel_type varchar(20) NOT NULL,subject text,body text NOT NULL,variables_json jsonb NOT NULL DEFAULT '[]'::jsonb,status varchar(20) NOT NULL DEFAULT 'Active',created_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz);
 CREATE TABLE IF NOT EXISTS barber.client_follow_ups(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),client_id uuid NOT NULL REFERENCES barber.clients(id),professional_id uuid REFERENCES barber.professionals(id),source_type varchar(20) NOT NULL DEFAULT 'Manual',source_id uuid,title varchar(160) NOT NULL,description text,due_at timestamptz NOT NULL,status varchar(20) NOT NULL DEFAULT 'Pending',communication_template_id uuid REFERENCES barber.communication_templates(id),created_by uuid NOT NULL REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,completed_at timestamptz,completed_by uuid REFERENCES barber.users(id),CHECK(source_type IN ('Appointment','TreatmentPlan','Budget','Manual')),CHECK(status IN ('Pending','Done','Cancelled','Overdue')));
 CREATE INDEX IF NOT EXISTS ix_client_follow_ups_scope ON barber.client_follow_ups(tenant_id,branch_id,client_id,status,due_at,created_at DESC);
 CREATE TABLE IF NOT EXISTS barber.client_preferences(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),client_id uuid NOT NULL REFERENCES barber.clients(id),preference_key varchar(100) NOT NULL,preference_value text NOT NULL,source varchar(60) NOT NULL DEFAULT 'Admin',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,UNIQUE(tenant_id,branch_id,client_id,preference_key));
@@ -637,7 +645,19 @@ CREATE TABLE IF NOT EXISTS barber.purchase_orders (id uuid PRIMARY KEY,tenant_id
 CREATE INDEX IF NOT EXISTS ix_purchase_orders_scope ON barber.purchase_orders(tenant_id,branch_id,supplier_id,status);
 CREATE TABLE IF NOT EXISTS barber.purchase_order_items (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),purchase_order_id uuid NOT NULL REFERENCES barber.purchase_orders(id),product_id uuid NOT NULL REFERENCES barber.products(id),quantity numeric(14,3) NOT NULL,received_quantity numeric(14,3) NOT NULL DEFAULT 0,unit_cost numeric(14,2) NOT NULL,discount_amount numeric(14,2) NOT NULL DEFAULT 0,total_amount numeric(14,2) NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,UNIQUE(purchase_order_id,product_id));
 CREATE INDEX IF NOT EXISTS ix_purchase_order_items_scope ON barber.purchase_order_items(tenant_id,branch_id,purchase_order_id,product_id);
-CREATE TABLE IF NOT EXISTS barber.purchase_receipts (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),purchase_order_id uuid NOT NULL REFERENCES barber.purchase_orders(id),supplier_id uuid NOT NULL REFERENCES barber.suppliers(id),received_at timestamptz NOT NULL DEFAULT now(),status varchar(20) NOT NULL DEFAULT 'Draft',notes text,create_payable boolean NOT NULL DEFAULT false,created_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),posted_by uuid REFERENCES barber.users(id),posted_at timestamptz);
+-- Evolui a estrutura legada de recebimentos sem criar uma tabela concorrente.
+ALTER TABLE barber.purchase_receipts ALTER COLUMN purchase_id DROP NOT NULL;
+ALTER TABLE barber.purchase_receipts ALTER COLUMN invoice_number DROP NOT NULL;
+ALTER TABLE barber.purchase_receipts ALTER COLUMN amount DROP NOT NULL;
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS purchase_order_id uuid REFERENCES barber.purchase_orders(id);
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS supplier_id uuid REFERENCES barber.suppliers(id);
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'Draft';
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS notes text;
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS create_payable boolean NOT NULL DEFAULT false;
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES barber.users(id);
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS posted_by uuid REFERENCES barber.users(id);
+ALTER TABLE barber.purchase_receipts ADD COLUMN IF NOT EXISTS posted_at timestamptz;
 CREATE INDEX IF NOT EXISTS ix_purchase_receipts_scope ON barber.purchase_receipts(tenant_id,branch_id,purchase_order_id,supplier_id,status);
 CREATE TABLE IF NOT EXISTS barber.purchase_receipt_items (id uuid PRIMARY KEY,tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),purchase_receipt_id uuid NOT NULL REFERENCES barber.purchase_receipts(id),purchase_order_item_id uuid NOT NULL REFERENCES barber.purchase_order_items(id),product_id uuid NOT NULL REFERENCES barber.products(id),quantity numeric(14,3) NOT NULL,unit_cost numeric(14,2) NOT NULL,lot_code varchar(80),expires_at date,created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS ix_purchase_receipt_items_scope ON barber.purchase_receipt_items(tenant_id,branch_id,purchase_receipt_id,product_id);
@@ -761,6 +781,36 @@ INSERT INTO barber.schema_versions(version,description,checksum) VALUES ('023','
 
 
 -- Governança SaaS (Sprint 42): escopo obrigatório, workflows auditáveis e sem IDs técnicos digitáveis.
+ALTER TABLE barber.tenants ADD COLUMN IF NOT EXISTS document_type varchar(10);
+ALTER TABLE barber.tenants ADD COLUMN IF NOT EXISTS document_number varchar(20);
+ALTER TABLE barber.tenants ADD COLUMN IF NOT EXISTS document_number_normalized varchar(20);
+ALTER TABLE barber.tenants ADD COLUMN IF NOT EXISTS institutional_email varchar(254);
+ALTER TABLE barber.tenants ADD COLUMN IF NOT EXISTS deleted_by uuid;
+ALTER TABLE barber.users ADD COLUMN IF NOT EXISTS cpf_normalized varchar(11);
+ALTER TABLE barber.users ADD COLUMN IF NOT EXISTS last_login_at timestamptz;
+ALTER TABLE barber.users ADD COLUMN IF NOT EXISTS deleted_by uuid;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS description text;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS limits jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS features jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS monthly_price numeric(12,2);
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS annual_price numeric(12,2);
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS max_branches integer;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS max_users integer;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS max_professionals integer;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS max_clients integer;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS max_storage_mb integer;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'Active';
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+ALTER TABLE barber.saas_plans ADD COLUMN IF NOT EXISTS updated_at timestamptz;
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS billing_cycle varchar(20) NOT NULL DEFAULT 'Monthly';
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS starts_at timestamptz;
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS ends_at timestamptz;
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS trial_ends_at timestamptz;
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS cancelled_at timestamptz;
+ALTER TABLE barber.tenant_subscriptions ADD COLUMN IF NOT EXISTS cancel_reason text;
+UPDATE barber.tenant_subscriptions SET starts_at=period_start::timestamptz WHERE starts_at IS NULL;
+ALTER TABLE barber.tenant_subscriptions ALTER COLUMN starts_at SET DEFAULT now();
+ALTER TABLE barber.tenant_subscriptions ALTER COLUMN starts_at SET NOT NULL;
 INSERT INTO barber.permissions(id,code,description) VALUES
 (gen_random_uuid(),'Governance.Read','Consultar governança'),(gen_random_uuid(),'Governance.Manage','Gerenciar governança'),(gen_random_uuid(),'Tenant.Manage','Gerenciar empresas'),(gen_random_uuid(),'Branch.Manage','Gerenciar filiais'),(gen_random_uuid(),'Users.Manage','Gerenciar usuários'),(gen_random_uuid(),'Roles.Manage','Gerenciar perfis'),(gen_random_uuid(),'Permissions.Manage','Gerenciar permissões'),(gen_random_uuid(),'Plans.Manage','Gerenciar planos'),(gen_random_uuid(),'Subscription.Manage','Gerenciar assinatura'),(gen_random_uuid(),'Security.Read','Consultar segurança'),(gen_random_uuid(),'Security.Manage','Gerenciar segurança'),(gen_random_uuid(),'Privacy.Manage','Gerenciar privacidade'),(gen_random_uuid(),'Exports.Manage','Gerenciar exportações'),(gen_random_uuid(),'Onboarding.Manage','Gerenciar onboarding') ON CONFLICT(code) DO UPDATE SET description=excluded.description;
 CREATE TABLE IF NOT EXISTS barber.saas_plans(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),code varchar(50) NOT NULL UNIQUE,name varchar(120) NOT NULL,description text,monthly_price numeric(12,2) NOT NULL DEFAULT 0,annual_price numeric(12,2) NOT NULL DEFAULT 0,max_branches integer,max_users integer,max_professionals integer,max_clients integer,max_storage_mb integer,status varchar(20) NOT NULL DEFAULT 'Active',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz);
@@ -770,6 +820,10 @@ CREATE TABLE IF NOT EXISTS barber.tenant_subscriptions(id uuid PRIMARY KEY DEFAU
 CREATE INDEX IF NOT EXISTS ix_tenant_subscriptions_scope ON barber.tenant_subscriptions(tenant_id,status,created_at);
 CREATE TABLE IF NOT EXISTS barber.tenant_module_settings(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),module_key varchar(80) NOT NULL,is_enabled boolean NOT NULL DEFAULT false,settings_json jsonb NOT NULL DEFAULT '{}'::jsonb,updated_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,UNIQUE(tenant_id,module_key));
 CREATE INDEX IF NOT EXISTS ix_tenant_modules_scope ON barber.tenant_module_settings(tenant_id,module_key,is_enabled);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tenants_document_normalized ON barber.tenants(document_number_normalized) WHERE deleted_at IS NULL AND document_number_normalized IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tenants_institutional_email ON barber.tenants(lower(institutional_email)) WHERE deleted_at IS NULL AND institutional_email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_users_tenant_cpf ON barber.users(tenant_id,cpf_normalized) WHERE deleted_at IS NULL AND cpf_normalized IS NOT NULL;
+CREATE INDEX IF NOT EXISTS ix_users_login_email ON barber.users(lower(email),tenant_id) WHERE deleted_at IS NULL AND is_active;
 CREATE TABLE IF NOT EXISTS barber.branch_settings(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),settings_key varchar(80) NOT NULL,settings_json jsonb NOT NULL DEFAULT '{}'::jsonb,updated_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,UNIQUE(tenant_id,branch_id,settings_key));
 CREATE INDEX IF NOT EXISTS ix_branch_settings_scope ON barber.branch_settings(tenant_id,branch_id,settings_key);
 CREATE TABLE IF NOT EXISTS barber.user_invitations(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),email varchar(254) NOT NULL,role_code varchar(50) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Pending',token_hash varchar(128) NOT NULL,expires_at timestamptz NOT NULL,accepted_at timestamptz,cancelled_at timestamptz,cancel_reason text,created_by uuid NOT NULL REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,CHECK(status IN ('Pending','Accepted','Expired','Cancelled')));
@@ -784,7 +838,14 @@ CREATE TABLE IF NOT EXISTS barber.security_policies(id uuid PRIMARY KEY DEFAULT 
 CREATE INDEX IF NOT EXISTS ix_security_policies_scope ON barber.security_policies(tenant_id,branch_id,status);
 CREATE TABLE IF NOT EXISTS barber.security_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),user_id uuid REFERENCES barber.users(id),event_type varchar(80) NOT NULL,severity varchar(20) NOT NULL,ip_address inet,user_agent text,metadata_json jsonb NOT NULL DEFAULT '{}'::jsonb,created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS ix_security_events_scope ON barber.security_events(tenant_id,branch_id,user_id,severity,created_at);
-CREATE TABLE IF NOT EXISTS barber.privacy_requests(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),request_type varchar(30) NOT NULL,subject_type varchar(30) NOT NULL,client_id uuid REFERENCES barber.clients(id),professional_id uuid REFERENCES barber.professionals(id),user_id uuid REFERENCES barber.users(id),status varchar(20) NOT NULL DEFAULT 'Open',reason text NOT NULL,requested_by uuid NOT NULL REFERENCES barber.users(id),completed_by uuid REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),completed_at timestamptz,updated_at timestamptz);
+ALTER TABLE barber.privacy_requests ALTER COLUMN client_id DROP NOT NULL;
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS subject_type varchar(30) NOT NULL DEFAULT 'Client';
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS professional_id uuid REFERENCES barber.professionals(id);
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES barber.users(id);
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS reason text NOT NULL DEFAULT 'Solicitação de privacidade';
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS completed_by uuid REFERENCES barber.users(id);
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE barber.privacy_requests ADD COLUMN IF NOT EXISTS updated_at timestamptz;
 CREATE INDEX IF NOT EXISTS ix_privacy_requests_scope ON barber.privacy_requests(tenant_id,branch_id,status,user_id,created_at);
 CREATE TABLE IF NOT EXISTS barber.tenant_exports(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),export_type varchar(40) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Pending',file_name text,filters_json jsonb NOT NULL DEFAULT '{}'::jsonb,requested_by uuid NOT NULL REFERENCES barber.users(id),created_at timestamptz NOT NULL DEFAULT now(),completed_at timestamptz,failure_reason text);
 CREATE INDEX IF NOT EXISTS ix_tenant_exports_scope ON barber.tenant_exports(tenant_id,branch_id,status,created_at);
@@ -801,7 +862,15 @@ COMMIT;
 -- Sprint 50: Clube & Vendas (idempotente, sem operações destrutivas)
 CREATE TABLE IF NOT EXISTS barber.club_plans(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,name varchar(160) NOT NULL,description text,billing_cycle varchar(24) NOT NULL CHECK(billing_cycle IN('Monthly','Quarterly','SemiAnnual','Annual')),price numeric(14,2) NOT NULL CHECK(price>=0),status varchar(20) NOT NULL DEFAULT 'Draft',allow_auto_renew boolean NOT NULL DEFAULT false,cancellation_policy_json jsonb NOT NULL DEFAULT '{}',created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),deleted_at timestamptz);
 CREATE TABLE IF NOT EXISTS barber.club_plan_benefits(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,club_plan_id uuid NOT NULL REFERENCES barber.club_plans(id),benefit_type varchar(32) NOT NULL,service_id uuid,product_id uuid,discount_percent numeric(5,2),credit_amount numeric(14,2),monthly_limit numeric(12,2),total_limit numeric(12,2),validity_days integer NOT NULL CHECK(validity_days>0),rules_json jsonb NOT NULL DEFAULT '{}',status varchar(20) NOT NULL DEFAULT 'Active',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),CHECK(monthly_limit IS NOT NULL OR total_limit IS NOT NULL));
-CREATE TABLE IF NOT EXISTS barber.client_memberships(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,client_id uuid NOT NULL,club_plan_id uuid NOT NULL REFERENCES barber.club_plans(id),status varchar(20) NOT NULL DEFAULT 'PendingPayment',starts_at timestamptz NOT NULL,ends_at timestamptz,next_billing_at timestamptz,auto_renew boolean NOT NULL DEFAULT false,payment_method_snapshot_json jsonb NOT NULL DEFAULT '{}',created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),cancelled_at timestamptz,cancel_reason text);
+-- Consolida o antigo registro comercial genérico com o domínio de Clube & Vendas.
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS client_id uuid REFERENCES barber.clients(id);
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS club_plan_id uuid REFERENCES barber.club_plans(id);
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS next_billing_at timestamptz;
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS auto_renew boolean NOT NULL DEFAULT false;
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS payment_method_snapshot_json jsonb NOT NULL DEFAULT '{}';
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES barber.users(id);
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS cancelled_at timestamptz;
+ALTER TABLE barber.client_memberships ADD COLUMN IF NOT EXISTS cancel_reason text;
 CREATE TABLE IF NOT EXISTS barber.membership_cycles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,membership_id uuid NOT NULL REFERENCES barber.client_memberships(id),cycle_start timestamptz NOT NULL,cycle_end timestamptz NOT NULL,status varchar(20) NOT NULL DEFAULT 'Open',expected_amount numeric(14,2) NOT NULL,paid_amount numeric(14,2) NOT NULL DEFAULT 0,payment_id uuid,accounts_receivable_id uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),CHECK(cycle_end>cycle_start));
 CREATE TABLE IF NOT EXISTS barber.membership_usage(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,membership_id uuid NOT NULL REFERENCES barber.client_memberships(id),cycle_id uuid NOT NULL REFERENCES barber.membership_cycles(id),benefit_id uuid NOT NULL REFERENCES barber.club_plan_benefits(id),client_id uuid NOT NULL,service_order_id uuid,service_id uuid,product_id uuid,quantity_used numeric(12,2) NOT NULL CHECK(quantity_used>0),amount_applied numeric(14,2) NOT NULL DEFAULT 0,status varchar(20) NOT NULL DEFAULT 'Applied',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS barber.client_wallets(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,client_id uuid NOT NULL,credit_balance numeric(14,2) NOT NULL DEFAULT 0 CHECK(credit_balance>=0),cashback_balance numeric(14,2) NOT NULL DEFAULT 0 CHECK(cashback_balance>=0),gift_balance numeric(14,2) NOT NULL DEFAULT 0 CHECK(gift_balance>=0),blocked_balance numeric(14,2) NOT NULL DEFAULT 0 CHECK(blocked_balance>=0),status varchar(20) NOT NULL DEFAULT 'Active',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(tenant_id,branch_id,client_id));
@@ -815,7 +884,14 @@ CREATE TABLE IF NOT EXISTS barber.voucher_redemptions(id uuid PRIMARY KEY DEFAUL
 CREATE TABLE IF NOT EXISTS barber.online_sales_orders(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,client_id uuid,buyer_name varchar(160) NOT NULL,buyer_email varchar(254) NOT NULL,buyer_phone varchar(32),order_type varchar(24) NOT NULL,status varchar(24) NOT NULL DEFAULT 'PendingPayment',subtotal numeric(14,2) NOT NULL,discount_total numeric(14,2) NOT NULL DEFAULT 0,total numeric(14,2) NOT NULL,payment_id uuid,expires_at timestamptz NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS barber.online_sales_order_items(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,online_sales_order_id uuid NOT NULL REFERENCES barber.online_sales_orders(id),item_type varchar(24) NOT NULL,club_plan_id uuid,service_id uuid,product_id uuid,combo_id uuid,package_id uuid,description varchar(240) NOT NULL,quantity numeric(12,2) NOT NULL CHECK(quantity>0),unit_price numeric(14,2) NOT NULL,total numeric(14,2) NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS barber.commercial_redemption_rules(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,branch_id uuid NOT NULL,source_type varchar(30) NOT NULL,source_id uuid NOT NULL,allow_partial boolean NOT NULL DEFAULT false,allow_stacking boolean NOT NULL DEFAULT false,no_show_consumes boolean NOT NULL DEFAULT false,rules_json jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
-CREATE INDEX IF NOT EXISTS ix_club_plans_scope_status_created ON barber.club_plans(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_club_plan_benefits_scope_status_created ON barber.club_plan_benefits(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_client_memberships_scope_status_created ON barber.client_memberships(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_client_wallets_scope_status_created ON barber.client_wallets(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_gift_cards_scope_status_created ON barber.gift_cards(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_vouchers_scope_status_created ON barber.vouchers(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_online_sales_orders_scope_status_created ON barber.online_sales_orders(tenant_id,branch_id,status,created_at);\nCREATE INDEX IF NOT EXISTS ix_commercial_combos_scope_status_created ON barber.commercial_combos(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_club_plans_scope_status_created ON barber.club_plans(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_club_plan_benefits_scope_status_created ON barber.club_plan_benefits(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_client_memberships_scope_status_created ON barber.client_memberships(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_client_wallets_scope_status_created ON barber.client_wallets(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_gift_cards_scope_status_created ON barber.gift_cards(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_vouchers_scope_status_created ON barber.vouchers(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_online_sales_orders_scope_status_created ON barber.online_sales_orders(tenant_id,branch_id,status,created_at);
+CREATE INDEX IF NOT EXISTS ix_commercial_combos_scope_status_created ON barber.commercial_combos(tenant_id,branch_id,status,created_at);
 CREATE INDEX IF NOT EXISTS ix_client_memberships_client ON barber.client_memberships(tenant_id,branch_id,client_id,status);
 CREATE INDEX IF NOT EXISTS ix_wallet_transactions_client_created ON barber.wallet_transactions(tenant_id,branch_id,client_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS ix_gift_cards_hash ON barber.gift_cards(tenant_id,branch_id,code_hash);
@@ -1123,3 +1199,231 @@ ALTER TABLE barber.inventory_count_items ADD COLUMN IF NOT EXISTS expected_quant
 ALTER TABLE barber.inventory_count_items ADD COLUMN IF NOT EXISTS reason text;
 ALTER TABLE barber.inventory_count_items ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'Pending';
 ALTER TABLE barber.inventory_count_items ALTER COLUMN product_id DROP NOT NULL;
+
+-- BarberSync 2.0: Control Plane SaaS, catálogo comercial e entitlement central.
+BEGIN;
+SELECT pg_advisory_xact_lock(4200202403);
+
+CREATE TABLE IF NOT EXISTS barber.saas_modules(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),module_key varchar(80) NOT NULL,name varchar(140) NOT NULL,
+ description text,category varchar(80) NOT NULL,status varchar(20) NOT NULL DEFAULT 'Active',display_order integer NOT NULL DEFAULT 0,
+ icon_key varchar(80),is_core boolean NOT NULL DEFAULT false,is_sellable boolean NOT NULL DEFAULT true,
+ created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ CONSTRAINT ck_saas_modules_status CHECK(status IN('Draft','Active','Suspended','Archived'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_saas_modules_key ON barber.saas_modules(module_key);
+CREATE INDEX IF NOT EXISTS ix_saas_modules_catalog ON barber.saas_modules(status,category,display_order);
+
+CREATE TABLE IF NOT EXISTS barber.saas_module_prices(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),module_id uuid NOT NULL REFERENCES barber.saas_modules(id),
+ billing_cycle varchar(20) NOT NULL,currency char(3) NOT NULL DEFAULT 'BRL',price numeric(14,2) NOT NULL,
+ valid_from timestamptz NOT NULL,valid_until timestamptz,status varchar(20) NOT NULL DEFAULT 'Active',
+ created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ CONSTRAINT ck_saas_module_price_cycle CHECK(billing_cycle IN('Monthly','Annual','OneTime','UsageBased')),
+ CONSTRAINT ck_saas_module_price_value CHECK(price>=0),
+ CONSTRAINT ck_saas_module_price_period CHECK(valid_until IS NULL OR valid_until>valid_from),
+ CONSTRAINT ck_saas_module_price_status CHECK(status IN('Draft','Active','Inactive','Archived')),
+ UNIQUE(module_id,billing_cycle,currency,valid_from)
+);
+CREATE INDEX IF NOT EXISTS ix_saas_module_prices_active ON barber.saas_module_prices(module_id,billing_cycle,currency,valid_from DESC) WHERE status='Active';
+
+CREATE TABLE IF NOT EXISTS barber.saas_plan_modules(
+ plan_id uuid NOT NULL REFERENCES barber.saas_plans(id),module_id uuid NOT NULL REFERENCES barber.saas_modules(id),
+ is_included boolean NOT NULL DEFAULT true,limits_json jsonb NOT NULL DEFAULT '{}'::jsonb,created_at timestamptz NOT NULL DEFAULT now(),
+ updated_at timestamptz,PRIMARY KEY(plan_id,module_id)
+);
+CREATE TABLE IF NOT EXISTS barber.saas_module_dependencies(
+ module_id uuid NOT NULL REFERENCES barber.saas_modules(id),depends_on_module_id uuid NOT NULL REFERENCES barber.saas_modules(id),
+ is_required boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY(module_id,depends_on_module_id),CHECK(module_id<>depends_on_module_id)
+);
+CREATE TABLE IF NOT EXISTS barber.saas_module_permissions(
+ module_id uuid NOT NULL REFERENCES barber.saas_modules(id),permission_id uuid NOT NULL REFERENCES barber.permissions(id),
+ created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(module_id,permission_id)
+);
+
+CREATE TABLE IF NOT EXISTS barber.tenant_module_contracts(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL REFERENCES barber.tenants(id),
+ module_id uuid NOT NULL REFERENCES barber.saas_modules(id),status varchar(30) NOT NULL,billing_cycle varchar(20) NOT NULL,
+ contracted_price numeric(14,2),currency char(3) NOT NULL DEFAULT 'BRL',starts_at timestamptz NOT NULL,
+ trial_ends_at timestamptz,ends_at timestamptz,cancelled_at timestamptz,suspended_at timestamptz,
+ reason text,created_by uuid,updated_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,deleted_at timestamptz,deleted_by uuid,
+ CONSTRAINT ck_tenant_module_contract_status CHECK(status IN('Pending','PendingActivation','Trial','Active','GracePeriod','PastDue','Suspended','Cancelled','Expired')),
+ CONSTRAINT ck_tenant_module_contract_cycle CHECK(billing_cycle IN('Monthly','Annual','OneTime','UsageBased')),
+ CONSTRAINT ck_tenant_module_contract_price CHECK(contracted_price IS NULL OR contracted_price>=0),
+ CONSTRAINT ck_tenant_module_contract_period CHECK(ends_at IS NULL OR ends_at>starts_at),
+ CONSTRAINT ck_tenant_module_trial_period CHECK(trial_ends_at IS NULL OR trial_ends_at>starts_at)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_tenant_module_contract_open ON barber.tenant_module_contracts(tenant_id,module_id)
+ WHERE deleted_at IS NULL AND status IN('Pending','PendingActivation','Trial','Active','GracePeriod','PastDue','Suspended');
+CREATE INDEX IF NOT EXISTS ix_tenant_module_contract_scope ON barber.tenant_module_contracts(tenant_id,status,module_id,starts_at,ends_at) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS barber.user_permissions(
+ user_id uuid NOT NULL REFERENCES barber.users(id),permission_id uuid NOT NULL REFERENCES barber.permissions(id),
+ is_allowed boolean NOT NULL,created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ PRIMARY KEY(user_id,permission_id)
+);
+CREATE TABLE IF NOT EXISTS barber.user_branch_access(
+ user_id uuid NOT NULL REFERENCES barber.users(id),branch_id uuid NOT NULL REFERENCES barber.branches(id),
+ is_active boolean NOT NULL DEFAULT true,created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ PRIMARY KEY(user_id,branch_id)
+);
+
+CREATE TABLE IF NOT EXISTS barber.platform_roles(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),code varchar(80) NOT NULL,name varchar(120) NOT NULL,
+ description text,is_system boolean NOT NULL DEFAULT true,status varchar(20) NOT NULL DEFAULT 'Active',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_platform_roles_code ON barber.platform_roles(code);
+CREATE TABLE IF NOT EXISTS barber.platform_permissions(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),code varchar(120) NOT NULL,description varchar(240) NOT NULL,created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_platform_permissions_code ON barber.platform_permissions(code);
+CREATE TABLE IF NOT EXISTS barber.platform_users(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),email varchar(254) NOT NULL,full_name varchar(180) NOT NULL,cpf_normalized varchar(11),
+ password_hash text NOT NULL,refresh_token_hash text,refresh_token_expires_at timestamptz,status varchar(20) NOT NULL DEFAULT 'Active',
+ is_active boolean NOT NULL DEFAULT true,last_login_at timestamptz,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ deleted_at timestamptz,deleted_by uuid,CONSTRAINT ck_platform_users_status CHECK(status IN('Invited','Active','Blocked','Suspended','Archived'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_platform_users_email ON barber.platform_users(lower(email)) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_platform_users_cpf ON barber.platform_users(cpf_normalized) WHERE deleted_at IS NULL AND cpf_normalized IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_platform_users_refresh ON barber.platform_users(refresh_token_hash) WHERE refresh_token_hash IS NOT NULL;
+CREATE TABLE IF NOT EXISTS barber.platform_user_roles(
+ user_id uuid NOT NULL REFERENCES barber.platform_users(id),role_id uuid NOT NULL REFERENCES barber.platform_roles(id),
+ assigned_by uuid REFERENCES barber.platform_users(id),assigned_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(user_id,role_id)
+);
+CREATE TABLE IF NOT EXISTS barber.platform_role_permissions(
+ role_id uuid NOT NULL REFERENCES barber.platform_roles(id),permission_id uuid NOT NULL REFERENCES barber.platform_permissions(id),
+ PRIMARY KEY(role_id,permission_id)
+);
+CREATE TABLE IF NOT EXISTS barber.platform_scope_sessions(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),actor_user_id uuid NOT NULL REFERENCES barber.platform_users(id),
+ tenant_id uuid NOT NULL REFERENCES barber.tenants(id),branch_id uuid REFERENCES barber.branches(id),status varchar(20) NOT NULL DEFAULT 'Active',
+ reason text NOT NULL,ip_address inet,correlation_id varchar(100) NOT NULL,started_at timestamptz NOT NULL DEFAULT now(),
+ expires_at timestamptz NOT NULL,ended_at timestamptz,
+ CONSTRAINT ck_platform_scope_period CHECK(expires_at>started_at),
+ CONSTRAINT ck_platform_scope_status CHECK(status IN('Active','Ended','Expired','Revoked'))
+);
+CREATE INDEX IF NOT EXISTS ix_platform_scope_actor ON barber.platform_scope_sessions(actor_user_id,status,expires_at DESC);
+CREATE INDEX IF NOT EXISTS ix_platform_scope_target ON barber.platform_scope_sessions(tenant_id,branch_id,started_at DESC);
+
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS actor_user_id uuid;
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS target_tenant_id uuid;
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS target_branch_id uuid;
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS target_user_id uuid;
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS reason text;
+ALTER TABLE barber.audit_logs ADD COLUMN IF NOT EXISTS scope_session_id uuid;
+CREATE INDEX IF NOT EXISTS ix_audit_platform_target ON barber.audit_logs(target_tenant_id,target_branch_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_audit_platform_actor ON barber.audit_logs(actor_user_id,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS barber.tenant_module_usage_daily(
+ tenant_id uuid NOT NULL REFERENCES barber.tenants(id),module_id uuid NOT NULL REFERENCES barber.saas_modules(id),usage_date date NOT NULL,
+ active_users integer NOT NULL DEFAULT 0,requests bigint NOT NULL DEFAULT 0,relevant_operations bigint NOT NULL DEFAULT 0,
+ usage_units numeric(18,4),updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(tenant_id,module_id,usage_date),
+ CHECK(active_users>=0 AND requests>=0 AND relevant_operations>=0 AND (usage_units IS NULL OR usage_units>=0))
+);
+CREATE INDEX IF NOT EXISTS ix_tenant_module_usage_period ON barber.tenant_module_usage_daily(module_id,usage_date,tenant_id);
+
+INSERT INTO barber.saas_modules(id,module_key,name,description,category,status,display_order,icon_key,is_core,is_sellable) VALUES
+('30000000-0000-4000-8000-000000000001','CORE','Core','Identidade, unidades, usuários e governança essenciais.','Plataforma','Active',10,'grid',true,false),
+('30000000-0000-4000-8000-000000000002','SCHEDULING','Agenda','Agenda e disponibilidade profissional.','Operação','Active',20,'calendar',false,true),
+('30000000-0000-4000-8000-000000000003','SERVICE_EXECUTION','Atendimento 360','Execução canônica do atendimento e comandas.','Operação','Active',30,'user-check',false,true),
+('30000000-0000-4000-8000-000000000004','POS_CASH','Caixa e PDV','Pagamentos, caixa e ponto de venda.','Operação','Active',40,'wallet',false,true),
+('30000000-0000-4000-8000-000000000005','CLIENTS_360','Clientes 360','Visão completa e histórico do cliente.','Relacionamento','Active',50,'users',false,true),
+('30000000-0000-4000-8000-000000000006','RELATIONSHIP_CRM','Relacionamento e CRM','Relacionamento, fidelidade e reativação.','Relacionamento','Active',60,'users',false,true),
+('30000000-0000-4000-8000-000000000007','QUALITY_RETENTION','Qualidade e Retenção','NPS, avaliações, recuperação e retenção.','Relacionamento','Active',70,'chart',false,true),
+('30000000-0000-4000-8000-000000000008','MARKETING_STUDIO','Marketing Studio','Segmentos, campanhas e jornadas baseados em dados reais.','Marketing','Active',80,'megaphone',false,true),
+('30000000-0000-4000-8000-000000000009','CLUB_SALES','Clube e Vendas','Clube, pacotes, vouchers e vendas digitais.','Comercial','Active',90,'gift',false,true),
+('30000000-0000-4000-8000-000000000010','CATALOG_PRICING','Catálogo e Precificação','Catálogo, margens, preços e comissões.','Comercial','Active',100,'tag',false,true),
+('30000000-0000-4000-8000-000000000011','TEAM_HR_360','Equipe e RH 360','Equipe, escalas, metas, comissões e desempenho.','Gestão','Active',110,'scissors',false,true),
+('30000000-0000-4000-8000-000000000012','INVENTORY_PURCHASING_360','Estoque e Compras 360','Estoque, compras, inventário, reposição e CMV.','Gestão','Active',120,'package',false,true),
+('30000000-0000-4000-8000-000000000013','FINANCE_360','Financeiro 360','Financeiro, conciliação, fluxo de caixa e DRE.','Gestão','Active',130,'coins',false,true),
+('30000000-0000-4000-8000-000000000014','AI_OPERATIONS','IA Operacional','Sinais, sugestões, evidências e revisão humana.','Automação','Active',140,'sparkles',false,true),
+('30000000-0000-4000-8000-000000000015','REPORTS_BI','Relatórios e BI','Indicadores, relatórios e analytics.','Inteligência','Active',150,'chart',false,true),
+('30000000-0000-4000-8000-000000000016','COMMUNICATION','Comunicação','Templates, canais e fila de comunicação.','Marketing','Active',160,'megaphone',false,true),
+('30000000-0000-4000-8000-000000000017','CLIENT_PORTAL','Portal do Cliente','Autoatendimento e relacionamento no portal.','Canais','Active',170,'monitor',false,true),
+('30000000-0000-4000-8000-000000000018','PUBLIC_WEB','Site Público','Presença pública e agendamento web.','Canais','Active',180,'monitor',false,true),
+('30000000-0000-4000-8000-000000000019','MOBILE','Mobile','Experiência operacional e do cliente em dispositivos móveis.','Canais','Active',190,'monitor',false,true),
+('30000000-0000-4000-8000-000000000020','TOTEM','Totem','Autoatendimento presencial e provisioning de dispositivos.','Canais','Active',200,'monitor',false,true),
+('30000000-0000-4000-8000-000000000021','PARTNERS_MARKETPLACE','Parceiros e Marketplace','Ecossistema de parceiros e vitrine.','Comercial','Active',210,'building',false,true),
+('30000000-0000-4000-8000-000000000022','COMMAND_CENTER','Central de Controle','Gestão executiva do estabelecimento.','Inteligência','Active',220,'grid',false,true),
+('30000000-0000-4000-8000-000000000023','INTEGRATIONS','Integrações','Conectores e integrações externas.','Plataforma','Active',230,'settings',false,true)
+ON CONFLICT(module_key) DO UPDATE SET name=excluded.name,description=excluded.description,category=excluded.category,display_order=excluded.display_order,icon_key=excluded.icon_key,is_core=excluded.is_core,is_sellable=excluded.is_sellable,updated_at=now();
+
+-- Compatibilidade não destrutiva: tenants anteriores ao catálogo modular conservam os módulos já utilizados.
+-- O plano não possui preço implícito; negociação comercial permanece explicitamente não configurada.
+INSERT INTO barber.saas_plans(id,code,name,description,limits,features,monthly_price,annual_price,status,is_active)
+VALUES('31000000-0000-4000-8000-000000000001','LEGACY','Legado preservado','Compatibilidade para clientes existentes durante a transição modular.','{}','{}',NULL,NULL,'Active',true)
+ON CONFLICT(code) DO UPDATE SET name=excluded.name,description=excluded.description,updated_at=now();
+INSERT INTO barber.saas_plan_modules(plan_id,module_id,is_included)
+SELECT '31000000-0000-4000-8000-000000000001',id,true FROM barber.saas_modules
+ON CONFLICT(plan_id,module_id) DO NOTHING;
+INSERT INTO barber.tenant_subscriptions(id,tenant_id,plan_id,status,billing_cycle,period_start,period_end,starts_at,ends_at)
+SELECT gen_random_uuid(),t.id,'31000000-0000-4000-8000-000000000001','Active','Monthly',current_date,(current_date+interval '100 years')::date,now(),now()+interval '100 years'
+FROM barber.tenants t WHERE t.deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM barber.tenant_subscriptions s WHERE s.tenant_id=t.id)
+ON CONFLICT(tenant_id) DO NOTHING;
+
+INSERT INTO barber.saas_plan_modules(plan_id,module_id,is_included)
+SELECT p.id,m.id,true FROM barber.saas_plans p CROSS JOIN barber.saas_modules m WHERE m.module_key='CORE'
+ON CONFLICT(plan_id,module_id) DO UPDATE SET is_included=true,updated_at=now();
+
+INSERT INTO barber.saas_module_permissions(module_id,permission_id)
+SELECT m.id,p.id FROM barber.saas_modules m JOIN barber.permissions p ON
+ (m.module_key='SCHEDULING' AND p.code LIKE 'Appointment.%') OR
+ (m.module_key='SERVICE_EXECUTION' AND (p.code LIKE 'ServiceExecution.%' OR p.code LIKE 'Attendance.%' OR p.code LIKE 'ServiceOrder.%')) OR
+ (m.module_key='POS_CASH' AND (p.code LIKE 'Cash.%' OR p.code LIKE 'Payment.%')) OR
+ (m.module_key='CLIENTS_360' AND p.code LIKE 'Client%') OR
+ (m.module_key='QUALITY_RETENTION' AND p.code LIKE 'Quality.%') OR
+ (m.module_key='MARKETING_STUDIO' AND (p.code LIKE 'Marketing.%' OR p.code LIKE 'Campaign.%')) OR
+ (m.module_key='CLUB_SALES' AND p.code LIKE 'Club.%') OR
+ (m.module_key='CATALOG_PRICING' AND p.code LIKE 'Catalog.%') OR
+ (m.module_key='TEAM_HR_360' AND (p.code LIKE 'Team360.%' OR p.code LIKE 'Professional.%' OR p.code LIKE 'Commission.%')) OR
+ (m.module_key='INVENTORY_PURCHASING_360' AND (p.code LIKE 'Inventory360.%' OR p.code LIKE 'Stock.%')) OR
+ (m.module_key='FINANCE_360' AND p.code LIKE 'Finance%') OR
+ (m.module_key='AI_OPERATIONS' AND p.code LIKE 'Ai%') OR
+ (m.module_key='REPORTS_BI' AND (p.code LIKE 'Analytics.%' OR p.code LIKE 'Report%')) OR
+ (m.module_key='COMMUNICATION' AND (p.code LIKE 'Communication.%' OR p.code LIKE 'Notification.%')) OR
+ (m.module_key='PARTNERS_MARKETPLACE' AND p.code LIKE 'Partner%') OR
+ (m.module_key='COMMAND_CENTER' AND p.code LIKE 'CommandCenter.%')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO barber.platform_roles(id,code,name,description) VALUES
+('40000000-0000-4000-8000-000000000001','SuperAdmin','Super Administrador','Acesso total e auditável ao Control Plane.'),
+('40000000-0000-4000-8000-000000000002','PlatformAdmin','Administrador da Plataforma','Administração comercial e operacional da plataforma.'),
+('40000000-0000-4000-8000-000000000003','PlatformSupport','Suporte da Plataforma','Suporte controlado a clientes e contextos.'),
+('40000000-0000-4000-8000-000000000004','PlatformBilling','Cobrança da Plataforma','Preços, contratos e cobranças.'),
+('40000000-0000-4000-8000-000000000005','PlatformAuditor','Auditoria da Plataforma','Consulta global de auditoria e uso.')
+ON CONFLICT(code) DO UPDATE SET name=excluded.name,description=excluded.description,updated_at=now();
+INSERT INTO barber.platform_permissions(id,code,description) VALUES
+('41000000-0000-4000-8000-000000000001','Platform.Dashboard.Read','Consultar dashboard global'),
+('41000000-0000-4000-8000-000000000002','Platform.Tenants.Read','Consultar clientes SaaS'),
+('41000000-0000-4000-8000-000000000003','Platform.Tenants.Manage','Administrar clientes SaaS'),
+('41000000-0000-4000-8000-000000000004','Platform.Modules.Read','Consultar catálogo de módulos'),
+('41000000-0000-4000-8000-000000000005','Platform.Modules.Manage','Administrar catálogo de módulos'),
+('41000000-0000-4000-8000-000000000006','Platform.Prices.Manage','Administrar preços de módulos'),
+('41000000-0000-4000-8000-000000000007','Platform.Contracts.Manage','Administrar contratos de módulos'),
+('41000000-0000-4000-8000-000000000008','Platform.Users.Manage','Administrar operadores da plataforma'),
+('41000000-0000-4000-8000-000000000009','Platform.Audit.Read','Consultar auditoria global'),
+('41000000-0000-4000-8000-000000000010','Platform.Scope.Enter','Entrar em contexto controlado de cliente'),
+('41000000-0000-4000-8000-000000000011','Platform.DataPurge','Executar eliminação física reforçada')
+ON CONFLICT(code) DO UPDATE SET description=excluded.description;
+INSERT INTO barber.platform_role_permissions(role_id,permission_id)
+SELECT r.id,p.id FROM barber.platform_roles r CROSS JOIN barber.platform_permissions p WHERE r.code='SuperAdmin'
+ON CONFLICT DO NOTHING;
+
+-- Roles de tenant continuam em RBAC explícito; não há bypass de Owner/Admin no código.
+INSERT INTO barber.role_permissions(role_id,permission_id)
+SELECT role.id,permission.id FROM barber.roles role CROSS JOIN barber.permissions permission
+WHERE role.code IN('Owner','SuperAdmin')
+ON CONFLICT DO NOTHING;
+INSERT INTO barber.platform_role_permissions(role_id,permission_id)
+SELECT r.id,p.id FROM barber.platform_roles r JOIN barber.platform_permissions p ON
+ (r.code='PlatformAdmin' AND p.code<>'Platform.DataPurge') OR
+ (r.code='PlatformSupport' AND p.code IN('Platform.Dashboard.Read','Platform.Tenants.Read','Platform.Modules.Read','Platform.Scope.Enter')) OR
+ (r.code='PlatformBilling' AND p.code IN('Platform.Dashboard.Read','Platform.Tenants.Read','Platform.Modules.Read','Platform.Prices.Manage','Platform.Contracts.Manage')) OR
+ (r.code='PlatformAuditor' AND p.code IN('Platform.Dashboard.Read','Platform.Tenants.Read','Platform.Modules.Read','Platform.Audit.Read'))
+ON CONFLICT DO NOTHING;
+
+INSERT INTO barber.schema_versions(version,description,checksum) VALUES
+('063','Control Plane SaaS, contratos modulares, login normalizado e entitlement','saas-control-plane-20260908')
+ON CONFLICT(version) DO UPDATE SET description=excluded.description,checksum=excluded.checksum;
+COMMIT;

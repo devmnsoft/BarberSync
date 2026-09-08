@@ -22,7 +22,7 @@ public sealed class AuthController(IAuthService authService, IValidator<LoginReq
             return BadRequest(ApiResponse<object>.Fail("Verifique os dados informados.", validation.Errors.Select(e => e.ErrorMessage), HttpContext.TraceIdentifier));
         var result = await authService.LoginAsync(request, IpAddress(), HttpContext.TraceIdentifier, cancellationToken);
         return result is null
-            ? Unauthorized(ApiResponse<object>.Fail("Credenciais inválidas.", traceId: HttpContext.TraceIdentifier))
+            ? Unauthorized(ApiResponse<object>.Fail("Não foi possível realizar o login com os dados informados.", traceId: HttpContext.TraceIdentifier))
             : Ok(ApiResponse<LoginResponseDto>.Ok(result, "Login realizado com sucesso.", HttpContext.TraceIdentifier));
     }
 

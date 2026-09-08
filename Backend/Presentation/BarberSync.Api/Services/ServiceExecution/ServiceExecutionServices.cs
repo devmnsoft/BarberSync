@@ -2,6 +2,7 @@ using System.Data;
 using System.Text.Json;
 using BarberSync.Api.Security;
 using BarberSync.Api.Services.Catalog;
+using BarberSync.Application.Abstractions;
 using Npgsql;
 
 namespace BarberSync.Api.Services.ServiceExecution;

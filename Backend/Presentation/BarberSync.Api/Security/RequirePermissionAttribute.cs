@@ -18,9 +18,7 @@ public sealed class RequirePermissionFilter(ICurrentUserContext currentUser, str
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        if (currentUser.Roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase) ||
-            currentUser.Roles.Contains("Owner", StringComparer.OrdinalIgnoreCase) ||
-            currentUser.Roles.Contains("Admin", StringComparer.OrdinalIgnoreCase))
+        if (currentUser.IsPlatformUser && currentUser.ScopeSessionId.HasValue)
         {
             return;
         }

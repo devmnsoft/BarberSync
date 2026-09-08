@@ -1,15 +1,26 @@
 using BarberSync.Application.Abstractions.Saas;
 using BarberSync.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using BarberSync.Application.Abstractions;
+using BarberSync.Api.Security;
 
 namespace BarberSync.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/saas")]
-public class SaasController(ISaasService saasService) : ControllerBase
+public class SaasController(ISaasService saasService, ICurrentUserContext currentUser) : ControllerBase
 {
-    [HttpGet("plans")] public ActionResult<IReadOnlyList<SubscriptionPlanDto>> Plans() => Ok(saasService.GetPlans());
-    [HttpGet("subscriptions")] public ActionResult<IReadOnlyList<SubscriptionDto>> Subscriptions([FromQuery] Guid? tenantId) => Ok(saasService.GetSubscriptions(tenantId));
-    [HttpGet("usage/{tenantId:guid}")] public ActionResult<TenantUsageDto> Usage(Guid tenantId) => Ok(saasService.GetUsage(tenantId));
-    [HttpGet("invoices/{tenantId:guid}")] public ActionResult<IReadOnlyList<InvoiceDto>> Invoices(Guid tenantId) => Ok(saasService.GetInvoices(tenantId));
+    [HttpGet("plans"), RequirePermission("Subscription.Manage")]
+    public async Task<ActionResult<IReadOnlyList<SubscriptionPlanDto>>> Plans(CancellationToken ct) => Ok(await saasService.GetPlansAsync(ct));
+
+    [HttpGet("subscriptions"), RequirePermission("Subscription.Manage")]
+    public async Task<ActionResult<IReadOnlyList<SubscriptionDto>>> Subscriptions(CancellationToken ct) => Ok(await saasService.GetSubscriptionsAsync(currentUser.TenantId,ct));
+
+    [HttpGet("usage"), RequirePermission("Subscription.Manage")]
+    public async Task<ActionResult<TenantUsageDto>> Usage(CancellationToken ct) => Ok(await saasService.GetUsageAsync(currentUser.TenantId,ct));
+
+    [HttpGet("invoices"), RequirePermission("Subscription.Manage")]
+    public async Task<ActionResult<IReadOnlyList<InvoiceDto>>> Invoices(CancellationToken ct) => Ok(await saasService.GetInvoicesAsync(currentUser.TenantId,ct));
 }

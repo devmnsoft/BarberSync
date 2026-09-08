@@ -20,8 +20,8 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(new { message = "Informe e-mail e senha." });
+        if (string.IsNullOrWhiteSpace(request.UserIdentifier) || string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest(new { message = "Informe o usuário e a senha." });
 
         using var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
         try
@@ -45,7 +45,7 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
 
             var expires = data.TryGetProperty("expiresAt", out var expiresAt) && expiresAt.TryGetDateTimeOffset(out var parsedExpiry)
                 ? parsedExpiry : DateTimeOffset.UtcNow.AddMinutes(15);
-            var claims = ReadClaims(token.GetString()!);
+            var claims = ReadClaims(token.GetString()!).ToList();
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme, ClaimTypes.Email, ClaimTypes.Role)),
                 new AuthenticationProperties { IsPersistent = false, ExpiresUtc = expires, AllowRefresh = false });
@@ -53,7 +53,8 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
             Response.Cookies.Append("BarberSync.AccessToken", token.GetString()!, cookieOptions);
             Response.Cookies.Append("BarberSync.RefreshToken", refreshToken.GetString()!, new CookieOptions { HttpOnly = true, Secure = Request.IsHttps, SameSite = SameSiteMode.Strict });
 
-            return Ok(new { redirectUrl = IsSafeReturnUrl(request.ReturnUrl) ? request.ReturnUrl : "/Admin/Dashboard" });
+            var isPlatform = claims.Any(claim => claim.Type == "platform_admin" && claim.Value == "true");
+            return Ok(new { redirectUrl = IsSafeReturnUrl(request.ReturnUrl) ? request.ReturnUrl : isPlatform ? "/Platform" : "/Admin/Dashboard" });
         }
         catch (HttpRequestException)
         {
@@ -101,9 +102,9 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
         using var document = JsonDocument.Parse(Convert.FromBase64String(payload));
         foreach (var property in document.RootElement.EnumerateObject())
         {
-            if (property.NameEquals("roles") || property.NameEquals("permissions"))
+            if (property.NameEquals("roles") || property.NameEquals("permissions") || property.NameEquals("modules"))
             {
-                var claimType = property.NameEquals("roles") ? ClaimTypes.Role : "permissions";
+                var claimType = property.NameEquals("roles") ? ClaimTypes.Role : property.Name;
                 if (property.Value.ValueKind == JsonValueKind.Array)
                     foreach (var value in property.Value.EnumerateArray()) yield return new Claim(claimType, value.GetString() ?? string.Empty);
                 else yield return new Claim(claimType, property.Value.GetString() ?? string.Empty);
@@ -119,5 +120,9 @@ public class AccountController(IHttpClientFactory httpClientFactory) : Controlle
     private bool IsSafeReturnUrl(string? returnUrl)
         => !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
 
-    public sealed record LoginRequest(string Email, string Password, string? ReturnUrl = null);
+    public sealed record LoginRequest(string? TenantIdentifier, string UserIdentifier, string Password, string? ReturnUrl = null)
+    {
+        public string? Email => null;
+        public string? TenantSlug => null;
+    }
 }

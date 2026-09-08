@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Text.Json;
 using BarberSync.Api.Security;
 using BarberSync.Api.Services.Team;
+using BarberSync.Application.Abstractions;
 
 namespace BarberSync.Api.Services.Catalog;
 

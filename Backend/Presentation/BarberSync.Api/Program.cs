@@ -178,6 +178,7 @@ app.Use(async (context, next) =>
 
 app.UseRateLimiter();
 app.UseAuthentication();
+app.UseMiddleware<ModuleRouteEntitlementMiddleware>();
 app.UseMiddleware<RequestObservabilityMiddleware>();
 app.UseAuthorization();
 

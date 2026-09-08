@@ -1,6 +1,6 @@
-@{ var section=ViewData["PartnersPage"]?.ToString()??"Index"; }
+@{ var partnerSection=ViewData["PartnersPage"]?.ToString()??"Index"; }
 <link rel="stylesheet" href="~/css/partners.css" />
-<main class="partners-shell" data-partners-page="@section">
+<main class="partners-shell" data-partners-page="@partnerSection">
  <header class="partners-hero"><div><span class="eyebrow">ECOSSISTEMA COMERCIAL</span><h1>Marketplace &amp; Parceiros</h1><p>Indicações rastreáveis, vitrine pública e comissionamento conectado a eventos reais.</p></div><a class="partner-primary" href="/Partners/Directory">Gerenciar parceiros</a></header>
  <nav class="partner-tabs" aria-label="Áreas de parceiros"><a href="/Partners">Visão geral</a><a href="/Partners/Directory">Diretório</a><a href="/Partners/Affiliates">Afiliados</a><a href="/Partners/Referrals">Indicações</a><a href="/Partners/Commissions">Comissões</a><a href="/Partners/Payouts">Payouts</a><a href="/Partners/Contracts">Contratos</a><a href="/Partners/Links">Links</a><a href="/Partners/Marketplace">Vitrine</a><a href="/Partners/Suppliers">Fornecedores</a><a href="/Partners/Reports">Relatórios</a></nav>
  <section class="partner-filters"><label>Período<input type="date" data-filter-from /></label><label>Status<select data-filter-status><option value="">Todos</option><option>Active</option><option>Draft</option><option>Suspended</option></select></label><label>Parceiro<select data-partner-filter><option value="">Todos os parceiros</option></select></label></section>
