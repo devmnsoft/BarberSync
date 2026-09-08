@@ -1,0 +1,9 @@
+@{ViewData["Title"]="Clientes SaaS";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+@section Styles{<link rel="stylesheet" href="~/css/platform-control.css" asp-append-version="true" />}
+<main class="platform-page" data-platform-page="tenants">
+ <header class="platform-hero"><div><span>PLATAFORMA › CLIENTES</span><h1>Clientes SaaS</h1><p>Busca paginada, comercial e operacional sem carregar a base inteira.</p></div><button class="platform-primary" type="button" disabled title="Fluxo transacional em preparação">Novo cliente</button></header>
+ <form class="platform-filters" data-tenant-filters><label>Buscar<input name="search" type="search" placeholder="Nome, CPF, CNPJ ou e-mail" /></label><label>Status<select name="status"><option value="">Todos</option><option>Active</option><option>Trial</option><option>Suspended</option><option>Cancelled</option></select></label><label>Criação desde<input name="createdFrom" type="date" /></label><button type="submit">Filtrar</button></form>
+ <section class="platform-error" data-error hidden><strong>Não foi possível consultar clientes.</strong><p></p><button type="button" data-retry>Tentar novamente</button></section>
+ <section class="platform-panel"><div class="responsive-table"><table><thead><tr><th>Cliente</th><th>Documento</th><th>Plano</th><th>Módulos</th><th>Usuários</th><th>Unidades</th><th>Status</th><th>Último acesso</th><th><span class="sr-only">Ações</span></th></tr></thead><tbody data-tenants></tbody></table></div><div class="platform-empty" data-empty hidden>Nenhum cliente corresponde aos filtros.</div><footer class="platform-pagination"><span data-page-info></span><div><button type="button" data-prev>Anterior</button><button type="button" data-next>Próxima</button></div></footer></section>
+</main>
+@section Scripts{<script src="~/js/platform-control.js" asp-append-version="true"></script>}

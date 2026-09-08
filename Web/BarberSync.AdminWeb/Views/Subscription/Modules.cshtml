@@ -1,0 +1,20 @@
+@{ViewData["Title"]="Minha assinatura e módulos";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+@section Styles{<link rel="stylesheet" href="~/css/platform-control.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/platform-forms.css" asp-append-version="true" />}
+<main class="platform-page subscription-page" data-subscription-modules>
+    <header class="platform-hero">
+        <div><span>ADMINISTRAÇÃO › ASSINATURA</span><h1>Minha assinatura e módulos</h1><p>Veja o que está disponível, os preços configurados e solicite ativações sem simular pagamento.</p></div>
+    </header>
+    <section class="platform-error" data-error hidden><strong>Não foi possível carregar sua assinatura.</strong><p></p><button type="button" data-retry>Tentar novamente</button></section>
+    <section class="module-cards" data-module-cards aria-live="polite"><article class="module-card">Carregando módulos…</article></section>
+    <dialog class="platform-dialog" data-request-dialog>
+        <form method="dialog" data-request-form>
+            @Html.AntiForgeryToken()
+            <header><div><small>SOLICITAÇÃO COMERCIAL</small><h2 data-module-name>Solicitar módulo</h2></div><button type="button" data-close aria-label="Fechar">×</button></header>
+            <label>Ciclo<select name="billingCycle" required><option value="Monthly">Mensal</option><option value="Annual">Anual</option></select></label>
+            <label>Motivo<textarea name="reason" required minlength="5" maxlength="500" placeholder="Descreva a necessidade da sua operação"></textarea></label>
+            <p class="form-error" data-form-error hidden></p>
+            <footer><button type="button" data-close>Cancelar</button><button class="platform-primary" type="submit">Registrar solicitação</button></footer>
+        </form>
+    </dialog>
+</main>
+@section Scripts{<script src="~/js/subscription-modules.js" asp-append-version="true"></script>}

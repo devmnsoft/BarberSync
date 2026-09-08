@@ -18,7 +18,7 @@ public sealed class PaymentRulesTests
     [Fact]
     public void Mixed_payment_for_entire_balance_marks_order_paid()
     {
-        var amount = PaymentRules.ValidateAndTotal([new("Card", 60), new("Cash", 40)], 100);
+        var amount = PaymentRules.ValidateAndTotal([new("CreditCard", 60), new("Cash", 40)], 100);
 
         Assert.Equal("Paid", PaymentRules.OrderStatus(amount, 100));
     }

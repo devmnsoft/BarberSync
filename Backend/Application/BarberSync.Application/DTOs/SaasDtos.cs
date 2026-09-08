@@ -1,6 +1,6 @@
 namespace BarberSync.Application.DTOs;
 
-public record SubscriptionPlanDto(Guid Id, string Code, string Name, int MaxUsers, int MaxProfessionals, int MaxBranches, int MaxMonthlyAppointments, bool AiEnabled, bool TotemEnabled, bool AdvancedReports, bool WhatsappNotifications, bool BiIntegration, decimal Price);
+public record SubscriptionPlanDto(Guid Id, string Code, string Name, int MaxUsers, int MaxProfessionals, int MaxBranches, int MaxMonthlyAppointments, bool AiEnabled, bool TotemEnabled, bool AdvancedReports, bool WhatsappNotifications, bool BiIntegration, decimal? Price);
 public record SubscriptionDto(Guid Id, Guid TenantId, Guid PlanId, string Status, DateTime StartedAt, DateTime? EndsAt);
 public record TenantUsageDto(Guid TenantId, int Users, int Professionals, int Branches, int MonthlyAppointments, int AiRequests, int TotemSessions);
 public record InvoiceDto(Guid Id, Guid TenantId, decimal Amount, string Status, DateTime DueDate);

@@ -4,6 +4,7 @@ using System.Text.Json;
 using BarberSync.Api.Security;
 using BarberSync.Api.Services.Catalog;
 using BarberSync.Api.Services.Team;
+using BarberSync.Application.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

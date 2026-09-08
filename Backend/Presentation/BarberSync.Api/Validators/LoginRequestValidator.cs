@@ -7,12 +7,15 @@ public sealed class LoginRequestValidator : AbstractValidator<LoginRequestDto>
 {
     public LoginRequestValidator()
     {
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("O e-mail é obrigatório.")
-            .EmailAddress().WithMessage("O e-mail informado não é válido.");
+        RuleFor(x => x.EffectiveUserIdentifier)
+            .NotEmpty().WithMessage("Informe o CPF ou e-mail do usuário.")
+            .MaximumLength(254).WithMessage("O identificador do usuário é inválido.");
+
+        RuleFor(x => x.EffectiveTenantIdentifier)
+            .MaximumLength(254).WithMessage("O identificador da empresa é inválido.");
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("A senha é obrigatória.")
-            .MinimumLength(8).WithMessage("A senha deve conter letras, números e caracteres especiais.");
+            .MinimumLength(8).WithMessage("A senha informada não atende aos requisitos de segurança.");
     }
 }

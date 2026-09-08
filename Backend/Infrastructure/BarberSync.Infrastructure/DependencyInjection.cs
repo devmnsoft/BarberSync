@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using BarberSync.Application.Operations;
 using BarberSync.Infrastructure.Repositories;
+using BarberSync.Application.Abstractions.Saas;
+using BarberSync.Infrastructure.Saas;
 
 namespace BarberSync.Infrastructure;
 
@@ -35,6 +37,12 @@ public static class DependencyInjection
         services.AddScoped<IServiceOrderRepository, PostgresServiceOrderRepository>();
         services.AddScoped<IPaymentRepository, PostgresServiceOrderRepository>();
         services.AddScoped<ICashRegisterRepository, PostgresCashRegisterRepository>();
+        services.AddSingleton<IEffectiveAccessCache, LocalEffectiveAccessCache>();
+        services.AddScoped<ISaasService, PostgresSaasService>();
+        services.AddScoped<IModuleEntitlementService, PostgresModuleEntitlementService>();
+        services.AddScoped<ISaasModuleRepository, PostgresSaasModuleRepository>();
+        services.AddScoped<IPlatformTenantRepository, PostgresPlatformTenantRepository>();
+        services.AddScoped<IPlatformScopeService, PostgresPlatformScopeService>();
         services.AddSingleton<IInnovationOrchestrator, InMemoryInnovationOrchestrator>();
 
         return services;

@@ -14,6 +14,9 @@ public interface ICurrentUserContext
     Guid UserId { get; }
     Guid TenantId { get; }
     Guid BranchId { get; }
+    bool IsPlatformUser { get; }
+    Guid? ActorUserId { get; }
+    Guid? ScopeSessionId { get; }
     IReadOnlySet<string> Roles { get; }
     IReadOnlySet<string> Permissions { get; }
 }

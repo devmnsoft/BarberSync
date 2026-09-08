@@ -1,0 +1,10 @@
+@{ViewData["Title"]="Dashboard Global";Layout="~/Views/Shared/_AdminLayout.cshtml";}
+@section Styles{<link rel="stylesheet" href="~/css/platform-control.css" asp-append-version="true" />}
+<main class="platform-page" data-platform-page="dashboard">
+ <header class="platform-hero"><div><span>CONTROL PLANE</span><h1>Plataforma BarberSync</h1><p>Clientes, contratos, adoção e receita calculados exclusivamente sobre dados persistidos.</p></div><label>Período<select data-period><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label></header>
+ <section class="platform-loading" data-loading aria-live="polite"><i></i><i></i><span>Consolidando a plataforma…</span></section>
+ <section class="platform-error" data-error hidden><strong>Não foi possível carregar o Control Plane.</strong><p></p><button type="button" data-retry>Tentar novamente</button></section>
+ <section class="platform-kpis" data-kpis hidden></section>
+ <section class="platform-grid" data-content hidden><article class="platform-panel"><header><h2>Clientes por plano</h2></header><div data-plans></div></article><article class="platform-panel"><header><h2>Adoção por módulo</h2></header><div class="responsive-table"><table><thead><tr><th>Módulo</th><th>Ativos</th><th>Trial</th><th>Adoção</th><th>MRR</th></tr></thead><tbody data-modules></tbody></table></div></article></section>
+</main>
+@section Scripts{<script src="~/js/platform-control.js" asp-append-version="true"></script>}

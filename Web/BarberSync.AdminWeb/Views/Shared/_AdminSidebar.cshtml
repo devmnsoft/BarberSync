@@ -1,78 +1,29 @@
+@inject BarberSync.AdminWeb.Services.Navigation.IModuleNavigationService Navigation
 @{
-    var path = Context.Request.Path.Value?.TrimEnd('/').ToLowerInvariant() ?? string.Empty;
-    Func<string, string> active = href => path == href.ToLowerInvariant() || path.StartsWith($"{href.ToLowerInvariant()}/") ? "active" : string.Empty;
-    var canManageSystem = User.IsInRole("SuperAdmin") || User.IsInRole("Owner") || User.IsInRole("Admin");
+    var path=Context.Request.Path.Value?.TrimEnd('/').ToLowerInvariant()??string.Empty;
+    var groups=Navigation.Build(User,path);
+    Func<string,bool> active=href=>path==href.ToLowerInvariant()||path.StartsWith($"{href.ToLowerInvariant()}/");
 }
 <aside class="admin-sidebar" aria-label="Navegação principal">
-    <a class="brand" href="/Admin/Dashboard" aria-label="BarberSync — Visão geral">
+    <a class="brand" href="@(User.HasClaim("platform_admin","true")?"/Platform":"/Admin/Dashboard")" aria-label="BarberSync — início">
         <img src="~/img/logo-barbersync-white.svg" alt="" />
-        <div><strong>BarberSync</strong><small>Gestão premium</small></div>
+        <div><strong>BarberSync</strong><small>@(User.HasClaim("platform_admin","true")?"Plataforma SaaS":"Gestão premium")</small></div>
     </a>
-    <nav class="journey-nav">
-        <div class="menu-section"><h6>OPERAÇÃO</h6>
-            <a class="menu-link @active("/admin/dashboard")" href="/Admin/Dashboard"><svg class="nav-icon"><use href="#i-grid" /></svg><span>Visão geral</span></a>
-            <a class="menu-link @active("/admin/appointments")" href="/Admin/Appointments"><svg class="nav-icon"><use href="#i-calendar" /></svg><span>Agenda</span></a>
-            <a class="menu-link @active("/operation")" href="/Operation/Today"><svg class="nav-icon"><use href="#i-user-check" /></svg><span>Operação do dia</span></a>
-            <a class="menu-link @active("/serviceexecution")" href="/ServiceExecution"><svg class="nav-icon"><use href="#i-user-check" /></svg><span>Atendimento 360</span></a>
-        </div>
-        <div class="menu-section"><h6>PDV / CAIXA</h6>
-            <a class="menu-link @active("/operation/serviceorders") @active("/admin/serviceorders")" href="/Operation/ServiceOrders"><svg class="nav-icon"><use href="#i-receipt" /></svg><span>Comandas</span></a>
-            <a class="menu-link @active("/operation/cash") @active("/admin/cash")" href="/Operation/Cash"><svg class="nav-icon"><use href="#i-wallet" /></svg><span>Caixa</span></a>
-        </div>
-        <div class="menu-section"><h6>CLIENTES</h6>
-            <a class="menu-link @active("/quality")" href="/Quality"><svg class="nav-icon"><use href="#i-chart" /></svg><span>Qualidade &amp; Retenção</span></a>
-            <a class="menu-link @active("/marketing")" href="/Marketing"><svg class="nav-icon"><use href="#i-sparkles" /></svg><span>Marketing Studio</span></a>
-            <a class="menu-link @active("/relationship")" href="/Relationship"><svg class="nav-icon"><use href="#i-users" /></svg><span>Relacionamento</span></a>
-            <a class="menu-link @active("/team")" href="/Team360"><svg class="nav-icon"><use href="#i-user-check" /></svg><span>Equipe &amp; RH 360</span></a>
-            <a class="menu-link @active("/admin/clients")" href="/Relationship/Clients"><svg class="nav-icon"><use href="#i-users" /></svg><span>Clientes</span></a>
-            <a class="menu-link @active("/club")" href="/Club"><svg class="nav-icon"><use href="#i-sparkles" /></svg><span>Clube &amp; Vendas</span></a>
-            <a class="menu-link @active("/clients360")" href="/Clients360"><svg class="nav-icon"><use href="#i-users" /></svg><span>Clientes 360</span></a>
-            <a class="menu-link @active("/admin/loyalty")" href="/Relationship/Loyalty"><svg class="nav-icon"><use href="#i-gift" /></svg><span>Fidelidade</span></a>
-        </div>
-        <div class="menu-section"><h6>COMERCIAL</h6>
-            <a class="menu-link @active("/catalog")" href="/Catalog"><svg class="nav-icon"><use href="#i-tag" /></svg><span>Catálogo &amp; Precificação</span></a>
-            <a class="menu-link @active("/admin/services")" href="/Admin/Services"><svg class="nav-icon"><use href="#i-tag" /></svg><span>Serviços</span></a>
-            <a class="menu-link @active("/admin/packages")" href="/Relationship/Packages"><svg class="nav-icon"><use href="#i-gift" /></svg><span>Pacotes</span></a>
-            <a class="menu-link @active("/admin/coupons")" href="/Relationship/Coupons"><svg class="nav-icon"><use href="#i-gift" /></svg><span>Cupons</span></a>
-            <a class="menu-link @active("/admin/memberships")" href="/Admin/Memberships"><svg class="nav-icon"><use href="#i-star" /></svg><span>Assinaturas</span></a>
-            <a class="menu-link @active("/admin/campaigns")" href="/Relationship/Campaigns"><svg class="nav-icon"><use href="#i-megaphone" /></svg><span>Campanhas</span></a>
-        </div>
-        <div class="menu-section"><h6>EQUIPE</h6>
-            <a class="menu-link @active("/admin/professionals")" href="/Admin/Professionals"><svg class="nav-icon"><use href="#i-scissors" /></svg><span>Profissionais</span></a>
-            <a class="menu-link @active("/admin/commissions")" href="/Admin/Commissions"><svg class="nav-icon"><use href="#i-coins" /></svg><span>Comissões</span></a>
-        </div>
-        <div class="menu-section"><h6>ESTOQUE</h6>
-            <a class="menu-link @active("/admin/products")" href="/Admin/Products"><svg class="nav-icon"><use href="#i-box" /></svg><span>Produtos</span></a>
-            <a class="menu-link @active("/inventory")" href="/Inventory360"><svg class="nav-icon"><use href="#i-package" /></svg><span>Estoque & Compras 360</span></a>
-            <a class="menu-link @active("/inventory/products")" href="/Inventory360/Products"><span>Produtos e categorias</span></a>
-            <a class="menu-link @active("/inventory/purchases")" href="/Inventory360/Purchases"><span>Compras e recebimento</span></a>
-            <a class="menu-link @active("/inventory/counts")" href="/Inventory360/InventoryCounts"><span>Inventário e ajustes</span></a>
-            <a class="menu-link @active("/inventory/replenishment")" href="/Inventory360/Replenishment"><span>Reposição e insumos</span></a>
-            <a class="menu-link @active("/admin/suppliers")" href="/Admin/Suppliers"><svg class="nav-icon"><use href="#i-building" /></svg><span>Fornecedores</span></a>
-            <a class="menu-link @active("/admin/purchases")" href="/Admin/Purchases"><svg class="nav-icon"><use href="#i-receipt" /></svg><span>Compras</span></a>
-        </div>
-        <div class="menu-section"><h6>FINANCEIRO</h6>
-            <a class="menu-link @active("/finance")" href="/Finance"><svg class="nav-icon"><use href="#i-coins" /></svg><span>Dashboard financeiro</span></a>
-            <a class="menu-link @active("/finance/accountspayable")" href="/Finance/AccountsPayable"><span>Contas a pagar</span></a>
-            <a class="menu-link @active("/finance/accountsreceivable")" href="/Finance/AccountsReceivable"><span>Contas a receber</span></a>
-            <a class="menu-link @active("/finance/reconciliation")" href="/Finance/Reconciliation"><span>Conciliação e relatórios</span></a>
-        </div>
-        <div class="menu-section"><h6>IA OPERACIONAL</h6>
-            <a class="menu-link @active("/aioperations")" href="/AiOperations"><svg class="nav-icon"><use href="#i-monitor" /></svg><span>IA Operacional</span></a>
-            <a class="menu-link @active("/aioperations/reviewqueue")" href="/AiOperations/ReviewQueue"><span>Fila de revisão</span></a>
-            <a class="menu-link @active("/aioperations/cameras")" href="/AiOperations/Cameras"><span>Câmeras e zonas</span></a>
-            <a class="menu-link @active("/aioperations/rules")" href="/AiOperations/Rules"><span>Regras de sinais</span></a>
-        </div>
-        <div class="menu-section"><h6>RELATÓRIOS</h6>
-            <a class="menu-link @active("/communication")" href="/Communication"><svg class="nav-icon"><use href="#i-megaphone" /></svg><span>Comunicação</span></a>
-            <a class="menu-link @active("/admin/reports")" href="/Admin/Reports"><svg class="nav-icon"><use href="#i-chart" /></svg><span>Relatórios</span></a>
-            <a class="menu-link @active("/admin/audit")" href="/Admin/Audit"><svg class="nav-icon"><use href="#i-history" /></svg><span>Auditoria</span></a>
-        </div>
-        <div class="menu-section"><h6>SISTEMA</h6>
-            <a class="menu-link @active("/admin/branches")" href="/Admin/Branches"><svg class="nav-icon"><use href="#i-building" /></svg><span>Unidades</span></a>
-            <a class="menu-link @active("/admin/users")" href="/Admin/Users"><svg class="nav-icon"><use href="#i-shield" /></svg><span>Usuários e perfis</span></a>
-            @if (canManageSystem) { <a class="menu-link @active("/admin/systemhealth")" href="/Admin/SystemHealth"><svg class="nav-icon"><use href="#i-monitor" /></svg><span>Saúde do sistema</span></a> }
-            <a class="menu-link @active("/admin/settings")" href="/Admin/Settings"><svg class="nav-icon"><use href="#i-settings" /></svg><span>Configurações</span></a>
-        </div>
-    <a class="admin-nav__item" href="/CommandCenter"><span>Central de Controle</span></a></nav>
+    <nav class="journey-nav" data-module-navigation>
+        @foreach(var group in groups)
+        {
+            var expanded=group.Items.Any(item=>active(item.Href));
+            <details class="menu-group @(group.IsPlatform?"is-platform":null)" data-menu-group="@group.Key" open="@(expanded?"open":null)">
+                <summary aria-label="@group.Label"><span>@group.Label</span><svg class="group-chevron" aria-hidden="true"><use href="#i-chevron" /></svg></summary>
+                <div class="menu-group-items">
+                    @foreach(var item in group.Items)
+                    {
+                        <a class="menu-link @(active(item.Href)?"active":null)" href="@item.Href" title="@item.Label" aria-current="@(active(item.Href)?"page":null)">
+                            <svg class="nav-icon" aria-hidden="true"><use href="#i-@item.Icon" /></svg><span>@item.Label</span>
+                        </a>
+                    }
+                </div>
+            </details>
+        }
+    </nav>
 </aside>

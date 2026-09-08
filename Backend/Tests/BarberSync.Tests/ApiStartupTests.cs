@@ -38,14 +38,15 @@ public sealed class ApiStartupTests
     [InlineData("superadmin")]
     [InlineData("OWNER")]
     [InlineData("Admin")]
-    public void Administrative_Roles_Should_Bypass_Permission_Check_Case_Insensitively(string role)
+    public void Tenant_Administrative_Roles_Must_Have_Explicit_Permission(string role)
     {
         var context = AuthorizationContext();
         var filter = new RequirePermissionFilter(new StubCurrentUser([role], []), "ServiceOrder.Read");
 
         filter.OnAuthorization(context);
 
-        Assert.Null(context.Result);
+        var result = Assert.IsType<ObjectResult>(context.Result);
+        Assert.Equal(StatusCodes.Status403Forbidden, result.StatusCode);
     }
 
     [Fact]
@@ -95,6 +96,9 @@ public sealed class ApiStartupTests
         public Guid UserId { get; } = Guid.NewGuid();
         public Guid TenantId { get; } = Guid.NewGuid();
         public Guid BranchId { get; } = Guid.NewGuid();
+        public bool IsPlatformUser => false;
+        public Guid? ActorUserId => UserId;
+        public Guid? ScopeSessionId => null;
         public IReadOnlySet<string> Roles { get; } = roles.ToHashSet(StringComparer.OrdinalIgnoreCase);
         public IReadOnlySet<string> Permissions { get; } = permissions.ToHashSet(StringComparer.OrdinalIgnoreCase);
     }

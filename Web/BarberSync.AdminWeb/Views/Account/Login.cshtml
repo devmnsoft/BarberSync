@@ -24,8 +24,11 @@
                 <h2>Bem-vindo de volta</h2>
                 <p class="form-intro">Entre para acompanhar a operação da sua unidade.</p>
                 <div class="login-error" role="alert" data-login-error hidden></div>
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" autocomplete="username" placeholder="voce@seusalao.com.br" required />
+                <label for="tenantIdentifier">Empresa / Conta</label>
+                <input type="text" id="tenantIdentifier" name="tenantIdentifier" autocomplete="organization" placeholder="CPF, CNPJ, e-mail da empresa ou identificador" />
+                <small class="field-hint">Operadores BarberSync podem deixar este campo em branco.</small>
+                <label for="userIdentifier">Usuário</label>
+                <input type="text" id="userIdentifier" name="userIdentifier" autocomplete="username" placeholder="CPF ou e-mail" required />
                 <div class="password-label"><label for="password">Senha</label><a href="/Account/ForgotPassword">Esqueci minha senha</a></div>
                 <div class="password-field"><input type="password" id="password" name="password" autocomplete="current-password" placeholder="Digite sua senha" required /><button type="button" data-toggle-password aria-label="Mostrar senha">Mostrar</button></div>
                 <button class="login-submit" type="submit"><span>Entrar</span></button>

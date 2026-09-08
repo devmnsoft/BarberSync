@@ -22,7 +22,7 @@ public sealed class CommunicationTemplatesController(CommunicationService servic
 public sealed class CommunicationCampaignsController(CommunicationService service):ControllerBase
 {
  [HttpGet] public async Task<IActionResult> List(CancellationToken ct)=>Ok((await service.List("communication_campaigns",ct)).RootElement);
- [HttpPost] public async Task<IActionResult> Create(CampaignRequest request,CancellationToken ct){try{return Ok(new{id=await service.CreateCampaign(request,ct)});}catch(CommunicationValidationException e){return BadRequest(new{message=e.Message,traceId=HttpContext.TraceIdentifier,errors=new{form=new[]{e.Message}}});}}
+ [HttpPost] public async Task<IActionResult> Create(BarberSync.Api.Services.Communication.CampaignRequest request,CancellationToken ct){try{return Ok(new{id=await service.CreateCampaign(request,ct)});}catch(CommunicationValidationException e){return BadRequest(new{message=e.Message,traceId=HttpContext.TraceIdentifier,errors=new{form=new[]{e.Message}}});}}
 }
 [ApiController,Authorize,Route("api/communication/automations")]
 public sealed class CommunicationAutomationsController(CommunicationService service):ControllerBase
